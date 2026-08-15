@@ -659,6 +659,11 @@ function loadListeningLesson(id) {
 
   workspace.innerHTML = `
     <div class="listening-player-box">
+      ${l.image ? `
+        <div style="margin-bottom:14px;border-radius:8px;overflow:hidden;max-height:220px;border:1px solid rgba(255,255,255,0.2)">
+          <img src="${l.image}" style="width:100%;height:180px;object-fit:cover;display:block" alt="${l.title}" onerror="this.style.display='none'">
+        </div>
+      ` : ''}
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
         <div>
           <div style="font-size:18px;font-weight:800;color:#fff">${l.title}</div>
@@ -885,6 +890,11 @@ function loadReadingLesson(id) {
   workspace.innerHTML = `
     <div class="reading-split-view">
       <div class="reading-passage-box">
+        ${r.image ? `
+          <div style="margin-bottom:14px;border-radius:8px;overflow:hidden;max-height:220px;border:1.5px solid #cbd5e1">
+            <img src="${r.image}" style="width:100%;height:180px;object-fit:cover;display:block" alt="${r.title}" onerror="this.style.display='none'">
+          </div>
+        ` : ''}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid #e2e8f0;padding-bottom:8px">
           <h3 style="margin:0;font-size:17px;color:#1e293b">${r.title}</h3>
           <span style="font-size:12px;color:#0284c7;background:#e0f2fe;padding:2px 8px;border-radius:4px;font-weight:600">💡 Bấm vào từ màu xanh để tra nhanh</span>
@@ -1383,32 +1393,59 @@ window.switchLangSubTab = function(tab) {
 function renderFlashcardsView(card, total) {
   if (!card) return '<div class="empty">Chưa có thẻ từ vựng trong Unit này.</div>';
   return `
-    <div style="text-align:center;max-width:500px;margin:0 auto">
-      <div style="font-size:13px;color:#64748b;margin-bottom:10px">Thẻ ${currentCardIdx + 1} / ${total} • Bấm vào thẻ để lật mặt xem nghĩa</div>
+    <div style="text-align:center;max-width:480px;margin:0 auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-size:13px;color:#64748b;font-weight:600">Thẻ ${currentCardIdx + 1} / ${total} • Bấm thẻ để lật 3D</span>
+        <button class="btn btn-sm" onclick="window.editCurrentFlashcardImage()" style="font-size:11.5px;padding:3px 9px;background:#fff">🖼️ Đổi ảnh minh họa</button>
+      </div>
       
       <div class="flashcard-3d-scene" id="flashcard-scene" onclick="this.classList.toggle('flipped')">
         <div class="flashcard-3d-inner">
-          <div class="flashcard-face">
-            <div style="font-size:12px;color:#a16207;font-weight:700;margin-bottom:4px;text-transform:uppercase">${card.pos || ''}</div>
+          <!-- MẶT TRƯỚC THẺ 3D -->
+          <div class="flashcard-face flashcard-front">
+            ${card.image ? `
+              <div class="fc-img-wrap">
+                <img src="${card.image}" class="flashcard-img" alt="${card.word}" loading="lazy" onerror="this.parentElement.style.display='none'">
+              </div>
+            ` : ''}
+            <div class="fc-pos-tag">${card.pos || 'word'}</div>
             <div class="flashcard-word">${card.word || ''}</div>
             <div class="flashcard-ipa">${card.ipa || ''}</div>
-            <button class="btn btn-sm btn-p" onclick="event.stopPropagation(); window.speakVocab('${card.word}')" style="background:#f59e0b;border-color:#f59e0b">🔊 Nghe phát âm</button>
+            <button class="btn btn-sm btn-p" onclick="event.stopPropagation(); window.speakVocab('${card.word}')" style="background:#f59e0b;border-color:#f59e0b;margin-top:4px">🔊 Nghe phát âm</button>
           </div>
+
+          <!-- MẶT SAU THẺ 3D -->
           <div class="flashcard-face flashcard-back">
             <div class="flashcard-meaning">${card.meaning || ''}</div>
             <div class="flashcard-example">"${card.example || ''}"</div>
-            ${card.synonyms ? `<div style="font-size:12px;color:#047857;margin-top:10px"><b>Đồng nghĩa:</b> ${card.synonyms}</div>` : ''}
+            ${card.synonyms ? `<div style="font-size:12.5px;color:#047857;margin-top:10px;font-weight:600"><b>Đồng nghĩa:</b> ${card.synonyms}</div>` : ''}
+            ${card.image ? `
+              <div style="margin-top:10px;opacity:0.85">
+                <img src="${card.image}" style="width:70px;height:45px;object-fit:cover;border-radius:6px;border:1px solid #cbd5e1" onerror="this.style.display='none'">
+              </div>
+            ` : ''}
           </div>
         </div>
       </div>
 
-      <div style="display:flex;gap:12px;justify-content:center;margin-top:16px">
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:18px">
         <button class="btn" onclick="window.prevFlashcard()" ${currentCardIdx === 0 ? 'disabled' : ''}>← Từ trước</button>
         <button class="btn btn-p" onclick="window.nextFlashcard()" ${currentCardIdx >= total - 1 ? 'disabled' : ''}>Từ tiếp theo →</button>
       </div>
     </div>
   `;
 }
+
+window.editCurrentFlashcardImage = function() {
+  const fCards = currentUnit?.languageFocus?.flashcards || [];
+  const card = fCards[currentCardIdx];
+  if (!card) return;
+  const newUrl = prompt("Nhập URL hình ảnh minh họa cho từ '" + card.word + "':", card.image || '');
+  if (newUrl !== null) {
+    card.image = newUrl.trim();
+    window.switchLangSubTab('cards');
+  }
+};
 
 window.prevFlashcard = function() {
   if (currentCardIdx > 0) {

@@ -301,8 +301,13 @@ export function switchDesignerSkillTab(skill) {
           <div style="font-size:12px;color:#64748b;margin-bottom:8px">Hệ thống sẽ dùng đoạn văn bản này để phát âm chuẩn giọng bản ngữ (US/UK) cho học sinh:</div>
           <textarea id="ud-lis-text" class="designer-textarea" style="width:100%;min-height:130px;font-size:14.5px;line-height:1.6;" placeholder="Nhập đoạn hội thoại hoặc văn bản tiếng Anh...">${esc(lis.audioText || '')}</textarea>
         </div>
+
+        <div class="fg" style="margin-top:14px">
+          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">🖼️ Hình ảnh minh họa đoạn nghe (Tùy chọn URL)</label>
+          <input type="text" id="ud-lis-image" placeholder="VD: https://images.unsplash.com/... hoặc để trống" value="${esc(lis.image || '')}">
+        </div>
         
-        <div class="fg" style="margin-top:16px">
+        <div class="fg" style="margin-top:14px">
           <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">✍️ 2. Câu Nghe Chép Chính Tả (Dictation)</label>
           <input type="text" id="ud-lis-dictation" style="width:100%;padding:10px 14px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:14px" placeholder="VD: Gate 24B starts boarding at 10:30." value="${esc(lis.exercises?.find(e => e.type === 'dictation')?.targetSentence || '')}">
         </div>
@@ -321,7 +326,7 @@ export function switchDesignerSkillTab(skill) {
       </div>
     `;
   } else if (skill === 'reading') {
-    const read = (unit.reading && unit.reading[0]) || { passage: '', vocabulary: {} };
+    const read = (unit.reading && unit.reading[0]) || { passage: '', vocabulary: {}, image: '' };
     contentWrap.innerHTML = `
       <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
         <div class="fg">
@@ -330,7 +335,12 @@ export function switchDesignerSkillTab(skill) {
           <textarea id="ud-read-passage" class="designer-textarea" style="width:100%;min-height:180px;font-size:14.5px;line-height:1.6;" placeholder="Nhập nội dung bài đọc...">${esc(read.passage || '')}</textarea>
         </div>
 
-        <div class="fg" style="margin-top:16px">
+        <div class="fg" style="margin-top:14px">
+          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">🖼️ Hình ảnh minh họa bài đọc (Tùy chọn URL)</label>
+          <input type="text" id="ud-read-image" placeholder="VD: https://images.unsplash.com/... hoặc để trống" value="${esc(read.image || '')}">
+        </div>
+
+        <div class="fg" style="margin-top:14px">
           <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">🔤 2. Danh Mục Tra Từ Nhanh (JSON Dictionary)</label>
           <textarea id="ud-read-vocab" class="designer-textarea" style="width:100%;min-height:100px;font-family:monospace;font-size:13px">${esc(JSON.stringify(read.vocabulary || {}, null, 2))}</textarea>
         </div>
@@ -338,7 +348,7 @@ export function switchDesignerSkillTab(skill) {
     `;
   } else if (skill === 'speaking') {
     const spk = (unit.speaking && unit.speaking[0]) || { phrases: [] };
-    const p1 = spk.phrases?.[0] || { text: 'Practice makes perfect.', ipa: '', meaning: 'Rèn luyện tạo nên sự hoàn hảo' };
+    const p1 = spk.phrases?.[0] || { text: 'Practice makes perfect.', ipa: '', meaning: 'Rèn luyện tạo nên sự hoàn hảo', image: '' };
     contentWrap.innerHTML = `
       <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
         <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:#1e293b">🗣️ Câu Luyện Nói & Chấm Điểm Phát Âm (Micro AI)</div>
@@ -356,11 +366,15 @@ export function switchDesignerSkillTab(skill) {
             <input type="text" id="ud-spk-meaning" value="${esc(p1.meaning || '')}">
           </div>
         </div>
+        <div class="fg" style="margin-top:10px">
+          <label>🖼️ Hình ảnh minh họa câu nói (Tùy chọn URL)</label>
+          <input type="text" id="ud-spk-image" placeholder="VD: https://..." value="${esc(p1.image || '')}">
+        </div>
       </div>
     `;
   } else if (skill === 'writing') {
     const wrt = (unit.writing && unit.writing[0]) || { items: [] };
-    const it1 = wrt.items?.[0] || { correctSentence: 'Learning English is fun and useful.', hint: 'Bắt đầu bằng Learning...' };
+    const it1 = wrt.items?.[0] || { correctSentence: 'Learning English is fun and useful.', hint: 'Bắt đầu bằng Learning...', image: '' };
     contentWrap.innerHTML = `
       <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
         <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:#1e293b">✍️ Bài Tập Xếp Từ Thành Câu (Sentence Scramble)</div>
@@ -368,25 +382,35 @@ export function switchDesignerSkillTab(skill) {
           <label>Câu hoàn chỉnh (Hệ thống sẽ tự động xáo trộn từ cho học sinh) *</label>
           <input type="text" id="ud-wrt-sentence" style="font-size:15px" value="${esc(it1.correctSentence || '')}">
         </div>
-        <div class="fg">
-          <label>Gợi ý cấu trúc</label>
-          <input type="text" id="ud-wrt-hint" value="${esc(it1.hint || '')}">
+        <div class="grid2">
+          <div class="fg" style="margin:0">
+            <label>Gợi ý cấu trúc</label>
+            <input type="text" id="ud-wrt-hint" value="${esc(it1.hint || '')}">
+          </div>
+          <div class="fg" style="margin:0">
+            <label>🖼️ Hình ảnh minh họa (Tùy chọn URL)</label>
+            <input type="text" id="ud-wrt-image" placeholder="VD: https://..." value="${esc(it1.image || '')}">
+          </div>
         </div>
       </div>
     `;
   } else if (skill === 'languageFocus') {
     const lf = unit.languageFocus || { flashcards: [] };
-    const fc = lf.flashcards?.[0] || { word: 'Sustainable', pos: 'adjective', ipa: '/səˈsteɪ.nə.bəl/', meaning: 'Bền vững', example: 'Solar energy is sustainable.' };
+    const fc = lf.flashcards?.[0] || { word: 'Sustainable', pos: 'adjective', ipa: '/səˈsteɪ.nə.bəl/', meaning: 'Bền vững', example: 'Solar energy is sustainable.', image: '' };
     contentWrap.innerHTML = `
       <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
-        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:#1e293b">🎴 Thẻ Từ Vựng 3D (3D Flashcard)</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:#1e293b">🎴 Thẻ Từ Vựng 3D (3D Flashcard với Hình Ảnh Minh Họa)</div>
         <div class="grid2">
-          <div class="fg" style="margin:0"><label>Từ vựng (Word)</label><input id="ud-fc-word" value="${esc(fc.word || '')}"></div>
+          <div class="fg" style="margin:0"><label>Từ vựng (Word) *</label><input id="ud-fc-word" value="${esc(fc.word || '')}"></div>
           <div class="fg" style="margin:0"><label>Từ loại (noun/verb/adj)</label><input id="ud-fc-pos" value="${esc(fc.pos || '')}"></div>
         </div>
         <div class="grid2" style="margin-top:10px">
           <div class="fg" style="margin:0"><label>Phiên âm IPA</label><input id="ud-fc-ipa" value="${esc(fc.ipa || '')}"></div>
-          <div class="fg" style="margin:0"><label>Nghĩa tiếng Việt</label><input id="ud-fc-meaning" value="${esc(fc.meaning || '')}"></div>
+          <div class="fg" style="margin:0"><label>Nghĩa tiếng Việt *</label><input id="ud-fc-meaning" value="${esc(fc.meaning || '')}"></div>
+        </div>
+        <div class="fg" style="margin-top:10px">
+          <label>🖼️ URL Hình ảnh minh họa cho thẻ 3D</label>
+          <input id="ud-fc-image" placeholder="VD: https://images.unsplash.com/photo-... hoặc link ảnh trực tiếp" value="${esc(fc.image || '')}">
         </div>
         <div class="fg" style="margin-top:10px">
           <label>Ví dụ thực tế (Example)</label>
@@ -407,6 +431,7 @@ function syncCurrentDesignerSkillToDraft() {
 
   if (currentDesignerSkill === 'listening') {
     const text = $('ud-lis-text')?.value.trim();
+    const image = $('ud-lis-image')?.value.trim();
     const dict = $('ud-lis-dictation')?.value.trim();
     const q = $('ud-lis-q')?.value.trim();
     const a = $('ud-lis-a')?.value.trim();
@@ -416,6 +441,7 @@ function syncCurrentDesignerSkillToDraft() {
     if (!unit.listening[0]) unit.listening[0] = { id: 'lis_1', exercises: [] };
     
     if (text) unit.listening[0].audioText = text;
+    unit.listening[0].image = image || '';
     unit.listening[0].exercises = [
       {
         type: 'mcq',
@@ -431,11 +457,13 @@ function syncCurrentDesignerSkillToDraft() {
     ];
   } else if (currentDesignerSkill === 'reading') {
     const passage = $('ud-read-passage')?.value.trim();
+    const image = $('ud-read-image')?.value.trim();
     const vocabRaw = $('ud-read-vocab')?.value.trim();
     if (!unit.reading) unit.reading = [];
     if (!unit.reading[0]) unit.reading[0] = { id: 'read_1', exercises: [] };
 
     if (passage) unit.reading[0].passage = passage;
+    unit.reading[0].image = image || '';
     if (vocabRaw) {
       try { unit.reading[0].vocabulary = JSON.parse(vocabRaw); } catch(e){}
     }
@@ -443,32 +471,35 @@ function syncCurrentDesignerSkillToDraft() {
     const text = $('ud-spk-text')?.value.trim();
     const ipa = $('ud-spk-ipa')?.value.trim();
     const meaning = $('ud-spk-meaning')?.value.trim();
+    const image = $('ud-spk-image')?.value.trim();
 
     if (!unit.speaking) unit.speaking = [];
     if (!unit.speaking[0]) unit.speaking[0] = { id: 'spk_1', phrases: [] };
     if (text) {
-      unit.speaking[0].phrases = [{ text, ipa: ipa || '', meaning: meaning || '', tip: 'Luyện phát âm chuẩn âm cuối.' }];
+      unit.speaking[0].phrases = [{ text, ipa: ipa || '', meaning: meaning || '', image: image || '', tip: 'Luyện phát âm chuẩn âm cuối.' }];
     }
   } else if (currentDesignerSkill === 'writing') {
     const sentence = $('ud-wrt-sentence')?.value.trim();
     const hint = $('ud-wrt-hint')?.value.trim();
+    const image = $('ud-wrt-image')?.value.trim();
 
     if (!unit.writing) unit.writing = [];
     if (!unit.writing[0]) unit.writing[0] = { id: 'wrt_1', items: [] };
     if (sentence) {
       const words = sentence.split(/\s+/);
-      unit.writing[0].items = [{ id: 'sc_1', words, correctSentence: sentence, hint: hint || '' }];
+      unit.writing[0].items = [{ id: 'sc_1', words, correctSentence: sentence, hint: hint || '', image: image || '' }];
     }
   } else if (currentDesignerSkill === 'languageFocus') {
     const word = $('ud-fc-word')?.value.trim();
     const pos = $('ud-fc-pos')?.value.trim();
     const ipa = $('ud-fc-ipa')?.value.trim();
     const meaning = $('ud-fc-meaning')?.value.trim();
+    const image = $('ud-fc-image')?.value.trim();
     const example = $('ud-fc-example')?.value.trim();
 
     if (!unit.languageFocus) unit.languageFocus = { flashcards: [], matchPairs: [], grammarChallenge: [] };
     if (word) {
-      unit.languageFocus.flashcards = [{ id: 'fc_1', word, pos: pos || 'noun', ipa: ipa || '', meaning: meaning || '', example: example || '' }];
+      unit.languageFocus.flashcards = [{ id: 'fc_1', word, pos: pos || 'noun', ipa: ipa || '', meaning: meaning || '', image: image || '', example: example || '' }];
     }
   }
 }

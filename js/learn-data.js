@@ -20,6 +20,7 @@ export const DEFAULT_UNITS = [
         level: 'A2 - B1',
         audioText: "Good morning. Where are you flying to today? I'm flying to London Heathrow on flight BA178. May I see your passport and ticket, please? Here you go. Would you prefer a window seat or an aisle seat? An aisle seat, please. Great, here is your boarding pass. Gate 24B starts boarding at 10:30.",
         audioUrl: '',
+        image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&auto=format&fit=crop&q=80',
         speed: 1.0,
         duration: '45s',
         exercises: [
@@ -58,6 +59,7 @@ export const DEFAULT_UNITS = [
         level: 'A1 - A2',
         audioText: "Welcome to Bella Italia. Are you ready to order? Yes, please. I would like the grilled salmon with asparagus. And for your drink? Just a glass of sparkling water with lemon, please. Would you like any dessert later? Maybe some tiramisu afterwards. Thank you.",
         audioUrl: '',
+        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80',
         speed: 1.0,
         duration: '40s',
         exercises: [
@@ -83,6 +85,7 @@ export const DEFAULT_UNITS = [
         title: 'The Rise of Artificial Intelligence in Everyday Life',
         topic: 'Technology & Future',
         level: 'B1 - B2',
+        image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&auto=format&fit=crop&q=80',
         passage: `Artificial intelligence (AI) is no longer confined to science fiction novels. Today, AI technology quietly powers many of the tools and services we use on a daily basis. From virtual assistants like Siri and Alexa that schedule our appointments, to streaming algorithms on Spotify and Netflix that recommend songs and movies based on our preferences, AI has become an integral part of modern society.
 
 In the medical field, machine learning algorithms can analyze radiology scans with remarkable accuracy, assisting doctors in detecting diseases at much earlier stages. In transportation, autonomous vehicles are being rigorously tested on public roads, promising to reduce traffic accidents caused by human error.
@@ -214,7 +217,7 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
           meaning: 'Sự kiên trì, bền bỉ vượt qua khó khăn',
           example: 'Through hard work and perseverance, she achieved her dream of becoming a doctor.',
           synonyms: 'Persistence, dedication, endurance',
-          image: ''
+          image: 'https://images.unsplash.com/photo-1519834785169-98be25ec3f84?w=600&auto=format&fit=crop&q=80'
         },
         {
           id: 'fc_2',
@@ -224,7 +227,7 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
           meaning: 'Bền vững, có thể duy trì lâu dài mà không hại môi trường',
           example: 'Solar energy provides a clean and sustainable source of power.',
           synonyms: 'Eco-friendly, renewable, durable',
-          image: ''
+          image: 'https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=600&auto=format&fit=crop&q=80'
         }
       ],
       matchPairs: [
