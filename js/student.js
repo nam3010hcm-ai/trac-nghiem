@@ -38,16 +38,19 @@ export function toggleStudentPassVisible() {
 }
 
 export async function loginStudent() {
-  const emailInput = document.getElementById('s-email')?.value.trim();
-  const pass = document.getElementById('s-pass')?.value.trim();
-  const errBox = document.getElementById('s-err');
-  const btn = document.getElementById('btn-s-login');
+  const inputEl = $('st-login-email') || $('s-email');
+  const passEl = $('st-login-pass') || $('s-pass');
+  const errBox = $('st-login-err') || $('s-err');
+  const btn = $('btn-student-login') || $('btn-s-login');
+
+  const userInput = inputEl ? inputEl.value.trim() : '';
+  const pass = passEl ? passEl.value.trim() : '';
 
   if (errBox) errBox.style.display = 'none';
 
-  if (!emailInput || !pass) {
+  if (!userInput || !pass) {
     if (errBox) {
-      errBox.textContent = 'Vui lòng nhập đầy đủ Email / Mã SV và Mật khẩu!';
+      errBox.textContent = '⚠️ Vui lòng nhập Mã Sinh Viên (ID) hoặc Gmail/Email và Mật khẩu!';
       errBox.style.display = 'block';
     }
     return;
@@ -58,18 +61,40 @@ export async function loginStudent() {
   try {
     let data = null;
     if (db()) {
-      const res = await db()
-        .from('students')
-        .select('*')
-        .or(`email.ilike.${emailInput},id.eq.${emailInput}`)
-        .eq('password', pass)
-        .maybeSingle();
-      data = res.data;
+      // 1. Thử tìm kiếm theo Mã sinh viên (id) hoặc Email (không phân biệt hoa/thường)
+      try {
+        const { data: students, error } = await db()
+          .from('students')
+          .select('*')
+          .or(`email.ilike."${userInput}",id.ilike."${userInput}"`)
+          .eq('password', pass);
+
+        if (students && students.length > 0) {
+          data = students[0];
+        }
+      } catch (e) {
+        console.warn("Lỗi truy vấn OR trong Supabase, chuyển sang truy vấn fallback:", e);
+      }
+
+      // Fallback: Nếu OR không tìm thấy hoặc bị lỗi syntax, tìm tuần tự theo ID rồi theo Email
+      if (!data) {
+        // Thử theo Mã sinh viên (ID)
+        const resId = await db().from('students').select('*').ilike('id', userInput).eq('password', pass).maybeSingle();
+        if (resId.data) {
+          data = resId.data;
+        } else {
+          // Thử theo Email
+          const resEmail = await db().from('students').select('*').ilike('email', userInput).eq('password', pass).maybeSingle();
+          if (resEmail.data) {
+            data = resEmail.data;
+          }
+        }
+      }
     }
 
     if (!data) {
       if (errBox) {
-        errBox.textContent = '❌ Email / Mã SV hoặc mật khẩu không chính xác!';
+        errBox.textContent = '❌ Mã Sinh Viên (ID) / Email hoặc Mật khẩu không chính xác!';
         errBox.style.display = 'block';
       }
       return;
@@ -83,8 +108,8 @@ export async function loginStudent() {
       return;
     }
 
-    // Đăng nhập thành công -> lưu session
-    const stPayload = { sid: data.id, name: data.full_name || data.id, class_name: data.class_name || '' };
+    // Đăng nhập thành công -> lưu session & chuyển sang Dashboard
+    const stPayload = { sid: data.id, name: data.full_name || data.id, class_name: data.class_name || '', email: data.email || '' };
     localStorage.setItem('st_user', JSON.stringify(stPayload));
     sessionStorage.setItem(STUDENT_AUTH_KEY, JSON.stringify(data));
     renderStudentPortal(data);
@@ -95,11 +120,12 @@ export async function loginStudent() {
       errBox.style.display = 'block';
     }
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Đăng Nhập Phòng Thi →'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Đăng Nhập Phòng Thi & Học Tập →'; }
   }
 }
 
 export function renderStudentPortal(student) {
+  if ($('st-auth-welcome')) $('st-auth-welcome').textContent = `Xin chào, ${student.full_name || student.id} 👋`;
   if ($('st-auth-name')) $('st-auth-name').textContent = student.full_name || 'Học viên';
   if ($('st-auth-id')) $('st-auth-id').textContent = student.id || '';
   if ($('st-auth-class')) $('st-auth-class').textContent = student.class_name || '';
@@ -578,6 +604,12 @@ async function initStudentApp() {
       }
     }catch{ clearPersist(); }
   }
+
+  // Enter key trigger for student login
+  const loginInput = $('st-login-email') || $('s-email');
+  const loginPass = $('st-login-pass') || $('s-pass');
+  if (loginInput) loginInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginStudent(); });
+  if (loginPass) loginPass.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginStudent(); });
 
   if ($('s-cohort')) {
     $('s-cohort').addEventListener('change', () => {
