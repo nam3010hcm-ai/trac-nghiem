@@ -508,28 +508,46 @@ async function loadUnitsData() {
 
 function populateUnitTiles() {
   const container = document.getElementById('unit-tiles-container');
-  if (!container) return;
-
-  let html = `
-    <div class="unit-card-btn ${!currentUnit || currentUnit.id === 'all' ? 'active' : ''}" onclick="window.selectUnitTile('all')">
-      <div style="font-size:20px">📚</div>
-      <div class="unit-btn-title">Tất cả</div>
-      <div class="unit-btn-desc">Tổng hợp tất cả bài</div>
-    </div>
-  `;
-
-  allUnits.forEach((u, idx) => {
-    const isAct = currentUnit && currentUnit.id === u.id;
-    html += `
-      <div class="unit-card-btn ${isAct ? 'active' : ''}" onclick="window.selectUnitTile('${u.id}')">
-        <div style="font-size:20px">${u.icon || (idx + 1) + '️⃣'}</div>
-        <div class="unit-btn-title">${u.title.split(':')[0] || 'Unit ' + (idx + 1)}</div>
-        <div class="unit-btn-desc">${u.topic || u.level || ''}</div>
+  if (container) {
+    let html = `
+      <div class="unit-card-btn ${!currentUnit || currentUnit.id === 'all' ? 'active' : ''}" onclick="window.selectUnitTile('all')">
+        <div style="font-size:20px">📚</div>
+        <div class="unit-btn-title">Tất cả</div>
+        <div class="unit-btn-desc">Tổng hợp tất cả bài</div>
       </div>
     `;
-  });
 
-  container.innerHTML = html;
+    allUnits.forEach((u, idx) => {
+      const isAct = currentUnit && currentUnit.id === u.id;
+      html += `
+        <div class="unit-card-btn ${isAct ? 'active' : ''}" onclick="window.selectUnitTile('${u.id}')">
+          <div style="font-size:20px">${u.icon || (idx + 1) + '️⃣'}</div>
+          <div class="unit-btn-title">${u.title.split(':')[0] || 'Unit ' + (idx + 1)}</div>
+          <div class="unit-btn-desc">${u.topic || u.level || ''}</div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+
+  const sel = document.getElementById('learn-unit-select');
+  if (sel) {
+    sel.innerHTML = allUnits.map(u => `
+      <option value="${u.id}" ${currentUnit && u.id === currentUnit.id ? 'selected' : ''}>
+        ${u.title} (${u.level || 'A2'})
+      </option>
+    `).join('');
+
+    sel.onchange = (e) => {
+      const chosen = allUnits.find(u => u.id === e.target.value);
+      if (chosen) {
+        currentUnit = chosen;
+        populateUnitTiles();
+        loadCurrentUnitView();
+      }
+    };
+  }
 }
 
 export function selectUnitTile(unitId) {
@@ -560,7 +578,6 @@ export function selectDifficulty(diff, btnEl) {
 export function filterLearningContent() {
   const q = document.getElementById('learn-search-input')?.value.trim().toLowerCase() || '';
   if (!q) return;
-  // Tìm kiếm trong flashcards hoặc exercises
   const foundInUnit = allUnits.find(u => 
     (u.title || '').toLowerCase().includes(q) || 
     (u.topic || '').toLowerCase().includes(q)
@@ -579,6 +596,12 @@ window.filterLearningContent = filterLearningContent;
 
 function loadCurrentUnitView() {
   if (!currentUnit) return;
+  const iconEl = document.getElementById('current-unit-icon');
+  const descEl = document.getElementById('current-unit-desc');
+
+  if (iconEl) iconEl.textContent = currentUnit.icon || '📖';
+  if (descEl) descEl.textContent = currentUnit.description || `Chủ đề: ${currentUnit.topic || 'General'} • Trình độ: ${currentUnit.level || 'A2'}`;
+
   switchSkillTab(currentSkillTab);
 }
 

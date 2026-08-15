@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Hệ Thống Hỗ Trợ Học Tập Tiếng Anh Chuyên Ngành</title>
+<title>Học Tập & Luyện Kỹ Năng Tiếng Anh - Quiz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -32,234 +32,154 @@
 </head>
 
 <body class="learn-body">
-<!-- ============================================================== -->
-<!-- HEADER THANH ĐIỀU HƯỚNG CHÍNH (DEEP NAVY WITH GOLD ACCENT) -->
-<!-- ============================================================== -->
+<!-- HEADER ĐIỀU HƯỚNG CHUNG (DEEP NAVY BLUE WITH GOLD LINE) -->
 <div class="header">
   <div class="logo">
     <div class="logo-flag">🇻🇳</div>
     <div class="logo-text-wrap">
-      <div class="logo-title">Tiếng Anh Khoa Học Cơ Bản</div>
-      <div class="logo-subtitle">Military & Academic Interactive English</div>
+      <div class="logo-title">Quiz English Hub</div>
+      <div class="logo-subtitle">Khoa Khoa học Cơ bản</div>
     </div>
   </div>
-
   <div class="nav">
     <a class="nav-btn" href="index.html">🏠 Trang chủ</a>
-    <a class="nav-btn active" href="learn.html">📖 Luyện tập</a>
-    <a class="nav-btn" href="student.html">🎓 Cổng thi</a>
+    <a class="nav-btn active" href="learn.html">📖 Luyện Kỹ Năng</a>
+    <a class="nav-btn" href="student.html">🎓 Cổng Thi</a>
     <a class="nav-btn" href="teacher.html">👩‍🏫 Quản trị</a>
-  </div>
-
-  <div class="header-user-info" id="learn-header-user-box" style="display:none;">
-    <span id="learn-header-user-name">Học viên</span>
-    <span class="header-role-badge">Học viên</span>
-    <button class="header-logout-btn" onclick="window.logoutLearnStudent()">Đăng xuất</button>
   </div>
 </div>
 
-<div class="main">
-  <!-- ============================================================== -->
-  <!-- 1. MÀN HÌNH ĐĂNG NHẬP 2 CỘT (SPLIT-SCREEN LOGIN - ẢNH 2) -->
-  <!-- ============================================================== -->
-  <div id="learn-login-screen" style="display:none;">
-    <div class="split-auth-card">
-      <!-- CỘT TRÁI: BANNER XANH NAVY VÀ HUY HIỆU -->
-      <div class="split-auth-left-pane">
-        <div class="emblem-round">🎖️</div>
-        <div class="auth-hero-title">HỆ THỐNG HỖ TRỢ HỌC TẬP TIẾNG ANH CHUYÊN NGÀNH</div>
-        <div class="auth-hero-desc">
-          Nền tảng luyện phát âm, từ vựng và 5 kỹ năng tiếng Anh chuyên ngành tương tác dành cho cán bộ, sinh viên
-        </div>
+<!-- ============================================================== -->
+<!-- 1. MÀN HÌNH ĐĂNG NHẬP HỌC VIÊN (KHI CHƯA ĐĂNG NHẬP) -->
+<!-- ============================================================== -->
+<div id="learn-login-screen" style="display:none;padding:40px 16px;">
+  <div class="card" style="max-width:440px;margin:30px auto;padding:32px 28px;border-radius:14px;box-shadow:0 6px 24px rgba(20,42,83,0.08);border:1.5px solid #cbd5e1">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:46px;margin-bottom:8px">📖</div>
+      <div style="font-size:22px;font-weight:800;color:#0f172a">Luyện 5 Kỹ Năng Tiếng Anh</div>
+      <div style="font-size:13px;color:#64748b;margin-top:4px">Đăng nhập tài khoản Học viên để tích lũy XP & xếp hạng tuần</div>
+    </div>
 
-        <div class="auth-feature-list">
-          <div class="auth-feature-chip">
-            <span>🎙️</span>
-            <span>Phân tích phát âm AI theo thời gian thực</span>
+    <div class="fg">
+      <label>Gmail / Email Học Viên *</label>
+      <input type="email" id="learn-auth-email" placeholder="VD: student1@gmail.com" autocomplete="email">
+    </div>
+
+    <div class="fg">
+      <label>Mật Khẩu *</label>
+      <div style="position:relative">
+        <input type="password" id="learn-auth-pass" placeholder="Nhập mật khẩu..." autocomplete="current-password">
+        <button type="button" onclick="window.toggleLearnPassVisible()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px">👁️</button>
+      </div>
+    </div>
+
+    <div id="learn-login-err" style="display:none;padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:14px"></div>
+
+    <button class="btn btn-p btn-full" id="btn-learn-login" onclick="window.loginLearnStudent()" style="padding:12px;font-size:15px;font-weight:700">
+      Đăng Nhập Bắt Đầu Học →
+    </button>
+
+    <div style="text-align:center;margin-top:16px;font-size:12px;color:#94a3b8">
+      🛡️ Hệ thống tự động ghi nhận thời gian học & điểm số vào Bảng Vinh Danh Tuần
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- 2. PHÂN HỆ HỌC TẬP CHÍNH (KHI ĐÃ ĐĂNG NHẬP) -->
+<!-- ============================================================== -->
+<div id="learn-app-container" style="display:none;">
+  <!-- THANH GAMIFICATION & TIẾN ĐỘ HỌC TẬP -->
+  <div class="gamify-header">
+    <div class="gamify-wrap">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:32px">🧑‍🎓</div>
+        <div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:15px;font-weight:800;color:#0f172a" id="learn-user-name">Học viên</span>
+            <span class="cat-badge" style="background:#eff6ff;color:#1e40af;margin:0" id="learn-user-class">Lớp: ...</span>
           </div>
-          <div class="auth-feature-chip">
-            <span>📚</span>
-            <span>Từ vựng, cụm từ, bài đọc & hội thoại</span>
-          </div>
-          <div class="auth-feature-chip">
-            <span>🏆</span>
-            <span>Theo dõi tiến độ & bảng xếp hạng tuần</span>
+          <div style="font-size:11.5px;color:#64748b;margin-top:2px">
+            Thời gian học tuần này: <b id="learn-weekly-time" style="color:#1e40af">0 phút</b>
           </div>
         </div>
       </div>
 
-      <!-- CỘT PHẢI: FORM ĐĂNG NHẬP TRẮNG TINH KHÔI -->
-      <div class="split-auth-right-pane">
-        <div class="auth-form-title">Đăng nhập</div>
-        <div class="auth-form-sub">Nhập thông tin tài khoản để tiếp tục</div>
-
-        <div class="fg">
-          <label>Tên đăng nhập / Email</label>
-          <input type="email" class="auth-input-box" id="learn-auth-email" placeholder="student1@gmail.com" autocomplete="email">
+      <div class="user-stats-bar">
+        <!-- LEVEL & XP -->
+        <div class="stat-pill level-pill">
+          <span>🏆</span>
+          <span id="user-level-val">Cấp 1</span>
         </div>
 
-        <div class="fg">
-          <label>Mật khẩu</label>
-          <input type="password" class="auth-input-box" id="learn-auth-pass" placeholder="••••••••••••" autocomplete="current-password">
+        <div class="xp-progress-box">
+          <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#a16207">
+            <span>Kinh nghiệm</span>
+            <span><span id="user-xp-val">0</span> XP</span>
+          </div>
+          <div class="xp-progress-bar">
+            <div class="xp-fill" id="user-xp-fill"></div>
+          </div>
         </div>
 
-        <label class="auth-checkbox-row">
-          <input type="checkbox" id="chk-show-pass" onchange="window.toggleLearnPassVisible()">
-          <span>Hiển thị mật khẩu</span>
-        </label>
+        <!-- STREAK -->
+        <div class="stat-pill streak-pill">
+          <span>🔥</span>
+          <span id="user-streak-val">1 ngày</span>
+        </div>
 
-        <div id="learn-login-err" style="display:none;padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:14px"></div>
-
-        <button class="auth-submit-btn" id="btn-learn-login" onclick="window.loginLearnStudent()">
-          Đăng nhập
+        <!-- ĐĂNG XUẤT -->
+        <button class="btn btn-sm" onclick="window.logoutLearnStudent()" style="background:#fff;border:1px solid #cbd5e1;color:#64748b;padding:6px 12px" title="Đăng xuất tài khoản">
+          🔒 Đăng xuất
         </button>
-
-        <div class="auth-footer-notice">
-          Quân đội Nhân dân Việt Nam • Khoa Khoa học Cơ bản<br>
-          Hệ thống dùng nội bộ • Chỉ dành cho cán bộ, học viên được cấp tài khoản
-        </div>
       </div>
     </div>
   </div>
 
-  <!-- ============================================================== -->
-  <!-- 2. PHÂN HỆ HỌC TẬP & LUYỆN TẬP CHÍNH (ẢNH 1 & ẢNH 3) -->
-  <!-- ============================================================== -->
-  <div id="learn-app-container" style="display:none;">
-    
-    <!-- BANNER LỜI CHÀO HỌC VIÊN (ẢNH 3) -->
-    <div class="welcome-blue-box">
-      <div class="welcome-star-badge">★</div>
-      <div>
-        <div class="welcome-headline" id="learn-welcome-text">Chào, Học viên!</div>
-        <div class="welcome-subtext">Chọn nội dung luyện tập và bắt đầu huấn luyện phát âm, từ vựng và 5 kỹ năng Tiếng Anh chuyên ngành</div>
-      </div>
-    </div>
-
-    <!-- KHỐI THÔNG TIN CÁ NHÂN & CHỈ SỐ (ẢNH 3) -->
-    <div class="profile-panel-card">
-      <div class="profile-panel-title">THÔNG TIN CÁ NHÂN</div>
-      <div class="profile-user-row">
-        <div class="profile-avatar-circle" id="user-avatar-display">🇻🇳</div>
+  <!-- NỘI DUNG CHÍNH -->
+  <div class="learn-container">
+    <!-- THANH CHỌN UNIT BÀI HỌC -->
+    <div class="card" style="margin: 20px 0 14px; padding: 14px 20px; background: #ffffff; border-radius: 12px; border: 1.5px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:28px;" id="current-unit-icon">📖</span>
         <div>
-          <div class="profile-name-text" id="learn-user-name">Vũ Thành Công - b211</div>
-          <div class="profile-unit-text" id="learn-user-class">Tên - Đơn vị: Lớp K7</div>
+          <div style="font-size:11px; font-weight:800; color:#1e40af; text-transform:uppercase; letter-spacing:0.5px;">CHỌN UNIT BÀI HỌC</div>
+          <select id="learn-unit-select" style="font-weight:700; font-size:15.5px; color:#0f172a; border:none; background:transparent; cursor:pointer; outline:none; padding:2px 0;">
+            <option value="">Đang tải các Unit...</option>
+          </select>
         </div>
       </div>
-
-      <div class="profile-avatar-actions">
-        <input type="text" id="avatar-url-input" placeholder="Dán URL ảnh đại diện (https://...)">
-        <button class="btn btn-sm btn-p" onclick="window.updateAvatarFromURL()">🔗 Dùng URL</button>
-        <button class="btn btn-sm" onclick="window.clearAvatar()">🗑 Xóa ảnh</button>
-      </div>
+      <div id="current-unit-desc" style="font-size:13px; color:#64748b; max-width:480px;"></div>
     </div>
-
-    <!-- HÀNG 5 THẺ CHỈ SỐ THỐNG KÊ (ẢNH 3) -->
-    <div class="stats-5-grid">
-      <div class="stat-5-box">
-        <div class="stat-5-value" id="stat-sessions">2</div>
-        <div class="stat-5-label">Buổi luyện</div>
-      </div>
-      <div class="stat-5-box">
-        <div class="stat-5-value" id="stat-score-words" style="color:#10b981">100%</div>
-        <div class="stat-5-label">Điểm từ TB</div>
-      </div>
-      <div class="stat-5-box">
-        <div class="stat-5-value" id="stat-score-phrases" style="color:#10b981">100%</div>
-        <div class="stat-5-label">Điểm cụm từ</div>
-      </div>
-      <div class="stat-5-box">
-        <div class="stat-5-value" id="stat-score-sentences" style="color:#0284c7">95%</div>
-        <div class="stat-5-label">Điểm câu TB</div>
-      </div>
-      <div class="stat-5-box">
-        <div class="stat-5-value" id="stat-score-dialogue" style="color:#7c3aed">90%</div>
-        <div class="stat-5-label">Hội thoại</div>
-      </div>
-    </div>
-
-    <!-- ============================================================== -->
-    <!-- CẤU HÌNH LUYỆN TẬP (ẢNH 1) -->
-    <!-- ============================================================== -->
-    <div class="section-header-bar">⚙️ CẤU HÌNH LUYỆN TẬP</div>
-
-    <!-- 1. CHỌN BÀI HỌC (UNIT) -->
-    <div class="config-main-card">
-      <div class="config-sec-title">CHỌN BÀI HỌC (UNIT)</div>
-      <div class="unit-scroll-row" id="unit-tiles-container">
-        <div class="unit-card-btn active" onclick="window.selectUnitTile('all')">
-          <div style="font-size:20px">📚</div>
-          <div class="unit-btn-title">Tất cả</div>
-          <div class="unit-btn-desc">Tổng hợp tất cả bài</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. LOẠI NỘI DUNG -->
-    <div class="config-main-card">
-      <div class="config-sec-title">LOẠI NỘI DUNG</div>
-      <div class="content-type-row">
-        <button class="type-btn" onclick="window.selectContentType('mixed', this)">Hỗn hợp</button>
-        <button class="type-btn active" onclick="window.selectContentType('word', this)">Từ đơn</button>
-        <button class="type-btn" onclick="window.selectContentType('phrase', this)">Cụm từ</button>
-        <button class="type-btn" onclick="window.selectContentType('sentence', this)">Câu</button>
-        <button class="type-btn dialogue-btn" onclick="window.selectContentType('dialogue', this)">💬 Hội thoại</button>
-      </div>
-    </div>
-
-    <!-- 3. HẠNG ĐỘ KHÓ -->
-    <div class="config-main-card">
-      <div class="config-sec-title">HẠNG ĐỘ KHÓ — <span style="color:#f59e0b;font-weight:600;text-transform:none">Đạt 70% ★ để mở ★★</span></div>
-      <div class="difficulty-row">
-        <div class="diff-btn active" onclick="window.selectDifficulty('all', this)">
-          <div class="diff-stars">★</div>
-          <div class="diff-label">Tất cả</div>
-        </div>
-        <div class="diff-btn" onclick="window.selectDifficulty('a1_a2', this)">
-          <div class="diff-stars" style="color:#0284c7">★</div>
-          <div class="diff-label">A1–A2</div>
-          <div class="diff-sub">Cơ bản</div>
-        </div>
-        <div class="diff-btn locked">
-          <div class="diff-stars" style="color:#94a3b8">★★</div>
-          <div class="diff-label">B1–B2</div>
-          <div class="diff-sub">Nâng cao 🔒</div>
-        </div>
-        <div class="diff-btn locked">
-          <div class="diff-stars" style="color:#94a3b8">★★★</div>
-          <div class="diff-label">C1–C2</div>
-          <div class="diff-sub">Chuyên sâu 🔒</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4. TÌM KIẾM TỪ / CỤM TỪ -->
-    <div class="config-main-card">
-      <div class="config-sec-title">🔍 TÌM KIẾM TỪ / CỤM TỪ</div>
-      <div class="search-filter-box">
-        <input type="text" id="learn-search-input" placeholder="Nhập từ hoặc cụm từ để tìm..." oninput="window.filterLearningContent()">
-        <button type="button" class="btn btn-sm" onclick="const inp=document.getElementById('learn-search-input'); if(inp){inp.value=''; window.filterLearningContent();}">✕</button>
-      </div>
-    </div>
-
-    <!-- ============================================================== -->
-    <!-- KHU VỰC LUYỆN TẬP 5 KỸ NĂNG TƯƠNG TÁC -->
-    <!-- ============================================================== -->
-    <div class="section-header-bar">🎯 KHÔNG GIAN THỰC HÀNH 5 KỸ NĂNG</div>
 
     <!-- THANH CHỌN 5 KỸ NĂNG -->
-    <div class="options-segmented-grid" style="margin-bottom:16px;">
-      <button class="option-seg-btn active" data-skill="listening" onclick="window.switchSkillTab('listening')">🎧 1. Listening</button>
-      <button class="option-seg-btn" data-skill="reading" onclick="window.switchSkillTab('reading')">📖 2. Reading</button>
-      <button class="option-seg-btn" data-skill="speaking" onclick="window.switchSkillTab('speaking')">🗣️ 3. Speaking (AI)</button>
-      <button class="option-seg-btn" data-skill="writing" onclick="window.switchSkillTab('writing')">✍️ 4. Writing</button>
-      <button class="option-seg-btn" data-skill="languageFocus" onclick="window.switchSkillTab('languageFocus')">🔍 5. Flashcards</button>
+    <div class="skill-nav-row">
+      <button class="skill-tab-btn active" data-skill="listening" onclick="window.switchSkillTab('listening')">
+        <span class="tab-icon">🎧</span>
+        <span>1. LISTENING</span>
+      </button>
+      <button class="skill-tab-btn" data-skill="reading" onclick="window.switchSkillTab('reading')">
+        <span class="tab-icon">📖</span>
+        <span>2. READING</span>
+      </button>
+      <button class="skill-tab-btn" data-skill="speaking" onclick="window.switchSkillTab('speaking')">
+        <span class="tab-icon">🗣️</span>
+        <span>3. SPEAKING</span>
+      </button>
+      <button class="skill-tab-btn" data-skill="writing" onclick="window.switchSkillTab('writing')">
+        <span class="tab-icon">✍️</span>
+        <span>4. WRITING</span>
+      </button>
+      <button class="skill-tab-btn" data-skill="languageFocus" onclick="window.switchSkillTab('languageFocus')">
+        <span class="tab-icon">🔍</span>
+        <span>5. LANGUAGE FOCUS</span>
+      </button>
     </div>
 
     <!-- 1. PHÂN HỆ LISTENING -->
     <div class="skill-content-panel active" id="skill-panel-listening">
-      <div class="exercise-area-card">
-        <div style="font-weight:800;font-size:15px;color:#0f172a;margin-bottom:12px">🎧 Bài Luyện Nghe & Chép Chính Tả</div>
+      <div class="card">
+        <div style="margin-bottom:12px;font-weight:800;font-size:15px;color:#0f172a">🎧 Chọn Bài Luyện Nghe Trong Unit:</div>
         <div class="lesson-selector-grid" id="lis-lesson-list"></div>
         <div class="exercise-workspace" id="lis-workspace"></div>
       </div>
@@ -267,8 +187,8 @@
 
     <!-- 2. PHÂN HỆ READING -->
     <div class="skill-content-panel" id="skill-panel-reading">
-      <div class="exercise-area-card">
-        <div style="font-weight:800;font-size:15px;color:#0f172a;margin-bottom:12px">📖 Bài Đọc Hiểu & Trả Lời Câu Hỏi</div>
+      <div class="card">
+        <div style="margin-bottom:12px;font-weight:800;font-size:15px;color:#0f172a">📖 Chọn Bài Đọc Hiểu Trong Unit:</div>
         <div class="lesson-selector-grid" id="read-lesson-list"></div>
         <div class="exercise-workspace" id="read-workspace"></div>
       </div>
@@ -276,8 +196,8 @@
 
     <!-- 3. PHÂN HỆ SPEAKING -->
     <div class="skill-content-panel" id="skill-panel-speaking">
-      <div class="exercise-area-card">
-        <div style="font-weight:800;font-size:15px;color:#0f172a;margin-bottom:12px">🗣️ Luyện Phát Âm Với Trợ Lý AI Micro</div>
+      <div class="card">
+        <div style="margin-bottom:12px;font-weight:800;font-size:15px;color:#0f172a">🗣️ Chọn Bài Luyện Nói & Phát Âm Trong Unit:</div>
         <div class="lesson-selector-grid" id="spk-lesson-list"></div>
         <div class="exercise-workspace" id="spk-workspace"></div>
       </div>
@@ -285,7 +205,7 @@
 
     <!-- 4. PHÂN HỆ WRITING -->
     <div class="skill-content-panel" id="skill-panel-writing">
-      <div class="exercise-area-card">
+      <div class="card">
         <div style="display:flex;gap:10px;margin-bottom:16px">
           <button class="btn btn-p" onclick="window.selectWritingTab('scramble')">🧩 Xếp Từ Thành Câu</button>
           <button class="btn" onclick="window.selectWritingTab('error_fix')">🔍 Tìm & Sửa Lỗi Sai</button>
@@ -296,15 +216,18 @@
 
     <!-- 5. PHÂN HỆ LANGUAGE FOCUS -->
     <div class="skill-content-panel" id="skill-panel-languageFocus">
-      <div class="exercise-area-card">
-        <div style="font-weight:800;font-size:15px;color:#0f172a;margin-bottom:12px">🔍 Thẻ Từ Vựng Flashcard 3D & Ghép Cụm Từ</div>
+      <div class="card">
+        <div style="margin-bottom:12px;font-weight:800;font-size:15px;color:#0f172a">🔍 Thẻ Từ Vựng Flashcard 3D & Ghép Cụm Từ:</div>
         <div class="exercise-workspace" id="lang-workspace"></div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- CANVAS HIỆU ỨNG PHÁO HOA CONFETTI -->
 <canvas id="confetti-canvas"></canvas>
-<script type="module" src="js/learn.js?v=4.0"></script>
+
+<!-- SCRIPT CONTROLLER -->
+<script type="module" src="js/learn.js?v=4.5"></script>
 </body>
 </html>
