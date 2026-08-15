@@ -1,10 +1,11 @@
 import {
-  supabase,
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
   uploadMediaFile
 } from './supabase.js';
 
 import { initData, state, $, esc } from './common.js';
+
+const db = () => window.supabaseClient;
 import { populateCategoryDropdowns, updateFltSubcat, updateQFormSubcat, updateEFormSubcat, addParentCategory, deleteParentCategory, addSubCategory, deleteSubCategory, editSubCategory, restoreDefaultCategories, renderCatManagementList } from './categories.js';
 import { openQForm, closeQForm, saveQ, deleteQ, renderQuestions } from './questions.js';
 import { openEForm, closeEForm, saveExam, deleteExam, toggleExamVisibility, renderExams, populateExamSelect } from './exams.js';
@@ -350,7 +351,7 @@ function initTeacherApp() {
               const downloadURL = await uploadMediaFile(selectedGalFile, 'image-bank', (pct) => {
                   btnUploadGal.textContent = `Đang tải lên: ${pct}%...`;
               });
-              const { error } = await supabase.from('gallery').insert([{ name: name, url: downloadURL, created_at: Date.now() }]);
+              const { error } = await db().from('gallery').insert([{ name: name, url: downloadURL, created_at: Date.now() }]);
               if(error) throw error;
               alert("Đã lưu ảnh vào thư viện đám mây!");
               document.getElementById('gal-name').value = '';
@@ -400,7 +401,7 @@ function initTeacherApp() {
       const res = state.results.find(r => String(r.id) === String(currentGradeResultId));
       if (res) {
           res.manualScore = scoreVal;
-          const { error } = await supabase.from('results').update({ manual_score: scoreVal }).eq('id', currentGradeResultId);
+          const { error } = await db().from('results').update({ manual_score: scoreVal }).eq('id', currentGradeResultId);
           if(error) console.error("Lỗi lưu điểm tự luận:", error);
           renderResults();
       }
@@ -485,7 +486,7 @@ async function loadCohorts() {
     if (!tbody) return;
 
     try {
-        const { data: cohorts, error } = await supabase.from('cohorts').select('*').order('created_at', { ascending: false });
+        const { data: cohorts, error } = await db().from('cohorts').select('*').order('created_at', { ascending: false });
         if (error) throw error;
         
         tbody.innerHTML = "";
@@ -628,7 +629,7 @@ window.addCohort = async () => {
     
     try {
         if (editingCohortId) {
-            const { error } = await supabase.from('cohorts').update({
+            const { error } = await db().from('cohorts').update({
                 name: name,
                 code: code,
                 start_time: startTime,
@@ -639,7 +640,7 @@ window.addCohort = async () => {
             if (error) throw error;
             alert("✅ Đã cập nhật ca thi thành công!");
         } else {
-            const { error } = await supabase.from('cohorts').insert([{
+            const { error } = await db().from('cohorts').insert([{
                 name: name,
                 code: code,
                 start_time: startTime,
@@ -676,7 +677,7 @@ window.changeCohortCode = async (id, oldCode) => {
     const newCode = prompt(`Nhập mã truy cập mới (Mã hiện tại: ${oldCode}):`, oldCode);
     if (newCode && newCode.trim() !== oldCode) {
         try {
-            const { error } = await supabase.from('cohorts').update({ code: newCode.trim().toUpperCase() }).eq('id', id);
+            const { error } = await db().from('cohorts').update({ code: newCode.trim().toUpperCase() }).eq('id', id);
             if (error) throw error;
             loadCohorts();
             alert("Đã đổi mã bảo mật thành công!");
@@ -690,14 +691,14 @@ window.changeCohortCode = async (id, oldCode) => {
 // 4. Bật tắt ca thi và Xóa
 window.toggleCohort = async (id, currentStatus) => {
     const newStatus = currentStatus === "active" ? "closed" : "active";
-    const { error } = await supabase.from('cohorts').update({ status: newStatus }).eq('id', id);
+    const { error } = await db().from('cohorts').update({ status: newStatus }).eq('id', id);
     if(error) console.error("Lỗi toggleCohort:", error);
     loadCohorts();
 };
 
 window.deleteCohort = async (id) => {
     if (confirm("Xóa ca thi này? Điểm của học viên đã thi sẽ KHÔNG bị mất.")) {
-        const { error } = await supabase.from('cohorts').delete().eq('id', id);
+        const { error } = await db().from('cohorts').delete().eq('id', id);
         if(error) console.error("Lỗi deleteCohort:", error);
         loadCohorts();
     }
@@ -784,7 +785,7 @@ window.moveQ = async (index, direction) => {
     exam.qIds[index] = exam.qIds[newIndex];
     exam.qIds[newIndex] = temp;
     
-    await supabase.from('exams').update({ q_ids: exam.qIds }).eq('id', exam.id);
+    await db().from('exams').update({ q_ids: exam.qIds }).eq('id', exam.id);
     renderEqmLists();
 };
 
@@ -796,7 +797,7 @@ window.addQToExam = async (qId) => {
     if(!exam.qIds.includes(qId)) {
         exam.qIds.push(qId);
         exam.count = exam.qIds.length;
-        await supabase.from('exams').update({ q_ids: exam.qIds, count: exam.count }).eq('id', exam.id);
+        await db().from('exams').update({ q_ids: exam.qIds, count: exam.count }).eq('id', exam.id);
         renderEqmLists();
         renderExams();
     }
@@ -809,7 +810,7 @@ window.removeQFromExam = async (qId) => {
     
     exam.qIds = exam.qIds.filter(id => id !== qId);
     exam.count = exam.qIds.length;
-    await supabase.from('exams').update({ q_ids: exam.qIds, count: exam.count }).eq('id', exam.id);
+    await db().from('exams').update({ q_ids: exam.qIds, count: exam.count }).eq('id', exam.id);
     renderEqmLists();
     renderExams();
 };
@@ -823,7 +824,7 @@ window.loadGallery = async function() {
     const list = document.getElementById("gallery-list");
     if (!list) return;
     try {
-        const { data: items, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
+        const { data: items, error } = await db().from('gallery').select('*').order('created_at', { ascending: false });
         if(error) throw error;
         window.imageGallery = items || [];
         renderGallery();
@@ -871,7 +872,7 @@ function renderGallery() {
 
 window.deleteGalleryItem = async function(id) {
     if (!confirm("Xóa ảnh này khỏi thư viện?\nLưu ý: Các câu hỏi đang dùng ảnh này không bị ảnh hưởng, nhưng ảnh sẽ biến mất khỏi thư viện.")) return;
-    const { error } = await supabase.from('gallery').delete().eq('id', id);
+    const { error } = await db().from('gallery').delete().eq('id', id);
     if(error) console.error("Lỗi deleteGalleryItem:", error);
     if (window.loadGallery) window.loadGallery();
 };

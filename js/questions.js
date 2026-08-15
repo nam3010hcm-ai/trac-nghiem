@@ -1,5 +1,7 @@
-import { supabase, uploadMediaFile } from './supabase.js';
+import { uploadMediaFile } from './supabase.js';
 import { state, $, esc, KEYS, mediaHTML, audioHTML, renderRich, typesetMath, TYPE_LABELS, splitBlanks, countBlanks, fillSubcatSelect } from './common.js';
+
+const db = () => window.supabaseClient;
 
 function updateQFormSubcat() { fillSubcatSelect('qf-subcat', $('qf-cat')?.value || '', false); }
 
@@ -369,12 +371,12 @@ export async function saveQ(){
         delete q.opts; delete q.ans; delete q.blanks; delete q.bank; delete q.pairs;
         Object.assign(q, { cat, subcat, text, image, audio, explain, ...fields }); 
       }
-      const { error } = await supabase.from('questions').update({ cat, subcat, text, image, audio, explain, ...fields }).eq('id', editQId);
+      const { error } = await db().from('questions').update({ cat, subcat, text, image, audio, explain, ...fields }).eq('id', editQId);
       if(error) throw error;
       alert("✅ Đã cập nhật câu hỏi thành công!");
     }else{
       const payload = { cat, subcat, text, image, audio, explain, ...fields }; 
-      const { data, error } = await supabase.from('questions').insert([payload]).select();
+      const { data, error } = await db().from('questions').insert([payload]).select();
       if(error) throw error;
       const created = data?.[0] || { id: state.nextQId++, ...payload };
       state.questions.unshift({
@@ -400,7 +402,7 @@ export async function saveQ(){
 export async function deleteQ(id){
   if(!confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')) return;
   try {
-    const { error } = await supabase.from('questions').delete().eq('id', id);
+    const { error } = await db().from('questions').delete().eq('id', id);
     if(error) throw error;
     state.questions = state.questions.filter(q => Number(q.id) !== Number(id));
     alert('✅ Đã xóa câu hỏi!');
@@ -538,7 +540,7 @@ async function importQuestionsFromFile(e){
       newQs.push(q);
     }
     if (newQs.length > 0) {
-      const { error } = await supabase.from('questions').insert(newQs);
+      const { error } = await db().from('questions').insert(newQs);
       if(error) console.error("Lỗi insert questions:", error);
     }
     alert(`✅ Đã import ${newQs.length} câu hỏi.`);

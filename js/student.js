@@ -1,7 +1,8 @@
-import { supabase } from './supabase.js';
 import { initData, state, $, KEYS, shuffle, getPool, esc, mediaHTML, audioHTML, renderRich, typesetMath, isCorrect, formatAnswer, splitBlanks } from './common.js';
 import { populateExamSelect, updateExamDesc } from './exams.js';
 import { saveResult } from './results.js';
+
+const db = () => window.supabaseClient;
 
 let qState = {};
 const STORE_KEY = 'quiz_current_attempt_v2';
@@ -21,7 +22,7 @@ async function loadActiveCohorts() {
   const selectEl = $('s-cohort');
   if (!selectEl) return;
   try {
-      const { data: cohorts, error } = await supabase.from('cohorts').select('*').eq('status', 'active');
+      const { data: cohorts, error } = await db().from('cohorts').select('*').eq('status', 'active');
       if (error) throw error;
 
       selectEl.innerHTML = '<option value="" disabled selected>-- Vui lòng chọn ca thi --</option>';
@@ -66,7 +67,7 @@ async function startExam(){
       if (cohort.mode === 'exam') {
           $('btn-start').disabled = true; $('btn-start').textContent = 'Đang kiểm tra lịch sử...';
           try {
-              const { data: results, error } = await supabase.from('results').select('id').eq('cohort', cohortName).eq('sid', studentId);
+              const { data: results, error } = await db().from('results').select('id').eq('cohort', cohortName).eq('sid', studentId);
               if (results && results.length > 0) {
                   alert('❌ Bạn đã thi Ca này rồi. Thi Thật chỉ cho phép 1 lần duy nhất!');
                   $('btn-start').disabled = false; $('btn-start').textContent = 'Bắt đầu làm bài →';

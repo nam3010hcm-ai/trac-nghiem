@@ -1,5 +1,6 @@
-import { supabase } from './supabase.js';
 import { state, $, esc } from './common.js';
+
+const db = () => window.supabaseClient;
 
 export async function saveResult(result){
   state.results.unshift(result);
@@ -19,7 +20,7 @@ export async function saveResult(result){
       timestamp: result.timestamp,
       answers: result.answers || []
     };
-    const { data, error } = await supabase.from('results').insert([payload]).select();
+    const { data, error } = await db().from('results').insert([payload]).select();
     if(error) console.error("Lỗi lưu kết quả thi lên Supabase:", error);
     if(data && data[0]) result.id = data[0].id;
   }catch(e){ console.error("Lỗi khi lưu kết quả:", e); }
@@ -96,7 +97,7 @@ export function renderResults(){
 
 export async function clearResults(){
   if(!confirm('Xóa toàn bộ kết quả? Thao tác này không thể hoàn tác!')) return;
-  const { error } = await supabase.from('results').delete().neq('id', 0);
+  const { error } = await db().from('results').delete().neq('id', 0);
   if(error) console.error("Lỗi xóa kết quả:", error);
   state.results = [];
   renderResults();

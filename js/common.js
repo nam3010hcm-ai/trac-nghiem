@@ -1,4 +1,6 @@
-import { supabase, uploadMediaFile } from './supabase.js';
+import { uploadMediaFile } from './supabase.js';
+
+const db = () => window.supabaseClient;
 
 export const KEYS = ['A','B','C','D'];
 export { uploadMediaFile };
@@ -177,26 +179,26 @@ export function getPool(exam){
 export async function initData(loadResults = false){
   try{
     // 1. Tải Danh mục (Categories)
-    const { data: catRows, error: catErr } = await supabase.from('categories').select('*');
+    const { data: catRows, error: catErr } = await db().from('categories').select('*');
     if(catErr) console.warn("Lỗi tải categories:", catErr);
     
     if(!catRows || catRows.length === 0){
       state.SUBCATS = clone(DEFAULT_SUBCATS);
       // Chèn các danh mục mặc định vào Supabase
       const inserts = Object.keys(DEFAULT_SUBCATS).map(k => ({ name: k, subcategories: DEFAULT_SUBCATS[k] }));
-      await supabase.from('categories').upsert(inserts, { onConflict: 'name' });
+      await db().from('categories').upsert(inserts, { onConflict: 'name' });
     } else {
       state.SUBCATS = {};
       catRows.forEach(r => { state.SUBCATS[r.name] = r.subcategories || []; });
     }
 
     // 2. Tải Ngân hàng câu hỏi (Questions)
-    const { data: qRows, error: qErr } = await supabase.from('questions').select('*').order('id', { ascending: true });
+    const { data: qRows, error: qErr } = await db().from('questions').select('*').order('id', { ascending: true });
     if(qErr) console.warn("Lỗi tải questions:", qErr);
 
     if(!qRows || qRows.length === 0){
       state.questions = DEFAULT_QUESTIONS.slice();
-      await supabase.from('questions').insert(DEFAULT_QUESTIONS);
+      await db().from('questions').insert(DEFAULT_QUESTIONS);
     } else {
       state.questions = qRows.map(q => ({
         ...q,
@@ -210,7 +212,7 @@ export async function initData(loadResults = false){
     state.nextQId = state.questions.length ? Math.max(...state.questions.map(q => Number(q.id)||0), 99) + 1 : 100;
 
     // 3. Tải Đề thi (Exams)
-    const { data: eRows, error: eErr } = await supabase.from('exams').select('*').order('id', { ascending: true });
+    const { data: eRows, error: eErr } = await db().from('exams').select('*').order('id', { ascending: true });
     if(eErr) console.warn("Lỗi tải exams:", eErr);
 
     if(!eRows || eRows.length === 0){
@@ -226,7 +228,7 @@ export async function initData(loadResults = false){
         is_hidden: e.isHidden || false,
         q_ids: e.qIds || []
       }));
-      await supabase.from('exams').insert(examInserts);
+      await db().from('exams').insert(examInserts);
     } else {
       state.exams = eRows.map(e => ({
         id: Number(e.id),
@@ -244,7 +246,7 @@ export async function initData(loadResults = false){
 
     // 4. Tải Kết quả thi (Results) nếu có yêu cầu
     if(loadResults){
-      const { data: rRows, error: rErr } = await supabase.from('results').select('*').order('id', { ascending: false });
+      const { data: rRows, error: rErr } = await db().from('results').select('*').order('id', { ascending: false });
       if(rErr) console.warn("Lỗi tải results:", rErr);
       state.results = (rRows || []).map(r => ({
         ...r,

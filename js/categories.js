@@ -1,5 +1,6 @@
-import { supabase } from './supabase.js';
 import { state, $, esc, clone, DEFAULT_SUBCATS, fillSubcatSelect } from './common.js';
+
+const db = () => window.supabaseClient;
 
 async function syncCategoriesToSupabase(){
   try{
@@ -7,7 +8,7 @@ async function syncCategoriesToSupabase(){
       name,
       subcategories: state.SUBCATS[name] || []
     }));
-    await supabase.from('categories').upsert(inserts, { onConflict: 'name' });
+    await db().from('categories').upsert(inserts, { onConflict: 'name' });
   }catch(e){
     console.error("Lỗi đồng bộ danh mục Supabase:", e);
   }
@@ -41,7 +42,7 @@ export async function addParentCategory(){
   if(exists){ alert('Chủ đề cha này đã tồn tại!'); return; }
   state.SUBCATS[name] = [];
   try {
-    const { error } = await supabase.from('categories').upsert([{ name, subcategories: [] }], { onConflict: 'name' });
+    const { error } = await db().from('categories').upsert([{ name, subcategories: [] }], { onConflict: 'name' });
     if(error) throw error;
     $('new-parent-cat').value = '';
     refreshCategoryUI();
@@ -61,17 +62,17 @@ export async function deleteParentCategory(parent){
   state.SUBCATS = updatedSubcats;
 
   try {
-    await supabase.from('categories').delete().eq('name', parent);
+    await db().from('categories').delete().eq('name', parent);
     for(const q of (state.questions || [])){
       if(q.cat === parent || subs.includes(q.subcat)){ 
           q.cat=''; q.subcat=''; 
-          await supabase.from('questions').update({ cat: '', subcat: '' }).eq('id', q.id);
+          await db().from('questions').update({ cat: '', subcat: '' }).eq('id', q.id);
       }
     }
     for(const e of (state.exams || [])){
       if(e.cat === parent || subs.includes(e.subcat)){ 
           e.cat=''; e.subcat=''; 
-          await supabase.from('exams').update({ cat: '', subcat: '' }).eq('id', e.id);
+          await db().from('exams').update({ cat: '', subcat: '' }).eq('id', e.id);
       }
     }
     refreshCategoryUI();
@@ -94,7 +95,7 @@ export async function addSubCategory(){
   if(exists){ alert('Phần con này đã tồn tại!'); return; }
   state.SUBCATS[parent].push(subName);
   try {
-    const { error } = await supabase.from('categories').update({ subcategories: state.SUBCATS[parent] }).eq('name', parent);
+    const { error } = await db().from('categories').update({ subcategories: state.SUBCATS[parent] }).eq('name', parent);
     if(error) throw error;
     $('new-sub-cat').value = '';
     refreshCategoryUI();
@@ -113,17 +114,17 @@ export async function deleteSubCategory(parent, sub){
   state.SUBCATS = updatedSubcats;
 
   try {
-    await supabase.from('categories').update({ subcategories: state.SUBCATS[parent] }).eq('name', parent);
+    await db().from('categories').update({ subcategories: state.SUBCATS[parent] }).eq('name', parent);
     for(const q of (state.questions || [])){
       if(q.subcat === sub){ 
           q.subcat = ''; 
-          await supabase.from('questions').update({ subcat: '' }).eq('id', q.id);
+          await db().from('questions').update({ subcat: '' }).eq('id', q.id);
       }
     }
     for(const e of (state.exams || [])){
       if(e.subcat === sub){ 
           e.subcat = ''; 
-          await supabase.from('exams').update({ subcat: '' }).eq('id', e.id);
+          await db().from('exams').update({ subcat: '' }).eq('id', e.id);
       }
     }
     refreshCategoryUI();
@@ -150,13 +151,13 @@ export async function editSubCategory(parent, oldSub){
   if(idx === -1) return;
   state.SUBCATS[parent][idx] = newSub;
   try {
-    await supabase.from('categories').update({ subcategories: state.SUBCATS[parent] }).eq('name', parent);
+    await db().from('categories').update({ subcategories: state.SUBCATS[parent] }).eq('name', parent);
     let qCount = 0, eCount = 0;
     for(const q of state.questions){
-      if(q.subcat === oldSub){ q.subcat = newSub; await supabase.from('questions').update({ subcat: newSub }).eq('id', q.id); qCount++; }
+      if(q.subcat === oldSub){ q.subcat = newSub; await db().from('questions').update({ subcat: newSub }).eq('id', q.id); qCount++; }
     }
     for(const e of state.exams){
-      if(e.subcat === oldSub){ e.subcat = newSub; await supabase.from('exams').update({ subcat: newSub }).eq('id', e.id); eCount++; }
+      if(e.subcat === oldSub){ e.subcat = newSub; await db().from('exams').update({ subcat: newSub }).eq('id', e.id); eCount++; }
     }
     refreshCategoryUI();
     if(typeof window.renderQuestions === 'function') window.renderQuestions();

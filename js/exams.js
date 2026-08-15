@@ -1,5 +1,6 @@
-import { supabase } from './supabase.js';
 import { state, $, esc, getPool, fillSubcatSelect } from './common.js';
+
+const db = () => window.supabaseClient;
 
 export function updateEFormSubcat(){ fillSubcatSelect('ef-subcat', $('ef-cat')?.value || '', true, '(Không lọc theo phần)'); }
 export function populateExamSelect(){
@@ -86,7 +87,7 @@ export async function saveExam(){
       if(exam){
         Object.assign(exam, { name, desc, count, cat, subcat, timeLimit });
       }
-      const { error } = await supabase.from('exams').update({
+      const { error } = await db().from('exams').update({
         name, description: desc, count, cat, subcat, time_limit: timeLimit
       }).eq('id', editId);
       if(error) throw error;
@@ -102,7 +103,7 @@ export async function saveExam(){
         is_hidden: false,
         q_ids: []
       };
-      const { data, error } = await supabase.from('exams').insert([payload]).select();
+      const { data, error } = await db().from('exams').insert([payload]).select();
       if(error) throw error;
       const created = data?.[0] || { id: state.nextEId++, ...payload };
       state.exams.unshift({
@@ -138,7 +139,7 @@ export async function deleteExam(id) {
     
     try {
         // 1. Xóa đề thi trên cơ sở dữ liệu Supabase
-        const { error } = await supabase.from('exams').delete().eq('id', id);
+        const { error } = await db().from('exams').delete().eq('id', id);
         if(error) throw error;
         
         // 2. Xóa khỏi bộ nhớ tạm (state) của trình duyệt
@@ -163,7 +164,7 @@ export async function toggleExamVisibility(id){
   const e = state.exams.find(x => x.id === id);
   if(!e) return;
   e.isHidden = !e.isHidden;
-  const { error } = await supabase.from('exams').update({ is_hidden: e.isHidden }).eq('id', id);
+  const { error } = await db().from('exams').update({ is_hidden: e.isHidden }).eq('id', id);
   if(error) console.error("Lỗi cập nhật trạng thái đề thi:", error);
   renderExams();
   populateExamSelect();
