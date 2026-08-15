@@ -25,18 +25,55 @@ export async function getCurrentUser() {
   return user;
 }
 
-// --- HELPER: UPLOAD FILE LÊN SUPABASE STORAGE ---
+// --- HELPER: UPLOAD FILE LÊN SUPABASE STORAGE CÓ TỰ ĐỘNG DỰ PHÒNG BASE64 ---
 export async function uploadMediaFile(file, bucket = 'audio-bank', onProgress = null) {
   if (!file) throw new Error("Không tìm thấy file để tải lên!");
+  
   const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
   const filePath = `${Date.now()}_${cleanName}`;
+  
   if (typeof onProgress === 'function') onProgress(20);
-  const { data, error } = await window.supabaseClient.storage.from(bucket).upload(filePath, file, {
-    cacheControl: '3600', upsert: false
+
+  try {
+    const { data, error } = await window.supabaseClient.storage.from(bucket).upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: true
+    });
+
+    if (error) {
+      console.warn(`[Storage Upload Warning] Bucket '${bucket}' gặp lỗi RLS:`, error.message);
+      
+      // Tự động dự phòng sang Base64 Data URL nếu là file ảnh
+      if (file.type && file.type.startsWith('image/')) {
+        if (typeof onProgress === 'function') onProgress(60);
+        const base64Url = await fileToBase64(file);
+        if (typeof onProgress === 'function') onProgress(100);
+        return base64Url;
+      }
+      throw error;
+    }
+
+    if (typeof onProgress === 'function') onProgress(80);
+    const { data: urlData } = window.supabaseClient.storage.from(bucket).getPublicUrl(filePath);
+    if (typeof onProgress === 'function') onProgress(100);
+    return urlData.publicUrl;
+  } catch (err) {
+    // Nếu gặp lỗi RLS hoặc chưa tạo bucket mà là ảnh, chuyển sang Base64
+    if (file.type && file.type.startsWith('image/')) {
+      if (typeof onProgress === 'function') onProgress(60);
+      const base64Url = await fileToBase64(file);
+      if (typeof onProgress === 'function') onProgress(100);
+      return base64Url;
+    }
+    throw new Error(`Lỗi tải file lên máy chủ (${err.message}). Vui lòng kiểm tra quyền RLS Storage hoặc chạy lệnh SQL cho phép tải file.`);
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+    reader.readAsDataURL(file);
   });
-  if (error) { console.error("Lỗi upload:", error); throw error; }
-  if (typeof onProgress === 'function') onProgress(80);
-  const { data: urlData } = window.supabaseClient.storage.from(bucket).getPublicUrl(filePath);
-  if (typeof onProgress === 'function') onProgress(100);
-  return urlData.publicUrl;
 }
