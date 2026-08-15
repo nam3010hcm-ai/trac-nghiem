@@ -310,15 +310,17 @@ export function renderUnitsList() {
 }
 
 // 3. MỞ MODAL THIẾT KẾ UNIT & 5 KỸ NĂNG
-export function openUnitEditor(unitId = null) {
+export function openUnitEditor(unitId = null, defaultSubject = '', defaultModule = '') {
   editingUnitId = unitId;
   const modal = document.getElementById('unit-designer-modal');
   if (!modal) return;
 
+  updateDatalists();
+
   const unit = unitId ? unitsState.find(u => u.id === unitId) : {
     id: 'unit_' + Date.now(),
-    subject: 'Tiếng Anh (English)',
-    module: 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)',
+    subject: defaultSubject || '🇬🇧 Tiếng Anh',
+    module: defaultModule || 'English B1 - General & Academic Skills',
     title: 'Unit ' + (unitsState.length + 1) + ': New Topic',
     topic: 'General Topic',
     level: 'A2 - B1',
@@ -426,8 +428,8 @@ export function openUnitEditor(unitId = null) {
   };
 
   // Đổ thông tin cơ bản vào form
-  if ($('ud-subject')) $('ud-subject').value = unit.subject || 'Tiếng Anh (English)';
-  if ($('ud-module')) $('ud-module').value = unit.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)';
+  if ($('ud-subject')) $('ud-subject').value = unit.subject || defaultSubject || '🇬🇧 Tiếng Anh';
+  if ($('ud-module')) $('ud-module').value = unit.module || defaultModule || 'English B1 - General & Academic Skills';
   if ($('ud-title')) $('ud-title').value = unit.title || '';
   if ($('ud-topic')) $('ud-topic').value = unit.topic || '';
   if ($('ud-level')) $('ud-level').value = unit.level || 'A2 - B1';
@@ -729,8 +731,8 @@ export async function saveUnit() {
     return;
   }
 
-  unit.subject = $('ud-subject')?.value.trim() || 'Tiếng Anh (English)';
-  unit.module = $('ud-module')?.value.trim() || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)';
+  unit.subject = $('ud-subject')?.value.trim() || '🇬🇧 Tiếng Anh';
+  unit.module = $('ud-module')?.value.trim() || 'English B1 - General & Academic Skills';
   unit.title = title;
   unit.topic = $('ud-topic')?.value.trim() || 'General';
   unit.level = $('ud-level')?.value || 'A2 - B1';

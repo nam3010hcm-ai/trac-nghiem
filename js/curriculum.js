@@ -101,10 +101,13 @@ export function renderCurriculumTree() {
               Chưa có học phần nào được tạo cho môn ${esc(sub.name)}. Bấm "➕ Thêm Học Phần Mới" để bắt đầu.
             </div>
           ` : subModules.map(mod => {
-            const modUnits = (unitsState || []).filter(u => 
-              (u.module || '').toLowerCase() === (mod.title || '').toLowerCase() || 
-              (u.subject || '').toLowerCase() === (sub.name || '').toLowerCase()
-            );
+            const modUnits = (unitsState || []).filter(u => {
+              const matchMod = (u.module || '').toLowerCase().trim() === (mod.title || '').toLowerCase().trim();
+              const matchSub = (u.subject || '').toLowerCase().includes(sub.code.toLowerCase()) || 
+                               (u.subject || '').toLowerCase().includes(sub.name.replace(/^[^\w\s\u00C0-\u1EF9]+/u, '').trim().toLowerCase()) ||
+                               sub.name.toLowerCase().includes((u.subject || '').toLowerCase().trim());
+              return matchMod || (matchSub && !u.module);
+            });
 
             return `
               <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
@@ -114,7 +117,7 @@ export function renderCurriculumTree() {
                     <span style="font-size:11px;background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:4px;">Mã: ${esc(mod.code)} • ${modUnits.length} Units</span>
                   </div>
                   <div style="display:flex;gap:6px;">
-                    <button class="action-btn-sm" style="background:#2563eb;color:#ffffff;border:none;" onclick="window.switchTTab('unit'); if(window.openUnitEditor) window.openUnitEditor();">
+                    <button class="action-btn-sm" style="background:#2563eb;color:#ffffff;border:none;" onclick="window.switchTTab('unit'); if(window.openUnitEditor) window.openUnitEditor(null, '${esc(sub.name)}', '${esc(mod.title)}');">
                       ➕ Thêm Unit 5 Kỹ Năng
                     </button>
                     <button class="action-btn-sm" style="background:#dc2626;color:#ffffff;border:none;" onclick="window.deleteModule('${mod.id}')">
@@ -129,9 +132,9 @@ export function renderCurriculumTree() {
                   ${modUnits.length === 0 ? `
                     <div style="font-size:12px;color:#94a3b8;grid-column:1/-1;">Chưa có Unit bài học nào. Bấm "+ Thêm Unit 5 Kỹ Năng" để thiết kế bài học.</div>
                   ` : modUnits.map(u => `
-                    <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;padding:10px;">
-                      <div style="font-weight:700;font-size:13px;color:#0f172a;margin-bottom:4px;">
-                        Unit ${u.unit_number || 1}: ${esc(u.title)}
+                    <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;padding:10px;cursor:pointer;transition:all 0.2s;" onclick="window.switchTTab('unit'); if(window.openUnitEditor) window.openUnitEditor('${u.id}');" title="Bấm để chỉnh sửa Unit này">
+                      <div style="font-weight:700;font-size:13px;color:#0f172a;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+                        <span>${u.icon || '📖'}</span> ${esc(u.title)}
                       </div>
                       <div style="font-size:11.5px;color:#64748b;display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">
                         <span style="background:#f0f9ff;color:#0369a1;padding:1px 6px;border-radius:4px;">📖 Reading</span>

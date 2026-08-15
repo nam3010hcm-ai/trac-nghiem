@@ -6,8 +6,8 @@
 export const DEFAULT_UNITS = [
   {
     id: 'unit_1',
-    subject: 'Tiếng Anh (English)',
-    module: 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)',
+    subject: '🇬🇧 Tiếng Anh',
+    module: 'English B1 - General & Academic Skills',
     title: 'Unit 1: Everyday Life & Travel',
     topic: 'Daily Communication & Travel',
     level: 'A2 - B1',
@@ -251,8 +251,8 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
   },
   {
     id: 'unit_2',
-    subject: 'Tiếng Anh (English)',
-    module: 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)',
+    subject: '🇬🇧 Tiếng Anh',
+    module: 'English B1 - General & Academic Skills',
     title: 'Unit 2: Nature, Environment & Career',
     topic: 'Environment & Professional Career',
     level: 'B1 - B2',
@@ -744,6 +744,115 @@ Unfortunately, rising ocean temperatures due to climate change have triggered se
           options: ['3', '30', '2', 'Error'],
           answer: 0,
           explain: 'Danh sách có 3 phần tử nên hàm len() trả về 3.'
+        }
+      ]
+    }
+  // -------------------------------------------------------------
+  // UNIT HÓA HỌC
+  // -------------------------------------------------------------
+  {
+    id: 'unit_chem_1',
+    subject: '🧪 Hóa Học',
+    module: 'Học phần 1: Hóa Học Đại Cương & Vô Cơ',
+    title: 'Unit 1: Cấu Tạo Nguyên Tử & Bảng Tuần Hoàn Các Nguyên Tố',
+    topic: 'Hóa học Đại Cương',
+    level: 'Lớp 10 - 12',
+    icon: '🧪',
+    description: 'Nghiên cứu hạt nhân nguyên tử, lớp vỏ electron, quy luật biến đổi tuần hoàn tính kim loại, phi kim và bán kính nguyên tử.',
+    isHidden: false,
+    listening: [
+      {
+        id: 'lis_chem_1',
+        title: 'Bài Giảng: Cấu hình Electron và Bảng tuần hoàn',
+        topic: 'Nguyên tử',
+        level: 'Cơ bản',
+        audioText: 'Nguyên tử được cấu tạo từ hạt nhân mang điện tích dương và lớp vỏ electron mang điện tích âm. Số thứ tự ô nguyên tố trong bảng tuần hoàn bằng đúng số hiệu nguyên tử Z, số thứ tự chu kỳ bằng số lớp electron và số thứ tự nhóm A bằng số electron ở lớp ngoài cùng.',
+        duration: '40s',
+        exercises: [
+          {
+            type: 'mcq',
+            question: 'Số thứ tự chu kỳ trong bảng tuần hoàn hóa học cho biết điều gì?',
+            options: ['Số lớp electron của nguyên tử', 'Số electron hóa trị', 'Số proton trong hạt nhân', 'Khối lượng nguyên tử'],
+            answer: 0,
+            explain: 'Số thứ tự chu kỳ bằng số lớp electron của nguyên tử nguyên tố đó.'
+          }
+        ]
+      }
+    ],
+    reading: [
+      {
+        id: 'read_chem_1',
+        title: 'Quy Luật Biến Đổi Tính Chất Trong Chu Kỳ',
+        topic: 'Định luật tuần hoàn',
+        level: 'Cơ bản',
+        text: 'Trong cùng một chu kỳ, đi từ trái sang phải theo chiều tăng dần của điện tích hạt nhân: điện tích hạt nhân tăng, bán kính nguyên tử giảm dần, độ âm điện tăng dần, tính kim loại giảm dần và tính phi kim tăng dần.',
+        exercises: [
+          {
+            type: 'mcq',
+            question: 'Trong cùng một chu kỳ, đi từ trái sang phải, tính phi kim của các nguyên tố biến đổi như thế nào?',
+            options: ['Tăng dần', 'Giảm dần', 'Không thay đổi', 'Biến đổi không theo quy luật'],
+            answer: 0,
+            explain: 'Trong một chu kỳ, từ trái sang phải theo chiều tăng điện tích hạt nhân, tính kim loại giảm và tính phi kim tăng dần.'
+          }
+        ]
+      }
+    ],
+    speaking: [
+      {
+        id: 'spk_chem_1',
+        title: 'Đọc Tên Hợp Chất & Phương Trình Hóa Học',
+        topic: 'Thuật ngữ Hóa học',
+        level: 'Cơ bản',
+        phrases: [
+          {
+            text: '2H2 + O2 -> 2H2O (Hai phân tử khí hiđro phản ứng với một phân tử khí oxi tạo thành hai phân tử nước)',
+            ipa: '/Chemical Equation/',
+            meaning: 'Phản ứng tổng hợp nước tỏa nhiều nhiệt.',
+            tip: 'Nhớ cân bằng số nguyên tử của từng nguyên tố ở 2 vế của phương trình.'
+          }
+        ]
+      }
+    ],
+    writing: [
+      {
+        id: 'wrt_chem_1',
+        title: 'Sắp Xếp Cấu Hình Electron Của Nguyên Tử Natri (Z=11)',
+        topic: 'Cấu hình electron',
+        level: 'Cơ bản',
+        items: [
+          {
+            id: 'sc_ch1',
+            words: ['1s²', '2s² 2p⁶', '3s¹'],
+            correctSentence: '1s² 2s² 2p⁶ 3s¹',
+            hint: 'Lớp 1 có 2e, lớp 2 có 8e, lớp 3 có 1e.'
+          }
+        ]
+      }
+    ],
+    languageFocus: {
+      flashcards: [
+        {
+          id: 'fc_ch1',
+          word: 'Electronegativity (Độ âm điện)',
+          pos: 'Khái niệm',
+          ipa: '/ɪˌlek.trəʊ.neɡ.əˈtɪv.ə.ti/',
+          meaning: 'Đại lượng đặc trưng cho khả năng hút electron của nguyên tử khi tạo thành liên kết hóa học.',
+          example: 'Flo (F) là nguyên tố có độ âm điện lớn nhất trong bảng tuần hoàn (3.98).',
+          synonyms: 'Độ hút electron'
+        }
+      ],
+      matchPairs: [
+        { left: 'Proton (p)', right: 'Mang điện tích dương (+1)', pairId: 1 },
+        { left: 'Electron (e)', right: 'Mang điện tích âm (-1)', pairId: 2 },
+        { left: 'Neutron (n)', right: 'Không mang điện tích (0)', pairId: 3 }
+      ],
+      grammarChallenge: [
+        {
+          id: 'gm_ch1',
+          question: 'Nguyên tố Clo (Z=17) có số electron ở lớp ngoài cùng là:',
+          options: ['7 electron', '8 electron', '5 electron', '2 electron'],
+          answer: 0,
+          explain: 'Cấu hình Cl: 1s² 2s² 2p⁶ 3s² 3p⁵ => Lớp ngoài cùng (lớp 3) có 2 + 5 = 7 electron.'
         }
       ]
     }
