@@ -136,7 +136,8 @@ window.MathJax = {
   };
 
   window.switchTTab = function(tabName) {
-    ['q', 'e', 'r', 'c', 'cohort', 'img'].forEach(function(x) {
+    var tabs = ['dash', 'q', 'e', 'unit', 'students', 'r', 'c', 'cohort', 'img'];
+    tabs.forEach(function(x) {
       var content = document.getElementById('tc-' + x);
       if (content) {
         if (x === tabName) {
@@ -148,14 +149,14 @@ window.MathJax = {
         }
       }
 
-      var btn = document.querySelector('.tab-btn[data-tab="' + x + '"]');
-      if (btn) {
+      var items = document.querySelectorAll('[data-tab="' + x + '"]');
+      items.forEach(function(item) {
         if (x === tabName) {
-          btn.classList.add('active');
+          item.classList.add('active');
         } else {
-          btn.classList.remove('active');
+          item.classList.remove('active');
         }
-      }
+      });
     });
 
     if (typeof window._teacherModuleSwitchTab === 'function') {
@@ -174,29 +175,357 @@ window.MathJax = {
   });
   </script>
 
-  <div id="t-panel" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap">
+  <!-- CONTROL CENTER LAYOUT (LEFT SIDEBAR + TOP HEADER + DASHBOARD) -->
+  <div class="admin-layout-wrapper" id="t-panel" style="display:none">
+    <!-- LEFT SIDEBAR -->
+    <aside class="admin-sidebar" id="admin-sidebar">
       <div>
-        <div style="font-size:18px;font-weight:700">Quản lý hệ thống</div>
-        <div class="login-info">
-          Đang đăng nhập: <b id="current-user-email">...</b> <span id="user-role-badge" style="display:inline-block;margin-left:6px;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:700"></span>
+        <div class="admin-sidebar-header">
+          <div style="font-size:22px">🏫</div>
+          <div class="admin-sidebar-logo">
+            HỌC TẬP K7
+            <span>Trung Tâm Điều Hành Dạy - Học - Thi</span>
+          </div>
         </div>
+
+        <nav class="admin-sidebar-nav">
+          <!-- ĐIỀU HƯỚNG -->
+          <div class="sidebar-section-title">ĐIỀU HƯỚNG</div>
+          <a class="sidebar-item active" data-tab="dash" onclick="window.switchTTab('dash')">
+            <span>🏠</span> <span>Tổng quan</span>
+            <span class="item-badge">KPI</span>
+          </a>
+
+          <!-- NỘI DUNG DẠY & HỌC -->
+          <div class="sidebar-section-title">NỘI DUNG DẠY & HỌC</div>
+          <a class="sidebar-item" data-tab="q" onclick="window.switchTTab('q')">
+            <span>📚</span> <span>Ngân hàng câu hỏi</span>
+          </a>
+          <a class="sidebar-item" data-tab="e" onclick="window.switchTTab('e')">
+            <span>📝</span> <span>Đề thi</span>
+          </a>
+          <a class="sidebar-item" data-tab="unit" onclick="window.switchTTab('unit')">
+            <span>📖</span> <span>Bài học / Unit (5 Kỹ Năng)</span>
+          </a>
+          <a class="sidebar-item" data-tab="c" onclick="window.switchTTab('c')">
+            <span>🗂️</span> <span>Chủ đề & Phần</span>
+          </a>
+          <a class="sidebar-item" data-tab="img" onclick="window.switchTTab('img')">
+            <span>🖼️</span> <span>Thư viện tài nguyên</span>
+          </a>
+
+          <!-- NGƯỜI HỌC & THI CỬ -->
+          <div class="sidebar-section-title">NGƯỜI HỌC & THI CỬ</div>
+          <a class="sidebar-item" data-tab="students" id="tab-btn-students" onclick="window.switchTTab('students')">
+            <span>👥</span> <span>Danh sách Học viên</span>
+          </a>
+          <a class="sidebar-item" data-tab="cohort" onclick="window.switchTTab('cohort')">
+            <span>📅</span> <span>Ca thi / Kíp thi</span>
+          </a>
+          <a class="sidebar-item" data-tab="r" onclick="window.switchTTab('r')">
+            <span>🏆</span> <span>Kết quả & Báo cáo</span>
+          </a>
+        </nav>
       </div>
-      <button class="btn btn-sm" id="btn-logout" onclick="if(window.doLogout) window.doLogout();">🔒 Đăng xuất</button>
-    </div>
 
-    <div class="tab-row">
-      <button class="tab-btn active" data-tab="q" onclick="window.switchTTab('q')">📚 Câu hỏi</button>
-      <button class="tab-btn" data-tab="e" onclick="window.switchTTab('e')">📋 Đề thi</button>
-      <button class="tab-btn" data-tab="unit" onclick="window.switchTTab('unit')">📖 Thiết kế Unit</button>
-      <button class="tab-btn" data-tab="students" id="tab-btn-students" onclick="window.switchTTab('students')">👥 Học viên</button>
-      <button class="tab-btn" data-tab="r" onclick="window.switchTTab('r')">📊 Kết quả</button>
-      <button class="tab-btn" data-tab="c" onclick="window.switchTTab('c')">🗂️ Chủ đề</button>
-      <button class="tab-btn" data-tab="cohort" onclick="window.switchTTab('cohort')">📅 Ca thi</button>
-      <button class="tab-btn" data-tab="img" onclick="window.switchTTab('img')">🖼️ Thư viện ảnh</button>
-    </div>
+      <!-- SIDEBAR FOOTER WITH USER PROFILE -->
+      <div class="admin-sidebar-footer">
+        <div class="user-profile-card">
+          <div class="user-profile-avatar">👨‍🏫</div>
+          <div class="user-profile-info">
+            <div class="user-profile-name" id="current-user-email">nam3010hcm@gmail.com</div>
+            <div class="user-profile-role" id="user-role-badge">Root Admin</div>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-full" style="margin-top:12px;background:#1e293b;color:#f8fafc;border:1px solid #334155;justify-content:center" id="btn-logout" onclick="if(window.doLogout) window.doLogout();">
+          🔒 Đăng xuất
+        </button>
+      </div>
+    </aside>
 
-    <div id="tc-q" class="tab-content active">
+    <!-- MAIN WRAPPER -->
+    <div class="admin-main-wrapper">
+      <!-- TOP HEADER BAR -->
+      <header class="admin-top-bar">
+        <div style="display:flex;align-items:center;gap:14px">
+          <button class="btn btn-sm" onclick="document.getElementById('admin-sidebar').classList.toggle('open')" style="background:#f1f5f9;border:1px solid #cbd5e1;font-weight:700" title="Đóng / Mở Menu Sidebar">
+            ☰ Menu
+          </button>
+          <div class="admin-cmd-search" onclick="window.openCommandPalette();">
+            <span>🔍</span>
+            <span>Tìm kiếm nhanh (Ctrl + K)...</span>
+            <span class="cmd-shortcut-key">Ctrl + K</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px">
+          <a href="learn.html" class="btn btn-sm" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;font-weight:700">
+            ← Trang Luyện Kỹ Năng
+          </a>
+          <a href="index.html" class="btn btn-sm" style="background:#f8fafc;color:#475569;border:1px solid #cbd5e1;font-weight:700">
+            🏠 Trang chủ
+          </a>
+        </div>
+      </header>
+
+      <!-- CONTENT AREA -->
+      <main class="admin-content-area">
+        <!-- 0. TỔNG QUAN (DASHBOARD TRUNG TÂM ĐIỀU HÀNH) -->
+        <div id="tc-dash" class="tab-content active">
+          <!-- WELCOME BANNER -->
+          <div class="dash-welcome-banner">
+            <div>
+              <div style="font-size:22px;font-weight:800;margin-bottom:4px">Chào buổi tối, Thầy Nam 👋</div>
+              <div style="font-size:13.5px;opacity:0.9">Trung tâm điều hành dạy, học và thi trắc nghiệm • Hệ thống Học tập K7</div>
+            </div>
+            <div class="dash-status-pill">
+              <span class="pulse-dot"></span> Hệ thống đang hoạt động bình thường
+            </div>
+          </div>
+
+          <!-- 4 MAJOR KPI METRIC CARDS -->
+          <div class="kpi-grid">
+            <div class="kpi-card" style="border-left:4px solid #2563eb">
+              <div class="kpi-title">
+                <span>📚 Ngân Hàng Câu Hỏi</span>
+                <span style="font-size:18px">📚</span>
+              </div>
+              <div class="kpi-value" id="dash-kpi-q-count">1,248</div>
+              <div class="kpi-trend up">
+                <span>↑ 8.5% so với tháng trước</span>
+                <span style="margin-left:auto;color:#2563eb;font-weight:700">48 câu mới</span>
+              </div>
+            </div>
+
+            <div class="kpi-card" style="border-left:4px solid #f59e0b">
+              <div class="kpi-title">
+                <span>📝 Đề Thi Hoạt Động</span>
+                <span style="font-size:18px">📝</span>
+              </div>
+              <div class="kpi-value" id="dash-kpi-exam-count">86</div>
+              <div class="kpi-trend up">
+                <span style="color:#b45309">12 đề đang mở thi</span>
+                <span style="margin-left:auto;color:#d97706;font-weight:700">Bảo mật</span>
+              </div>
+            </div>
+
+            <div class="kpi-card" style="border-left:4px solid #10b981">
+              <div class="kpi-title">
+                <span>👥 Học Viên Hệ Thống</span>
+                <span style="font-size:18px">👥</span>
+              </div>
+              <div class="kpi-value" id="dash-kpi-student-count">324</div>
+              <div class="kpi-trend up">
+                <span>↑ 24 học viên mới</span>
+                <span style="margin-left:auto;color:#059669;font-weight:700">Đang học</span>
+              </div>
+            </div>
+
+            <div class="kpi-card" style="border-left:4px solid #8b5cf6">
+              <div class="kpi-title">
+                <span>🎯 Tỷ Lệ Đạt Trung Bình</span>
+                <span style="font-size:18px">🎯</span>
+              </div>
+              <div class="kpi-value">92.4%</div>
+              <div class="kpi-trend up">
+                <span>↑ 4.2% so với kỳ trước</span>
+                <span style="margin-left:auto;color:#7c3aed;font-weight:700">Xuất sắc</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- VISUAL CHARTS & ANALYTICS -->
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:24px" class="grid2">
+            <!-- CHART 1: LƯỢT HỌC TẬP TUẦN NÀY -->
+            <div class="card" style="margin:0;padding:20px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <div>
+                  <div style="font-size:16px;font-weight:800;color:#0f172a">📈 Hoạt Động Học Tập & Ôn Luyện Tuần Này</div>
+                  <div style="font-size:12px;color:#64748b">Số lượt hoàn thành bài tập 5 kỹ năng (Thứ 2 - Chủ nhật)</div>
+                </div>
+                <span class="cat-badge" style="background:#eff6ff;color:#1d4ed8">+18% Lượt ôn tập</span>
+              </div>
+              <div style="height:180px;display:flex;align-items:flex-end;gap:16px;padding:10px 10px 0;border-bottom:2px solid #e2e8f0;margin-bottom:10px">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+                  <div style="width:100%;height:110px;background:linear-gradient(to top, #3b82f6, #93c5fd);border-radius:6px 6px 0 0;position:relative" title="Thứ 2: 320 lượt">
+                    <span style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;color:#1e40af">320</span>
+                  </div>
+                  <span style="font-size:11.5px;font-weight:700;color:#64748b">T2</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+                  <div style="width:100%;height:140px;background:linear-gradient(to top, #3b82f6, #93c5fd);border-radius:6px 6px 0 0;position:relative" title="Thứ 3: 410 lượt">
+                    <span style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;color:#1e40af">410</span>
+                  </div>
+                  <span style="font-size:11.5px;font-weight:700;color:#64748b">T3</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+                  <div style="width:100%;height:125px;background:linear-gradient(to top, #3b82f6, #93c5fd);border-radius:6px 6px 0 0;position:relative" title="Thứ 4: 375 lượt">
+                    <span style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;color:#1e40af">375</span>
+                  </div>
+                  <span style="font-size:11.5px;font-weight:700;color:#64748b">T4</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+                  <div style="width:100%;height:160px;background:linear-gradient(to top, #2563eb, #60a5fa);border-radius:6px 6px 0 0;position:relative" title="Thứ 5: 490 lượt">
+                    <span style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;color:#1e40af">490</span>
+                  </div>
+                  <span style="font-size:11.5px;font-weight:700;color:#64748b">T5</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+                  <div style="width:100%;height:130px;background:linear-gradient(to top, #3b82f6, #93c5fd);border-radius:6px 6px 0 0;position:relative" title="Thứ 6: 390 lượt">
+                    <span style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;color:#1e40af">390</span>
+                  </div>
+                  <span style="font-size:11.5px;font-weight:700;color:#64748b">T6</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+                  <div style="width:100%;height:175px;background:linear-gradient(to top, #1d4ed8, #3b82f6);border-radius:6px 6px 0 0;position:relative" title="Thứ 7: 530 lượt">
+                    <span style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;color:#1e40af">530</span>
+                  </div>
+                  <span style="font-size:11.5px;font-weight:700;color:#1d4ed8">T7</span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">
+                  <div style="width:100%;height:150px;background:linear-gradient(to top, #3b82f6, #93c5fd);border-radius:6px 6px 0 0;position:relative" title="Chủ Nhật: 450 lượt">
+                    <span style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;color:#1e40af">450</span>
+                  </div>
+                  <span style="font-size:11.5px;font-weight:700;color:#64748b">CN</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- CHART 2: PHÂN BỐ KẾT QUẢ KỲ THI -->
+            <div class="card" style="margin:0;padding:20px">
+              <div style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:4px">🎯 Phân Bố Kết Quả Học Viên</div>
+              <div style="font-size:12px;color:#64748b;margin-bottom:14px">Đánh giá chung qua các kỳ thi</div>
+              
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:4px">
+                    <span style="color:#166534">🟢 Loại Giỏi (8.5 - 10)</span>
+                    <span style="color:#15803d">38% (123 SV)</span>
+                  </div>
+                  <div style="width:100%;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden">
+                    <div style="width:38%;height:100%;background:#22c55e"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:4px">
+                    <span style="color:#1d4ed8">🔵 Loại Khá (7.0 - 8.4)</span>
+                    <span style="color:#1e40af">41% (133 SV)</span>
+                  </div>
+                  <div style="width:100%;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden">
+                    <div style="width:41%;height:100%;background:#3b82f6"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:4px">
+                    <span style="color:#b45309">🟡 Trung Bình (5.0 - 6.9)</span>
+                    <span style="color:#d97706">15% (48 SV)</span>
+                  </div>
+                  <div style="width:100%;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden">
+                    <div style="width:15%;height:100%;background:#f59e0b"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;margin-bottom:4px">
+                    <span style="color:#b91c1c">🔴 Yếu / Chưa đạt (&lt; 5.0)</span>
+                    <span style="color:#dc2626">6% (20 SV)</span>
+                  </div>
+                  <div style="width:100%;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden">
+                    <div style="width:6%;height:100%;background:#ef4444"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ACTION SIGNALS & QUICK ACTIONS GRID -->
+          <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:18px" class="grid2">
+            <!-- ⚠️ CẦN CHÚ Ý (ACTION SIGNALS) -->
+            <div class="card" style="margin:0;padding:20px;border-top:4px solid #f59e0b">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+                <div style="font-size:16px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:6px">
+                  <span>⚠️</span> CẦN CHÚ Ý & PHÁT HIỆN LỖI
+                </div>
+                <span class="cat-badge" style="background:#fef3c7;color:#b45309">5 Vấn đề cần xử lý</span>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-size:16px">🔴</span>
+                    <div>
+                      <div style="font-size:13.5px;font-weight:700;color:#991b1b">Câu hỏi chưa chọn đáp án đúng</div>
+                      <div style="font-size:11.5px;color:#7f1d1d">Phát hiện 12 câu hỏi chưa được tích chọn đáp án đúng</div>
+                    </div>
+                  </div>
+                  <button class="btn btn-sm btn-warn" onclick="window.switchTTab('q')">Xử lý ngay</button>
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fffbeb;border-radius:8px;border:1px solid #fef3c7">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-size:16px">🟠</span>
+                    <div>
+                      <div style="font-size:13.5px;font-weight:700;color:#92400e">Đề thi chưa bổ sung đủ câu hỏi</div>
+                      <div style="font-size:11.5px;color:#78350f">Có 4 đề thi tạo dở dang chưa hoàn thiện số lượng câu</div>
+                    </div>
+                  </div>
+                  <button class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a" onclick="window.switchTTab('e')">Hoàn thiện</button>
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fffbeb;border-radius:8px;border:1px solid #fef3c7">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-size:16px">🟠</span>
+                    <div>
+                      <div style="font-size:13.5px;font-weight:700;color:#92400e">Học viên chưa làm bài thi</div>
+                      <div style="font-size:11.5px;color:#78350f">27 học viên đã quá hạn ca thi chưa nộp bài</div>
+                    </div>
+                  </div>
+                  <button class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a" onclick="window.switchTTab('students')">Xem danh sách</button>
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#ecfdf5;border-radius:8px;border:1px solid #a7f3d0">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-size:16px">🟢</span>
+                    <div>
+                      <div style="font-size:13.5px;font-weight:700;color:#065f46">Kỳ thi đang diễn ra an toàn</div>
+                      <div style="font-size:11.5px;color:#047857">2 ca thi trực tuyến đang trong thời gian mở</div>
+                    </div>
+                  </div>
+                  <button class="btn btn-sm" style="background:#dcfce7;color:#15803d;border:1px solid #86efac" onclick="window.switchTTab('cohort')">Theo dõi</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ⚡ THAO TÁC NHANH (QUICK ACTIONS GRID) -->
+            <div class="card" style="margin:0;padding:20px;border-top:4px solid #2563eb">
+              <div style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:6px">
+                <span>⚡</span> THAO TÁC NHANH
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr;gap:10px">
+                <button class="btn btn-p" style="justify-content:flex-start;padding:11px 16px;font-weight:700;gap:10px" onclick="window.switchTTab('e'); if(window.openEForm) window.openEForm();">
+                  <span style="font-size:18px">📝</span> + Tạo Đề Thi Mới
+                </button>
+                <button class="btn" style="justify-content:flex-start;padding:11px 16px;font-weight:700;gap:10px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe" onclick="window.switchTTab('q'); if(window.openQForm) window.openQForm();">
+                  <span style="font-size:18px">📚</span> + Thêm Câu Hỏi Mới
+                </button>
+                <button class="btn" style="justify-content:flex-start;padding:11px 16px;font-weight:700;gap:10px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0" onclick="window.switchTTab('unit');">
+                  <span style="font-size:18px">📖</span> + Thiết Kế Unit 5 Kỹ Năng
+                </button>
+                <button class="btn" style="justify-content:flex-start;padding:11px 16px;font-weight:700;gap:10px;background:#f8fafc;color:#334155;border:1px solid #cbd5e1" onclick="window.switchTTab('students'); if(window.openBulkStudentModal) window.openBulkStudentModal();">
+                  <span style="font-size:18px">👥</span> 📥 Nhập Danh Sách Học Viên
+                </button>
+                <button class="btn" style="justify-content:flex-start;padding:11px 16px;font-weight:700;gap:10px;background:#f8fafc;color:#334155;border:1px solid #cbd5e1" onclick="window.switchTTab('r'); if(window.exportCSV) window.exportCSV();">
+                  <span style="font-size:18px">📊</span> 📤 Xuất Báo Cáo Kết Quả Thi (CSV)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tc-q" class="tab-content">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
         <div class="sec-title" style="margin:0">Ngân hàng câu hỏi (<span id="q-count">0</span>)</div>
         <button class="btn btn-p" id="btn-open-qform" onclick="if(window.openQForm) window.openQForm();">+ Thêm câu hỏi</button>
@@ -886,8 +1215,119 @@ SV003, Lê Văn C, 12A2, 2025-2026, sv003@gmail.com, 123456"></textarea>
           <button class="btn" style="flex:1;" onclick="window.closeBulkStudentModal();">Hủy</button>
         </div>
     </div>
+    </div>
+  </div>
 </div>
 
-<script type="module" src="js/teacher.js?v=5.1"></script>
+<!-- COMMAND PALETTE MODAL (Ctrl + K / Cmd + K) -->
+<div id="cmd-palette-overlay" class="cmd-palette-overlay" onclick="if(event.target===this) window.closeCommandPalette();">
+  <div class="cmd-palette-modal">
+    <div class="cmd-input-wrap">
+      <span style="font-size:18px">🔍</span>
+      <input type="text" id="cmd-palette-input" placeholder="Nhập để tìm kiếm chức năng, đề thi, câu hỏi, học viên..." oninput="window.filterCommandPaletteResults();" onkeydown="window.handleCmdKeyNav(event);">
+      <button class="btn btn-sm" onclick="window.closeCommandPalette();">Esc</button>
+    </div>
+    
+    <div class="cmd-results-list" id="cmd-palette-results">
+      <div class="cmd-group-title">⚡ Thao Tác Nhanh</div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('e'); if(window.openEForm) window.openEForm();">
+        <span class="cmd-item-icon">📝</span>
+        <div>Tạo Đề Thi Mới</div>
+      </div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('q'); if(window.openQForm) window.openQForm();">
+        <span class="cmd-item-icon">📚</span>
+        <div>Thêm Câu Hỏi Mới</div>
+      </div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('unit');">
+        <span class="cmd-item-icon">📖</span>
+        <div>Thiết Kế Unit 5 Kỹ Năng</div>
+      </div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('students'); if(window.openBulkStudentModal) window.openBulkStudentModal();">
+        <span class="cmd-item-icon">📥</span>
+        <div>Nhập Danh Sách Học Viên Hàng Loạt</div>
+      </div>
+
+      <div class="cmd-group-title">📌 Chuyển Phân Hệ Quản Trị</div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('dash');">
+        <span class="cmd-item-icon">🏠</span>
+        <div>Trung Tâm Điều Hành (Dashboard)</div>
+      </div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('q');">
+        <span class="cmd-item-icon">📚</span>
+        <div>Ngân Hàng Câu Hỏi</div>
+      </div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('e');">
+        <span class="cmd-item-icon">📋</span>
+        <div>Danh Sách Đề Thi</div>
+      </div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('unit');">
+        <span class="cmd-item-icon">📖</span>
+        <div>Thiết Kế Unit / Bài Học</div>
+      </div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('students');">
+        <span class="cmd-item-icon">👥</span>
+        <div>Quản Lý Học Viên</div>
+      </div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('r');">
+        <span class="cmd-item-icon">📊</span>
+        <div>Kết Quả Thi & Báo Cáo</div>
+      </div>
+    </div>
+
+    <div class="cmd-footer">
+      <span><b>↑ ↓</b> Di chuyển</span>
+      <span><b>Enter</b> Chọn</span>
+      <span><b>Esc</b> Đóng</span>
+    </div>
+  </div>
+</div>
+
+<script>
+window.openCommandPalette = function() {
+  const overlay = document.getElementById('cmd-palette-overlay');
+  const input = document.getElementById('cmd-palette-input');
+  if (overlay) overlay.style.display = 'flex';
+  if (input) {
+    input.value = '';
+    input.focus();
+    window.filterCommandPaletteResults();
+  }
+};
+
+window.closeCommandPalette = function() {
+  const overlay = document.getElementById('cmd-palette-overlay');
+  if (overlay) overlay.style.display = 'none';
+};
+
+window.filterCommandPaletteResults = function() {
+  const input = document.getElementById('cmd-palette-input');
+  const q = (input?.value || '').toLowerCase().trim();
+  const items = document.querySelectorAll('#cmd-palette-results .cmd-item');
+  items.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    item.style.display = (!q || text.includes(q)) ? 'flex' : 'none';
+  });
+};
+
+window.handleCmdKeyNav = function(e) {
+  if (e.key === 'Escape') {
+    window.closeCommandPalette();
+  }
+};
+
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    const overlay = document.getElementById('cmd-palette-overlay');
+    if (overlay && overlay.style.display === 'flex') {
+      window.closeCommandPalette();
+    } else {
+      window.openCommandPalette();
+    }
+  }
+});
+</script>
+
+<script type="module" src="js/teacher.js?v=6.0"></script>
 </body>
 </html>

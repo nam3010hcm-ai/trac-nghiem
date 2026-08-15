@@ -59,14 +59,29 @@ async function showTeacherPanel(user) {
     renderCatManagementList();
     loadCohorts(); 
     loadUnits().then(() => renderUnitsList());
-    loadStudents().then(() => renderStudentsList());
+    loadStudents().then(() => {
+      renderStudentsList();
+      updateDashboardKPICounts();
+    });
     if (typeof window.populateCohortExams === 'function') {
       window.populateCohortExams(); 
     }
+    updateDashboardKPICounts();
   } catch(e) {
     console.error("Lỗi khi hiển thị giao diện quản trị:", e);
   }
 }
+
+export function updateDashboardKPICounts() {
+  const qEl = document.getElementById('dash-kpi-q-count');
+  const eEl = document.getElementById('dash-kpi-exam-count');
+  const sEl = document.getElementById('dash-kpi-student-count');
+
+  if (qEl && state?.questions) qEl.textContent = state.questions.length.toLocaleString('vi-VN');
+  if (eEl && state?.exams) eEl.textContent = state.exams.length.toLocaleString('vi-VN');
+  if (sEl && state?.students) sEl.textContent = state.students.length.toLocaleString('vi-VN');
+}
+window.updateDashboardKPICounts = updateDashboardKPICounts;
 
 window.initTeacherPanelDirect = showTeacherPanel;
 
