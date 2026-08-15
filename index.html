@@ -138,13 +138,13 @@ document.addEventListener('DOMContentLoaded', function() {
 </head>
 
 <body>
-<!-- K7 EDUHUB BRANDED APP HEADER -->
+<!-- EDUCORE BRANDED APP HEADER -->
 <div class="header">
   <a href="index.html" class="logo">
     <div class="logo-flag" style="font-size:26px;">⚡</div>
     <div class="logo-text-wrap">
-      <div class="logo-title" style="font-size:18px;font-weight:800;letter-spacing:-0.4px;">K7 EduHub</div>
-      <div class="logo-subtitle" style="font-size:11px;color:#93c5fd;">Intelligent Learning Platform</div>
+      <div class="logo-title" style="font-size:18px;font-weight:800;letter-spacing:-0.4px;">EduCore</div>
+      <div class="logo-subtitle" style="font-size:11px;color:#93c5fd;">Learn • Practice • Assess • Improve</div>
     </div>
   </a>
 
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="header-actions">
     <div class="global-search-bar">
       <span style="font-size:13px;color:#94a3b8;">🔍</span>
-      <input type="text" id="global-search-input" placeholder="Tìm khóa học, đề thi..." />
+      <input type="text" id="global-search-input" placeholder="Tìm môn học, đề thi, unit..." />
     </div>
 
     <button class="notif-bell-btn" title="Thông báo mới" onclick="window.openAuthModal();">
@@ -182,10 +182,10 @@ document.addEventListener('DOMContentLoaded', function() {
   <div class="lms-hero-banner">
     <div>
       <div class="hero-tag">
-        <span>⚡</span> LMS PLATFORM 3.0 • HỌC KỲ 2026
+        <span>⚡</span> EDUCORE LMS PLATFORM • HỌC KỲ 2026
       </div>
-      <h1 class="hero-title">Xin chào, Chào mừng bạn tới K7 EduHub! 🚀</h1>
-      <p class="hero-subtitle">Hệ thống quản lý học tập thông minh & tổ chức thi trắc nghiệm trực tuyến bảo mật.</p>
+      <h1 class="hero-title">Chào mừng đến với EduCore 👋</h1>
+      <p class="hero-subtitle">Một nền tảng – Nhiều môn học – Một hành trình học tập thông minh.</p>
     </div>
     <div class="hero-quick-actions">
       <a href="teacher.html" class="action-btn-primary" onclick="return window.checkTeacherAuth(event);">+ Tạo Đề Thi Mới</a>
@@ -193,55 +193,101 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </div>
 
-  <!-- KPI METRICS GRID -->
+  <!-- KPI METRICS GRID (4 TIÊU CHUẨN EDUCORE) -->
   <div class="kpi-grid">
     <div class="kpi-card">
       <div class="kpi-header">
-        <span class="kpi-title">Tổng Khóa Học</span>
-        <div class="kpi-icon-wrap" style="background:#e0f2fe;color:#0284c7;">📚</div>
+        <span class="kpi-title">Tổng Học Viên</span>
+        <div class="kpi-icon-wrap" style="background:#e0f2fe;color:#0284c7;">👥</div>
       </div>
-      <div class="kpi-val">120</div>
+      <div class="kpi-val">1,245</div>
       <div class="kpi-footer">
-        <span class="trend-badge-up">↑ +10%</span>
-        <span class="trend-text">so với tháng trước</span>
-      </div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-title">Học Viên Active</span>
-        <div class="kpi-icon-wrap" style="background:#dcfce7;color:#15803d;">👥</div>
-      </div>
-      <div class="kpi-val">850</div>
-      <div class="kpi-footer">
-        <span class="trend-badge-up">↑ +5%</span>
+        <span class="trend-badge-up">↑ +12%</span>
         <span class="trend-text">tăng trưởng học viên</span>
       </div>
     </div>
 
     <div class="kpi-card">
       <div class="kpi-header">
-        <span class="kpi-title">Bài Thi Chờ Chấm</span>
-        <div class="kpi-icon-wrap" style="background:#fef3c7;color:#b45309;">📝</div>
+        <span class="kpi-title">Môn Học Hệ Thống</span>
+        <div class="kpi-icon-wrap" style="background:#dcfce7;color:#15803d;">📚</div>
       </div>
-      <div class="kpi-val">45</div>
+      <div class="kpi-val">4 Môn</div>
       <div class="kpi-footer">
-        <span class="trend-badge-down">↓ -2%</span>
-        <span class="trend-text">giảm tồn đọng</span>
+        <span class="trend-badge-up">↑ +1 môn</span>
+        <span class="trend-text">Anh, Toán, Lý, Hóa</span>
       </div>
     </div>
 
     <div class="kpi-card">
       <div class="kpi-header">
-        <span class="kpi-title">Tỷ Lệ Hoàn Thành</span>
-        <div class="kpi-icon-wrap" style="background:#f5f3ff;color:#6d28d9;">🎯</div>
+        <span class="kpi-title">Tổng Đề Thi</span>
+        <div class="kpi-icon-wrap" style="background:#fef3c7;color:#b45309;">📝</div>
       </div>
-      <div class="kpi-val">88%</div>
+      <div class="kpi-val">186</div>
       <div class="kpi-footer">
-        <span class="trend-badge-up">↑ +3%</span>
-        <span class="trend-text">đạt mục tiêu môn học</span>
+        <span class="trend-badge-up">↑ +24 đề</span>
+        <span class="trend-text">bổ sung tháng này</span>
       </div>
     </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">Tỷ Lệ Đạt Mục Tiêu</span>
+        <div class="kpi-icon-wrap" style="background:#f5f3ff;color:#6d28d9;">📊</div>
+      </div>
+      <div class="kpi-val">87.6%</div>
+      <div class="kpi-footer">
+        <span class="trend-badge-up">↑ +3.2%</span>
+        <span class="trend-text">đạt chuẩn đầu ra</span>
+      </div>
+      <!-- BÁO CÁO KẾT QUẢ THEO MÔN HỌC (EDUCORE SUBJECT PERFORMANCE) -->
+      <div class="subject-perf-card">
+        <div style="font-size:15px;font-weight:800;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;">
+          <span>📊 Kết Quả Đánh Giá Theo Môn Học</span>
+          <span style="font-size:11.5px;color:#2563eb;background:#eff6ff;padding:3px 10px;border-radius:9999px;font-weight:700;">EduCore Analytics</span>
+        </div>
+
+        <div class="subject-perf-item">
+          <div class="subject-perf-header">
+            <span>🇬🇧 Tiếng Anh</span>
+            <span style="color:#0284c7;">91% Đạt</span>
+          </div>
+          <div class="subject-perf-track">
+            <div class="subject-perf-fill" style="width: 91%; background: #0284c7;"></div>
+          </div>
+        </div>
+
+        <div class="subject-perf-item">
+          <div class="subject-perf-header">
+            <span>➗ Toán Học</span>
+            <span style="color:#16a34a;">84% Đạt</span>
+          </div>
+          <div class="subject-perf-track">
+            <div class="subject-perf-fill" style="width: 84%; background: #16a34a;"></div>
+          </div>
+        </div>
+
+        <div class="subject-perf-item">
+          <div class="subject-perf-header">
+            <span>⚛️ Vật Lý</span>
+            <span style="color:#d97706;">79% Đạt</span>
+          </div>
+          <div class="subject-perf-track">
+            <div class="subject-perf-fill" style="width: 79%; background: #d97706;"></div>
+          </div>
+        </div>
+
+        <div class="subject-perf-item">
+          <div class="subject-perf-header">
+            <span>🧪 Hóa Học</span>
+            <span style="color:#9333ea;">86% Đạt</span>
+          </div>
+          <div class="subject-perf-track">
+            <div class="subject-perf-fill" style="width: 86%; background: #9333ea;"></div>
+          </div>
+        </div>
+      </div>
   </div>
 
   <!-- MAIN DASHBOARD GRID (2 COLUMNS) -->

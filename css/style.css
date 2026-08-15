@@ -1950,6 +1950,103 @@ textarea {
   margin-bottom: 6px;
 }
 
+/* EDUCORE MULTI-SUBJECT PERFORMANCE PROGRESS BARS */
+.subject-perf-card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.subject-perf-item {
+  margin-bottom: 14px;
+}
+
+.subject-perf-item:last-child {
+  margin-bottom: 0;
+}
+
+.subject-perf-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.subject-perf-track {
+  height: 10px;
+  background: #f1f5f9;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.subject-perf-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s ease;
+}
+
+/* EDUCORE STUDENT "MY LEARNING" PORTAL STYLES */
+.my-learning-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+  border-radius: 18px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+}
+
+.my-learning-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 860px) {
+  .my-learning-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.todo-item-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  margin-bottom: 10px;
+  transition: all 0.15s ease;
+}
+
+.todo-item-card:hover {
+  transform: translateX(4px);
+  border-color: #2563eb;
+}
+
+.todo-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.streak-badge-card {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border: 1px solid #fed7aa;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
 .auth-portal-desc {
   font-size: 12px;
   color: #64748b;

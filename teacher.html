@@ -223,8 +223,8 @@ window.globalLogout = async function() {
         <div class="admin-sidebar-header">
           <div style="font-size:24px">⚡</div>
           <div class="admin-sidebar-logo">
-            K7 EduHub LMS
-            <span>Hệ Sinh Thái Học Tập & Đánh Giá</span>
+            EduCore Admin
+            <span>Hệ Sinh Thái Học Tập & Đánh Giá Số</span>
           </div>
         </div>
 
@@ -232,14 +232,14 @@ window.globalLogout = async function() {
           <!-- 1. TỔNG QUAN -->
           <div class="sidebar-section-title">🏠 TỔNG QUAN</div>
           <a class="sidebar-item active" data-tab="dash" onclick="window.switchTTab('dash')">
-            <span>📊</span> <span>Bảng điều khiển LMS</span>
+            <span>📊</span> <span>Bảng điều khiển EduCore</span>
             <span class="item-badge">KPI</span>
           </a>
 
           <!-- 2. HỌC TẬP & NỘI DUNG -->
           <div class="sidebar-section-title">📚 HỌC TẬP & NỘI DUNG</div>
           <a class="sidebar-item" data-tab="curriculum" onclick="window.switchTTab('curriculum')">
-            <span>🏛️</span> <span>Phân cấp: Môn ➔ Học phần ➔ Unit</span>
+            <span>🏛️</span> <span>Môn học & Chương trình</span>
           </a>
           <a class="sidebar-item" data-tab="unit" onclick="window.switchTTab('unit')">
             <span>📖</span> <span>Bài học & Unit (5 Kỹ Năng)</span>
@@ -289,7 +289,7 @@ window.globalLogout = async function() {
           <div class="user-profile-avatar">⚡</div>
           <div class="user-profile-info">
             <div class="user-profile-name" id="current-user-email">nam3010hcm@gmail.com</div>
-            <div class="user-profile-role" id="user-role-badge">K7 EduHub Admin</div>
+            <div class="user-profile-role" id="user-role-badge">EduCore Admin</div>
           </div>
         </div>
         <button class="btn btn-sm btn-full" style="margin-top:12px;background:#1e293b;color:#f8fafc;border:1px solid #334155;justify-content:center" id="btn-logout" onclick="if(window.doLogout) window.doLogout();">
@@ -331,60 +331,60 @@ window.globalLogout = async function() {
           <div class="dash-welcome-banner">
             <div>
               <div style="font-size:22px;font-weight:800;margin-bottom:4px">Chào mừng trở lại, Ban Quản Trị 👋</div>
-              <div style="font-size:13.5px;opacity:0.9">Trung tâm điều hành K7 EduHub • Hệ sinh thái học tập & đánh giá số</div>
+              <div style="font-size:13.5px;opacity:0.9">Trung tâm điều hành EduCore • Hệ sinh thái học tập & đánh giá số</div>
             </div>
             <div class="dash-status-pill">
-              <span class="pulse-dot"></span> K7 EduHub Platform • Online
+              <span class="pulse-dot"></span> EduCore Platform • Online
             </div>
           </div>
 
-          <!-- 4 MAJOR KPI METRIC CARDS -->
+          <!-- 4 MAJOR KPI METRIC CARDS (EDUCORE STANDARDS) -->
           <div class="kpi-grid">
             <div class="kpi-card" style="border-left:4px solid #2563eb">
               <div class="kpi-title">
-                <span>📚 Ngân Hàng Câu Hỏi</span>
-                <span style="font-size:18px">📚</span>
+                <span>👥 Học Viên Hệ Thống</span>
+                <span style="font-size:18px">👥</span>
               </div>
-              <div class="kpi-value" id="dash-kpi-q-count">1,248</div>
+              <div class="kpi-value" id="dash-kpi-student-count">1,245</div>
               <div class="kpi-trend up">
-                <span>↑ 8.5% so với tháng trước</span>
-                <span style="margin-left:auto;color:#2563eb;font-weight:700">48 câu mới</span>
-              </div>
-            </div>
-
-            <div class="kpi-card" style="border-left:4px solid #f59e0b">
-              <div class="kpi-title">
-                <span>📝 Đề Thi Hoạt Động</span>
-                <span style="font-size:18px">📝</span>
-              </div>
-              <div class="kpi-value" id="dash-kpi-exam-count">86</div>
-              <div class="kpi-trend up">
-                <span style="color:#b45309">12 đề đang mở thi</span>
-                <span style="margin-left:auto;color:#d97706;font-weight:700">Bảo mật</span>
+                <span>↑ 12% so với tháng trước</span>
+                <span style="margin-left:auto;color:#2563eb;font-weight:700">Đang học</span>
               </div>
             </div>
 
             <div class="kpi-card" style="border-left:4px solid #10b981">
               <div class="kpi-title">
-                <span>👥 Học Viên Hệ Thống</span>
-                <span style="font-size:18px">👥</span>
+                <span>📚 Môn Học Hệ Thống</span>
+                <span style="font-size:18px">📚</span>
               </div>
-              <div class="kpi-value" id="dash-kpi-student-count">324</div>
+              <div class="kpi-value">4 Môn</div>
               <div class="kpi-trend up">
-                <span>↑ 24 học viên mới</span>
-                <span style="margin-left:auto;color:#059669;font-weight:700">Đang học</span>
+                <span style="color:#059669">Anh, Toán, Lý, Hóa</span>
+                <span style="margin-left:auto;color:#059669;font-weight:700">+1 Môn</span>
+              </div>
+            </div>
+
+            <div class="kpi-card" style="border-left:4px solid #f59e0b">
+              <div class="kpi-title">
+                <span>📝 Tổng Đề Thi & Bài Kiểm Tra</span>
+                <span style="font-size:18px">📝</span>
+              </div>
+              <div class="kpi-value" id="dash-kpi-exam-count">186</div>
+              <div class="kpi-trend up">
+                <span style="color:#b45309">24 đề mở tháng này</span>
+                <span style="margin-left:auto;color:#d97706;font-weight:700">Đầy đủ</span>
               </div>
             </div>
 
             <div class="kpi-card" style="border-left:4px solid #8b5cf6">
               <div class="kpi-title">
-                <span>🎯 Tỷ Lệ Đạt Trung Bình</span>
-                <span style="font-size:18px">🎯</span>
+                <span>📊 Tỷ Lệ Đạt Mục Tiêu</span>
+                <span style="font-size:18px">📊</span>
               </div>
-              <div class="kpi-value">92.4%</div>
+              <div class="kpi-value">87.6%</div>
               <div class="kpi-trend up">
-                <span>↑ 4.2% so với kỳ trước</span>
-                <span style="margin-left:auto;color:#7c3aed;font-weight:700">Xuất sắc</span>
+                <span>↑ 3.2% đạt chuẩn đầu ra</span>
+                <span style="margin-left:auto;color:#7c3aed;font-weight:700">Đạt KPI</span>
               </div>
             </div>
           </div>
