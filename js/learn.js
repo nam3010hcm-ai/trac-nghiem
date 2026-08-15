@@ -5,7 +5,7 @@
  * =========================================================================
  */
 
-import { LEARN_DATA, DEFAULT_UNITS } from './learn-data.js?v=5.1';
+import { LEARN_DATA, DEFAULT_UNITS } from './learn-data.js?v=5.3';
 
 const db = () => window.supabaseClient;
 
@@ -180,16 +180,16 @@ export function toggleLearnPassVisible() {
 }
 
 export async function loginLearnStudent() {
-  const email = document.getElementById('learn-auth-email')?.value.trim().toLowerCase();
+  const emailInput = document.getElementById('learn-auth-email')?.value.trim();
   const pass = document.getElementById('learn-auth-pass')?.value.trim();
   const errBox = document.getElementById('learn-login-err');
   const btn = document.getElementById('btn-learn-login');
 
   if (errBox) errBox.style.display = 'none';
 
-  if (!email || !pass) {
+  if (!emailInput || !pass) {
     if (errBox) {
-      errBox.textContent = 'Vui lòng nhập đầy đủ Gmail và Mật khẩu!';
+      errBox.textContent = 'Vui lòng nhập đầy đủ Email / Mã SV và Mật khẩu!';
       errBox.style.display = 'block';
     }
     return;
@@ -198,24 +198,30 @@ export async function loginLearnStudent() {
   if (btn) { btn.disabled = true; btn.textContent = 'Đang xác thực...'; }
 
   try {
-    const { data, error } = await db()
-      .from('students')
-      .select('*')
-      .eq('email', email)
-      .eq('password', pass)
-      .maybeSingle();
+    let studentData = null;
 
-    if (error) throw error;
+    if (db()) {
+      const { data, error } = await db()
+        .from('students')
+        .select('*')
+        .or(`email.ilike.${emailInput},id.eq.${emailInput}`)
+        .eq('password', pass)
+        .maybeSingle();
 
-    if (!data) {
+      if (!error && data) {
+        studentData = data;
+      }
+    }
+
+    if (!studentData) {
       if (errBox) {
-        errBox.textContent = '❌ Gmail hoặc mật khẩu không chính xác!';
+        errBox.textContent = '❌ Email / Mã SV hoặc mật khẩu không chính xác!';
         errBox.style.display = 'block';
       }
       return;
     }
 
-    if (data.is_active === false) {
+    if (studentData.is_active === false) {
       if (errBox) {
         errBox.textContent = '⛔ Tài khoản học viên của bạn đã bị khóa. Vui lòng liên hệ quản trị viên!';
         errBox.style.display = 'block';
@@ -224,7 +230,7 @@ export async function loginLearnStudent() {
     }
 
     // Đăng nhập thành công
-    sessionStorage.setItem(STUDENT_AUTH_KEY, JSON.stringify(data));
+    sessionStorage.setItem(STUDENT_AUTH_KEY, JSON.stringify(studentData));
     await initAuthenticatedLearn();
   } catch (err) {
     console.error("Lỗi đăng nhập learn:", err);
@@ -236,6 +242,19 @@ export async function loginLearnStudent() {
     if (btn) { btn.disabled = false; btn.textContent = 'Đăng Nhập Bắt Đầu Học →'; }
   }
 }
+
+export function loginGuestStudent() {
+  const guestStudent = {
+    id: 'guest_demo',
+    full_name: 'Học Viên Trải Nghiệm',
+    class_name: 'Khách Học Thử',
+    email: 'guest@trac-nghiem.edu.vn',
+    is_active: true
+  };
+  sessionStorage.setItem(STUDENT_AUTH_KEY, JSON.stringify(guestStudent));
+  return initAuthenticatedLearn();
+}
+window.loginGuestStudent = loginGuestStudent;
 
 export function logoutLearnStudent() {
   sessionStorage.removeItem(STUDENT_AUTH_KEY);
@@ -1659,6 +1678,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (student && student.id) {
     await initAuthenticatedLearn();
   } else {
-    logoutLearnStudent();
+    await loginGuestStudent();
   }
 });

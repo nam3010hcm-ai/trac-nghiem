@@ -38,16 +38,16 @@ export function toggleStudentPassVisible() {
 }
 
 export async function loginStudent() {
-  const email = $('st-login-email')?.value.trim().toLowerCase();
-  const pass = $('st-login-pass')?.value.trim();
-  const errBox = $('st-login-err');
-  const btn = $('btn-student-login');
+  const emailInput = document.getElementById('s-email')?.value.trim();
+  const pass = document.getElementById('s-pass')?.value.trim();
+  const errBox = document.getElementById('s-err');
+  const btn = document.getElementById('btn-s-login');
 
   if (errBox) errBox.style.display = 'none';
 
-  if (!email || !pass) {
+  if (!emailInput || !pass) {
     if (errBox) {
-      errBox.textContent = 'Vui lòng nhập đầy đủ Gmail và Mật khẩu!';
+      errBox.textContent = 'Vui lòng nhập đầy đủ Email / Mã SV và Mật khẩu!';
       errBox.style.display = 'block';
     }
     return;
@@ -56,18 +56,20 @@ export async function loginStudent() {
   if (btn) { btn.disabled = true; btn.textContent = 'Đang xác thực...'; }
 
   try {
-    const { data, error } = await db()
-      .from('students')
-      .select('*')
-      .eq('email', email)
-      .eq('password', pass)
-      .maybeSingle();
-
-    if (error) throw error;
+    let data = null;
+    if (db()) {
+      const res = await db()
+        .from('students')
+        .select('*')
+        .or(`email.ilike.${emailInput},id.eq.${emailInput}`)
+        .eq('password', pass)
+        .maybeSingle();
+      data = res.data;
+    }
 
     if (!data) {
       if (errBox) {
-        errBox.textContent = '❌ Gmail hoặc mật khẩu không chính xác!';
+        errBox.textContent = '❌ Email / Mã SV hoặc mật khẩu không chính xác!';
         errBox.style.display = 'block';
       }
       return;
