@@ -4,12 +4,12 @@ import {
 } from './supabase.js';
 
 import { initData, state, $, esc } from './common.js';
-
-const db = () => window.supabaseClient;
 import { populateCategoryDropdowns, updateFltSubcat, updateQFormSubcat, updateEFormSubcat, addParentCategory, deleteParentCategory, addSubCategory, deleteSubCategory, editSubCategory, restoreDefaultCategories, renderCatManagementList } from './categories.js';
 import { openQForm, closeQForm, saveQ, deleteQ, renderQuestions } from './questions.js';
 import { openEForm, closeEForm, saveExam, deleteExam, toggleExamVisibility, renderExams, populateExamSelect } from './exams.js';
 import { renderResults, clearResults, exportCSV } from './results.js';
+
+const db = () => window.supabaseClient;
 
 async function showTeacherPanel(user) {
   $('t-login').style.display = 'none';
