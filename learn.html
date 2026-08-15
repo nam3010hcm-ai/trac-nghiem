@@ -138,18 +138,46 @@
 
   <!-- NỘI DUNG CHÍNH -->
   <div class="learn-container">
-    <!-- THANH CHỌN UNIT BÀI HỌC -->
-    <div class="card" style="margin: 20px 0 14px; padding: 14px 20px; background: #ffffff; border-radius: 12px; border: 1.5px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <span style="font-size:28px;" id="current-unit-icon">📖</span>
-        <div>
-          <div style="font-size:11px; font-weight:800; color:#1e40af; text-transform:uppercase; letter-spacing:0.5px;">CHỌN UNIT BÀI HỌC</div>
-          <select id="learn-unit-select" style="font-weight:700; font-size:15.5px; color:#0f172a; border:none; background:transparent; cursor:pointer; outline:none; padding:2px 0;">
-            <option value="">Đang tải các Unit...</option>
+    <!-- THANH CHỌN PHÂN CẤP: MÔN HỌC -> HỌC PHẦN -> UNIT -->
+    <div class="card" style="margin: 20px 0 14px; padding: 16px 20px; background: #ffffff; border-radius: 12px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+      <!-- BREADCRUMB -->
+      <div id="learn-breadcrumbs" style="font-size:12px; color:#1e40af; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+        <span>📚 Môn học:</span> <span id="bc-subject" style="color:#0f172a">Tiếng Anh</span>
+        <span>❯</span>
+        <span>📦 Học phần:</span> <span id="bc-module" style="color:#0f172a">Basic English Module 1</span>
+        <span>❯</span>
+        <span>📖 Bài học:</span> <span id="bc-unit" style="color:#2563eb">Unit 1: Everyday Life & Travel</span>
+      </div>
+
+      <!-- 3-TIER SELECTORS -->
+      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+        <!-- 1. MÔN HỌC -->
+        <div style="flex:1; min-width:200px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:6px 12px;">
+          <label style="display:block; font-size:10.5px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.5px;">1. MÔN HỌC (SUBJECT)</label>
+          <select id="learn-subject-select" style="width:100%; font-weight:700; font-size:14px; color:#0f172a; border:none; background:transparent; cursor:pointer; outline:none;" onchange="window.onLearnSubjectChange()">
+            <option value="">Đang tải môn học...</option>
+          </select>
+        </div>
+
+        <!-- 2. HỌC PHẦN -->
+        <div style="flex:1.5; min-width:260px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:6px 12px;">
+          <label style="display:block; font-size:10.5px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.5px;">2. HỌC PHẦN (MODULE / COURSE)</label>
+          <select id="learn-module-select" style="width:100%; font-weight:700; font-size:14px; color:#0f172a; border:none; background:transparent; cursor:pointer; outline:none;" onchange="window.onLearnModuleChange()">
+            <option value="">Đang tải học phần...</option>
+          </select>
+        </div>
+
+        <!-- 3. UNIT BÀI HỌC -->
+        <div style="flex:1.5; min-width:260px; background:#eff6ff; border:1.5px solid #93c5fd; border-radius:8px; padding:6px 12px;">
+          <label style="display:block; font-size:10.5px; font-weight:800; color:#1d4ed8; text-transform:uppercase; letter-spacing:0.5px;">3. UNIT BÀI HỌC (5 KỸ NĂNG)</label>
+          <select id="learn-unit-select" style="width:100%; font-weight:800; font-size:14px; color:#1e40af; border:none; background:transparent; cursor:pointer; outline:none;" onchange="window.onLearnUnitChange()">
+            <option value="">Đang tải Unit...</option>
           </select>
         </div>
       </div>
-      <div id="current-unit-desc" style="font-size:13px; color:#64748b; max-width:480px;"></div>
+
+      <!-- UNIT DESCRIPTION -->
+      <div id="current-unit-desc" style="font-size:12.5px; color:#64748b; margin-top:10px; padding-top:8px; border-top:1px dashed #e2e8f0;"></div>
     </div>
 
     <!-- THANH CHỌN 5 KỸ NĂNG -->

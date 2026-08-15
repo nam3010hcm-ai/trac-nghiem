@@ -26,6 +26,8 @@ export async function loadUnits() {
       // Chèn các Unit mặc định lên Supabase
       const inserts = DEFAULT_UNITS.map((u, i) => ({
         id: u.id,
+        subject: u.subject || 'Tiếng Anh (English)',
+        module: u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)',
         title: u.title,
         topic: u.topic || '',
         level: u.level || 'A2 - B1',
@@ -43,6 +45,8 @@ export async function loadUnits() {
     } else {
       unitsState = data.map(u => ({
         id: u.id,
+        subject: u.subject || 'Tiếng Anh (English)',
+        module: u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)',
         title: u.title,
         topic: u.topic || '',
         level: u.level || 'A2 - B1',
@@ -60,7 +64,44 @@ export async function loadUnits() {
     console.error("Lỗi loadUnits:", err);
     unitsState = clone(DEFAULT_UNITS);
   }
+  populateUnitFilters();
 }
+
+// Cập nhật các lựa chọn cho Bộ lọc Môn học & Học phần trên bảng giáo viên
+export function populateUnitFilters() {
+  const subSel = document.getElementById('flt-unit-subject');
+  const modSel = document.getElementById('flt-unit-module');
+  if (!subSel || !modSel) return;
+
+  const currentSub = subSel.value;
+  const currentMod = modSel.value;
+
+  const subjects = [...new Set(unitsState.map(u => u.subject || 'Tiếng Anh (English)'))];
+  subSel.innerHTML = '<option value="">Tất cả Môn học</option>' + subjects.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  if (currentSub && subjects.includes(currentSub)) subSel.value = currentSub;
+
+  updateModuleFilterOptions();
+}
+
+export function updateModuleFilterOptions() {
+  const subSel = document.getElementById('flt-unit-subject');
+  const modSel = document.getElementById('flt-unit-module');
+  if (!modSel) return;
+
+  const selSubject = subSel?.value;
+  let filteredUnits = unitsState;
+  if (selSubject) {
+    filteredUnits = unitsState.filter(u => (u.subject || 'Tiếng Anh (English)') === selSubject);
+  }
+
+  const modules = [...new Set(filteredUnits.map(u => u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)'))];
+  modSel.innerHTML = '<option value="">Tất cả Học phần</option>' + modules.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+}
+
+window.onUnitFilterChange = function() {
+  updateModuleFilterOptions();
+  renderUnitsList();
+};
 
 // 2. RENDER DANH SÁCH UNIT TRÊN BẢNG ĐIỀU KHIỂN
 export function renderUnitsList() {
@@ -68,14 +109,30 @@ export function renderUnitsList() {
   const countEl = document.getElementById('unit-count-badge');
   if (!container) return;
 
-  if (countEl) countEl.textContent = unitsState.length;
+  const selSub = document.getElementById('flt-unit-subject')?.value;
+  const selMod = document.getElementById('flt-unit-module')?.value;
+  const searchTxt = (document.getElementById('flt-unit-search')?.value || '').toLowerCase().trim();
 
-  if (!unitsState.length) {
-    container.innerHTML = '<div class="empty">📭 Chưa có Unit bài học nào. Bấm "+ Tạo Unit Mới" để bắt đầu thiết kế!</div>';
+  let list = unitsState.filter(u => {
+    if (selSub && (u.subject || 'Tiếng Anh (English)') !== selSub) return false;
+    if (selMod && (u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)') !== selMod) return false;
+    if (searchTxt) {
+      const matchTitle = (u.title || '').toLowerCase().includes(searchTxt);
+      const matchTopic = (u.topic || '').toLowerCase().includes(searchTxt);
+      const matchDesc = (u.description || '').toLowerCase().includes(searchTxt);
+      if (!matchTitle && !matchTopic && !matchDesc) return false;
+    }
+    return true;
+  });
+
+  if (countEl) countEl.textContent = list.length;
+
+  if (!list.length) {
+    container.innerHTML = '<div class="empty">📭 Không tìm thấy Unit bài học nào phù hợp. Bấm "+ Tạo Unit Mới" để bắt đầu thiết kế!</div>';
     return;
   }
 
-  container.innerHTML = unitsState.map((u, idx) => {
+  container.innerHTML = list.map((u, idx) => {
     const isHidden = u.isHidden;
     const lisCount = (u.listening || []).length;
     const readCount = (u.reading || []).length;
@@ -86,9 +143,15 @@ export function renderUnitsList() {
     const authorBadge = u.created_by ? `<span class="cat-badge" style="background:#f1f5f9;color:#475569" title="Người tạo: ${esc(u.created_by)}">👤 ${esc(u.created_by.split('@')[0])}</span>` : '';
 
     return `
-      <div class="qitem" style="border-left: 4px solid ${isHidden ? '#94a3b8' : '#3b82f6'};">
+      <div class="qitem" style="border-left: 4px solid ${isHidden ? '#94a3b8' : '#3b82f6'}; margin-bottom:12px;">
         <div class="qrow">
           <div style="flex:1">
+            <!-- PHÂN CẤP: MÔN HỌC & HỌC PHẦN -->
+            <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+              <span class="cat-badge" style="background:#eff6ff;color:#1e40af;font-weight:700">📚 ${esc(u.subject || 'Tiếng Anh (English)')}</span>
+              <span class="cat-badge" style="background:#f0fdf4;color:#166534;font-weight:700">📦 ${esc(u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)')}</span>
+            </div>
+
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
               <span style="font-size:20px">${u.icon || '📖'}</span>
               <span style="font-size:16px;font-weight:700;color:#1e293b">${esc(u.title)}</span>
@@ -134,6 +197,8 @@ export function openUnitEditor(unitId = null) {
 
   const unit = unitId ? unitsState.find(u => u.id === unitId) : {
     id: 'unit_' + Date.now(),
+    subject: 'Tiếng Anh (English)',
+    module: 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)',
     title: 'Unit ' + (unitsState.length + 1) + ': New Topic',
     topic: 'General Topic',
     level: 'A2 - B1',
@@ -241,11 +306,13 @@ export function openUnitEditor(unitId = null) {
   };
 
   // Đổ thông tin cơ bản vào form
-  $('ud-title').value = unit.title || '';
-  $('ud-topic').value = unit.topic || '';
-  $('ud-level').value = unit.level || 'A2 - B1';
-  $('ud-icon').value = unit.icon || '📖';
-  $('ud-desc').value = unit.description || '';
+  if ($('ud-subject')) $('ud-subject').value = unit.subject || 'Tiếng Anh (English)';
+  if ($('ud-module')) $('ud-module').value = unit.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)';
+  if ($('ud-title')) $('ud-title').value = unit.title || '';
+  if ($('ud-topic')) $('ud-topic').value = unit.topic || '';
+  if ($('ud-level')) $('ud-level').value = unit.level || 'A2 - B1';
+  if ($('ud-icon')) $('ud-icon').value = unit.icon || '📖';
+  if ($('ud-desc')) $('ud-desc').value = unit.description || '';
 
   // Lưu tạm unit đang chỉnh sửa vào window._currentDraftUnit
   window._currentDraftUnit = clone(unit);
@@ -542,6 +609,8 @@ export async function saveUnit() {
     return;
   }
 
+  unit.subject = $('ud-subject')?.value.trim() || 'Tiếng Anh (English)';
+  unit.module = $('ud-module')?.value.trim() || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)';
   unit.title = title;
   unit.topic = $('ud-topic')?.value.trim() || 'General';
   unit.level = $('ud-level')?.value || 'A2 - B1';
@@ -557,6 +626,8 @@ export async function saveUnit() {
   try {
     const payload = {
       id: unit.id,
+      subject: unit.subject,
+      module: unit.module,
       title: unit.title,
       topic: unit.topic,
       level: unit.level,

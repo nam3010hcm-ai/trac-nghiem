@@ -426,8 +426,20 @@ window.MathJax = {
         <button class="btn btn-p" id="btn-open-unit-form" onclick="if(window.openUnitEditor) window.openUnitEditor();">+ Tạo Unit Mới</button>
       </div>
       <div class="info-note">
-        💡 <b>Phân hệ Học tập 5 Kỹ năng:</b> Giáo viên có thể thiết kế các bài học theo từng UNIT riêng biệt (Listening, Reading, Speaking, Writing, Language Focus) với các bài tập tương tác, audio và thẻ từ vựng 3D.
+        💡 <b>Phân cấp Học tập:</b> Cấu trúc chuẩn: <b>Môn học (Subject)</b> ➔ <b>Học phần (Module / Course)</b> ➔ <b>Unit Bài học (5 Kỹ năng)</b>.
       </div>
+
+      <!-- BỘ LỌC MÔN HỌC & HỌC PHẦN -->
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <select id="flt-unit-subject" style="flex:1;min-width:180px;padding:8px 12px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px" onchange="window.onUnitFilterChange()">
+          <option value="">Tất cả Môn học</option>
+        </select>
+        <select id="flt-unit-module" style="flex:1.5;min-width:220px;padding:8px 12px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px" onchange="window.renderUnitsList()">
+          <option value="">Tất cả Học phần</option>
+        </select>
+        <input type="text" id="flt-unit-search" placeholder="🔍 Tìm Unit theo tên hoặc chủ đề..." style="flex:1.5;min-width:200px;padding:8px 12px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px" oninput="window.renderUnitsList()">
+      </div>
+
       <div id="unit-management-list"></div>
     </div>
 
@@ -710,10 +722,33 @@ window.MathJax = {
             <button class="btn btn-sm" onclick="window.closeUnitEditor();">✖ Đóng</button>
         </div>
 
+        <!-- THÔNG TIN PHÂN CẤP: MÔN HỌC & HỌC PHẦN -->
+        <div class="grid2" style="margin-bottom:12px; background:#eff6ff; padding:12px; border-radius:10px; border:1px solid #bfdbfe;">
+          <div class="fg" style="margin:0">
+            <label style="color:#1e40af;font-weight:700">📚 1. Môn Học (Subject) *</label>
+            <input type="text" id="ud-subject" list="dl-subjects" placeholder="VD: Tiếng Anh (English)">
+            <datalist id="dl-subjects">
+              <option value="Tiếng Anh (English)">
+              <option value="Tiếng Anh Chuyên ngành (ESP)">
+              <option value="Tiếng Anh Giao Tiếp Quốc Tế">
+            </datalist>
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="color:#1e40af;font-weight:700">📦 2. Học Phần (Module / Course) *</label>
+            <input type="text" id="ud-module" list="dl-modules" placeholder="VD: Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)">
+            <datalist id="dl-modules">
+              <option value="Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)">
+              <option value="Học phần Tiếng Anh cơ bản 2 (Basic English Module 2)">
+              <option value="Học phần Tiếng Anh Kỹ thuật Quân sự (Military Engineering English)">
+              <option value="Học phần Tiếng Anh Công nghệ Thông tin (English for IT)">
+            </datalist>
+          </div>
+        </div>
+
         <!-- THÔNG TIN CHUNG CỦA UNIT -->
         <div class="grid2" style="margin-bottom:14px; background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0;">
           <div class="fg" style="margin:0">
-            <label>Tên Unit bài học *</label>
+            <label>📖 3. Tên Unit bài học *</label>
             <input type="text" id="ud-title" placeholder="VD: Unit 1: Everyday Life & Travel">
           </div>
           <div class="fg" style="margin:0">

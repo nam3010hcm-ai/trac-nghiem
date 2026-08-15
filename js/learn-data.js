@@ -6,6 +6,8 @@
 export const DEFAULT_UNITS = [
   {
     id: 'unit_1',
+    subject: 'Tiếng Anh (English)',
+    module: 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)',
     title: 'Unit 1: Everyday Life & Travel',
     topic: 'Daily Communication & Travel',
     level: 'A2 - B1',
@@ -235,27 +237,11 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
         { left: 'Once in a blue moon', right: 'Rất hiếm khi xảy ra', pairId: 2 },
         { left: 'Piece of cake', right: 'Rất dễ dàng', pairId: 3 },
         { left: 'Under the weather', right: 'Cảm thấy hơi mệt/ốm', pairId: 4 }
-      ],
-      grammarChallenge: [
-        {
-          id: 'gm_1',
-          question: 'By the time the train arrives, we ___ for over an hour.',
-          options: ['will wait', 'will have been waiting', 'are waiting', 'waited'],
-          answer: 1,
-          explain: 'Cấu trúc "By the time + S + V(hiện tại đơn), S + will have been V-ing" (Tương lai hoàn thành tiếp diễn nhấn mạnh khoảng thời gian).'
-        },
-        {
-          id: 'gm_2',
-          question: 'Scarcely ___ the door when the phone rang.',
-          options: ['he had opened', 'had he opened', 'did he open', 'he opened'],
-          answer: 1,
-          explain: 'Đảo ngữ với "Scarcely had + S + V3... when...": Vừa mới... thì...'
-        }
-      ]
-    }
-  },
+[
   {
     id: 'unit_2',
+    subject: 'Tiếng Anh (English)',
+    module: 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)',
     title: 'Unit 2: Nature, Environment & Career',
     topic: 'Environment & Professional Career',
     level: 'B1 - B2',
@@ -270,6 +256,7 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
         level: 'B1 - B2',
         audioText: "Thank you for inviting me today. I have over four years of experience as a software developer, specializing in frontend web technologies. In my previous role, I led a team of three developers to build an e-commerce platform that increased client sales by twenty-five percent. I am passionate about creating accessible, user-friendly digital products.",
         audioUrl: '',
+        image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&auto=format&fit=crop&q=80',
         speed: 1.0,
         duration: '50s',
         exercises: [
@@ -302,6 +289,7 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
         title: 'The Wonders of the Great Barrier Reef',
         topic: 'Nature & Environment',
         level: 'A2 - B1',
+        image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&auto=format&fit=crop&q=80',
         passage: `Stretching over 2,300 kilometers along the northeast coast of Australia, the Great Barrier Reef is the world's largest coral reef ecosystem. It is so vast that it can even be seen from outer space. The reef is home to thousands of marine species, including colorful fish, sea turtles, giant clams, and harmless reef sharks.
 
 Corals are not inanimate rocks; they are living marine animals that build hard limestone skeletons. Over hundreds of years, billions of tiny coral polyps work together to construct massive underwater structures.
@@ -318,38 +306,28 @@ Unfortunately, rising ocean temperatures due to climate change have triggered se
         exercises: [
           {
             type: 'mcq',
-            question: 'What are corals actually?',
-            options: [
-              'Undersea colorful plants',
-              'Inanimate mineral stones',
-              'Living marine animals',
-              'Artificial concrete blocks'
-            ],
-            answer: 2,
-            explain: 'Đoạn 2 nêu rõ: "Corals are not inanimate rocks; they are living marine animals..."'
-          },
-          {
-            type: 'tfng',
-            question: 'The Great Barrier Reef is visible from outer space.',
-            options: ['True (Đúng)', 'False (Sai)', 'Not Given (Không đề cập)'],
-            answer: 0,
-            explain: 'True. Đoạn 1 viết: "It is so vast that it can even be seen from outer space."'
+            question: 'What is the Great Barrier Reef?',
+            options: ['A man-made underwater tunnel', 'The world’s largest coral reef ecosystem', 'A volcanic island', 'A marine amusement park'],
+            answer: 1,
+            explain: 'The first sentence states: "the Great Barrier Reef is the world\'s largest coral reef ecosystem."'
           }
         ]
       }
     ],
     speaking: [
       {
-        id: 'spk_3',
-        title: 'Environmental Responsibility',
-        topic: 'Environment',
-        level: 'B1 - B2',
+        id: 'spk_2',
+        title: 'Career Aspirations & Interview Pitch',
+        topic: 'Professional Communication',
+        level: 'B1',
         phrases: [
           {
-            text: 'Environmental conservation should be everyone’s responsibility.',
-            ipa: '/ɪnˌvaɪ.rənˈmen.təl ˌkɒn.səˈveɪ.ʃən ʃʊd biː ˈev.ri.wʌnz rɪˌspɒn.sɪˈbɪl.ə.ti/',
-            meaning: 'Bảo vệ môi trường nên là trách nhiệm của tất cả mọi người.',
-            tip: 'Trọng âm từ dài: envi-ron-MEN-tal, conser-VA-tion, responsi-BI-lity.'
+            id: 'ph_3',
+            text: 'I am looking for new opportunities to broaden my technical horizons.',
+            ipa: '/aɪ æm ˈlʊk.ɪŋ fɔːr njuː ˌɒp.əˈtjuː.nə.tiz tuː ˈbrɔː.dən maɪ ˈtek.nɪ.kəl həˈraɪ.zənz/',
+            meaning: 'Tôi đang tìm kiếm những cơ hội mới để mở rộng tầm hiểu biết kỹ thuật của mình.',
+            image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&auto=format&fit=crop&q=80',
+            tip: 'Nhấn mạnh vào "opportunities" và "horizons".'
           }
         ]
       }
@@ -357,15 +335,16 @@ Unfortunately, rising ocean temperatures due to climate change have triggered se
     writing: [
       {
         id: 'wrt_scramble_2',
-        title: 'Sentence Scramble: Conditionals',
-        topic: 'Conditionals',
-        level: 'B1 - B2',
+        title: 'Environmental Protection Scramble',
+        topic: 'Green Living',
+        level: 'B1',
         items: [
           {
-            id: 'sc_4',
-            words: ['If', 'I', 'had', 'known', 'the', 'truth,', 'I', 'would', 'have', 'helped', 'him.'],
-            correctSentence: 'If I had known the truth, I would have helped him.',
-            hint: 'Câu điều kiện loại 3 (quá khứ không có thật)'
+            id: 'sc_3',
+            words: ['Renewable', 'energy', 'plays', 'a', 'crucial', 'role', 'in', 'combating', 'climate', 'change.'],
+            correctSentence: 'Renewable energy plays a crucial role in combating climate change.',
+            hint: 'Bắt đầu bằng "Renewable energy..."',
+            image: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=600&auto=format&fit=crop&q=80'
           }
         ]
       }
@@ -380,7 +359,7 @@ Unfortunately, rising ocean temperatures due to climate change have triggered se
           meaning: 'Hùng biện, lưu loát, có tài ăn nói thuyết phục',
           example: 'The president delivered an eloquent speech that moved the entire audience.',
           synonyms: 'Articulate, fluent, persuasive',
-          image: ''
+          image: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=600&auto=format&fit=crop&q=80'
         },
         {
           id: 'fc_4',
@@ -390,7 +369,7 @@ Unfortunately, rising ocean temperatures due to climate change have triggered se
           meaning: 'Hợp tác, cộng tác cùng làm việc',
           example: 'Researchers from various universities collaborated on the vaccine project.',
           synonyms: 'Cooperate, team up, work together',
-          image: ''
+          image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&auto=format&fit=crop&q=80'
         }
       ],
       matchPairs: [

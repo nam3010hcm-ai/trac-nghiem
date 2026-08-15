@@ -467,6 +467,9 @@ function showToast(msg) {
 }
 
 // =========================================================================
+let currentSubject = '';
+let currentModule = '';
+
 // LOAD UNITS TỪ SUPABASE / DEFAULT
 // =========================================================================
 async function loadUnitsData() {
@@ -476,6 +479,8 @@ async function loadUnitsData() {
       if (!error && data && data.length > 0) {
         allUnits = data.map(u => ({
           id: u.id,
+          subject: u.subject || 'Tiếng Anh (English)',
+          module: u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)',
           title: u.title,
           topic: u.topic || '',
           level: u.level || 'A2 - B1',
@@ -502,72 +507,99 @@ async function loadUnitsData() {
   if (!allUnits.length) allUnits = DEFAULT_UNITS;
   currentUnit = allUnits[0];
 
-  populateUnitTiles();
+  renderCascadingSelectors();
   loadCurrentUnitView();
 }
 
-function populateUnitTiles() {
-  const container = document.getElementById('unit-tiles-container');
-  if (container) {
-    let html = `
-      <div class="unit-card-btn ${!currentUnit || currentUnit.id === 'all' ? 'active' : ''}" onclick="window.selectUnitTile('all')">
-        <div style="font-size:20px">📚</div>
-        <div class="unit-btn-title">Tất cả</div>
-        <div class="unit-btn-desc">Tổng hợp tất cả bài</div>
-      </div>
-    `;
+function renderCascadingSelectors() {
+  const subSel = document.getElementById('learn-subject-select');
+  const modSel = document.getElementById('learn-module-select');
+  const unitSel = document.getElementById('learn-unit-select');
+  if (!subSel || !modSel || !unitSel) return;
 
-    allUnits.forEach((u, idx) => {
-      const isAct = currentUnit && currentUnit.id === u.id;
-      html += `
-        <div class="unit-card-btn ${isAct ? 'active' : ''}" onclick="window.selectUnitTile('${u.id}')">
-          <div style="font-size:20px">${u.icon || (idx + 1) + '️⃣'}</div>
-          <div class="unit-btn-title">${u.title.split(':')[0] || 'Unit ' + (idx + 1)}</div>
-          <div class="unit-btn-desc">${u.topic || u.level || ''}</div>
-        </div>
-      `;
-    });
-
-    container.innerHTML = html;
+  // 1. Danh sách Môn học (Subject)
+  const subjects = [...new Set(allUnits.map(u => u.subject || 'Tiếng Anh (English)'))];
+  if (!currentSubject || !subjects.includes(currentSubject)) {
+    currentSubject = currentUnit?.subject || subjects[0] || 'Tiếng Anh (English)';
   }
 
-  const sel = document.getElementById('learn-unit-select');
-  if (sel) {
-    sel.innerHTML = allUnits.map(u => `
-      <option value="${u.id}" ${currentUnit && u.id === currentUnit.id ? 'selected' : ''}>
-        ${u.title} (${u.level || 'A2'})
-      </option>
-    `).join('');
+  subSel.innerHTML = subjects.map(s => `
+    <option value="${s}" ${s === currentSubject ? 'selected' : ''}>📚 ${s}</option>
+  `).join('');
 
-    sel.onchange = (e) => {
-      const chosen = allUnits.find(u => u.id === e.target.value);
-      if (chosen) {
-        currentUnit = chosen;
-        populateUnitTiles();
-        loadCurrentUnitView();
-      }
-    };
+  // 2. Danh sách Học phần (Module) theo Môn học đã chọn
+  const unitsInSubject = allUnits.filter(u => (u.subject || 'Tiếng Anh (English)') === currentSubject);
+  const modules = [...new Set(unitsInSubject.map(u => u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)'))];
+  
+  if (!currentModule || !modules.includes(currentModule)) {
+    currentModule = (currentUnit?.module && modules.includes(currentUnit.module)) ? currentUnit.module : (modules[0] || '');
   }
+
+  modSel.innerHTML = modules.map(m => `
+    <option value="${m}" ${m === currentModule ? 'selected' : ''}>📦 ${m}</option>
+  `).join('');
+
+  // 3. Danh sách Unit thuộc Học phần đã chọn
+  const unitsInModule = unitsInSubject.filter(u => (u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)') === currentModule);
+  
+  if (!currentUnit || !unitsInModule.some(u => u.id === currentUnit.id)) {
+    currentUnit = unitsInModule[0] || unitsInSubject[0] || allUnits[0];
+  }
+
+  unitSel.innerHTML = unitsInModule.map(u => `
+    <option value="${u.id}" ${currentUnit && u.id === currentUnit.id ? 'selected' : ''}>
+      ${u.icon || '📖'} ${u.title} (${u.level || 'A2'})
+    </option>
+  `).join('');
+
+  updateBreadcrumbs();
 }
 
-export function selectUnitTile(unitId) {
-  if (unitId === 'all') {
-    currentUnit = allUnits[0];
-  } else {
-    const found = allUnits.find(u => u.id === unitId);
-    if (found) currentUnit = found;
-  }
-  populateUnitTiles();
+function updateBreadcrumbs() {
+  const bcSub = document.getElementById('bc-subject');
+  const bcMod = document.getElementById('bc-module');
+  const bcUnit = document.getElementById('bc-unit');
+
+  if (bcSub) bcSub.textContent = currentSubject || 'Tiếng Anh (English)';
+  if (bcMod) bcMod.textContent = currentModule || 'Học phần cơ bản';
+  if (bcUnit) bcUnit.textContent = currentUnit?.title || 'Unit bài học';
+}
+
+window.onLearnSubjectChange = function() {
+  const subSel = document.getElementById('learn-subject-select');
+  if (!subSel) return;
+  currentSubject = subSel.value;
+  currentModule = '';
+  renderCascadingSelectors();
   loadCurrentUnitView();
-}
+};
+
+window.onLearnModuleChange = function() {
+  const modSel = document.getElementById('learn-module-select');
+  if (!modSel) return;
+  currentModule = modSel.value;
+  renderCascadingSelectors();
+  loadCurrentUnitView();
+};
+
+window.onLearnUnitChange = function() {
+  const unitSel = document.getElementById('learn-unit-select');
+  if (!unitSel) return;
+  const chosen = allUnits.find(u => u.id === unitSel.value);
+  if (chosen) {
+    currentUnit = chosen;
+    updateBreadcrumbs();
+    loadCurrentUnitView();
+  }
+};
 
 export function selectContentType(type, btnEl) {
   document.querySelectorAll('.content-type-row .type-btn').forEach(b => b.classList.remove('active'));
   if (btnEl) btnEl.classList.add('active');
-  // Chuyển tab tương ứng nếu chọn
   if (type === 'word' || type === 'mixed') switchSkillTab('languageFocus');
   if (type === 'phrase' || type === 'sentence') switchSkillTab('writing');
   if (type === 'dialogue') switchSkillTab('speaking');
+}
 }
 
 export function selectDifficulty(diff, btnEl) {
