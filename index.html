@@ -71,6 +71,69 @@ window.checkSkillAuth = function(event) {
   }
   return true;
 };
+
+window.initHeaderAuthState = function() {
+  const stUserRaw = localStorage.getItem('st_user');
+  const tcUserRaw = localStorage.getItem('teacher_user');
+  let userLabel = '';
+  let avatarIcon = '🎓';
+  let isLoggedIn = false;
+
+  if (stUserRaw) {
+    try {
+      const parsed = JSON.parse(stUserRaw);
+      userLabel = (parsed.name || parsed.student_name || parsed.sid || 'Học viên') + ' (Học viên)';
+      avatarIcon = '🎓';
+      isLoggedIn = true;
+    } catch(e){}
+  } else if (tcUserRaw) {
+    try {
+      const parsed = JSON.parse(tcUserRaw);
+      const isRoot = (parsed.email || '').toLowerCase() === 'nam3010hcm@gmail.com';
+      userLabel = (parsed.name || parsed.email || 'Giảng viên') + (isRoot ? ' (Root Admin)' : ' (Giảng viên)');
+      avatarIcon = isRoot ? '👑' : '👨‍🏫';
+      isLoggedIn = true;
+    } catch(e){}
+  }
+
+  const profileBadge = document.getElementById('user-header-badge');
+  const logoutBtn = document.getElementById('header-logout-btn');
+
+  if (isLoggedIn) {
+    if (profileBadge) {
+      profileBadge.innerHTML = `
+        <div class="user-avatar-img">${avatarIcon}</div>
+        <span style="font-weight:700;">${userLabel}</span>
+      `;
+      profileBadge.title = "Tài khoản đang đăng nhập";
+      profileBadge.onclick = null;
+    }
+    if (logoutBtn) {
+      logoutBtn.style.display = 'inline-flex';
+    }
+  } else {
+    if (profileBadge) {
+      profileBadge.innerHTML = `
+        <div class="user-avatar-img">🔑</div>
+        <span>Đăng Nhập Phân Hệ</span>
+      `;
+      profileBadge.title = "Bấm để chọn phân hệ đăng nhập";
+      profileBadge.onclick = function() { if (window.openAuthModal) window.openAuthModal(); };
+    }
+    if (logoutBtn) {
+      logoutBtn.style.display = 'none';
+    }
+
+    // Tự động bật Modal Đăng Nhập khi mới truy cập index lần đầu mà chưa đăng nhập
+    setTimeout(function() {
+      if (window.openAuthModal) window.openAuthModal();
+    }, 150);
+  }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  window.initHeaderAuthState();
+});
 </script>
 </head>
 
@@ -103,12 +166,12 @@ window.checkSkillAuth = function(event) {
       <span class="notif-badge-dot"></span>
     </button>
 
-    <div class="user-profile-badge" title="Bấm để chọn phân hệ đăng nhập" onclick="window.openAuthModal();">
+    <div class="user-profile-badge" id="user-header-badge" title="Bấm để chọn phân hệ đăng nhập" onclick="window.openAuthModal();">
       <div class="user-avatar-img">🔑</div>
       <span>Đăng Nhập Phân Hệ</span>
     </div>
 
-    <button class="header-logout-btn" onclick="window.globalLogout();" title="Đăng xuất khỏi tài khoản">
+    <button class="header-logout-btn" id="header-logout-btn" onclick="window.globalLogout();" title="Đăng xuất khỏi tài khoản" style="display:none;">
       🔒 Đăng xuất
     </button>
   </div>

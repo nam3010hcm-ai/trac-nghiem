@@ -141,6 +141,13 @@ window.globalLogout = async function() {
 
       if (err) err.style.display = 'none';
 
+      // Lưu session teacher_user cho toàn ứng dụng
+      localStorage.setItem('teacher_user', JSON.stringify({
+        email: authUser?.email || email,
+        name: (authUser?.email || email).split('@')[0],
+        role: 'teacher'
+      }));
+
       // Chuyển sang màn hình quản lý
       document.getElementById('t-login').style.display = 'none';
       document.getElementById('t-panel').style.display = 'flex';

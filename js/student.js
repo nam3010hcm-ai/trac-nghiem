@@ -84,6 +84,8 @@ export async function loginStudent() {
     }
 
     // Đăng nhập thành công -> lưu session
+    const stPayload = { sid: data.id, name: data.full_name || data.id, class_name: data.class_name || '' };
+    localStorage.setItem('st_user', JSON.stringify(stPayload));
     sessionStorage.setItem(STUDENT_AUTH_KEY, JSON.stringify(data));
     renderStudentPortal(data);
   } catch (err) {
