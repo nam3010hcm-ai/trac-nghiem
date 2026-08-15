@@ -105,6 +105,7 @@ export function renderStudentsList() {
           </span>
         </td>
         <td style="text-align:right;white-space:nowrap">
+          <button class="btn btn-sm" onclick="if(window.openStudentReportModal) window.openStudentReportModal('${esc(st.id)}')" title="Xem báo cáo kết quả & thời gian học" style="padding:4px 8px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe">📊 Hồ sơ</button>
           <button class="btn btn-sm" onclick="window.openStudentModal('${esc(st.id)}')" title="Sửa thông tin" style="padding:4px 8px">✏️</button>
           <button class="btn btn-sm ${isActive ? 'btn-warn' : 'btn-p'}" onclick="window.toggleStudentStatus('${esc(st.id)}')" title="${isActive ? 'Khóa tài khoản' : 'Mở khóa'}" style="padding:4px 8px">
             ${isActive ? '🔒' : '🔓'}

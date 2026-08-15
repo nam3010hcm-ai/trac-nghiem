@@ -1,6 +1,7 @@
 import { initData, state, $, KEYS, shuffle, getPool, esc, mediaHTML, audioHTML, renderRich, typesetMath, isCorrect, formatAnswer, splitBlanks } from './common.js';
 import { populateExamSelect, updateExamDesc } from './exams.js';
 import { saveResult } from './results.js';
+import { recordAuthEvent, recordStudyTime } from './auth-logs.js';
 
 const db = () => window.supabaseClient;
 
@@ -108,10 +109,15 @@ export async function loginStudent() {
       return;
     }
 
-    // Đăng nhập thành công -> lưu session & chuyển sang Dashboard
+    // Đăng nhập thành công -> lưu session & ghi nhận login event
     const stPayload = { sid: data.id, name: data.full_name || data.id, class_name: data.class_name || '', email: data.email || '' };
     localStorage.setItem('st_user', JSON.stringify(stPayload));
     sessionStorage.setItem(STUDENT_AUTH_KEY, JSON.stringify(data));
+    sessionStorage.setItem('st_session_start', Date.now().toString());
+
+    // Ghi nhận sự kiện Login vào Supabase
+    recordAuthEvent(data.email, 'student', 'login', 0, data.id, data.full_name || data.id, data.class_name || '');
+
     renderStudentPortal(data);
   } catch (err) {
     console.error("Lỗi đăng nhập học viên:", err);
@@ -137,7 +143,16 @@ export function renderStudentPortal(student) {
 }
 
 export function logoutStudent() {
+  const currentStudent = getAuthenticatedStudent();
+  const sessionStart = parseInt(sessionStorage.getItem('st_session_start') || '0', 10);
+  const duration = sessionStart > 0 ? Math.round((Date.now() - sessionStart) / 1000) : 0;
+
+  if (currentStudent && currentStudent.email) {
+    recordAuthEvent(currentStudent.email, 'student', 'logout', duration, currentStudent.id, currentStudent.full_name, currentStudent.class_name);
+  }
+
   sessionStorage.removeItem(STUDENT_AUTH_KEY);
+  sessionStorage.removeItem('st_session_start');
   if ($('st-login-pass')) $('st-login-pass').value = '';
   if ($('st-login-err')) $('st-login-err').style.display = 'none';
   showScreen('sc-login');
@@ -551,6 +566,10 @@ async function finishExam() {
   };
 
   await saveResult(result); 
+  
+  // Tích lũy thời gian làm bài thi và điểm XP vào bảng thống kê tuần
+  recordStudyTime(student.id, student.name, student.class_name, elapsed, Math.round(score * 10));
+
   clearPersist();
 
   // HIỂN THỊ KẾT QUẢ

@@ -10,8 +10,8 @@ import { openEForm, closeEForm, saveExam, deleteExam, toggleExamVisibility, rend
 import { renderResults, clearResults, exportCSV } from './results.js';
 import { loadUnits, renderUnitsList, openUnitEditor, closeUnitEditor, switchDesignerSkillTab, saveUnit, deleteUnit, toggleUnitVisibility } from './units.js';
 import { loadStudents, renderStudentsList, openStudentModal, closeStudentModal, saveStudent, toggleStudentStatus, deleteStudent, openBulkStudentModal, closeBulkStudentModal, saveBulkStudents, exportStudentsCSV } from './students-mgr.js';
-import { loadTeachers, renderTeachersList, openTeacherModal, closeTeacherModal, saveTeacher, toggleTeacherStatus, deleteTeacher } from './teachers-mgr.js';
 import { renderCurriculumTree, openSubjectModal, closeSubjectModal, saveSubject, loadCurriculumFromSupabase } from './curriculum.js';
+import { calculateAndRenderTop10, loadAuthLogs, renderAuthLogsTable, openStudentReportModal, closeStudentReportModal, recordAuthEvent } from './auth-logs.js';
 
 const db = () => window.supabaseClient;
 
@@ -187,7 +187,11 @@ function switchTTab(t) {
   if (t === 'unit') renderUnitsList();
   if (t === 'teachers') loadTeachers().then(renderTeachersList);
   if (t === 'students') loadStudents().then(renderStudentsList);
-  if (t === 'r') renderResults();
+  if (t === 'r') {
+    renderResults();
+    if (typeof window.calculateAndRenderTop10 === 'function') window.calculateAndRenderTop10();
+    if (typeof window.loadAuthLogs === 'function') window.loadAuthLogs().then(window.renderAuthLogsTable);
+  }
   if (t === 'c') renderCatManagementList();
   if (t === 'img' && typeof window.loadGallery === 'function') window.loadGallery();
   if (t === 'cohort') {
@@ -201,6 +205,11 @@ function switchTTab(t) {
 window.switchTTab = switchTTab;
 window._teacherModuleSwitchTab = switchTTab;
 window.doLogout = doLogout;
+window.openStudentReportModal = openStudentReportModal;
+window.closeStudentReportModal = closeStudentReportModal;
+window.calculateAndRenderTop10 = calculateAndRenderTop10;
+window.loadAuthLogs = loadAuthLogs;
+window.renderAuthLogsTable = renderAuthLogsTable;
 window.openStudentModal = openStudentModal;
 window.closeStudentModal = closeStudentModal;
 window.saveStudent = saveStudent;

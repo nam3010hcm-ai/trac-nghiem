@@ -54,28 +54,91 @@ export async function loadWeeklyLeaderboards() {
       return;
     }
 
-    // Truy vấn dữ liệu tuần hiện tại
-    const { data, error } = await db()
+    // 1. Nạp dữ liệu student_learning_stats tuần hiện tại
+    const { data: dbStats } = await db()
       .from('student_learning_stats')
       .select('*')
-      .eq('week_key', period.week_key);
+      .eq('week_key', period.weekKey);
 
-    if (error || !data || data.length === 0) {
-      renderEmptyLeaderboards('Chưa có dữ liệu học tập trong tuần này. Hãy là người đầu tiên tham gia học tập để vinh danh!');
-      return;
-    }
+    // 2. Nạp thêm kết quả thi từ bảng results và danh sách học viên
+    const { data: dbResults } = await db()
+      .from('results')
+      .select('*');
+
+    const { data: dbStudents } = await db()
+      .from('students')
+      .select('*');
+
+    const mondayTs = period.monday.getTime();
+    const sundayTs = period.sunday.getTime();
+
+    const studentMap = {};
+
+    // Khởi tạo từ danh sách học viên
+    (dbStudents || []).forEach(st => {
+      studentMap[st.id] = {
+        student_id: st.id,
+        student_name: st.full_name || st.student_name || st.id,
+        class_name: st.class_name || 'K7',
+        weekly_xp: st.total_xp || 0,
+        weekly_time_seconds: 0
+      };
+    });
+
+    // Cộng dồn từ bảng results trong tuần
+    (dbResults || []).forEach(r => {
+      const rTime = r.timestamp || (r.at ? new Date(r.at).getTime() : 0);
+      if (rTime >= mondayTs && rTime <= sundayTs) {
+        const sid = r.sid || r.student;
+        if (!studentMap[sid]) {
+          studentMap[sid] = {
+            student_id: sid,
+            student_name: r.student || sid,
+            class_name: r.cohort || 'K7',
+            weekly_xp: 0,
+            weekly_time_seconds: 0
+          };
+        }
+        const scoreVal = parseFloat(r.manual_score ?? r.score) || 0;
+        studentMap[sid].weekly_xp += Math.round(scoreVal * 10);
+        studentMap[sid].weekly_time_seconds += (r.time || 0);
+      }
+    });
+
+    // Cộng dồn từ bảng student_learning_stats
+    (dbStats || []).forEach(st => {
+      if (studentMap[st.student_id]) {
+        studentMap[st.student_id].weekly_xp = Math.max(studentMap[st.student_id].weekly_xp, st.weekly_xp || 0);
+        studentMap[st.student_id].weekly_time_seconds = Math.max(studentMap[st.student_id].weekly_time_seconds, st.weekly_time_seconds || 0);
+      } else {
+        studentMap[st.student_id] = {
+          student_id: st.student_id,
+          student_name: st.student_name,
+          class_name: st.class_name,
+          weekly_xp: st.weekly_xp || 0,
+          weekly_time_seconds: st.weekly_time_seconds || 0
+        };
+      }
+    });
+
+    const combinedList = Object.values(studentMap);
 
     // 1. TOP 10 ĐIỂM SỐ (XP)
-    const topXP = [...data]
+    const topXP = [...combinedList]
       .filter(s => (s.weekly_xp || 0) > 0)
       .sort((a, b) => (b.weekly_xp || 0) - (a.weekly_xp || 0))
       .slice(0, 10);
 
     // 2. TOP 10 THỜI GIAN HỌC
-    const topTime = [...data]
+    const topTime = [...combinedList]
       .filter(s => (s.weekly_time_seconds || 0) > 0)
       .sort((a, b) => (b.weekly_time_seconds || 0) - (a.weekly_time_seconds || 0))
       .slice(0, 10);
+
+    if (!topXP.length && !topTime.length) {
+      renderEmptyLeaderboards('Chưa có dữ liệu học tập trong tuần này. Hãy là người đầu tiên tham gia làm bài để được vinh danh!');
+      return;
+    }
 
     renderXPLeaderboard(topXP, xpListEl);
     renderTimeLeaderboard(topTime, timeListEl);

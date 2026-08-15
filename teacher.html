@@ -944,10 +944,46 @@ window.globalLogout = async function() {
     </div>
     
     <div id="tc-r" class="tab-content">
+      <!-- 1. BẢNG VINH DANH TOP 10 TRONG 1 TUẦN -->
+      <div class="card" style="padding:20px;margin-bottom:20px;border-top:4px solid #2563eb;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div style="font-size:17px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px;">
+              <span>🏆</span> BẢNG XẾP HẠNG TOP 10 TRONG TUẦN
+            </div>
+            <div style="font-size:12.5px;color:#64748b;margin-top:2px;" id="top10-date-label">Đang tính toán khoảng thời gian tuần...</div>
+          </div>
+          <button class="btn btn-sm" onclick="if(window.calculateAndRenderTop10) window.calculateAndRenderTop10();" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">
+            🔄 Cập nhật Xếp Hạng
+          </button>
+        </div>
+
+        <div class="grid2" style="gap:20px;" id="weekly-top10-container">
+          <!-- TOP 10 ĐIỂM SỐ -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:16px;">
+            <div style="font-size:14px;font-weight:800;color:#1d4ed8;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+              <span>⭐ TOP 10 ĐIỂM CAO NHẤT</span>
+              <span class="abadge" style="background:#e0f2fe;color:#0369a1;font-size:11px;">Điểm TB & XP</span>
+            </div>
+            <div id="top10-score-list">Đang nạp dữ liệu...</div>
+          </div>
+
+          <!-- TOP 10 THỜI GIAN HỌC -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:16px;">
+            <div style="font-size:14px;font-weight:800;color:#0d9488;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+              <span>⏱️ TOP 10 THỜI GIAN HỌC NHIỀU NHẤT</span>
+              <span class="abadge" style="background:#ccfbf1;color:#0f766e;font-size:11px;">Tích Lũy Tuần</span>
+            </div>
+            <div id="top10-time-list">Đang nạp dữ liệu...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. DANH SÁCH KẾT QUẢ CÁC BÀI THI -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-        <div class="sec-title" style="margin:0">Kết quả làm bài (<span id="r-count">0</span>)</div>
+        <div class="sec-title" style="margin:0">Kết quả làm bài thi (<span id="r-count">0</span>)</div>
         <div style="display:flex;gap:8px; align-items:center;">
-          <!-- 1. BỘ LỌC CA THI -->
+          <!-- BỘ LỌC CA THI -->
           <select id="flt-r-cohort" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; background: white; outline: none; cursor: pointer;">
             <option value="">(Tất cả Ca thi)</option>
           </select>
@@ -958,11 +994,10 @@ window.globalLogout = async function() {
 
       <div id="stats-summary"></div>
 
-      <div class="card" style="padding:10px 16px">
+      <div class="card" style="padding:10px 16px;margin-bottom:24px;">
         <div class="table-wrap">
           <table class="data-table">
             <thead>
-              <!-- 2. CẬP NHẬT 9 CỘT CHO KHỚP VỚI HÀM RENDER JS -->
               <tr>
                 <th style="text-align:center; width:50px;">STT</th>
                 <th>Mã HV</th>
@@ -977,6 +1012,39 @@ window.globalLogout = async function() {
             </thead>
             <tbody id="r-tbody">
               <!-- JS renderResults sẽ đổ dữ liệu vào đây -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. NHẬT KÝ ĐĂNG NHẬP / ĐĂNG XUẤT (AUTH & SESSION LOGS) -->
+      <div class="card" style="padding:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px;">
+              <span>🔐</span> NHẬT KÝ ĐĂNG NHẬP & ĐĂNG XUẤT (<span id="auth-logs-count">0</span>)
+            </div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px;">Theo dõi thời điểm Login/Logout và thời lượng online của từng tài khoản</div>
+          </div>
+          <button class="btn btn-sm" onclick="if(window.loadAuthLogs) window.loadAuthLogs().then(window.renderAuthLogsTable);" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;">
+            🔄 Tải lại nhật ký
+          </button>
+        </div>
+
+        <div class="table-wrap" style="max-height:360px;overflow-y:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:40px;text-align:center">#</th>
+                <th>Tài Khoản / Email</th>
+                <th>Loại Tài Khoản</th>
+                <th>Sự Kiện</th>
+                <th>Thời Gian Ghi Nhận</th>
+                <th style="text-align:center">Thời Lượng Phiên</th>
+              </tr>
+            </thead>
+            <tbody id="auth-logs-tbody">
+              <tr><td colspan="6" style="text-align:center;padding:16px;color:#94a3b8">Đang tải nhật ký...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1546,6 +1614,28 @@ document.addEventListener('keydown', function(e) {
   }
 });
 </script>
+
+<!-- MODAL BÁO CÁO HỌC TẬP CHI TIẾT HỌC VIÊN -->
+<div id="modal-student-report" class="auth-modal-overlay" style="display:none;" onclick="if(event.target===this) window.closeStudentReportModal();">
+  <div class="auth-modal-card" style="max-width:700px;text-align:left;">
+    <button class="auth-modal-close-btn" onclick="window.closeStudentReportModal();">✕</button>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="font-size:26px;">📊</div>
+      <div>
+        <h2 style="font-size:18px;font-weight:800;color:#0f172a;margin:0;" id="sr-modal-title">Hồ Sơ Học Tập & Điểm Số</h2>
+        <div style="font-size:12px;color:#64748b;margin-top:2px;">Báo cáo tổng hợp quá trình làm bài và thời gian học tập</div>
+      </div>
+    </div>
+
+    <div id="sr-modal-body">
+      <!-- Dữ liệu báo cáo sẽ được render động từ auth-logs.js -->
+    </div>
+
+    <div style="text-align:right;margin-top:20px;padding-top:14px;border-top:1px solid #e2e8f0;">
+      <button class="btn" onclick="window.closeStudentReportModal();" style="background:#f1f5f9;border:1px solid #cbd5e1;color:#334155;">Đóng</button>
+    </div>
+  </div>
+</div>
 
 <script type="module" src="js/teacher.js?v=6.0"></script>
 </body>
