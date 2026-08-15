@@ -877,14 +877,23 @@ textarea {
   padding: 10px 8px;
   overflow-y: auto;
   flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: #0284c7 #1e293b;
 }
 
 .admin-sidebar-nav::-webkit-scrollbar {
-  width: 5px;
+  width: 6px;
+}
+.admin-sidebar-nav::-webkit-scrollbar-track {
+  background: #1e293b;
+  border-radius: 4px;
 }
 .admin-sidebar-nav::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #0284c7;
   border-radius: 4px;
+}
+.admin-sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8;
 }
 
 .sidebar-section-title {

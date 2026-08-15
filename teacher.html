@@ -238,6 +238,9 @@ window.globalLogout = async function() {
 
           <!-- 2. HỌC TẬP & NỘI DUNG -->
           <div class="sidebar-section-title">📚 HỌC TẬP & NỘI DUNG</div>
+          <a class="sidebar-item" data-tab="curriculum" onclick="window.switchTTab('curriculum')">
+            <span>🏛️</span> <span>Phân cấp: Môn ➔ Học phần ➔ Unit</span>
+          </a>
           <a class="sidebar-item" data-tab="unit" onclick="window.switchTTab('unit')">
             <span>📖</span> <span>Bài học & Unit (5 Kỹ Năng)</span>
           </a>
@@ -801,6 +804,37 @@ window.globalLogout = async function() {
       <div id="e-list"></div>
     </div>
 
+    <!-- 2.0. PHÂN HỆ CẤU TRÚC PHÂN CẤP HỌC TẬP (CURRICULUM TREE) -->
+    <div id="tc-curriculum" class="tab-content" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:18px;font-weight:800;color:#0f172a">🏛️ Phân Cấp Học Tập Đa Môn Học</div>
+          <div style="font-size:12.5px;color:#64748b">Cấu trúc chuẩn: Môn học (Subject) ➔ Học phần (Module / Course) ➔ Unit Bài học (5 Kỹ năng).</div>
+        </div>
+        <button class="btn btn-p" onclick="window.openSubjectModal();">
+          ➕ Thêm Môn Học Mới
+        </button>
+      </div>
+
+      <div class="card" style="padding:16px;margin-bottom:16px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <label style="font-size:13px;font-weight:700;color:#334155;">Lọc Môn Học:</label>
+          <select id="flt-curriculum-subject" style="padding:8px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;background:white;" onchange="window.renderCurriculumTree();">
+            <option value="">(Tất cả các môn: Tiếng Anh, Toán, Vật Lý, Hóa Học, Tin...)</option>
+            <option value="SUB_ENG">🇬🇧 Tiếng Anh</option>
+            <option value="SUB_MATH">📐 Toán Học</option>
+            <option value="SUB_PHYS">⚡ Vật Lý</option>
+            <option value="SUB_CHEM">🧪 Hóa Học</option>
+            <option value="SUB_CS">💻 Tin Học</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="curriculum-tree-container">
+        <!-- Rendered dynamically by js/curriculum.js -->
+      </div>
+    </div>
+
     <div id="tc-unit" class="tab-content">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
         <div class="sec-title" style="margin:0">Quản lý & Thiết kế Unit Học Tập (<span id="unit-count-badge">0</span>)</div>
@@ -1308,6 +1342,39 @@ window.globalLogout = async function() {
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button class="btn" onclick="window.closeTeacherModal();">Hủy</button>
       <button class="btn btn-p" onclick="window.saveTeacher();">💾 Lưu Giảng Viên</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL THÊM MÔN HỌC MỚI -->
+<div id="modal-subject" class="auth-modal-overlay" style="display:none;" onclick="if(event.target===this) window.closeSubjectModal();">
+  <div class="auth-modal-card" style="max-width:440px;text-align:left;">
+    <button class="auth-modal-close-btn" onclick="window.closeSubjectModal();">✕</button>
+    <div style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:16px;">➕ Thêm Môn Học Mới</div>
+
+    <div class="fg" style="margin-bottom:12px;">
+      <label style="font-size:12.5px;font-weight:700;color:#334155;">Tên Môn Học *</label>
+      <input type="text" id="sub-mod-name" placeholder="VD: Vật Lý, Hóa Học, Toán Học..." style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+    </div>
+
+    <div class="fg" style="margin-bottom:12px;">
+      <label style="font-size:12.5px;font-weight:700;color:#334155;">Mã Môn Học *</label>
+      <input type="text" id="sub-mod-code" placeholder="VD: PHYS, CHEM, MATH..." style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+    </div>
+
+    <div class="fg" style="margin-bottom:12px;">
+      <label style="font-size:12.5px;font-weight:700;color:#334155;">Biểu Tượng (Icon)</label>
+      <input type="text" id="sub-mod-icon" placeholder="VD: ⚡, 🧪, 📐..." style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;" value="📘">
+    </div>
+
+    <div class="fg" style="margin-bottom:20px;">
+      <label style="font-size:12.5px;font-weight:700;color:#334155;">Mô Tả Môn Học</label>
+      <textarea id="sub-mod-desc" placeholder="Mô tả tóm tắt nội dung môn học..." style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;height:70px;"></textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn" onclick="window.closeSubjectModal();">Hủy</button>
+      <button class="btn btn-p" onclick="window.saveSubject();">💾 Lưu Môn Học</button>
     </div>
   </div>
 </div>

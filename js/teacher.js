@@ -10,6 +10,8 @@ import { openEForm, closeEForm, saveExam, deleteExam, toggleExamVisibility, rend
 import { renderResults, clearResults, exportCSV } from './results.js';
 import { loadUnits, renderUnitsList, openUnitEditor, closeUnitEditor, switchDesignerSkillTab, saveUnit, deleteUnit, toggleUnitVisibility } from './units.js';
 import { loadStudents, renderStudentsList, openStudentModal, closeStudentModal, saveStudent, toggleStudentStatus, deleteStudent, openBulkStudentModal, closeBulkStudentModal, saveBulkStudents, exportStudentsCSV } from './students-mgr.js';
+import { loadTeachers, renderTeachersList, openTeacherModal, closeTeacherModal, saveTeacher, toggleTeacherStatus, deleteTeacher } from './teachers-mgr.js';
+import { renderCurriculumTree, openSubjectModal, closeSubjectModal, saveSubject } from './curriculum.js';
 
 const db = () => window.supabaseClient;
 
@@ -36,6 +38,15 @@ async function showTeacherPanel(user) {
       roleBadge.style.border = '1px solid #bae6fd';
       roleBadge.innerHTML = '👨‍🏫 Giáo viên';
     }
+  }
+
+  await initData();
+
+  if (isRootUser(state.currentUserEmail)) {
+    const defaultTab = 'dash';
+    switchTTab(defaultTab);
+  } else {
+    switchTTab('dash');
   }
 
   initTeacherApp();
