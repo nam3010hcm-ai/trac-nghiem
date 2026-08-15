@@ -14,6 +14,38 @@ export let unitsState = [];
 let editingUnitId = null;
 let currentDesignerSkill = 'listening';
 
+// HELPER TỰ ĐỘNG XỬ LÝ NẾU BẢNG SUPABASE THIẾU CỘT MỚI (MODULE / SUBJECT / CREATED_BY)
+async function safeUpsertUnit(payload) {
+  let list = Array.isArray(payload) ? payload.map(p => ({ ...p })) : [{ ...payload }];
+  let { error } = await db().from('learning_units').upsert(list, { onConflict: 'id' });
+  
+  if (error && error.message && (error.message.includes('column') || error.message.includes('schema cache'))) {
+    console.warn("[Units] Supabase schema mismatch, retrying without missing columns:", error.message);
+    const msg = error.message.toLowerCase();
+    list = list.map(item => {
+      const cleaned = { ...item };
+      if (msg.includes('module')) delete cleaned.module;
+      if (msg.includes('subject')) delete cleaned.subject;
+      if (msg.includes('created_by')) delete cleaned.created_by;
+      return cleaned;
+    });
+
+    let retryResult = await db().from('learning_units').upsert(list, { onConflict: 'id' });
+    if (!retryResult.error) return retryResult;
+
+    // Fallback: Xóa cả 3 cột mới nếu Supabase chưa được ALTER TABLE
+    list = list.map(item => {
+      const cleaned = { ...item };
+      delete cleaned.module;
+      delete cleaned.subject;
+      delete cleaned.created_by;
+      return cleaned;
+    });
+    return await db().from('learning_units').upsert(list, { onConflict: 'id' });
+  }
+  return { error };
+}
+
 // 1. TẢI DANH SÁCH UNIT TỪ SUPABASE
 export async function loadUnits() {
   try {
@@ -41,7 +73,7 @@ export async function loadUnits() {
         language_focus: u.languageFocus || {},
         created_at: Date.now() + i
       }));
-      await db().from('learning_units').upsert(inserts, { onConflict: 'id' });
+      await safeUpsertUnit(inserts);
     } else {
       unitsState = data.map(u => ({
         id: u.id,
@@ -643,7 +675,7 @@ export async function saveUnit() {
       created_by: unit.created_by || state.currentUserEmail || 'nam3010hcm@gmail.com'
     };
 
-    const { error } = await db().from('learning_units').upsert([payload], { onConflict: 'id' });
+    const { error } = await safeUpsertUnit(payload);
     if (error) throw error;
 
     const existingIdx = unitsState.findIndex(u => u.id === unit.id);
