@@ -1559,29 +1559,44 @@ window.checkGrammarQuiz = function(qIdx, chosenIdx, correctIdx) {
 // =========================================================================
 // MAIN CONTROLLER INITIALIZATION
 // =========================================================================
-function switchSkillTab(skill) {
+export function switchSkillTab(skill) {
+  if (!skill) return;
   currentSkillTab = skill;
 
+  // 1. Cập nhật trạng thái Active trên 5 nút Tab
   document.querySelectorAll('.skill-tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.skill === skill);
+    const isTarget = btn.dataset.skill === skill;
+    btn.classList.toggle('active', isTarget);
   });
 
+  // 2. Ẩn/Hiện chính xác Panel nội dung tương ứng
   document.querySelectorAll('.skill-content-panel').forEach(panel => {
-    panel.classList.toggle('active', panel.id === `skill-panel-${skill}`);
+    const isTarget = panel.id === `skill-panel-${skill}`;
+    panel.classList.toggle('active', isTarget);
+    panel.style.display = isTarget ? 'block' : 'none';
   });
 
-  if (skill === 'listening') initListening();
-  if (skill === 'reading') initReading();
-  if (skill === 'speaking') initSpeaking();
-  if (skill === 'writing') initWriting();
-  if (skill === 'languageFocus') initLanguageFocus();
+  // 3. Khởi tạo dữ liệu bài tập tương ứng một cách an toàn
+  try {
+    if (skill === 'listening') initListening();
+    else if (skill === 'reading') initReading();
+    else if (skill === 'speaking') initSpeaking();
+    else if (skill === 'writing') initWriting();
+    else if (skill === 'languageFocus') initLanguageFocus();
+  } catch (err) {
+    console.error("Lỗi khi chuyển sang tab " + skill + ":", err);
+  }
 }
 
 window.switchSkillTab = switchSkillTab;
 
 document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.skill-tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchSkillTab(btn.dataset.skill));
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const skill = btn.dataset.skill || btn.getAttribute('data-skill');
+      if (skill) switchSkillTab(skill);
+    });
   });
 
   const student = getAuthenticatedStudent();
