@@ -187,8 +187,12 @@ function ensureQuestionTools(){
             <img src="${downloadURL}" style="max-width:100%;max-height:180px;border-radius:6px;border:1px solid #cbd5e1">
           `;
         }
-        if ($('btn-clear-image')) $('btn-clear-image').style.display = 'inline-block';
       } catch (err) {
+        console.error("Lỗi upload ảnh:", err);
+        alert('Lỗi khi tải file ảnh lên Supabase Storage: ' + (err.message || ''));
+        if (progressWrapper) progressWrapper.style.display = 'none';
+      }
+    });
   }
 
   const imgInput = $('qf-image');

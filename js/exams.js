@@ -79,6 +79,7 @@ export async function saveExam(){
   const timeLimit = parseInt($('ef-time').value) || 0;
   
   const saveBtn = $('btn-save-exam');
+  const editId = saveBtn?.dataset?.editId ? (isNaN(saveBtn.dataset.editId) ? saveBtn.dataset.editId : Number(saveBtn.dataset.editId)) : null;
   if(saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Đang lưu...'; }
 
   try {

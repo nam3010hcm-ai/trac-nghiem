@@ -272,4 +272,3 @@ export function fillSubcatSelect(selId, cat, addAll=true, allLabel='(Tất cả 
   sel.innerHTML = (addAll ? `<option value="">${esc(allLabel)}</option>` : '') +
     scs.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
 }
-
