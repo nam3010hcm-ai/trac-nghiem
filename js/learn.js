@@ -489,6 +489,24 @@ function showToast(msg) {
 let currentSubject = '';
 let currentModule = '';
 
+function safeArray(val, fallback = []) {
+  let res = val;
+  if (typeof val === 'string') {
+    try { res = JSON.parse(val); } catch (e) { res = null; }
+  }
+  if (Array.isArray(res) && res.length > 0) return res;
+  return fallback;
+}
+
+function safeObj(val, fallback = {}) {
+  let res = val;
+  if (typeof val === 'string') {
+    try { res = JSON.parse(val); } catch (e) { res = null; }
+  }
+  if (res && typeof res === 'object' && !Array.isArray(res) && Object.keys(res).length > 0) return res;
+  return fallback;
+}
+
 // LOAD UNITS TỪ SUPABASE / DEFAULT
 // =========================================================================
 async function loadUnitsData() {
@@ -496,22 +514,25 @@ async function loadUnitsData() {
     if (db()) {
       const { data, error } = await db().from('learning_units').select('*').eq('is_hidden', false).order('created_at', { ascending: true });
       if (!error && data && data.length > 0) {
-        allUnits = data.map(u => ({
-          id: u.id,
-          subject: u.subject || 'Tiếng Anh (English)',
-          module: u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)',
-          title: u.title,
-          topic: u.topic || '',
-          level: u.level || 'A2 - B1',
-          icon: u.icon || '📖',
-          description: u.description || '',
-          isHidden: u.is_hidden ?? false,
-          listening: u.listening || [],
-          reading: u.reading || [],
-          speaking: u.speaking || [],
-          writing: u.writing || [],
-          languageFocus: u.language_focus || u.languageFocus || {}
-        }));
+        allUnits = data.map(u => {
+          const defMatch = DEFAULT_UNITS.find(d => d.id === u.id) || DEFAULT_UNITS[0];
+          return {
+            id: u.id,
+            subject: u.subject || 'Tiếng Anh (English)',
+            module: u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)',
+            title: u.title,
+            topic: u.topic || '',
+            level: u.level || 'A2 - B1',
+            icon: u.icon || '📖',
+            description: u.description || '',
+            isHidden: u.is_hidden ?? false,
+            listening: safeArray(u.listening, defMatch?.listening || []),
+            reading: safeArray(u.reading, defMatch?.reading || []),
+            speaking: safeArray(u.speaking, defMatch?.speaking || []),
+            writing: safeArray(u.writing, defMatch?.writing || []),
+            languageFocus: safeObj(u.language_focus || u.languageFocus, defMatch?.languageFocus || {})
+          };
+        });
       } else {
         allUnits = DEFAULT_UNITS.filter(u => !u.isHidden);
       }
