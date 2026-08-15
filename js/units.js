@@ -303,8 +303,12 @@ export function switchDesignerSkillTab(skill) {
         </div>
 
         <div class="fg" style="margin-top:14px">
-          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">🖼️ Hình ảnh minh họa đoạn nghe (Tùy chọn URL)</label>
-          <input type="text" id="ud-lis-image" placeholder="VD: https://images.unsplash.com/... hoặc để trống" value="${esc(lis.image || '')}">
+          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">🖼️ Hình ảnh minh họa đoạn nghe (Tùy chọn)</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="ud-lis-image" placeholder="VD: https://images.unsplash.com/... hoặc chọn từ thư viện" value="${esc(lis.image || '')}">
+            <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('ud-lis-image', 'ud-lis-img-preview')" style="white-space:nowrap;">📂 Thư viện ảnh</button>
+          </div>
+          <div id="ud-lis-img-preview" style="margin-top:6px">${lis.image ? `<img src="${lis.image}" style="max-height:140px;border-radius:6px;border:1px solid #cbd5e1">` : ''}</div>
         </div>
         
         <div class="fg" style="margin-top:14px">
@@ -336,8 +340,12 @@ export function switchDesignerSkillTab(skill) {
         </div>
 
         <div class="fg" style="margin-top:14px">
-          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">🖼️ Hình ảnh minh họa bài đọc (Tùy chọn URL)</label>
-          <input type="text" id="ud-read-image" placeholder="VD: https://images.unsplash.com/... hoặc để trống" value="${esc(read.image || '')}">
+          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">🖼️ Hình ảnh minh họa bài đọc (Tùy chọn)</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="ud-read-image" placeholder="VD: https://images.unsplash.com/... hoặc chọn từ thư viện" value="${esc(read.image || '')}">
+            <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('ud-read-image', 'ud-read-img-preview')" style="white-space:nowrap;">📂 Thư viện ảnh</button>
+          </div>
+          <div id="ud-read-img-preview" style="margin-top:6px">${read.image ? `<img src="${read.image}" style="max-height:140px;border-radius:6px;border:1px solid #cbd5e1">` : ''}</div>
         </div>
 
         <div class="fg" style="margin-top:14px">
@@ -367,8 +375,12 @@ export function switchDesignerSkillTab(skill) {
           </div>
         </div>
         <div class="fg" style="margin-top:10px">
-          <label>🖼️ Hình ảnh minh họa câu nói (Tùy chọn URL)</label>
-          <input type="text" id="ud-spk-image" placeholder="VD: https://..." value="${esc(p1.image || '')}">
+          <label>🖼️ Hình ảnh minh họa câu nói (Tùy chọn)</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="ud-spk-image" placeholder="VD: https://... hoặc chọn từ thư viện" value="${esc(p1.image || '')}">
+            <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('ud-spk-image', 'ud-spk-img-preview')" style="white-space:nowrap;">📂 Thư viện ảnh</button>
+          </div>
+          <div id="ud-spk-img-preview" style="margin-top:6px">${p1.image ? `<img src="${p1.image}" style="max-height:140px;border-radius:6px;border:1px solid #cbd5e1">` : ''}</div>
         </div>
       </div>
     `;
@@ -382,15 +394,17 @@ export function switchDesignerSkillTab(skill) {
           <label>Câu hoàn chỉnh (Hệ thống sẽ tự động xáo trộn từ cho học sinh) *</label>
           <input type="text" id="ud-wrt-sentence" style="font-size:15px" value="${esc(it1.correctSentence || '')}">
         </div>
-        <div class="grid2">
-          <div class="fg" style="margin:0">
-            <label>Gợi ý cấu trúc</label>
-            <input type="text" id="ud-wrt-hint" value="${esc(it1.hint || '')}">
+        <div class="fg">
+          <label>Gợi ý cấu trúc</label>
+          <input type="text" id="ud-wrt-hint" value="${esc(it1.hint || '')}">
+        </div>
+        <div class="fg">
+          <label>🖼️ Hình ảnh minh họa bài tập (Tùy chọn)</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="ud-wrt-image" placeholder="VD: https://... hoặc chọn từ thư viện" value="${esc(it1.image || '')}">
+            <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('ud-wrt-image', 'ud-wrt-img-preview')" style="white-space:nowrap;">📂 Thư viện ảnh</button>
           </div>
-          <div class="fg" style="margin:0">
-            <label>🖼️ Hình ảnh minh họa (Tùy chọn URL)</label>
-            <input type="text" id="ud-wrt-image" placeholder="VD: https://..." value="${esc(it1.image || '')}">
-          </div>
+          <div id="ud-wrt-img-preview" style="margin-top:6px">${it1.image ? `<img src="${it1.image}" style="max-height:140px;border-radius:6px;border:1px solid #cbd5e1">` : ''}</div>
         </div>
       </div>
     `;
@@ -410,7 +424,11 @@ export function switchDesignerSkillTab(skill) {
         </div>
         <div class="fg" style="margin-top:10px">
           <label>🖼️ URL Hình ảnh minh họa cho thẻ 3D</label>
-          <input id="ud-fc-image" placeholder="VD: https://images.unsplash.com/photo-... hoặc link ảnh trực tiếp" value="${esc(fc.image || '')}">
+          <div style="display:flex;gap:8px;">
+            <input id="ud-fc-image" placeholder="VD: https://images.unsplash.com/photo-... hoặc chọn từ thư viện" value="${esc(fc.image || '')}">
+            <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('ud-fc-image', 'ud-fc-img-preview')" style="white-space:nowrap;">📂 Thư viện ảnh</button>
+          </div>
+          <div id="ud-fc-img-preview" style="margin-top:6px">${fc.image ? `<img src="${fc.image}" style="max-height:140px;border-radius:6px;border:1px solid #cbd5e1">` : ''}</div>
         </div>
         <div class="fg" style="margin-top:10px">
           <label>Ví dụ thực tế (Example)</label>

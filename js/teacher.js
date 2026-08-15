@@ -910,23 +910,54 @@ function renderGallery() {
 
 
 
+window.openSelectGalleryModal = function(targetInputId = 'qf-image', previewContainerId = null) {
+    window._activeGalleryTargetInputId = targetInputId;
+    window._activeGalleryPreviewId = previewContainerId || (targetInputId === 'qf-image' ? 'image-preview' : null);
+    
+    const modal = document.getElementById('modal-select-gallery');
+    if (modal) {
+        modal.style.display = 'flex';
+        if (typeof window.loadGallery === 'function') window.loadGallery();
+    }
+};
+
 window.deleteGalleryItem = async function(id) {
-    if (!confirm("Xóa ảnh này khỏi thư viện?\nLưu ý: Các câu hỏi đang dùng ảnh này không bị ảnh hưởng, nhưng ảnh sẽ biến mất khỏi thư viện.")) return;
+    if (!confirm("Xóa ảnh này khỏi thư viện?\nLưu ý: Các câu hỏi và bài học đang dùng ảnh này không bị ảnh hưởng, nhưng ảnh sẽ biến mất khỏi danh mục thư viện.")) return;
     const { error } = await db().from('gallery').delete().eq('id', id);
     if(error) console.error("Lỗi deleteGalleryItem:", error);
     if (window.loadGallery) window.loadGallery();
 };
 
 window.selectGalleryImage = function(src) {
-    const qfImage = document.getElementById('qf-image');
-    const imgPreview = document.getElementById('image-preview');
+    const targetId = window._activeGalleryTargetInputId || 'qf-image';
+    const targetInput = document.getElementById(targetId);
     
-    if (qfImage) qfImage.value = src;
-    if (imgPreview) imgPreview.innerHTML = `<img src="${src}" style="max-width:100%; max-height:200px; border-radius:8px; margin-top:10px; border: 1px solid #e2e8f0;">`;
-    if (document.getElementById('btn-clear-image')) document.getElementById('btn-clear-image').style.display = 'inline-block';
-    
+    if (targetInput) {
+        targetInput.value = src;
+        targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+        targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    const previewId = window._activeGalleryPreviewId || (targetId === 'qf-image' ? 'image-preview' : null);
+    if (previewId) {
+        const imgPreview = document.getElementById(previewId);
+        if (imgPreview) {
+            imgPreview.innerHTML = `<img src="${src}" style="max-width:100%; max-height:200px; border-radius:8px; margin-top:8px; border: 1px solid #cbd5e1; display:block;">`;
+        }
+    }
+
+    if (targetId === 'qf-image') {
+        const btnClear = document.getElementById('btn-clear-image');
+        if (btnClear) btnClear.style.display = 'inline-block';
+    }
+
     const modal = document.getElementById('modal-select-gallery');
     if (modal) modal.style.display = 'none';
+
+    // Tự động đồng bộ vào bản nháp nếu đang mở Trình thiết kế Unit
+    if (typeof window.syncCurrentDesignerSkillToDraft === 'function') {
+        window.syncCurrentDesignerSkillToDraft();
+    }
 };
 
 
