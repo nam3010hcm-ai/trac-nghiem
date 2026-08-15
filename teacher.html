@@ -37,6 +37,21 @@ window.MathJax = {
   }
   console.log('[Supabase] window.supabaseClient =', window.supabaseClient ? 'OK' : 'NULL');
 })();
+
+window.globalLogout = async function() {
+  try {
+    if (window.supabaseClient && window.supabaseClient.auth) {
+      await window.supabaseClient.auth.signOut();
+    }
+  } catch (e) {
+    console.warn("SignOut error:", e);
+  }
+  localStorage.removeItem('st_user');
+  localStorage.removeItem('teacher_user');
+  sessionStorage.clear();
+  alert('🔒 Đã đăng xuất thành công khỏi hệ thống K7 EduHub!');
+  window.location.href = 'index.html';
+};
 </script>
 </head>
 <body>

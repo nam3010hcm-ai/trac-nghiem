@@ -26,6 +26,21 @@ window.MathJax = {
 window.supabaseClient = (window.supabase && typeof window.supabase.createClient === 'function')
   ? window.supabase.createClient("https://xuioxmjufpfdblecjvuv.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1aW94bWp1ZnBmZGJsZWNqdnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NDk0NDIsImV4cCI6MjEwMjMyNTQ0Mn0.udJ9W9Y_6WgqENT6j2xSXGZg2pEKfvnMTWfzKR_3gfY", { auth: { persistSession: true, autoRefreshToken: true } })
   : null;
+
+window.globalLogout = async function() {
+  try {
+    if (window.supabaseClient && window.supabaseClient.auth) {
+      await window.supabaseClient.auth.signOut();
+    }
+  } catch (e) {
+    console.warn("SignOut error:", e);
+  }
+  localStorage.removeItem('st_user');
+  localStorage.removeItem('teacher_user');
+  sessionStorage.clear();
+  alert('🔒 Đã đăng xuất thành công khỏi hệ thống K7 EduHub!');
+  window.location.href = 'index.html';
+};
 </script>
 </head>
 

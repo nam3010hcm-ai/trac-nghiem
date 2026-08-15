@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="css/style.css"/>
 <link rel="stylesheet" href="css/learn.css"/>
 
-<!-- SUPABASE CLIENT INITIALIZATION -->
+<!-- SUPABASE CLIENT INITIALIZATION & GLOBAL AUTH GUARDS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1/dist/umd/supabase.min.js"></script>
 <script>
 (function() {
@@ -28,6 +28,49 @@
     window.supabaseClient = null;
   }
 })();
+
+window.globalLogout = async function() {
+  try {
+    if (window.supabaseClient && window.supabaseClient.auth) {
+      await window.supabaseClient.auth.signOut();
+    }
+  } catch (e) {
+    console.warn("SignOut error:", e);
+  }
+  localStorage.removeItem('st_user');
+  localStorage.removeItem('teacher_user');
+  sessionStorage.clear();
+  alert('🔒 Đã đăng xuất thành công khỏi hệ thống K7 EduHub!');
+  window.location.href = 'index.html';
+};
+
+window.checkTeacherAuth = function(event) {
+  const teacherUser = localStorage.getItem('teacher_user');
+  const sbUser = window.supabaseClient?.auth?.user?.();
+  if (!teacherUser && !sbUser) {
+    if (event) event.preventDefault();
+    alert("🔒 Chức năng này yêu cầu quyền đăng nhập Quản Trị / Giảng Viên!\n\nHệ thống sẽ chuyển bạn tới Cổng Đăng Nhập Quản Trị.");
+    window.location.href = 'teacher.html';
+    return false;
+  }
+  return true;
+};
+
+window.checkSkillAuth = function(event) {
+  const studentUser = localStorage.getItem('st_user');
+  const teacherUser = localStorage.getItem('teacher_user');
+  if (!studentUser && !teacherUser) {
+    if (event) event.preventDefault();
+    alert("🔒 Chức năng 'Luyện 5 Kỹ Năng' yêu cầu đăng nhập tài khoản Học Viên hoặc Giảng Viên!\n\nVui lòng đăng nhập để bắt đầu học tập.");
+    if (window.openAuthModal) {
+      window.openAuthModal();
+    } else {
+      window.location.href = 'student.html';
+    }
+    return false;
+  }
+  return true;
+};
 </script>
 </head>
 
@@ -44,9 +87,9 @@
 
   <div class="nav">
     <a class="nav-btn active" href="index.html">🏠 Dashboard</a>
-    <a class="nav-btn" href="learn.html">📖 Luyện Kỹ Năng</a>
+    <a class="nav-btn" href="learn.html" onclick="return window.checkSkillAuth(event);">📖 Luyện Kỹ Năng</a>
     <a class="nav-btn" href="student.html">🎓 Cổng Thi</a>
-    <a class="nav-btn" href="teacher.html">👩‍🏫 Quản Trị LMS</a>
+    <a class="nav-btn" href="teacher.html" onclick="return window.checkTeacherAuth(event);">👩‍🏫 Quản Trị LMS</a>
   </div>
 
   <div class="header-actions">
@@ -82,8 +125,8 @@
       <p class="hero-subtitle">Hệ thống quản lý học tập thông minh & tổ chức thi trắc nghiệm trực tuyến bảo mật.</p>
     </div>
     <div class="hero-quick-actions">
-      <a href="teacher.html" class="action-btn-primary">+ Tạo Đề Thi Mới</a>
-      <a href="learn.html" class="action-btn-secondary">📖 Luyện 5 Kỹ Năng</a>
+      <a href="teacher.html" class="action-btn-primary" onclick="return window.checkTeacherAuth(event);">+ Tạo Đề Thi Mới</a>
+      <a href="learn.html" class="action-btn-secondary" onclick="return window.checkSkillAuth(event);">📖 Luyện 5 Kỹ Năng</a>
     </div>
   </div>
 
@@ -363,7 +406,7 @@
         </div>
 
         <div style="display:flex;flex-direction:column;gap:10px;">
-          <a href="learn.html" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#f0f9ff;border:1px solid #bae6fd;transition:all 0.15s ease;">
+          <a href="learn.html" onclick="return window.checkSkillAuth(event);" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#f0f9ff;border:1px solid #bae6fd;transition:all 0.15s ease;">
             <div style="font-size:24px;">📖</div>
             <div>
               <div style="font-size:13.5px;font-weight:800;color:#0369a1;">Luyện 5 Kỹ Năng</div>
@@ -379,7 +422,7 @@
             </div>
           </a>
 
-          <a href="teacher.html" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#fffbeb;border:1px solid #fde68a;transition:all 0.15s ease;">
+          <a href="teacher.html" onclick="return window.checkTeacherAuth(event);" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#fffbeb;border:1px solid #fde68a;transition:all 0.15s ease;">
             <div style="font-size:24px;">👩‍🏫</div>
             <div>
               <div style="font-size:13.5px;font-weight:800;color:#b45309;">Quản Trị Giảng Viên</div>
