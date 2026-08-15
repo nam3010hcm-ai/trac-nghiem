@@ -628,13 +628,19 @@ function renderListeningLessons() {
   if (!container) return;
   if (!list.length) { container.innerHTML = ''; return; }
 
-  container.innerHTML = list.map(item => `
-    <div class="lesson-card ${currentLisLesson && item.id === currentLisLesson.id ? 'active' : ''}" onclick="window.selectListeningLesson('${item.id}')">
-      <span class="lesson-badge">${item.level || currentUnit.level}</span>
-      <div style="font-weight:700;font-size:15px;margin-bottom:4px;color:#1e293b">${item.title}</div>
-      <div style="font-size:12px;color:#64748b">🎯 Chủ đề: ${item.topic || currentUnit.topic} • ⏱ ${item.duration || '45s'}</div>
-    </div>
-  `).join('');
+  container.innerHTML = list.map(item => {
+    const isSelected = currentLisLesson && item.id === currentLisLesson.id;
+    return `
+      <div class="lesson-card ${isSelected ? 'active' : ''}" onclick="window.selectListeningLesson('${item.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span class="lesson-badge">${item.level || currentUnit.level || 'A2 - B1'}</span>
+          ${isSelected ? '<span class="active-badge">✓ Đang chọn</span>' : ''}
+        </div>
+        <div class="lesson-title">🎧 ${item.title}</div>
+        <div class="lesson-meta">🎯 Chủ đề: ${item.topic || currentUnit.topic || 'General'} • ⏱ ${item.duration || '45s'}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 window.selectListeningLesson = function(id) {
@@ -839,13 +845,19 @@ function renderReadingLessons() {
   if (!container) return;
   if (!list.length) { container.innerHTML = ''; return; }
 
-  container.innerHTML = list.map(item => `
-    <div class="lesson-card ${currentReadLesson && item.id === currentReadLesson.id ? 'active' : ''}" onclick="window.selectReadingLesson('${item.id}')">
-      <span class="lesson-badge">${item.level || currentUnit.level}</span>
-      <div style="font-weight:700;font-size:15px;margin-bottom:4px;color:#1e293b">${item.title}</div>
-      <div style="font-size:12px;color:#64748b">🎯 Chủ đề: ${item.topic || currentUnit.topic}</div>
-    </div>
-  `).join('');
+  container.innerHTML = list.map(item => {
+    const isSelected = currentReadLesson && item.id === currentReadLesson.id;
+    return `
+      <div class="lesson-card ${isSelected ? 'active' : ''}" onclick="window.selectReadingLesson('${item.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span class="lesson-badge">${item.level || currentUnit.level || 'A2 - B1'}</span>
+          ${isSelected ? '<span class="active-badge">✓ Đang chọn</span>' : ''}
+        </div>
+        <div class="lesson-title">📖 ${item.title}</div>
+        <div class="lesson-meta">🎯 Chủ đề: ${item.topic || currentUnit.topic || 'General'}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 window.selectReadingLesson = function(id) {
@@ -985,13 +997,19 @@ function renderSpeakingLessons() {
   if (!container) return;
   if (!list.length) { container.innerHTML = ''; return; }
 
-  container.innerHTML = list.map(item => `
-    <div class="lesson-card ${currentSpkLesson && item.id === currentSpkLesson.id ? 'active' : ''}" onclick="window.selectSpeakingLesson('${item.id}')">
-      <span class="lesson-badge">${item.level || currentUnit.level}</span>
-      <div style="font-weight:700;font-size:15px;margin-bottom:4px;color:#1e293b">${item.title}</div>
-      <div style="font-size:12px;color:#64748b">🎯 Chủ đề: ${item.topic || currentUnit.topic}</div>
-    </div>
-  `).join('');
+  container.innerHTML = list.map(item => {
+    const isSelected = currentSpkLesson && item.id === currentSpkLesson.id;
+    return `
+      <div class="lesson-card ${isSelected ? 'active' : ''}" onclick="window.selectSpeakingLesson('${item.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span class="lesson-badge">${item.level || currentUnit.level || 'A2 - B1'}</span>
+          ${isSelected ? '<span class="active-badge">✓ Đang chọn</span>' : ''}
+        </div>
+        <div class="lesson-title">🗣️ ${item.title}</div>
+        <div class="lesson-meta">🎯 Chủ đề: ${item.topic || currentUnit.topic || 'General'}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 window.selectSpeakingLesson = function(id) {
