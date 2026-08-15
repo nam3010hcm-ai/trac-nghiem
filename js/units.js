@@ -286,14 +286,22 @@ export function renderUnitsList() {
     const canEdit = canEditItem(u, state.currentUserEmail);
     const authorBadge = u.created_by ? `<span class="cat-badge" style="background:#f1f5f9;color:#475569" title="Người tạo: ${esc(u.created_by)}">👤 ${esc(u.created_by.split('@')[0])}</span>` : '';
 
+    const isEng = (u.subject || '').includes('Tiếng Anh') || (u.subject || '').includes('English');
+    const badge1 = isEng ? `🎧 Listening (${lisCount})` : `📖 Lý thuyết (${lisCount})`;
+    const badge2 = isEng ? `📖 Reading (${readCount})` : `💡 Ví dụ (${readCount})`;
+    const badge3 = isEng ? `🗣️ Speaking (${spkCount})` : `🗣️ Đọc công thức (${spkCount})`;
+    const badge4 = isEng ? `✍️ Writing (${wrtCount})` : `✍️ Tự luyện (${wrtCount})`;
+    const badge5 = isEng ? `🔍 Flashcards (${fcCount})` : `🧠 Thẻ ghi nhớ (${fcCount})`;
+    const editBtnLabel = isEng ? '🎛️ Thiết kế 5 Kỹ năng' : '🎛️ Biên soạn Bài học Tương tác';
+
     return `
       <div class="qitem" style="border-left: 4px solid ${isHidden ? '#94a3b8' : '#3b82f6'}; margin-bottom:12px;">
         <div class="qrow">
           <div style="flex:1">
             <!-- PHÂN CẤP: MÔN HỌC & HỌC PHẦN -->
             <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-              <span class="cat-badge" style="background:#eff6ff;color:#1e40af;font-weight:700">📚 ${esc(u.subject || 'Tiếng Anh (English)')}</span>
-              <span class="cat-badge" style="background:#f0fdf4;color:#166534;font-weight:700">📦 ${esc(u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)')}</span>
+              <span class="cat-badge" style="background:#eff6ff;color:#1e40af;font-weight:700">📚 ${esc(u.subject || '🇬🇧 Tiếng Anh')}</span>
+              <span class="cat-badge" style="background:#f0fdf4;color:#166534;font-weight:700">📦 ${esc(u.module || 'English B1 - General & Academic Skills')}</span>
             </div>
 
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
@@ -305,17 +313,17 @@ export function renderUnitsList() {
             </div>
             <div style="font-size:13px;color:#64748b;margin-bottom:8px">${esc(u.description || u.topic || '')}</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:12px">
-              <span class="abadge">🎧 Listening (${lisCount})</span>
-              <span class="abadge">📖 Reading (${readCount})</span>
-              <span class="abadge">🗣️ Speaking (${spkCount})</span>
-              <span class="abadge">✍️ Writing (${wrtCount})</span>
-              <span class="abadge">🔍 Flashcards (${fcCount})</span>
+              <span class="abadge">${badge1}</span>
+              <span class="abadge">${badge2}</span>
+              <span class="abadge">${badge3}</span>
+              <span class="abadge">${badge4}</span>
+              <span class="abadge">${badge5}</span>
             </div>
           </div>
           <div style="display:flex;gap:6px;flex-direction:column;align-items:flex-end">
             ${canEdit ? `
               <button class="btn btn-sm" onclick="window.openUnitEditor('${u.id}')" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe">
-                🎛️ Thiết kế 5 Kỹ năng
+                ${editBtnLabel}
               </button>
               <button class="btn btn-sm ${isHidden ? 'btn-warn' : 'btn-p'}" onclick="window.toggleUnitVisibility('${u.id}')">
                 ${isHidden ? '👁️ Mở Unit' : '🙈 Ẩn Unit'}
@@ -452,13 +460,17 @@ export function openUnitEditor(unitId = null, defaultSubject = '', defaultModule
   };
 
   // Đổ thông tin cơ bản vào form
-  if ($('ud-subject')) $('ud-subject').value = unit.subject || defaultSubject || '🇬🇧 Tiếng Anh';
+  const currentSub = unit.subject || defaultSubject || '🇬🇧 Tiếng Anh';
+  if ($('ud-subject')) $('ud-subject').value = currentSub;
   if ($('ud-module')) $('ud-module').value = unit.module || defaultModule || 'English B1 - General & Academic Skills';
   if ($('ud-title')) $('ud-title').value = unit.title || '';
   if ($('ud-topic')) $('ud-topic').value = unit.topic || '';
   if ($('ud-level')) $('ud-level').value = unit.level || 'A2 - B1';
   if ($('ud-icon')) $('ud-icon').value = unit.icon || '📖';
   if ($('ud-desc')) $('ud-desc').value = unit.description || '';
+
+  // Cập nhật nhãn và tab theo loại môn học (Tiếng Anh vs Các môn khác)
+  updateDesignerSubjectLabels(currentSub);
 
   // Lưu tạm unit đang chỉnh sửa vào window._currentDraftUnit
   window._currentDraftUnit = clone(unit);
@@ -468,6 +480,50 @@ export function openUnitEditor(unitId = null, defaultSubject = '', defaultModule
   switchDesignerSkillTab('listening');
   setTimeout(autoFitAllDesignerTextareas, 60);
 }
+
+export function updateDesignerSubjectLabels(sub) {
+  const isEng = !sub || sub.includes('Tiếng Anh') || sub.includes('English');
+  const titleEl = document.getElementById('ud-modal-title');
+  const subTitleEl = document.getElementById('ud-modal-subtitle');
+  const sectionLabel = document.getElementById('ud-section-label');
+  
+  if (titleEl) {
+    titleEl.textContent = isEng ? '🎛️ Thiết Kế UNIT Bài Học (5 Kỹ Năng Tiếng Anh)' : `🎛️ Biên Soạn Bài Học Tương Tác (${sub || 'Môn Học'})`;
+  }
+  if (subTitleEl) {
+    subTitleEl.textContent = isEng 
+      ? 'Soạn nội dung bài học tương tác: Listening, Reading, Speaking, Writing, Language Focus'
+      : 'Soạn nội dung bài học tương tác: Lý thuyết bài giảng, Ví dụ mẫu, Đọc công thức, Bài tập tự luyện, Sổ tay ghi nhớ';
+  }
+  if (sectionLabel) {
+    sectionLabel.textContent = isEng ? '⚙️ CHỌN KỸ NĂNG ĐỂ THIẾT KẾ:' : '⚙️ CHỌN HẠNG MỤC NỘI DUNG TƯƠNG TÁC:';
+  }
+
+  const tabRow = document.getElementById('ud-tab-row');
+  if (tabRow) {
+    if (isEng) {
+      tabRow.innerHTML = `
+        <button type="button" class="tab-btn ud-skill-tab ${currentDesignerSkill === 'listening' ? 'active' : ''}" data-skill="listening" onclick="window.switchDesignerSkillTab('listening')">🎧 1. Listening</button>
+        <button type="button" class="tab-btn ud-skill-tab ${currentDesignerSkill === 'reading' ? 'active' : ''}" data-skill="reading" onclick="window.switchDesignerSkillTab('reading')">📖 2. Reading</button>
+        <button type="button" class="tab-btn ud-skill-tab ${currentDesignerSkill === 'speaking' ? 'active' : ''}" data-skill="speaking" onclick="window.switchDesignerSkillTab('speaking')">🗣️ 3. Speaking</button>
+        <button type="button" class="tab-btn ud-skill-tab ${currentDesignerSkill === 'writing' ? 'active' : ''}" data-skill="writing" onclick="window.switchDesignerSkillTab('writing')">✍️ 4. Writing</button>
+        <button type="button" class="tab-btn ud-skill-tab ${currentDesignerSkill === 'languageFocus' ? 'active' : ''}" data-skill="languageFocus" onclick="window.switchDesignerSkillTab('languageFocus')">🔍 5. Language Focus</button>
+      `;
+    } else {
+      tabRow.innerHTML = `
+        <button type="button" class="tab-btn ud-skill-tab ${currentDesignerSkill === 'listening' ? 'active' : ''}" data-skill="listening" onclick="window.switchDesignerSkillTab('listening')">📖 1. Lý Thuyết & Bài Giảng</button>
+        <button type="button" class="tab-btn ud-skill-tab ${currentDesignerSkill === 'reading' ? 'active' : ''}" data-skill="reading" onclick="window.switchDesignerSkillTab('reading')">💡 2. Ví Dụ Minh Họa</button>
+        <button type="button" class="tab-btn ud-skill-tab ${currentDesignerSkill === 'speaking' ? 'active' : ''}" data-skill="speaking" onclick="window.switchDesignerSkillTab('speaking')">🗣️ 3. Đọc Công Thức / Code</button>
+        <button type="button" class="tab-btn ud-skill-tab ${currentDesignerSkill === 'writing' ? 'active' : ''}" data-skill="writing" onclick="window.switchDesignerSkillTab('writing')">✍️ 4. Bài Tập Tự Luyện</button>
+        <button type="button" class="tab-btn ud-skill-tab ${currentDesignerSkill === 'languageFocus' ? 'active' : ''}" data-skill="languageFocus" onclick="window.switchDesignerSkillTab('languageFocus')">🧠 5. Sổ Tay Ghi Nhớ & Trắc Nghiệm</button>
+      `;
+    }
+  }
+}
+
+window.onDesignerSubjectInput = function(val) {
+  updateDesignerSubjectLabels(val);
+};
 
 export function closeUnitEditor() {
   const modal = document.getElementById('unit-designer-modal');

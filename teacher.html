@@ -1247,8 +1247,8 @@ window.globalLogout = async function() {
     <div class="card" style="width:94%; max-width:920px; max-height:92vh; overflow-y:auto; position:relative; padding:24px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 2px solid #e2e8f0; padding-bottom:12px;">
             <div>
-              <h3 style="margin:0; color:#1e293b; font-size:18px;">🎛️ Thiết Kế UNIT Bài Học (5 Kỹ Năng)</h3>
-              <div style="font-size:12px; color:#64748b;">Soạn nội dung bài học tương tác: Listening, Reading, Speaking, Writing, Language Focus</div>
+              <h3 id="ud-modal-title" style="margin:0; color:#1e293b; font-size:18px;">🎛️ Thiết Kế UNIT Bài Học (5 Kỹ Năng)</h3>
+              <div id="ud-modal-subtitle" style="font-size:12px; color:#64748b;">Soạn nội dung bài học tương tác: Listening, Reading, Speaking, Writing, Language Focus</div>
             </div>
             <button class="btn btn-sm" onclick="window.closeUnitEditor();">✖ Đóng</button>
         </div>
@@ -1257,7 +1257,7 @@ window.globalLogout = async function() {
         <div class="grid2" style="margin-bottom:12px; background:#eff6ff; padding:12px; border-radius:10px; border:1px solid #bfdbfe;">
           <div class="fg" style="margin:0">
             <label style="color:#1e40af;font-weight:700">📚 1. Môn Học (Subject) *</label>
-            <input type="text" id="ud-subject" list="dl-subjects" placeholder="VD: 🇬🇧 Tiếng Anh">
+            <input type="text" id="ud-subject" list="dl-subjects" placeholder="VD: 🇬🇧 Tiếng Anh" oninput="if(window.onDesignerSubjectInput) window.onDesignerSubjectInput(this.value)">
             <datalist id="dl-subjects">
               <option value="🇬🇧 Tiếng Anh">
               <option value="📐 Toán Học">
@@ -1313,9 +1313,9 @@ window.globalLogout = async function() {
           <input type="text" id="ud-desc" placeholder="Mô tả mục tiêu bài học hoặc tóm tắt nội dung...">
         </div>
 
-        <!-- 5 TABS SOẠN THẢO 5 KỸ NĂNG -->
-        <div style="margin:18px 0 12px; font-weight:700; color:#1e293b; font-size:14px;">⚙️ CHỌN KỸ NĂNG ĐỂ THIẾT KẾ:</div>
-        <div class="tab-row" style="margin-bottom:14px;">
+        <!-- 5 TABS SOẠN THẢO DÀNH CHO TIẾNG ANH (5 KỸ NĂNG) HOẶC CÁC MÔN KHÁC (BÀI HỌC TƯƠNG TÁC) -->
+        <div id="ud-section-label" style="margin:18px 0 12px; font-weight:700; color:#1e293b; font-size:14px;">⚙️ CHỌN KỸ NĂNG ĐỂ THIẾT KẾ:</div>
+        <div class="tab-row" id="ud-tab-row" style="margin-bottom:14px;">
           <button type="button" class="tab-btn ud-skill-tab active" data-skill="listening" onclick="window.switchDesignerSkillTab('listening')">🎧 1. Listening</button>
           <button type="button" class="tab-btn ud-skill-tab" data-skill="reading" onclick="window.switchDesignerSkillTab('reading')">📖 2. Reading</button>
           <button type="button" class="tab-btn ud-skill-tab" data-skill="speaking" onclick="window.switchDesignerSkillTab('speaking')">🗣️ 3. Speaking</button>

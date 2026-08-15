@@ -675,6 +675,66 @@ function renderCascadingSelectors() {
   `).join('');
 
   updateBreadcrumbs();
+  updateSubjectUI(currentSubject);
+}
+
+export function updateSubjectUI(subject) {
+  const isEng = !subject || subject.includes('Tiếng Anh') || subject.includes('English');
+  const unitLabel = document.getElementById('lbl-unit-select');
+  if (unitLabel) {
+    unitLabel.textContent = isEng ? '3. UNIT BÀI HỌC (5 KỸ NĂNG)' : '3. BÀI HỌC TƯƠNG TÁC (INTERACTIVE LESSON)';
+  }
+
+  const navRow = document.getElementById('learn-skill-nav-row');
+  if (navRow) {
+    if (isEng) {
+      navRow.innerHTML = `
+        <button class="skill-tab-btn ${currentSkillTab === 'listening' ? 'active' : ''}" data-skill="listening" onclick="window.switchSkillTab('listening')">
+          <span class="tab-icon">🎧</span>
+          <span>1. LISTENING</span>
+        </button>
+        <button class="skill-tab-btn ${currentSkillTab === 'reading' ? 'active' : ''}" data-skill="reading" onclick="window.switchSkillTab('reading')">
+          <span class="tab-icon">📖</span>
+          <span>2. READING</span>
+        </button>
+        <button class="skill-tab-btn ${currentSkillTab === 'speaking' ? 'active' : ''}" data-skill="speaking" onclick="window.switchSkillTab('speaking')">
+          <span class="tab-icon">🗣️</span>
+          <span>3. SPEAKING</span>
+        </button>
+        <button class="skill-tab-btn ${currentSkillTab === 'writing' ? 'active' : ''}" data-skill="writing" onclick="window.switchSkillTab('writing')">
+          <span class="tab-icon">✍️</span>
+          <span>4. WRITING</span>
+        </button>
+        <button class="skill-tab-btn ${currentSkillTab === 'languageFocus' ? 'active' : ''}" data-skill="languageFocus" onclick="window.switchSkillTab('languageFocus')">
+          <span class="tab-icon">🔍</span>
+          <span>5. LANGUAGE FOCUS</span>
+        </button>
+      `;
+    } else {
+      navRow.innerHTML = `
+        <button class="skill-tab-btn ${currentSkillTab === 'listening' ? 'active' : ''}" data-skill="listening" onclick="window.switchSkillTab('listening')">
+          <span class="tab-icon">📖</span>
+          <span>1. LÝ THUYẾT & BÀI GIẢNG</span>
+        </button>
+        <button class="skill-tab-btn ${currentSkillTab === 'reading' ? 'active' : ''}" data-skill="reading" onclick="window.switchSkillTab('reading')">
+          <span class="tab-icon">💡</span>
+          <span>2. VÍ DỤ MINH HỌA</span>
+        </button>
+        <button class="skill-tab-btn ${currentSkillTab === 'speaking' ? 'active' : ''}" data-skill="speaking" onclick="window.switchSkillTab('speaking')">
+          <span class="tab-icon">🗣️</span>
+          <span>3. ĐỌC CÔNG THỨC / CODE</span>
+        </button>
+        <button class="skill-tab-btn ${currentSkillTab === 'writing' ? 'active' : ''}" data-skill="writing" onclick="window.switchSkillTab('writing')">
+          <span class="tab-icon">✍️</span>
+          <span>4. BÀI TẬP TỰ LUYỆN</span>
+        </button>
+        <button class="skill-tab-btn ${currentSkillTab === 'languageFocus' ? 'active' : ''}" data-skill="languageFocus" onclick="window.switchSkillTab('languageFocus')">
+          <span class="tab-icon">🧠</span>
+          <span>5. CÔNG THỨC & TRẮC NGHIỆM</span>
+        </button>
+      `;
+    }
+  }
 }
 
 function updateBreadcrumbs() {
@@ -682,7 +742,7 @@ function updateBreadcrumbs() {
   const bcMod = document.getElementById('bc-module');
   const bcUnit = document.getElementById('bc-unit');
 
-  if (bcSub) bcSub.textContent = currentSubject || 'Tiếng Anh (English)';
+  if (bcSub) bcSub.textContent = currentSubject || '🇬🇧 Tiếng Anh';
   if (bcMod) bcMod.textContent = currentModule || 'Học phần cơ bản';
   if (bcUnit) bcUnit.textContent = currentUnit?.title || 'Unit bài học';
 }
