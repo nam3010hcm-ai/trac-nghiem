@@ -4,17 +4,17 @@
    ========================================================================= */
 
 :root {
-  --learn-navy: #042f2e;
-  --learn-navy-hover: #064e3b;
-  --learn-primary-blue: #0d9488;
-  --learn-sky-light: #f0fdfa;
+  --learn-navy: #0f172a;
+  --learn-navy-hover: #1e293b;
+  --learn-primary-blue: #2563eb;
+  --learn-sky-light: #eff6ff;
   --learn-border: #cbd5e1;
   --learn-border-subtle: #e2e8f0;
   --learn-gold: #f59e0b;
 }
 
 body.learn-body {
-  background: #f0fdfa;
+  background: #f8fafc;
   color: #0f172a;
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100vh;

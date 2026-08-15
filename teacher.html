@@ -223,69 +223,67 @@ window.globalLogout = async function() {
 <div class="admin-layout-wrapper" id="t-panel" style="display:none">
     <!-- LEFT SIDEBAR -->
     <aside class="admin-sidebar" id="admin-sidebar">
-      <div>
-        <div class="admin-sidebar-header">
-          <div style="font-size:24px">⚡</div>
-          <div class="admin-sidebar-logo">
-            EduCore Admin
-            <span>Hệ Sinh Thái Học Tập & Đánh Giá Số</span>
-          </div>
+      <div class="admin-sidebar-header">
+        <div style="font-size:24px">⚡</div>
+        <div class="admin-sidebar-logo">
+          EduCore Admin
+          <span>Hệ Sinh Thái Học Tập & Đánh Giá Số</span>
         </div>
-
-        <nav class="admin-sidebar-nav">
-          <!-- 1. TỔNG QUAN -->
-          <div class="sidebar-section-title">🏠 TỔNG QUAN</div>
-          <a class="sidebar-item active" data-tab="dash" onclick="window.switchTTab('dash')">
-            <span>📊</span> <span>Bảng điều khiển EduCore</span>
-            <span class="item-badge">KPI</span>
-          </a>
-
-          <!-- 2. HỌC TẬP & NỘI DUNG -->
-          <div class="sidebar-section-title">📚 HỌC TẬP & NỘI DUNG</div>
-          <a class="sidebar-item" data-tab="curriculum" onclick="window.switchTTab('curriculum')">
-            <span>🏛️</span> <span>Môn học & Chương trình</span>
-          </a>
-          <a class="sidebar-item" data-tab="unit" onclick="window.switchTTab('unit')">
-            <span>📖</span> <span>Bài học & Unit (5 Kỹ Năng)</span>
-          </a>
-          <a class="sidebar-item" data-tab="c" onclick="window.switchTTab('c')">
-            <span>🗂️</span> <span>Chủ đề & Phần bài giảng</span>
-          </a>
-
-          <!-- 3. NGÂN HÀNG CÂU HỎI -->
-          <div class="sidebar-section-title">🧠 NGÂN HÀNG CÂU HỎI</div>
-          <a class="sidebar-item" data-tab="q" onclick="window.switchTTab('q')">
-            <span>📚</span> <span>Ngân hàng câu hỏi</span>
-          </a>
-
-          <!-- 4. THI & ĐÁNH GIÁ -->
-          <div class="sidebar-section-title">📝 THI & ĐÁNH GIÁ</div>
-          <a class="sidebar-item" data-tab="e" onclick="window.switchTTab('e')">
-            <span>📝</span> <span>Ma trận & Đề thi</span>
-          </a>
-          <a class="sidebar-item" data-tab="cohort" onclick="window.switchTTab('cohort')">
-            <span>📅</span> <span>Kỳ thi & Ca thi</span>
-          </a>
-          <a class="sidebar-item" data-tab="r" onclick="window.switchTTab('r')">
-            <span>🏆</span> <span>Kết quả & Phân tích</span>
-          </a>
-
-          <!-- 5. QUẢN LÝ NGƯỜI DÙNG -->
-          <div class="sidebar-section-title">👥 QUẢN LÝ NGƯỜI DÙNG</div>
-          <a class="sidebar-item" data-tab="teachers" id="tab-btn-teachers" onclick="window.switchTTab('teachers')">
-            <span>👨‍🏫</span> <span>Quản lý Người Dạy (Teachers)</span>
-          </a>
-          <a class="sidebar-item" data-tab="students" id="tab-btn-students" onclick="window.switchTTab('students')">
-            <span>🎓</span> <span>Quản lý Người Học (Students)</span>
-          </a>
-
-          <!-- 6. MEDIA LIBRARY -->
-          <div class="sidebar-section-title">🖼️ TÀI NGUYÊN</div>
-          <a class="sidebar-item" data-tab="img" onclick="window.switchTTab('img')">
-            <span>🎵</span> <span>Media Library (Audio & Ảnh)</span>
-          </a>
-        </nav>
       </div>
+
+      <nav class="admin-sidebar-nav">
+        <!-- 1. TỔNG QUAN -->
+        <div class="sidebar-section-title">🏠 TỔNG QUAN</div>
+        <a class="sidebar-item active" data-tab="dash" onclick="window.switchTTab('dash')">
+          <span>📊</span> <span>Bảng điều khiển EduCore</span>
+          <span class="item-badge">KPI</span>
+        </a>
+
+        <!-- 2. HỌC TẬP & NỘI DUNG -->
+        <div class="sidebar-section-title">📚 HỌC TẬP & NỘI DUNG</div>
+        <a class="sidebar-item" data-tab="curriculum" onclick="window.switchTTab('curriculum')">
+          <span>🏛️</span> <span>Môn học & Chương trình</span>
+        </a>
+        <a class="sidebar-item" data-tab="unit" onclick="window.switchTTab('unit')">
+          <span>📖</span> <span>Bài học & Unit (5 Kỹ Năng)</span>
+        </a>
+        <a class="sidebar-item" data-tab="c" onclick="window.switchTTab('c')">
+          <span>🗂️</span> <span>Chủ đề & Phần bài giảng</span>
+        </a>
+
+        <!-- 3. NGÂN HÀNG CÂU HỎI -->
+        <div class="sidebar-section-title">🧠 NGÂN HÀNG CÂU HỎI</div>
+        <a class="sidebar-item" data-tab="q" onclick="window.switchTTab('q')">
+          <span>📚</span> <span>Ngân hàng câu hỏi</span>
+        </a>
+
+        <!-- 4. THI & ĐÁNH GIÁ -->
+        <div class="sidebar-section-title">📝 THI & ĐÁNH GIÁ</div>
+        <a class="sidebar-item" data-tab="e" onclick="window.switchTTab('e')">
+          <span>📝</span> <span>Ma trận & Đề thi</span>
+        </a>
+        <a class="sidebar-item" data-tab="cohort" onclick="window.switchTTab('cohort')">
+          <span>📅</span> <span>Kỳ thi & Ca thi</span>
+        </a>
+        <a class="sidebar-item" data-tab="r" onclick="window.switchTTab('r')">
+          <span>🏆</span> <span>Kết quả & Phân tích</span>
+        </a>
+
+        <!-- 5. QUẢN LÝ NGƯỜI DÙNG -->
+        <div class="sidebar-section-title">👥 QUẢN LÝ NGƯỜI DÙNG</div>
+        <a class="sidebar-item" data-tab="teachers" id="tab-btn-teachers" onclick="window.switchTTab('teachers')">
+          <span>👨‍🏫</span> <span>Quản lý Người Dạy (Teachers)</span>
+        </a>
+        <a class="sidebar-item" data-tab="students" id="tab-btn-students" onclick="window.switchTTab('students')">
+          <span>🎓</span> <span>Quản lý Người Học (Students)</span>
+        </a>
+
+        <!-- 6. MEDIA LIBRARY -->
+        <div class="sidebar-section-title">🖼️ TÀI NGUYÊN</div>
+        <a class="sidebar-item" data-tab="img" onclick="window.switchTTab('img')">
+          <span>🎵</span> <span>Media Library (Audio & Ảnh)</span>
+        </a>
+      </nav>
 
       <!-- SIDEBAR FOOTER WITH USER PROFILE -->
       <div class="admin-sidebar-footer">

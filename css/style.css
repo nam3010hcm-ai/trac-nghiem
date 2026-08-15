@@ -8,37 +8,37 @@
 :root {
   --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
-  /* Emerald Teal & Mint Forest Palette (Educeet Theme) */
-  --header-bg: linear-gradient(135deg, #042f2e 0%, #064e3b 50%, #0d9488 100%);
-  --header-gold: #f59e0b;
-  --primary: #0d9488;
-  --primary-hover: #0f766e;
-  --primary-blue: #0d9488;
-  --primary-light: #f0fdfa;
-  --primary-border: #99f6e4;
+  /* Workademy Theme Palette (Electric Royal Blue, Crisp White & Warm Accents) */
+  --header-bg: #0f172a;
+  --header-gold: #2563eb;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-blue: #2563eb;
+  --primary-light: #eff6ff;
+  --primary-border: #bfdbfe;
   
   --accent-gold: #f59e0b;
   --accent-gold-light: #fef3c7;
   --accent-emerald: #10b981;
   --accent-emerald-light: #ecfdf5;
-  --accent-rose: #f43f5e;
-  --accent-rose-light: #fff1f2;
-  --accent-purple: #8b5cf6;
+  --accent-rose: #ef4444;
+  --accent-rose-light: #fef2f2;
+  --accent-purple: #7c3aed;
   --accent-purple-light: #f5f3ff;
 
   /* Surfaces & Backgrounds */
-  --bg-page: #f0fdfa;
+  --bg-page: #f8fafc;
   --surface: #ffffff;
-  --surface-subtle: #f8fafc;
+  --surface-subtle: #f1f5f9;
   --text-main: #0f172a;
-  --text-muted: #475569;
-  --border-card: #cbd5e1;
-  --border-subtle: #e2e8f0;
+  --text-muted: #64748b;
+  --border-card: #e2e8f0;
+  --border-subtle: #f1f5f9;
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(13, 148, 136, 0.05);
-  --shadow-md: 0 4px 14px rgba(13, 148, 136, 0.08);
-  --shadow-lg: 0 8px 24px rgba(13, 148, 136, 0.12);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 10px 30px rgba(37, 99, 235, 0.12);
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -835,8 +835,8 @@ textarea {
 
 .admin-sidebar {
   width: 260px;
-  background: #042f2e;
-  color: #f0fdfa;
+  background: #0f172a;
+  color: #f8fafc;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -846,15 +846,18 @@ textarea {
   top: 62px;
   height: calc(100vh - 62px);
   z-index: 90;
-  border-right: 1px solid #115e59;
+  border-right: 1px solid #1e293b;
+  overflow: hidden;
 }
 
 .admin-sidebar-header {
   padding: 18px 20px;
-  border-bottom: 1px solid #115e59;
+  border-bottom: 1px solid #1e293b;
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
+  background: #0f172a;
 }
 
 .admin-sidebar-logo {
@@ -869,69 +872,70 @@ textarea {
   display: block;
   font-size: 11px;
   font-weight: 600;
-  color: #2dd4bf;
+  color: #60a5fa;
   margin-top: 2px;
 }
 
 .admin-sidebar-nav {
-  padding: 10px 8px;
-  overflow-y: scroll;
+  padding: 12px 10px;
+  overflow-y: auto;
   flex: 1;
-  scrollbar-width: auto;
-  scrollbar-color: #f59e0b #022c22;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 #1e293b;
 }
 
 .admin-sidebar-nav::-webkit-scrollbar {
-  width: 8px;
+  width: 7px;
 }
 .admin-sidebar-nav::-webkit-scrollbar-track {
-  background: #022c22;
+  background: #1e293b;
   border-radius: 4px;
   margin: 4px 0;
 }
 .admin-sidebar-nav::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+  background: #3b82f6;
   border-radius: 4px;
-  border: 1px solid #78350f;
 }
 .admin-sidebar-nav::-webkit-scrollbar-thumb:hover {
-  background: #fbbf24;
+  background: #60a5fa;
 }
 
 .sidebar-section-title {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 800;
-  color: #5eead4;
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  margin: 10px 8px 3px;
+  margin: 14px 8px 4px;
 }
 
 .sidebar-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
-  color: #ccfbf1;
-  font-size: 13px;
+  gap: 10px;
+  padding: 8px 12px;
+  color: #cbd5e1;
+  font-size: 13.5px;
   font-weight: 600;
-  border-radius: 7px;
+  border-radius: 8px;
   cursor: pointer;
   text-decoration: none;
   transition: all 0.15s ease;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
 .sidebar-item:hover {
-  background: #064e3b;
+  background: #1e293b;
   color: #ffffff;
 }
 
 .sidebar-item.active {
-  background: #0d9488;
+  background: #2563eb;
   color: #ffffff;
   font-weight: 700;
-  border-left: 4px solid #2dd4bf;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+  border-left: none;
 }
 
 .sidebar-item .item-badge {
@@ -939,20 +943,20 @@ textarea {
   font-size: 10.5px;
   padding: 2px 7px;
   border-radius: 12px;
-  background: #115e59;
-  color: #f0fdfa;
+  background: #334155;
+  color: #f8fafc;
 }
 
 .sidebar-item.active .item-badge {
-  background: #f59e0b;
-  color: #0f172a;
-  font-weight: 800;
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
 }
 
 .admin-sidebar-footer {
-  padding: 16px;
+  padding: 14px 16px;
   border-top: 1px solid #1e293b;
-  background: #090d16;
+  background: #0f172a;
+  flex-shrink: 0;
 }
 
 .user-profile-card {
