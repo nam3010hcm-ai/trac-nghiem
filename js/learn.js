@@ -557,14 +557,35 @@ function getUnitSkillObj(unit, skillName) {
 async function loadUnitsData() {
   try {
     if (db()) {
+function normalizeSubjectName(sub) {
+  if (!sub) return '🇬🇧 Tiếng Anh';
+  const s = String(sub).trim();
+  const clean = s.toLowerCase().replace(/^[^\w\s\u00C0-\u1EF9]+/u, '').trim();
+  if (clean.includes('tiếng anh') || clean.includes('english') || clean.includes('eng')) return '🇬🇧 Tiếng Anh';
+  if (clean.includes('toán') || clean.includes('math')) return '📐 Toán Học';
+  if (clean.includes('vật lý') || clean.includes('vật lí') || clean.includes('phys')) return '⚡ Vật Lý';
+  if (clean.includes('hóa') || clean.includes('chem')) return '🧪 Hóa Học';
+  if (clean.includes('tin') || clean.includes('công nghệ thông tin') || clean.includes('it') || clean.includes('cs') || clean.includes('python')) return '💻 Tin Học';
+  return s;
+}
+
+function normalizeModuleName(mod) {
+  if (!mod) return 'English B1 - General & Academic Skills';
+  const m = String(mod).trim();
+  if (m.includes('Tiếng Anh cơ bản 1') || m.includes('Basic English Module 1') || m.includes('Tiếng Anh cơ bản')) {
+    return 'English B1 - General & Academic Skills';
+  }
+  return m;
+}
+
       const { data, error } = await db().from('learning_units').select('*').eq('is_hidden', false).order('created_at', { ascending: true });
       if (!error && data && data.length > 0) {
         allUnits = data.map(u => {
           const defMatch = DEFAULT_UNITS.find(d => d.id === u.id) || DEFAULT_UNITS[0];
           return {
             id: u.id,
-            subject: u.subject || '🇬🇧 Tiếng Anh',
-            module: u.module || 'English B1 - General & Academic Skills',
+            subject: normalizeSubjectName(u.subject),
+            module: normalizeModuleName(u.module),
             title: u.title,
             topic: u.topic || '',
             level: u.level || 'A2 - B1',

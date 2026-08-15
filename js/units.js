@@ -47,6 +47,28 @@ async function safeUpsertUnit(payload) {
   return { error };
 }
 
+// HÀM CHUẨN HÓA TÊN MÔN HỌC & HỌC PHẦN (LOẠI BỎ TRIỆT ĐỂ TÊN CŨ TRÊN CƠ SỞ DỮ LIỆU)
+export function normalizeSubjectName(sub) {
+  if (!sub) return '🇬🇧 Tiếng Anh';
+  const s = String(sub).trim();
+  const clean = s.toLowerCase().replace(/^[^\w\s\u00C0-\u1EF9]+/u, '').trim();
+  if (clean.includes('tiếng anh') || clean.includes('english') || clean.includes('eng')) return '🇬🇧 Tiếng Anh';
+  if (clean.includes('toán') || clean.includes('math')) return '📐 Toán Học';
+  if (clean.includes('vật lý') || clean.includes('vật lí') || clean.includes('phys')) return '⚡ Vật Lý';
+  if (clean.includes('hóa') || clean.includes('chem')) return '🧪 Hóa Học';
+  if (clean.includes('tin') || clean.includes('công nghệ thông tin') || clean.includes('it') || clean.includes('cs') || clean.includes('python')) return '💻 Tin Học';
+  return s;
+}
+
+export function normalizeModuleName(mod) {
+  if (!mod) return 'English B1 - General & Academic Skills';
+  const m = String(mod).trim();
+  if (m.includes('Tiếng Anh cơ bản 1') || m.includes('Basic English Module 1') || m.includes('Tiếng Anh cơ bản')) {
+    return 'English B1 - General & Academic Skills';
+  }
+  return m;
+}
+
 // 1. TẢI DANH SÁCH UNIT TỪ SUPABASE
 export async function loadUnits() {
   try {
@@ -59,8 +81,8 @@ export async function loadUnits() {
       // Chèn các Unit mặc định lên Supabase
       const inserts = DEFAULT_UNITS.map((u, i) => ({
         id: u.id,
-        subject: u.subject || '🇬🇧 Tiếng Anh',
-        module: u.module || 'English B1 - General & Academic Skills',
+        subject: normalizeSubjectName(u.subject),
+        module: normalizeModuleName(u.module),
         title: u.title,
         topic: u.topic || '',
         level: u.level || 'A2 - B1',
@@ -78,8 +100,8 @@ export async function loadUnits() {
     } else {
       unitsState = data.map(u => ({
         id: u.id,
-        subject: u.subject || '🇬🇧 Tiếng Anh',
-        module: u.module || 'English B1 - General & Academic Skills',
+        subject: normalizeSubjectName(u.subject),
+        module: normalizeModuleName(u.module),
         title: u.title,
         topic: u.topic || '',
         level: u.level || 'A2 - B1',
@@ -93,7 +115,7 @@ export async function loadUnits() {
         languageFocus: u.language_focus || u.languageFocus || {}
       }));
 
-      // Nếu trong data chưa có các unit của môn Toán, Lý, Tin học thì bổ sung từ DEFAULT_UNITS
+      // Bổ sung các unit mẫu mặc định nếu chưa có
       DEFAULT_UNITS.forEach(defUnit => {
         if (!unitsState.some(u => u.id === defUnit.id)) {
           unitsState.push(clone(defUnit));
@@ -110,23 +132,25 @@ export async function loadUnits() {
 // Cập nhật các lựa chọn cho Bộ lọc Môn học & Học phần trên bảng giáo viên
 export function populateUnitFilters() {
   const subSel = document.getElementById('flt-unit-subject');
-  const modSel = document.getElementById('flt-unit-module');
   if (!subSel) return;
 
   const currentSub = subSel.value;
 
-  // Lấy toàn bộ danh sách Môn học từ subjectsList + unitsState
+  // Lấy toàn bộ danh sách Môn học từ subjectsList + unitsState (tất cả đều chuẩn hóa)
   const subjectsMap = new Map();
   
   // 1. Thêm từ subjectsList trong curriculum.js
   (subjectsList || []).forEach(s => {
-    subjectsMap.set(s.name, s.name);
+    const norm = normalizeSubjectName(s.name);
+    subjectsMap.set(norm, norm);
   });
 
   // 2. Thêm từ các units hiện có
   unitsState.forEach(u => {
-    if (u.subject && !subjectsMap.has(u.subject)) {
-      subjectsMap.set(u.subject, u.subject);
+    if (u.subject) {
+      const norm = normalizeSubjectName(u.subject);
+      u.subject = norm;
+      subjectsMap.set(norm, norm);
     }
   });
 
