@@ -36,6 +36,23 @@ export function isRootUser(email) {
   return String(email).trim().toLowerCase() === ROOT_ADMIN_EMAIL.toLowerCase();
 }
 
+export async function globalLogout() {
+  try {
+    if (window.supabaseClient && window.supabaseClient.auth) {
+      await window.supabaseClient.auth.signOut();
+    }
+  } catch (e) {
+    console.warn("SignOut error:", e);
+  }
+  localStorage.removeItem('st_user');
+  localStorage.removeItem('teacher_user');
+  sessionStorage.clear();
+  alert('🔒 Đã đăng xuất khỏi tài khoản K7 EduHub!');
+  window.location.href = 'index.html';
+}
+
+window.globalLogout = globalLogout;
+
 export function canEditItem(item, currentUserEmail) {
   if (!currentUserEmail) return true;
   if (isRootUser(currentUserEmail)) return true;

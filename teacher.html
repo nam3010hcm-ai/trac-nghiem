@@ -61,6 +61,9 @@ window.MathJax = {
       <div class="user-avatar-img">K7</div>
       <span>Admin / Teacher</span>
     </div>
+    <button class="header-logout-btn" onclick="window.globalLogout();" title="Đăng xuất khỏi tài khoản">
+      🔒 Đăng xuất
+    </button>
   </div>
 </div>
 
@@ -238,10 +241,13 @@ window.MathJax = {
             <span>🏆</span> <span>Kết quả & Phân tích</span>
           </a>
 
-          <!-- 5. NGƯỜI HỌC -->
-          <div class="sidebar-section-title">👥 QUẢN LÝ NGƯỜI HỌC</div>
+          <!-- 5. QUẢN LÝ NGƯỜI DÙNG -->
+          <div class="sidebar-section-title">👥 QUẢN LÝ NGƯỜI DÙNG</div>
+          <a class="sidebar-item" data-tab="teachers" id="tab-btn-teachers" onclick="window.switchTTab('teachers')">
+            <span>👨‍🏫</span> <span>Quản lý Người Dạy (Teachers)</span>
+          </a>
           <a class="sidebar-item" data-tab="students" id="tab-btn-students" onclick="window.switchTTab('students')">
-            <span>👥</span> <span>Học viên & Tiến độ</span>
+            <span>🎓</span> <span>Quản lý Người Học (Students)</span>
           </a>
 
           <!-- 6. MEDIA LIBRARY -->
@@ -796,6 +802,44 @@ window.MathJax = {
       <div id="unit-management-list"></div>
     </div>
 
+    <!-- 4.1. PHÂN HỆ QUẢN LÝ NGƯỜI DẠY (TEACHERS MANAGEMENT) -->
+    <div id="tc-teachers" class="tab-content" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:18px;font-weight:800;color:#0f172a">👨‍🏫 Quản Lý Người Dạy / Giảng Viên</div>
+          <div style="font-size:12.5px;color:#64748b">Quản lý tài khoản giảng viên, cấp quyền phân hệ và kiểm soát quyền hạn.</div>
+        </div>
+        <button class="btn btn-p" onclick="window.openTeacherModal();">
+          ➕ Thêm Giảng Viên Mới
+        </button>
+      </div>
+
+      <div class="card" style="padding:16px;margin-bottom:16px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <input type="text" id="flt-teacher-search" placeholder="🔍 Tìm theo Tên, Email, Khoa..." style="padding:8px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;flex:1;min-width:220px;" oninput="window.renderTeachersList();">
+          <span style="font-size:12.5px;font-weight:700;color:#64748b;">Tổng số: <b id="teacher-count-badge" style="color:#2563eb">4</b> Giảng viên</span>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0;overflow-x:auto;border:1px solid #e2e8f0;border-radius:12px;">
+        <table class="lms-table">
+          <thead>
+            <tr>
+              <th>Giảng Viên</th>
+              <th>Email Đăng Nhập</th>
+              <th>Khoa / Bộ Môn</th>
+              <th>Phân Quyền</th>
+              <th>Trạng Thái</th>
+              <th>Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="teachers-table-body">
+            <tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8">Đang tải danh sách giảng viên...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- TAB QUẢN LÝ HỌC VIÊN -->
     <div id="tc-students" class="tab-content">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
@@ -1210,7 +1254,37 @@ window.MathJax = {
             <button class="btn btn-p" id="btn-save-student" style="flex:2;" onclick="window.saveStudent();">💾 Lưu học viên</button>
             <button class="btn" style="flex:1;" onclick="window.closeStudentModal();">Hủy</button>
         </div>
+<!-- MODAL THÊM / SỬA GIẢNG VIÊN -->
+<div id="modal-teacher" class="auth-modal-overlay" style="display:none;" onclick="if(event.target===this) window.closeTeacherModal();">
+  <div class="auth-modal-card" style="max-width:440px;text-align:left;">
+    <button class="auth-modal-close-btn" onclick="window.closeTeacherModal();">✕</button>
+    <div style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:16px;" id="modal-teacher-title">➕ Thêm Tài Khoản Giảng Viên Mới</div>
+
+    <div class="fg" style="margin-bottom:12px;">
+      <label style="font-size:12.5px;font-weight:700;color:#334155;">Email Giảng Viên *</label>
+      <input type="email" id="t-mod-email" placeholder="VD: teacher@k7.edu.vn" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
     </div>
+
+    <div class="fg" style="margin-bottom:12px;">
+      <label style="font-size:12.5px;font-weight:700;color:#334155;">Họ và Tên Giảng Viên *</label>
+      <input type="text" id="t-mod-name" placeholder="VD: Thầy Nguyễn Văn B" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+    </div>
+
+    <div class="fg" style="margin-bottom:12px;">
+      <label style="font-size:12.5px;font-weight:700;color:#334155;">Khoa / Bộ Môn</label>
+      <input type="text" id="t-mod-dept" placeholder="VD: Khoa Ngoại Ngữ / KH Máy Tính" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+    </div>
+
+    <div class="fg" style="margin-bottom:20px;">
+      <label style="font-size:12.5px;font-weight:700;color:#334155;">Mật Khẩu Khởi Tạo</label>
+      <input type="password" id="t-mod-pass" placeholder="Nhập mật khẩu..." style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn" onclick="window.closeTeacherModal();">Hủy</button>
+      <button class="btn btn-p" onclick="window.saveTeacher();">💾 Lưu Giảng Viên</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL NHẬP HỌC VIÊN HÀNG LOẠT (BULK IMPORT) -->

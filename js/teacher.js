@@ -159,7 +159,8 @@ async function doLogout() {
 }
 
 function switchTTab(t) {
-  ['q', 'e', 'unit', 'students', 'r', 'c', 'cohort', 'img'].forEach(x => {
+  const tabs = ['dash', 'q', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
+  tabs.forEach(x => {
     const content = $('tc-' + x);
     if(content) {
       content.classList.toggle('active', x === t);
@@ -171,6 +172,7 @@ function switchTTab(t) {
   });
 
   if (t === 'unit') renderUnitsList();
+  if (t === 'teachers') loadTeachers().then(renderTeachersList);
   if (t === 'students') loadStudents().then(renderStudentsList);
   if (t === 'r') renderResults();
   if (t === 'c') renderCatManagementList();
