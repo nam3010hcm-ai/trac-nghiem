@@ -175,7 +175,7 @@ window.globalLogout = async function() {
   };
 
   window.switchTTab = function(tabName) {
-    var tabs = ['dash', 'q', 'e', 'unit', 'students', 'r', 'c', 'cohort', 'img'];
+    var tabs = ['dash', 'curriculum', 'q', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
     tabs.forEach(function(x) {
       var content = document.getElementById('tc-' + x);
       if (content) {
@@ -197,6 +197,10 @@ window.globalLogout = async function() {
         }
       });
     });
+
+    if (tabName === 'curriculum' && typeof window.renderCurriculumTree === 'function') {
+      window.renderCurriculumTree();
+    }
 
     if (typeof window._teacherModuleSwitchTab === 'function') {
       window._teacherModuleSwitchTab(tabName);
@@ -1375,6 +1379,34 @@ window.globalLogout = async function() {
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button class="btn" onclick="window.closeSubjectModal();">Hủy</button>
       <button class="btn btn-p" onclick="window.saveSubject();">💾 Lưu Môn Học</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL THÊM HỌC PHẦN MỚI -->
+<div id="modal-module" class="auth-modal-overlay" style="display:none;" onclick="if(event.target===this) window.closeModuleModal();">
+  <div class="auth-modal-card" style="max-width:440px;text-align:left;">
+    <button class="auth-modal-close-btn" onclick="window.closeModuleModal();">✕</button>
+    <div style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:16px;">➕ Thêm Học Phần / Chương Mới</div>
+
+    <div class="fg" style="margin-bottom:12px;">
+      <label style="font-size:12.5px;font-weight:700;color:#334155;">Tên Học Phần / Chương *</label>
+      <input type="text" id="mod-mod-title" placeholder="VD: Học phần 1: Đại số & Hàm số..." style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+    </div>
+
+    <div class="fg" style="margin-bottom:12px;">
+      <label style="font-size:12.5px;font-weight:700;color:#334155;">Mã Học Phần *</label>
+      <input type="text" id="mod-mod-code" placeholder="VD: MATH-ALG, PHYS-MEC..." style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+    </div>
+
+    <div class="fg" style="margin-bottom:20px;">
+      <label style="font-size:12.5px;font-weight:700;color:#334155;">Mô Tả Nội Dung Học Phần</label>
+      <textarea id="mod-mod-desc" placeholder="Tóm tắt trọng tâm kiến thức của học phần..." style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;height:70px;"></textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn" onclick="window.closeModuleModal();">Hủy</button>
+      <button class="btn btn-p" onclick="window.saveModule();">💾 Lưu Học Phần</button>
     </div>
   </div>
 </div>
