@@ -1,7 +1,7 @@
 /**
  * =========================================================================
  * MODULE QUẢN LÝ TÀI KHOẢN GIẢNG VIÊN / NGƯỜI DẠY (teachers-mgr.js)
- * K7 EduHub LMS Teachers Management Subsystem
+ * EduCore LMS Teachers Management Subsystem
  * =========================================================================
  */
 

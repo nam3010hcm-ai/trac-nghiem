@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>K7 EduHub - Luyện 5 Kỹ Năng Tiếng Anh Tương Tác</title>
+<title>EduCore - Luyện Kỹ Năng Tương Tác</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -26,6 +26,9 @@
     }
   } catch(e) {
     window.supabaseClient = null;
+  }
+})();
+
 window.globalLogout = async function() {
   try {
     if (window.supabaseClient && window.supabaseClient.auth) {
@@ -37,7 +40,7 @@ window.globalLogout = async function() {
   localStorage.removeItem('st_user');
   localStorage.removeItem('teacher_user');
   sessionStorage.clear();
-  alert('🔒 Đã đăng xuất thành công khỏi hệ thống K7 EduHub!');
+  alert('🔒 Đã đăng xuất thành công khỏi hệ thống EduCore!');
   window.location.href = 'index.html';
 };
 </script>

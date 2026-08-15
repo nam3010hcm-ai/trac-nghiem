@@ -84,7 +84,7 @@ export async function globalLogout() {
   localStorage.removeItem('st_user');
   localStorage.removeItem('teacher_user');
   sessionStorage.clear();
-  alert('🔒 Đã đăng xuất khỏi tài khoản K7 EduHub!');
+  alert('🔒 Đã đăng xuất khỏi tài khoản EduCore!');
   window.location.href = 'index.html';
 }
 

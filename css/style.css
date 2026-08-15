@@ -875,25 +875,27 @@ textarea {
 
 .admin-sidebar-nav {
   padding: 10px 8px;
-  overflow-y: auto;
+  overflow-y: scroll;
   flex: 1;
-  scrollbar-width: thin;
-  scrollbar-color: #2dd4bf #042f2e;
+  scrollbar-width: auto;
+  scrollbar-color: #f59e0b #022c22;
 }
 
 .admin-sidebar-nav::-webkit-scrollbar {
-  width: 7px;
+  width: 8px;
 }
 .admin-sidebar-nav::-webkit-scrollbar-track {
-  background: #042f2e;
+  background: #022c22;
   border-radius: 4px;
+  margin: 4px 0;
 }
 .admin-sidebar-nav::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #14b8a6 0%, #0d9488 100%);
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
   border-radius: 4px;
+  border: 1px solid #78350f;
 }
 .admin-sidebar-nav::-webkit-scrollbar-thumb:hover {
-  background: #2dd4bf;
+  background: #fbbf24;
 }
 
 .sidebar-section-title {
