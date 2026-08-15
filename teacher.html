@@ -51,8 +51,94 @@ window.MathJax = {
       ❌ Email hoặc mật khẩu không đúng!
     </div>
 
-    <button class="btn btn-p btn-full" id="btn-login" onclick="if(window.doLoginManual) window.doLoginManual();">Đăng nhập</button>
+    <button class="btn btn-p btn-full" id="btn-login" onclick="window.doLoginManual();">Đăng nhập</button>
   </div>
+
+  <script>
+  window.doLoginManual = async function() {
+    const emailEl = document.getElementById('t-email');
+    const passEl = document.getElementById('t-pass');
+    const btn = document.getElementById('btn-login');
+    const err = document.getElementById('t-err');
+
+    const email = emailEl ? emailEl.value.trim() : '';
+    const pass = passEl ? passEl.value.trim() : '';
+
+    if (!email || !pass) {
+      if (err) { err.style.display = 'block'; err.innerText = '❌ Vui lòng nhập email và mật khẩu!'; }
+      alert('Vui lòng nhập đầy đủ Email và Mật khẩu!');
+      return;
+    }
+
+    if (btn) { btn.disabled = true; btn.innerText = 'Đang đăng nhập...'; }
+
+    try {
+      const client = (window.supabase && typeof window.supabase.createClient === 'function')
+        ? window.supabase.createClient("https://xuioxmjufpfdblecjvuv.supabase.co", "sb_publishable_eKhgTzsFTVwL5mGwZTWWbQ_yogb4Hpc")
+        : null;
+
+      let authUser = null;
+
+      if (client) {
+        const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
+        if (error) throw error;
+        authUser = data.user;
+      } else {
+        // Fallback fetch API trực tiếp
+        const res = await fetch("https://xuioxmjufpfdblecjvuv.supabase.co/auth/v1/token?grant_type=password", {
+          method: "POST",
+          headers: {
+            "apikey": "sb_publishable_eKhgTzsFTVwL5mGwZTWWbQ_yogb4Hpc",
+            "Authorization": "Bearer sb_publishable_eKhgTzsFTVwL5mGwZTWWbQ_yogb4Hpc",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ email, password: pass })
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error_description || json.msg || json.message || "Đăng nhập thất bại");
+        authUser = json.user;
+      }
+
+      if (err) err.style.display = 'none';
+
+      // Chuyển sang màn hình quản lý
+      document.getElementById('t-login').style.display = 'none';
+      document.getElementById('t-panel').style.display = 'block';
+      if (document.getElementById('current-user-email')) {
+        document.getElementById('current-user-email').innerText = authUser?.email || email;
+      }
+
+      if (typeof window.initTeacherPanelDirect === 'function') {
+        await window.initTeacherPanelDirect(authUser);
+      }
+    } catch (error) {
+      console.error("Lỗi đăng nhập:", error);
+      let msg = error.message || 'Email hoặc mật khẩu không đúng!';
+      if (msg.includes('Email not confirmed')) {
+        msg = 'Tài khoản chưa được kích hoạt!';
+      } else if (msg.includes('Invalid login credentials')) {
+        msg = 'Sai email hoặc mật khẩu! Vui lòng kiểm tra lại.';
+      }
+      if (err) {
+        err.style.display = 'block';
+        err.innerText = '❌ ' + msg;
+      }
+      alert('❌ ' + msg);
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerText = 'Đăng nhập'; }
+    }
+  };
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      const emailEl = document.getElementById('t-email');
+      const passEl = document.getElementById('t-pass');
+      if (document.activeElement === emailEl || document.activeElement === passEl) {
+        window.doLoginManual();
+      }
+    }
+  });
+  </script>
 
   <div id="t-panel" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap">

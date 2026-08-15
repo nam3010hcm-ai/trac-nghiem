@@ -44,6 +44,8 @@ async function showTeacherPanel(user) {
   }
 }
 
+window.initTeacherPanelDirect = showTeacherPanel;
+
 function togglePasswordVisibility() {
   const passInput = $('t-pass');
   const btn = $('btn-toggle-pass');
