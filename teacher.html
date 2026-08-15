@@ -13,6 +13,7 @@ window.MathJax = {
 };
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="header">
@@ -34,7 +35,6 @@ window.MathJax = {
       <input
         type="email"
         id="t-email"
-        
         placeholder="Nhập email quản trị..."
       />
     </div>
@@ -43,7 +43,7 @@ window.MathJax = {
       <label>Mật khẩu</label>
       <div class="password-row">
         <input type="password" id="t-pass" placeholder="Nhập mật khẩu...">
-        <button type="button" id="btn-toggle-pass">👁 Hiện</button>
+        <button type="button" id="btn-toggle-pass" onclick="const p=document.getElementById('t-pass'); if(p.type==='password'){p.type='text';this.innerText='🙈 Ẩn';}else{p.type='password';this.innerText='👁 Hiện';}">👁 Hiện</button>
       </div>
     </div>
 
@@ -51,7 +51,7 @@ window.MathJax = {
       ❌ Email hoặc mật khẩu không đúng!
     </div>
 
-    <button class="btn btn-p btn-full" id="btn-login">Đăng nhập</button>
+    <button class="btn btn-p btn-full" id="btn-login" onclick="if(window.doLoginManual) window.doLoginManual();">Đăng nhập</button>
   </div>
 
   <div id="t-panel" style="display:none">

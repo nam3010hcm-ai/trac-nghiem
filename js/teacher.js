@@ -78,6 +78,9 @@ async function doLogin() {
   }
 }
 
+window.doLoginManual = doLogin;
+window.togglePasswordVisibility = togglePasswordVisibility;
+
 async function doLogout() {
   try { await signOut(); } catch(e){}
 
