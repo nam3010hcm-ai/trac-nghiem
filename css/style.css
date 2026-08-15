@@ -8,37 +8,37 @@
 :root {
   --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   
-  /* Deep Navy & Royal Blue Palette */
-  --header-bg: #142a53;
-  --header-gold: #d97706;
-  --primary: #163b65;
-  --primary-hover: #102a45;
-  --primary-blue: #1e40af;
-  --primary-light: #eff6ff;
-  --primary-border: #bfdbfe;
+  /* Emerald Teal & Mint Forest Palette (Educeet Theme) */
+  --header-bg: linear-gradient(135deg, #042f2e 0%, #064e3b 50%, #0d9488 100%);
+  --header-gold: #f59e0b;
+  --primary: #0d9488;
+  --primary-hover: #0f766e;
+  --primary-blue: #0d9488;
+  --primary-light: #f0fdfa;
+  --primary-border: #99f6e4;
   
   --accent-gold: #f59e0b;
   --accent-gold-light: #fef3c7;
   --accent-emerald: #10b981;
   --accent-emerald-light: #ecfdf5;
-  --accent-rose: #ef4444;
-  --accent-rose-light: #fef2f2;
-  --accent-purple: #7c3aed;
+  --accent-rose: #f43f5e;
+  --accent-rose-light: #fff1f2;
+  --accent-purple: #8b5cf6;
   --accent-purple-light: #f5f3ff;
 
   /* Surfaces & Backgrounds */
-  --bg-page: #f1f5f9;
+  --bg-page: #f0fdfa;
   --surface: #ffffff;
   --surface-subtle: #f8fafc;
   --text-main: #0f172a;
-  --text-muted: #64748b;
+  --text-muted: #475569;
   --border-card: #cbd5e1;
   --border-subtle: #e2e8f0;
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(20, 42, 83, 0.06);
-  --shadow-lg: 0 8px 24px rgba(20, 42, 83, 0.1);
+  --shadow-sm: 0 1px 3px rgba(13, 148, 136, 0.05);
+  --shadow-md: 0 4px 14px rgba(13, 148, 136, 0.08);
+  --shadow-lg: 0 8px 24px rgba(13, 148, 136, 0.12);
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -835,8 +835,8 @@ textarea {
 
 .admin-sidebar {
   width: 260px;
-  background: #0f172a;
-  color: #f8fafc;
+  background: #042f2e;
+  color: #f0fdfa;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -846,12 +846,12 @@ textarea {
   top: 62px;
   height: calc(100vh - 62px);
   z-index: 90;
-  border-right: 1px solid #1e293b;
+  border-right: 1px solid #115e59;
 }
 
 .admin-sidebar-header {
   padding: 18px 20px;
-  border-bottom: 1px solid #1e293b;
+  border-bottom: 1px solid #115e59;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -869,7 +869,7 @@ textarea {
   display: block;
   font-size: 11px;
   font-weight: 600;
-  color: #38bdf8;
+  color: #2dd4bf;
   margin-top: 2px;
 }
 
@@ -878,28 +878,28 @@ textarea {
   overflow-y: auto;
   flex: 1;
   scrollbar-width: thin;
-  scrollbar-color: #0284c7 #1e293b;
+  scrollbar-color: #2dd4bf #042f2e;
 }
 
 .admin-sidebar-nav::-webkit-scrollbar {
-  width: 6px;
+  width: 7px;
 }
 .admin-sidebar-nav::-webkit-scrollbar-track {
-  background: #1e293b;
+  background: #042f2e;
   border-radius: 4px;
 }
 .admin-sidebar-nav::-webkit-scrollbar-thumb {
-  background: #0284c7;
+  background: linear-gradient(180deg, #14b8a6 0%, #0d9488 100%);
   border-radius: 4px;
 }
 .admin-sidebar-nav::-webkit-scrollbar-thumb:hover {
-  background: #38bdf8;
+  background: #2dd4bf;
 }
 
 .sidebar-section-title {
   font-size: 10px;
   font-weight: 800;
-  color: #64748b;
+  color: #5eead4;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   margin: 10px 8px 3px;
@@ -910,7 +910,7 @@ textarea {
   align-items: center;
   gap: 8px;
   padding: 7px 10px;
-  color: #94a3b8;
+  color: #ccfbf1;
   font-size: 13px;
   font-weight: 600;
   border-radius: 7px;
@@ -921,15 +921,15 @@ textarea {
 }
 
 .sidebar-item:hover {
-  background: #1e293b;
-  color: #f1f5f9;
+  background: #064e3b;
+  color: #ffffff;
 }
 
 .sidebar-item.active {
-  background: #1e293b;
-  color: #38bdf8;
+  background: #0d9488;
+  color: #ffffff;
   font-weight: 700;
-  border-left: 3.5px solid #38bdf8;
+  border-left: 4px solid #2dd4bf;
 }
 
 .sidebar-item .item-badge {
@@ -937,13 +937,14 @@ textarea {
   font-size: 10.5px;
   padding: 2px 7px;
   border-radius: 12px;
-  background: #334155;
-  color: #f8fafc;
+  background: #115e59;
+  color: #f0fdfa;
 }
 
 .sidebar-item.active .item-badge {
-  background: #0284c7;
-  color: #ffffff;
+  background: #f59e0b;
+  color: #0f172a;
+  font-weight: 800;
 }
 
 .admin-sidebar-footer {
