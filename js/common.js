@@ -192,46 +192,58 @@ export function getPool(exam){
 }
 
 export async function initData(loadResults = false){
-  try{
-    // 1. Tải Danh mục (Categories)
+  // 1. Tải Danh mục (Categories)
+  try {
     const { data: catRows, error: catErr } = await db().from('categories').select('*');
-    if(catErr) console.warn("Lỗi tải categories:", catErr);
-    
-    if(!catRows || catRows.length === 0){
+    if (catErr) {
+      console.warn("Lỗi tải categories từ Supabase:", catErr);
       state.SUBCATS = clone(DEFAULT_SUBCATS);
-      // Chèn các danh mục mặc định vào Supabase
+    } else if (!catRows || catRows.length === 0) {
+      state.SUBCATS = clone(DEFAULT_SUBCATS);
       const inserts = Object.keys(DEFAULT_SUBCATS).map(k => ({ name: k, subcategories: DEFAULT_SUBCATS[k] }));
-      await db().from('categories').upsert(inserts, { onConflict: 'name' });
+      try { await db().from('categories').upsert(inserts, { onConflict: 'name' }); } catch(e){}
     } else {
       state.SUBCATS = {};
       catRows.forEach(r => { state.SUBCATS[r.name] = r.subcategories || []; });
     }
+  } catch (err) {
+    console.warn("Ngoại lệ tải categories:", err);
+    state.SUBCATS = clone(DEFAULT_SUBCATS);
+  }
 
-    // 2. Tải Ngân hàng câu hỏi (Questions)
+  // 2. Tải Ngân hàng câu hỏi (Questions)
+  try {
     const { data: qRows, error: qErr } = await db().from('questions').select('*').order('id', { ascending: true });
-    if(qErr) console.warn("Lỗi tải questions:", qErr);
-
-    if(!qRows || qRows.length === 0){
-      state.questions = DEFAULT_QUESTIONS.slice();
-      await db().from('questions').insert(DEFAULT_QUESTIONS);
+    if (qErr) {
+      console.warn("Lỗi tải questions từ Supabase:", qErr);
+      state.questions = clone(DEFAULT_QUESTIONS);
+    } else if (!qRows || qRows.length === 0) {
+      state.questions = clone(DEFAULT_QUESTIONS);
+      try { await db().from('questions').insert(DEFAULT_QUESTIONS); } catch(e){}
     } else {
       state.questions = qRows.map(q => ({
         ...q,
-        id: Number(q.id),
+        id: isNaN(Number(q.id)) ? q.id : Number(q.id),
         opts: q.opts || [],
         blanks: q.blanks || [],
         bank: q.bank || [],
         pairs: q.pairs || []
       }));
     }
-    state.nextQId = state.questions.length ? Math.max(...state.questions.map(q => Number(q.id)||0), 99) + 1 : 100;
+  } catch (err) {
+    console.warn("Ngoại lệ tải questions:", err);
+    state.questions = clone(DEFAULT_QUESTIONS);
+  }
+  state.nextQId = state.questions.length ? Math.max(...state.questions.map(q => Number(q.id)||0), 99) + 1 : 100;
 
-    // 3. Tải Đề thi (Exams)
+  // 3. Tải Đề thi (Exams)
+  try {
     const { data: eRows, error: eErr } = await db().from('exams').select('*').order('id', { ascending: true });
-    if(eErr) console.warn("Lỗi tải exams:", eErr);
-
-    if(!eRows || eRows.length === 0){
-      state.exams = DEFAULT_EXAMS.slice();
+    if (eErr) {
+      console.warn("Lỗi tải exams từ Supabase:", eErr);
+      state.exams = clone(DEFAULT_EXAMS);
+    } else if (!eRows || eRows.length === 0) {
+      state.exams = clone(DEFAULT_EXAMS);
       const examInserts = DEFAULT_EXAMS.map(e => ({
         id: e.id,
         name: e.name,
@@ -243,10 +255,10 @@ export async function initData(loadResults = false){
         is_hidden: e.isHidden || false,
         q_ids: e.qIds || []
       }));
-      await db().from('exams').insert(examInserts);
+      try { await db().from('exams').insert(examInserts); } catch(e){}
     } else {
       state.exams = eRows.map(e => ({
-        id: Number(e.id),
+        id: isNaN(Number(e.id)) ? e.id : Number(e.id),
         name: e.name,
         desc: e.description || e.desc || '',
         count: e.count || 10,
@@ -257,26 +269,30 @@ export async function initData(loadResults = false){
         qIds: e.q_ids || e.qIds || []
       }));
     }
-    state.nextEId = state.exams.length ? Math.max(...state.exams.map(e => Number(e.id)||0), 9) + 1 : 10;
+  } catch (err) {
+    console.warn("Ngoại lệ tải exams:", err);
+    state.exams = clone(DEFAULT_EXAMS);
+  }
+  state.nextEId = state.exams.length ? Math.max(...state.exams.map(e => Number(e.id)||0), 9) + 1 : 10;
 
-    // 4. Tải Kết quả thi (Results) nếu có yêu cầu
-    if(loadResults){
+  // 4. Tải Kết quả thi (Results)
+  if (loadResults) {
+    try {
       const { data: rRows, error: rErr } = await db().from('results').select('*').order('id', { ascending: false });
-      if(rErr) console.warn("Lỗi tải results:", rErr);
+      if (rErr) console.warn("Lỗi tải results:", rErr);
       state.results = (rRows || []).map(r => ({
         ...r,
-        id: Number(r.id),
+        id: isNaN(Number(r.id)) ? r.id : Number(r.id),
         manualScore: Number(r.manual_score ?? r.manualScore ?? 0),
         score: Number(r.score ?? 0),
         answers: r.answers || []
       }));
-    } else {
+    } catch (err) {
+      console.warn("Ngoại lệ tải results:", err);
       state.results = [];
     }
-  }catch(error){
-    console.error("Lỗi kết nối Supabase:", error);
-    alert("Lỗi kết nối Supabase. Vui lòng kiểm tra console hoặc chạy script SQL trên Supabase.");
-    if(Object.keys(state.SUBCATS).length === 0) state.SUBCATS = clone(DEFAULT_SUBCATS);
+  } else {
+    state.results = [];
   }
 }
 
