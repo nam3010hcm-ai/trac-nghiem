@@ -17,9 +17,33 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;color:#1a202
 .btn-full{width:100%;padding:13px}
 .fg{margin-bottom:13px}
 .fg label{display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
-.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:9px;font-size:14px;color:#1a202c;background:#fff;outline:none;font-family:inherit;transition:border .15s}
+textarea, input[type="text"], input[type="number"], select {
+  box-sizing: border-box;
+}
+
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 10px 12px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9px;
+  outline: none;
+  background: #ffffff;
+  color: #1e293b;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.fg input,.fg select,.fg textarea{width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:9px;font-size:14px;color:#1a202c;background:#fff;outline:none;font-family:inherit;transition:border .15s}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,.1)}
-.fg textarea{resize:vertical;min-height:65px}
+.fg textarea{resize:vertical;min-height:90px;line-height:1.6}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tab-row{display:flex;gap:4px;background:#f0f4f8;padding:4px;border-radius:10px;margin-bottom:18px}
 .tab-btn{flex:1;padding:8px;text-align:center;font-size:13px;border-radius:7px;cursor:pointer;color:#64748b;border:none;background:transparent;font-weight:500}

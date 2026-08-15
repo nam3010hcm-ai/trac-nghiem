@@ -243,9 +243,10 @@ export function openUnitEditor(unitId = null) {
   // Lưu tạm unit đang chỉnh sửa vào window._currentDraftUnit
   window._currentDraftUnit = clone(unit);
 
-  // Mở tab kỹ năng mặc định
-  switchDesignerSkillTab('listening');
+  // Mở tab kỹ năng mặc định và hiển thị modal
   modal.style.display = 'flex';
+  switchDesignerSkillTab('listening');
+  setTimeout(autoFitAllDesignerTextareas, 60);
 }
 
 export function closeUnitEditor() {
@@ -253,6 +254,23 @@ export function closeUnitEditor() {
   if (modal) modal.style.display = 'none';
   editingUnitId = null;
   window._currentDraftUnit = null;
+}
+
+// Hàm tự động căn chỉnh chiều cao textarea theo toàn bộ nội dung
+export function autoFitAllDesignerTextareas() {
+  requestAnimationFrame(() => {
+    const textareas = document.querySelectorAll('#unit-designer-modal textarea');
+    textareas.forEach(ta => {
+      ta.style.height = 'auto';
+      const newH = Math.max(ta.scrollHeight + 8, 120);
+      ta.style.height = newH + 'px';
+      
+      ta.oninput = () => {
+        ta.style.height = 'auto';
+        ta.style.height = Math.max(ta.scrollHeight + 8, 120) + 'px';
+      };
+    });
+  });
 }
 
 // 4. CHUYỂN TAB THIẾT KẾ 5 KỸ NĂNG BÊN TRONG MODAL
@@ -270,44 +288,56 @@ export function switchDesignerSkillTab(skill) {
   if (skill === 'listening') {
     const lis = (unit.listening && unit.listening[0]) || { audioText: '', exercises: [] };
     contentWrap.innerHTML = `
-      <div class="card" style="margin:0;padding:16px;background:#f8fafc">
-        <div style="font-weight:700;margin-bottom:8px;color:#1e293b">🎧 1. Lời Thoại Đoạn Nghe (Audio Script / Text-to-Speech)</div>
-        <textarea id="ud-lis-text" class="dictation-textarea" style="min-height:90px" placeholder="Nhập đoạn hội thoại hoặc văn bản tiếng Anh để hệ thống tự phát âm chuẩn...">${esc(lis.audioText || '')}</textarea>
-        
-        <div style="font-weight:700;margin:14px 0 8px;color:#1e293b">✍️ 2. Câu Nghe Chép Chính Tả (Dictation)</div>
-        <input type="text" id="ud-lis-dictation" style="width:100%;padding:8px 12px;border:1.5px solid #cbd5e1;border-radius:8px" placeholder="VD: Gate 24B starts boarding at 10:30." value="${esc(lis.exercises?.find(e => e.type === 'dictation')?.targetSentence || '')}">
-
-        <div style="font-weight:700;margin:14px 0 8px;color:#1e293b">📝 3. Câu Hỏi Trắc Nghiệm Nghe Hiểu</div>
+      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
         <div class="fg">
-          <label>Nội dung câu hỏi</label>
-          <input type="text" id="ud-lis-q" value="${esc(lis.exercises?.find(e => e.type === 'mcq')?.question || 'Where is the passenger flying to?')}">
+          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">🎧 1. Lời Thoại Đoạn Nghe (Audio Script / Text-to-Speech) *</label>
+          <div style="font-size:12px;color:#64748b;margin-bottom:8px">Hệ thống sẽ dùng đoạn văn bản này để phát âm chuẩn giọng bản ngữ (US/UK) cho học sinh:</div>
+          <textarea id="ud-lis-text" class="designer-textarea" style="width:100%;min-height:130px;font-size:14.5px;line-height:1.6;" placeholder="Nhập đoạn hội thoại hoặc văn bản tiếng Anh...">${esc(lis.audioText || '')}</textarea>
         </div>
-        <div class="grid2">
-          <div class="fg" style="margin:0"><label>Đáp án A</label><input id="ud-lis-a" value="${esc(lis.exercises?.find(e => e.type === 'mcq')?.options?.[0] || 'London')}"></div>
-          <div class="fg" style="margin:0"><label>Đáp án B</label><input id="ud-lis-b" value="${esc(lis.exercises?.find(e => e.type === 'mcq')?.options?.[1] || 'New York')}"></div>
+        
+        <div class="fg" style="margin-top:16px">
+          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">✍️ 2. Câu Nghe Chép Chính Tả (Dictation)</label>
+          <input type="text" id="ud-lis-dictation" style="width:100%;padding:10px 14px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:14px" placeholder="VD: Gate 24B starts boarding at 10:30." value="${esc(lis.exercises?.find(e => e.type === 'dictation')?.targetSentence || '')}">
+        </div>
+
+        <div style="margin-top:18px;padding-top:14px;border-top:1px dashed #cbd5e1">
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:#1e293b">📝 3. Câu Hỏi Trắc Nghiệm Nghe Hiểu</div>
+          <div class="fg">
+            <label>Nội dung câu hỏi</label>
+            <input type="text" id="ud-lis-q" value="${esc(lis.exercises?.find(e => e.type === 'mcq')?.question || 'Where is the passenger flying to?')}">
+          </div>
+          <div class="grid2">
+            <div class="fg" style="margin:0"><label>Đáp án A</label><input id="ud-lis-a" value="${esc(lis.exercises?.find(e => e.type === 'mcq')?.options?.[0] || 'London')}"></div>
+            <div class="fg" style="margin:0"><label>Đáp án B</label><input id="ud-lis-b" value="${esc(lis.exercises?.find(e => e.type === 'mcq')?.options?.[1] || 'New York')}"></div>
+          </div>
         </div>
       </div>
     `;
   } else if (skill === 'reading') {
     const read = (unit.reading && unit.reading[0]) || { passage: '', vocabulary: {} };
     contentWrap.innerHTML = `
-      <div class="card" style="margin:0;padding:16px;background:#f8fafc">
-        <div style="font-weight:700;margin-bottom:8px;color:#1e293b">📖 1. Đoạn Văn Đọc Hiểu (Reading Passage)</div>
-        <textarea id="ud-read-passage" class="dictation-textarea" style="min-height:120px" placeholder="Nhập nội dung bài đọc...">${esc(read.passage || '')}</textarea>
+      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
+        <div class="fg">
+          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">📖 1. Đoạn Văn Đọc Hiểu (Reading Passage) *</label>
+          <div style="font-size:12px;color:#64748b;margin-bottom:8px">Đoạn văn đọc hiểu sẽ hiển thị toàn bộ cho học sinh đọc và tra từ tức thì:</div>
+          <textarea id="ud-read-passage" class="designer-textarea" style="width:100%;min-height:180px;font-size:14.5px;line-height:1.6;" placeholder="Nhập nội dung bài đọc...">${esc(read.passage || '')}</textarea>
+        </div>
 
-        <div style="font-weight:700;margin:14px 0 8px;color:#1e293b">🔤 2. Danh Mục Tra Từ Nhanh (JSON format: word -> {ipa, pos, meaning})</div>
-        <textarea id="ud-read-vocab" class="dictation-textarea" style="min-height:80px;font-family:monospace;font-size:12px">${esc(JSON.stringify(read.vocabulary || {}, null, 2))}</textarea>
+        <div class="fg" style="margin-top:16px">
+          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">🔤 2. Danh Mục Tra Từ Nhanh (JSON Dictionary)</label>
+          <textarea id="ud-read-vocab" class="designer-textarea" style="width:100%;min-height:100px;font-family:monospace;font-size:13px">${esc(JSON.stringify(read.vocabulary || {}, null, 2))}</textarea>
+        </div>
       </div>
     `;
   } else if (skill === 'speaking') {
     const spk = (unit.speaking && unit.speaking[0]) || { phrases: [] };
     const p1 = spk.phrases?.[0] || { text: 'Practice makes perfect.', ipa: '', meaning: 'Rèn luyện tạo nên sự hoàn hảo' };
     contentWrap.innerHTML = `
-      <div class="card" style="margin:0;padding:16px;background:#f8fafc">
-        <div style="font-weight:700;margin-bottom:8px;color:#1e293b">🗣️ Câu Luyện Nói & Chấm Điểm Phát Âm (Micro AI)</div>
+      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:#1e293b">🗣️ Câu Luyện Nói & Chấm Điểm Phát Âm (Micro AI)</div>
         <div class="fg">
-          <label>Câu mẫu tiếng Anh</label>
-          <input type="text" id="ud-spk-text" value="${esc(p1.text || '')}">
+          <label>Câu mẫu tiếng Anh *</label>
+          <input type="text" id="ud-spk-text" style="font-size:15px;font-weight:600" value="${esc(p1.text || '')}">
         </div>
         <div class="grid2">
           <div class="fg" style="margin:0">
@@ -325,11 +355,11 @@ export function switchDesignerSkillTab(skill) {
     const wrt = (unit.writing && unit.writing[0]) || { items: [] };
     const it1 = wrt.items?.[0] || { correctSentence: 'Learning English is fun and useful.', hint: 'Bắt đầu bằng Learning...' };
     contentWrap.innerHTML = `
-      <div class="card" style="margin:0;padding:16px;background:#f8fafc">
-        <div style="font-weight:700;margin-bottom:8px;color:#1e293b">✍️ Bài Tập Xếp Từ Thành Câu (Scramble)</div>
+      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:#1e293b">✍️ Bài Tập Xếp Từ Thành Câu (Sentence Scramble)</div>
         <div class="fg">
-          <label>Câu hoàn chỉnh (Hệ thống sẽ tự động xáo trộn từ cho học sinh)</label>
-          <input type="text" id="ud-wrt-sentence" value="${esc(it1.correctSentence || '')}">
+          <label>Câu hoàn chỉnh (Hệ thống sẽ tự động xáo trộn từ cho học sinh) *</label>
+          <input type="text" id="ud-wrt-sentence" style="font-size:15px" value="${esc(it1.correctSentence || '')}">
         </div>
         <div class="fg">
           <label>Gợi ý cấu trúc</label>
@@ -341,8 +371,8 @@ export function switchDesignerSkillTab(skill) {
     const lf = unit.languageFocus || { flashcards: [] };
     const fc = lf.flashcards?.[0] || { word: 'Sustainable', pos: 'adjective', ipa: '/səˈsteɪ.nə.bəl/', meaning: 'Bền vững', example: 'Solar energy is sustainable.' };
     contentWrap.innerHTML = `
-      <div class="card" style="margin:0;padding:16px;background:#f8fafc">
-        <div style="font-weight:700;margin-bottom:8px;color:#1e293b">🎴 Thẻ Từ Vựng 3D (3D Flashcard)</div>
+      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:#1e293b">🎴 Thẻ Từ Vựng 3D (3D Flashcard)</div>
         <div class="grid2">
           <div class="fg" style="margin:0"><label>Từ vựng (Word)</label><input id="ud-fc-word" value="${esc(fc.word || '')}"></div>
           <div class="fg" style="margin:0"><label>Từ loại (noun/verb/adj)</label><input id="ud-fc-pos" value="${esc(fc.pos || '')}"></div>
@@ -358,6 +388,9 @@ export function switchDesignerSkillTab(skill) {
       </div>
     `;
   }
+
+  // Tự động căn chỉnh chiều cao textareas để hiển thị toàn bộ nội dung
+  autoFitAllDesignerTextareas();
 }
 
 // 5. LƯU THAY ĐỔI CỦA SKILL ĐANG SỬA VÀO DRAFT
