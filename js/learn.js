@@ -1426,9 +1426,8 @@ function renderFlashcardsView(card, total) {
   if (!card) return '<div class="empty">Chưa có thẻ từ vựng trong Unit này.</div>';
   return `
     <div style="text-align:center;max-width:480px;margin:0 auto">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <span style="font-size:13px;color:#64748b;font-weight:600">Thẻ ${currentCardIdx + 1} / ${total} • Bấm thẻ để lật 3D</span>
-        <button class="btn btn-sm" onclick="window.editCurrentFlashcardImage()" style="font-size:11.5px;padding:3px 9px;background:#fff">🖼️ Đổi ảnh minh họa</button>
+      <div style="text-align:center;margin-bottom:10px">
+        <span style="font-size:13px;color:#64748b;font-weight:600">Thẻ ${currentCardIdx + 1} / ${total} • Bấm thẻ để lật 3D xem nghĩa</span>
       </div>
       
       <div class="flashcard-3d-scene" id="flashcard-scene" onclick="this.classList.toggle('flipped')">
@@ -1467,17 +1466,6 @@ function renderFlashcardsView(card, total) {
     </div>
   `;
 }
-
-window.editCurrentFlashcardImage = function() {
-  const fCards = currentUnit?.languageFocus?.flashcards || [];
-  const card = fCards[currentCardIdx];
-  if (!card) return;
-  const newUrl = prompt("Nhập URL hình ảnh minh họa cho từ '" + card.word + "':", card.image || '');
-  if (newUrl !== null) {
-    card.image = newUrl.trim();
-    window.switchLangSubTab('cards');
-  }
-};
 
 window.prevFlashcard = function() {
   if (currentCardIdx > 0) {
