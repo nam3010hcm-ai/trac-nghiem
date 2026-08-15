@@ -44,56 +44,6 @@ async function showTeacherPanel(user) {
   }
 }
 
-async function doLogin() {
-  const email = $('t-email').value.trim();
-  const pass = $('t-pass').value.trim();
-
-  if (!email || !pass) {
-    $('t-err').style.display = 'block';
-    $('t-err').innerText = '❌ Vui lòng nhập email và mật khẩu!';
-    return;
-  }
-
-  const btn = $('btn-login');
-  if(btn) { btn.disabled = true; btn.innerText = 'Đang xác thực...'; }
-
-  try {
-    const data = await signInWithEmailAndPassword(email, pass);
-    $('t-err').style.display = 'none';
-    if (data?.user) await showTeacherPanel(data.user);
-  } catch (error) {
-    console.error("Lỗi đăng nhập:", error);
-
-    let errMsg = error.message || 'Email hoặc mật khẩu không đúng!';
-    if (errMsg.includes('Email not confirmed')) {
-      errMsg = 'Tài khoản chưa được kích hoạt! Hãy vào Supabase Dashboard -> Authentication -> Users và bấm Confirm user.';
-    } else if (errMsg.includes('Invalid login credentials')) {
-      errMsg = 'Sai email hoặc mật khẩu! Vui lòng kiểm tra lại thông tin tài khoản Supabase.';
-    }
-    
-    $('t-err').style.display = 'block';
-    $('t-err').innerText = '❌ ' + errMsg;
-  } finally {
-    if(btn) { btn.disabled = false; btn.innerText = 'Đăng nhập'; }
-  }
-}
-
-window.doLoginManual = doLogin;
-window.togglePasswordVisibility = togglePasswordVisibility;
-
-async function doLogout() {
-  try { await signOut(); } catch(e){}
-
-  $('t-pass').value = '';
-  $('t-err').style.display = 'none';
-  $('t-login').style.display = 'block';
-  $('t-panel').style.display = 'none';
-
-  if ($('current-user-email')) {
-    $('current-user-email').innerText = '';
-  }
-}
-
 function togglePasswordVisibility() {
   const passInput = $('t-pass');
   const btn = $('btn-toggle-pass');
@@ -106,6 +56,64 @@ function togglePasswordVisibility() {
   } else {
     passInput.type = 'password';
     btn.innerText = '👁 Hiện';
+  }
+}
+
+async function doLogin() {
+  const email = $('t-email')?.value?.trim() || '';
+  const pass = $('t-pass')?.value?.trim() || '';
+
+  if (!email || !pass) {
+    if ($('t-err')) {
+      $('t-err').style.display = 'block';
+      $('t-err').innerText = '❌ Vui lòng nhập email và mật khẩu!';
+    }
+    alert('Vui lòng nhập đầy đủ Email và Mật khẩu!');
+    return;
+  }
+
+  const btn = $('btn-login');
+  if(btn) { btn.disabled = true; btn.innerText = 'Đang xác thực...'; }
+
+  try {
+    const data = await signInWithEmailAndPassword(email, pass);
+    if ($('t-err')) $('t-err').style.display = 'none';
+    if (data?.user) {
+      await showTeacherPanel(data.user);
+    }
+  } catch (error) {
+    console.error("Lỗi đăng nhập:", error);
+
+    let errMsg = error.message || 'Email hoặc mật khẩu không đúng!';
+    if (errMsg.includes('Email not confirmed')) {
+      errMsg = 'Tài khoản chưa được kích hoạt! Hãy vào Supabase Dashboard -> Authentication -> Users và bấm Confirm user.';
+    } else if (errMsg.includes('Invalid login credentials')) {
+      errMsg = 'Sai email hoặc mật khẩu! Vui lòng kiểm tra lại thông tin tài khoản Supabase.';
+    }
+    
+    if ($('t-err')) {
+      $('t-err').style.display = 'block';
+      $('t-err').innerText = '❌ ' + errMsg;
+    }
+    alert('❌ ' + errMsg);
+  } finally {
+    if(btn) { btn.disabled = false; btn.innerText = 'Đăng nhập'; }
+  }
+}
+
+window.doLoginManual = doLogin;
+window.togglePasswordVisibility = togglePasswordVisibility;
+
+async function doLogout() {
+  try { await signOut(); } catch(e){}
+
+  if ($('t-pass')) $('t-pass').value = '';
+  if ($('t-err')) $('t-err').style.display = 'none';
+  if ($('t-login')) $('t-login').style.display = 'block';
+  if ($('t-panel')) $('t-panel').style.display = 'none';
+
+  if ($('current-user-email')) {
+    $('current-user-email').innerText = '';
   }
 }
 
