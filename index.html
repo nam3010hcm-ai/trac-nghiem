@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>HỆ THỐNG HỖ TRỢ HỌC TẬP - ÔN TẬP VÀ THI TRẮC NGHIỆM</title>
+<title>K7 EduHub - Nền Tảng Quản Lý Học Tập & Đánh Giá Thông Minh</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -32,107 +32,426 @@
 </head>
 
 <body>
+<!-- K7 EDUHUB BRANDED APP HEADER -->
 <div class="header">
-  <div class="logo">📘 HỆ THỐNG HỖ TRỢ HỌC TẬP - ÔN TẬP VÀ THI TRẮC NGHIỆM</div>
+  <a href="index.html" class="logo">
+    <div class="logo-flag" style="font-size:26px;">⚡</div>
+    <div class="logo-text-wrap">
+      <div class="logo-title" style="font-size:18px;font-weight:800;letter-spacing:-0.4px;">K7 EduHub</div>
+      <div class="logo-subtitle" style="font-size:11px;color:#93c5fd;">Intelligent Learning Platform</div>
+    </div>
+  </a>
+
   <div class="nav">
-    <a class="nav-btn active" href="index.html">🏠 Trang chủ</a>
+    <a class="nav-btn active" href="index.html">🏠 Dashboard</a>
     <a class="nav-btn" href="learn.html">📖 Luyện Kỹ Năng</a>
     <a class="nav-btn" href="student.html">🎓 Cổng Thi</a>
-    <a class="nav-btn" href="teacher.html">👩‍🏫 Quản trị</a>
-  </div>
-</div>
-
-<div class="main" style="max-width:980px">
-  <!-- HERO BANNER -->
-  <div style="text-align:center;margin:32px 0 26px">
-    <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;background:#e0f2fe;border:1px solid #bae6fd;color:#0284c7;border-radius:9999px;font-size:12.5px;font-weight:700;margin-bottom:14px;box-shadow:0 1px 3px rgba(14,165,233,0.1)">
-      ✨ NỀN TẢNG HỌC TẬP & ĐÁNH GIÁ THÔNG MINH
-    </div>
-    <h1 style="font-size:30px;font-weight:800;color:#0f172a;margin-bottom:10px;letter-spacing:-0.5px">
-      Chinh Phục Kỹ Năng & Đạt Điểm Cao
-    </h1>
-    <p style="font-size:15px;color:#64748b;max-width:620px;margin:0 auto;line-height:1.6">
-      Không gian rèn luyện toàn diện 5 kỹ năng Tiếng Anh tương tác kết hợp hệ thống thi trắc nghiệm hiện đại, bảo mật và minh bạch.
-    </p>
+    <a class="nav-btn" href="teacher.html">👩‍🏫 Quản Trị LMS</a>
   </div>
 
-  <!-- 3 CỔNG ĐIỀU HƯỚNG CHÍNH -->
-  <div class="home-grid" style="max-width:980px;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));margin:28px auto 40px">
-    <a href="learn.html" class="home-card" style="border-top:4px solid #0284c7;">
-      <div class="icon" style="color:#0284c7;">📖</div>
-      <h2 style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:8px">Luyện 5 Kỹ Năng Tiếng Anh</h2>
-      <p style="font-size:13px;color:#64748b;line-height:1.5">Reading • Speaking (AI Micro) • Listening • Writing • Language Focus với Gamification XP 🔥</p>
-      <div style="margin-top:16px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
-        <span class="cat-badge" style="background:#e0f2fe;color:#0284c7">🎧 Nghe chép</span>
-        <span class="cat-badge" style="background:#fef3c7;color:#b45309">🗣️ AI Micro</span>
-        <span class="cat-badge" style="background:#f0fdf4;color:#166534">🧩 Flashcards 3D</span>
-      </div>
-    </a>
-
-    <a href="student.html" class="home-card" style="border-top:4px solid #10b981;">
-      <div class="icon" style="color:#10b981;">🎓</div>
-      <h2 style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:8px">Cổng Thi Trắc Nghiệm</h2>
-      <p style="font-size:13px;color:#64748b;line-height:1.5">Đăng nhập tài khoản bảo mật, làm bài trắc nghiệm có thời gian và nhận kết quả tức thì</p>
-      <div style="margin-top:16px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
-        <span class="cat-badge" style="background:#ecfdf5;color:#047857">🛡️ Anti-DDoS</span>
-        <span class="cat-badge" style="background:#eff6ff;color:#1d4ed8">⏱️ Đếm ngược</span>
-        <span class="cat-badge" style="background:#f5f3ff;color:#6d28d9">📝 Chấm tự động</span>
-      </div>
-    </a>
-
-    <a href="teacher.html" class="home-card" style="border-top:4px solid #f59e0b;">
-      <div class="icon" style="color:#f59e0b;">👩‍🏫</div>
-      <h2 style="font-size:18px;font-weight:800;color:#0f172a;margin-bottom:8px">Quản Trị Viên</h2>
-      <p style="font-size:13px;color:#64748b;line-height:1.5">Soạn ngân hàng câu hỏi, thiết kế Unit 5 kỹ năng, quản lý tài khoản học viên và xuất báo cáo</p>
-      <div style="margin-top:16px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
-        <span class="cat-badge" style="background:#fffbeb;color:#b45309">👑 Root Admin</span>
-        <span class="cat-badge" style="background:#e0f2fe;color:#0369a1">👥 Quản lý SV</span>
-        <span class="cat-badge" style="background:#f1f5f9;color:#475569">📊 Xuất CSV</span>
-      </div>
-    </a>
-  </div>
-
-  <!-- BẢNG VINH DANH HỌC TẬP TUẦN NÀY (THỨ 2 - CHỦ NHẬT) -->
-  <div class="leaderboards-container">
-    <div class="leaderboards-header">
-      <div style="display:inline-flex;align-items:center;gap:8px;font-size:23px;font-weight:800;color:#0f172a">
-        <span>🏆</span> BẢNG VINH DANH HỌC TẬP TUẦN NÀY
-      </div>
-      <div style="font-size:13.5px;color:#64748b;margin-top:4px;font-weight:500" id="leaderboard-date-label">
-        Tính từ Thứ Hai đến Chủ Nhật tuần hiện tại
-      </div>
+  <div class="header-actions">
+    <div class="global-search-bar">
+      <span style="font-size:13px;color:#94a3b8;">🔍</span>
+      <input type="text" id="global-search-input" placeholder="Tìm khóa học, đề thi..." />
     </div>
 
-    <div class="leaderboards-grid">
-      <!-- CỘT 1: TOP 10 ĐIỂM SỐ HỌC TẬP (XP) -->
-      <div class="lb-card">
-        <div class="lb-card-header" style="background:#fffbeb;border-top:3px solid #f59e0b">
-          <div style="font-weight:800;font-size:15px;color:#92400e;display:flex;align-items:center;gap:6px">
-            <span>🌟</span> TOP 10 ĐIỂM HỌC TẬP (XP)
-          </div>
-          <span style="font-size:11px;font-weight:700;color:#b45309;background:#fef3c7;padding:3px 9px;border-radius:9999px">Tuần này</span>
-        </div>
-        <div class="lb-card-body" id="top-xp-list">
-          <div style="text-align:center;padding:28px;color:#94a3b8;font-size:13px">Đang tải bảng vinh danh điểm số...</div>
-        </div>
-      </div>
+    <button class="notif-bell-btn" title="Thông báo mới">
+      🔔
+      <span class="notif-badge-dot"></span>
+    </button>
 
-      <!-- CỘT 2: TOP 10 THỜI GIAN HỌC NHIỀU NHẤT -->
-      <div class="lb-card">
-        <div class="lb-card-header" style="background:#f0f9ff;border-top:3px solid #0284c7">
-          <div style="font-weight:800;font-size:15px;color:#075985;display:flex;align-items:center;gap:6px">
-            <span>⏱️</span> TOP 10 THỜI GIAN HỌC TẬP
-          </div>
-          <span style="font-size:11px;font-weight:700;color:#0369a1;background:#e0f2fe;padding:3px 9px;border-radius:9999px">Tuần này</span>
-        </div>
-        <div class="lb-card-body" id="top-time-list">
-          <div style="text-align:center;padding:28px;color:#94a3b8;font-size:13px">Đang tải bảng vinh danh thời gian...</div>
-        </div>
-      </div>
+    <div class="user-profile-badge" title="Tài khoản cá nhân">
+      <div class="user-avatar-img">K7</div>
+      <span>Tài Khoản LMS</span>
     </div>
   </div>
 </div>
 
-<script type="module" src="js/index.js?v=5.1"></script>
+<div class="main" style="max-width:1200px;">
+  <!-- HERO WELCOME BANNER -->
+  <div class="lms-hero-banner">
+    <div>
+      <div class="hero-tag">
+        <span>⚡</span> LMS PLATFORM 3.0 • HỌC KỲ 2026
+      </div>
+      <h1 class="hero-title">Xin chào, Chào mừng bạn tới K7 EduHub! 🚀</h1>
+      <p class="hero-subtitle">Hệ thống quản lý học tập thông minh & tổ chức thi trắc nghiệm trực tuyến bảo mật.</p>
+    </div>
+    <div class="hero-quick-actions">
+      <a href="teacher.html" class="action-btn-primary">+ Tạo Đề Thi Mới</a>
+      <a href="learn.html" class="action-btn-secondary">📖 Luyện 5 Kỹ Năng</a>
+    </div>
+  </div>
+
+  <!-- KPI METRICS GRID -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">Tổng Khóa Học</span>
+        <div class="kpi-icon-wrap" style="background:#e0f2fe;color:#0284c7;">📚</div>
+      </div>
+      <div class="kpi-val">120</div>
+      <div class="kpi-footer">
+        <span class="trend-badge-up">↑ +10%</span>
+        <span class="trend-text">so với tháng trước</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">Học Viên Active</span>
+        <div class="kpi-icon-wrap" style="background:#dcfce7;color:#15803d;">👥</div>
+      </div>
+      <div class="kpi-val">850</div>
+      <div class="kpi-footer">
+        <span class="trend-badge-up">↑ +5%</span>
+        <span class="trend-text">tăng trưởng học viên</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">Bài Thi Chờ Chấm</span>
+        <div class="kpi-icon-wrap" style="background:#fef3c7;color:#b45309;">📝</div>
+      </div>
+      <div class="kpi-val">45</div>
+      <div class="kpi-footer">
+        <span class="trend-badge-down">↓ -2%</span>
+        <span class="trend-text">giảm tồn đọng</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <span class="kpi-title">Tỷ Lệ Hoàn Thành</span>
+        <div class="kpi-icon-wrap" style="background:#f5f3ff;color:#6d28d9;">🎯</div>
+      </div>
+      <div class="kpi-val">88%</div>
+      <div class="kpi-footer">
+        <span class="trend-badge-up">↑ +3%</span>
+        <span class="trend-text">đạt mục tiêu môn học</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN DASHBOARD GRID (2 COLUMNS) -->
+  <div class="lms-dashboard-grid">
+    <!-- LEFT MAIN COLUMN -->
+    <div>
+      <!-- ANALYTICS CHART CARD -->
+      <div class="analytics-card">
+        <div class="analytics-header">
+          <div class="analytics-title">
+            <span>📈</span> Xu Hướng Học Tập & Lưu Lượng LMS
+          </div>
+          <div class="period-pill-tabs">
+            <button class="period-tab" data-period="daily">Ngày</button>
+            <button class="period-tab active" data-period="weekly">Tuần này</button>
+            <button class="period-tab" data-period="monthly">Tháng</button>
+          </div>
+        </div>
+
+        <div class="chart-svg-container">
+          <svg viewBox="0 0 700 160" style="width:100%;height:100%;">
+            <defs>
+              <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#2563eb" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#2563eb" stop-opacity="0.0"/>
+              </linearGradient>
+            </defs>
+            <!-- Grid Lines -->
+            <line x1="0" y1="30" x2="700" y2="30" stroke="#f1f5f9" stroke-width="1.5" stroke-dasharray="4"/>
+            <line x1="0" y1="75" x2="700" y2="75" stroke="#f1f5f9" stroke-width="1.5" stroke-dasharray="4"/>
+            <line x1="0" y1="120" x2="700" y2="120" stroke="#f1f5f9" stroke-width="1.5" stroke-dasharray="4"/>
+
+            <!-- Area Fill -->
+            <path d="M 20 120 Q 90 90, 140 105 T 260 70 T 380 95 T 500 35 T 620 60 T 680 40 L 680 145 L 20 145 Z" fill="url(#chartGrad)"/>
+            <!-- Line Path -->
+            <path d="M 20 120 Q 90 90, 140 105 T 260 70 T 380 95 T 500 35 T 620 60 T 680 40" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
+            
+            <!-- Data Points -->
+            <circle cx="140" cy="105" r="4" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
+            <circle cx="260" cy="70" r="4" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
+            <circle cx="380" cy="95" r="4" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
+            <circle cx="500" cy="35" r="6" fill="#2563eb" stroke="#ffffff" stroke-width="2.5"/>
+            <circle cx="620" cy="60" r="4" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
+
+            <!-- Tooltip Badge on Peak -->
+            <rect x="460" y="5" width="80" height="22" rx="6" fill="#0f172a"/>
+            <text x="500" y="20" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">850 Học viên</text>
+
+            <!-- X-Axis Labels -->
+            <text x="20" y="158" font-size="11" font-weight="600" fill="#94a3b8">Thứ 2</text>
+            <text x="130" y="158" font-size="11" font-weight="600" fill="#94a3b8">Thứ 3</text>
+            <text x="250" y="158" font-size="11" font-weight="600" fill="#94a3b8">Thứ 4</text>
+            <text x="370" y="158" font-size="11" font-weight="600" fill="#94a3b8">Thứ 5</text>
+            <text x="490" y="158" font-size="11" font-weight="700" fill="#2563eb">Thứ 6</text>
+            <text x="610" y="158" font-size="11" font-weight="600" fill="#94a3b8">Thứ 7</text>
+            <text x="670" y="158" font-size="11" font-weight="600" fill="#94a3b8">Chủ Nhật</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- TOP COURSES CATALOG TABLE CARD -->
+      <div class="courses-table-card">
+        <div class="table-toolbar">
+          <div style="font-size:16px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px;">
+            <span>🎓</span> Danh Sách Khóa Học Nổi Bật
+          </div>
+          <input type="text" id="course-filter-search" class="table-search-input" placeholder="Lọc theo tên khóa học..." />
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="lms-table" id="courses-table">
+            <thead>
+              <tr>
+                <th>Tên Khóa Học</th>
+                <th>Giảng Viên</th>
+                <th>Học Viên</th>
+                <th>Tiến Độ</th>
+                <th>Trạng Thái</th>
+                <th>Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div style="font-weight:700;color:#0f172a;">Introduction to Data Science</div>
+                  <div style="font-size:11.5px;color:#64748b;">Khoa KH Máy Tính • K7-DS101</div>
+                </td>
+                <td>Dr. Chen</td>
+                <td><b>150</b> SV</td>
+                <td>
+                  <div class="course-progress-wrap">
+                    <div class="course-progress-bar">
+                      <div class="course-progress-fill" style="width:85%;"></div>
+                    </div>
+                    <span style="font-size:11.5px;font-weight:700;color:#2563eb;">85%</span>
+                  </div>
+                </td>
+                <td><span class="status-badge status-active">● Active</span></td>
+                <td><a href="learn.html" class="action-btn-sm">Vào Học</a></td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight:700;color:#0f172a;">Advanced Machine Learning</div>
+                  <div style="font-size:11.5px;color:#64748b;">Trí Tuệ Nhân Tạo • K7-AI202</div>
+                </td>
+                <td>Dr. Ramirez</td>
+                <td><b>120</b> SV</td>
+                <td>
+                  <div class="course-progress-wrap">
+                    <div class="course-progress-bar">
+                      <div class="course-progress-fill" style="width:70%;"></div>
+                    </div>
+                    <span style="font-size:11.5px;font-weight:700;color:#2563eb;">70%</span>
+                  </div>
+                </td>
+                <td><span class="status-badge status-active">● Active</span></td>
+                <td><a href="learn.html" class="action-btn-sm">Vào Học</a></td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight:700;color:#0f172a;">Web Development Fundamentals</div>
+                  <div style="font-size:11.5px;color:#64748b;">Lập Trình Web • K7-WEB101</div>
+                </td>
+                <td>Mr. Davis</td>
+                <td><b>180</b> SV</td>
+                <td>
+                  <div class="course-progress-wrap">
+                    <div class="course-progress-bar">
+                      <div class="course-progress-fill" style="width:92%;"></div>
+                    </div>
+                    <span style="font-size:11.5px;font-weight:700;color:#2563eb;">92%</span>
+                  </div>
+                </td>
+                <td><span class="status-badge status-active">● Active</span></td>
+                <td><a href="learn.html" class="action-btn-sm">Vào Học</a></td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight:700;color:#0f172a;">Luyện 5 Kỹ Năng Tiếng Anh Unit 1-10</div>
+                  <div style="font-size:11.5px;color:#64748b;">Ngoại Ngữ K7 • ENG-K7</div>
+                </td>
+                <td>Khoa Ngoại Ngữ</td>
+                <td><b>340</b> SV</td>
+                <td>
+                  <div class="course-progress-wrap">
+                    <div class="course-progress-bar">
+                      <div class="course-progress-fill" style="width:65%;"></div>
+                    </div>
+                    <span style="font-size:11.5px;font-weight:700;color:#2563eb;">65%</span>
+                  </div>
+                </td>
+                <td><span class="status-badge status-active">● Active</span></td>
+                <td><a href="learn.html" class="action-btn-sm">Vào Học</a></td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight:700;color:#0f172a;">Đề Thi Trắc Nghiệm Giữa Kỳ</div>
+                  <div style="font-size:11.5px;color:#64748b;">Hệ Thống Thi • EXAM-K7</div>
+                </td>
+                <td>Ban Kiểm Định</td>
+                <td><b>210</b> SV</td>
+                <td>
+                  <div class="course-progress-wrap">
+                    <div class="course-progress-bar">
+                      <div class="course-progress-fill" style="width:40%;"></div>
+                    </div>
+                    <span style="font-size:11.5px;font-weight:700;color:#2563eb;">40%</span>
+                  </div>
+                </td>
+                <td><span class="status-badge status-pending">● Đang thi</span></td>
+                <td><a href="student.html" class="action-btn-sm">Cổng Thi</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- BẢNG VINH DANH HỌC TẬP TUẦN -->
+      <div class="leaderboards-container" style="margin-top:0;padding-top:0;border-top:none;">
+        <div class="leaderboards-header">
+          <div style="display:inline-flex;align-items:center;gap:8px;font-size:20px;font-weight:800;color:#0f172a">
+            <span>🏆</span> BẢNG VINH DANH HỌC TẬP K7 EDUHUB
+          </div>
+          <div style="font-size:13px;color:#64748b;margin-top:4px;font-weight:500" id="leaderboard-date-label">
+            Tính từ Thứ Hai đến Chủ Nhật tuần hiện tại
+          </div>
+        </div>
+
+        <div class="leaderboards-grid">
+          <!-- CỘT 1: TOP 10 XP -->
+          <div class="lb-card">
+            <div class="lb-card-header" style="background:#fffbeb;border-top:3px solid #f59e0b">
+              <div style="font-weight:800;font-size:14px;color:#92400e;display:flex;align-items:center;gap:6px">
+                <span>🌟</span> TOP 10 ĐIỂM HỌC TẬP (XP)
+              </div>
+              <span style="font-size:11px;font-weight:700;color:#b45309;background:#fef3c7;padding:3px 9px;border-radius:9999px">Tuần này</span>
+            </div>
+            <div class="lb-card-body" id="top-xp-list">
+              <div style="text-align:center;padding:24px;color:#94a3b8;font-size:13px">Đang tải bảng vinh danh điểm số...</div>
+            </div>
+          </div>
+
+          <!-- CỘT 2: TOP 10 THỜI GIAN -->
+          <div class="lb-card">
+            <div class="lb-card-header" style="background:#f0f9ff;border-top:3px solid #0284c7">
+              <div style="font-weight:800;font-size:14px;color:#075985;display:flex;align-items:center;gap:6px">
+                <span>⏱️</span> TOP 10 THỜI GIAN HỌC TẬP
+              </div>
+              <span style="font-size:11px;font-weight:700;color:#0369a1;background:#e0f2fe;padding:3px 9px;border-radius:9999px">Tuần này</span>
+            </div>
+            <div class="lb-card-body" id="top-time-list">
+              <div style="text-align:center;padding:24px;color:#94a3b8;font-size:13px">Đang tải bảng vinh danh thời gian...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR COLUMN -->
+    <div>
+      <!-- 3 PORTAL CARDS -->
+      <div class="side-widget-card" style="padding:16px;">
+        <div class="widget-title" style="margin-bottom:12px;">
+          <span>🚀 Cổng Điều Hướng</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a href="learn.html" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#f0f9ff;border:1px solid #bae6fd;transition:all 0.15s ease;">
+            <div style="font-size:24px;">📖</div>
+            <div>
+              <div style="font-size:13.5px;font-weight:800;color:#0369a1;">Luyện 5 Kỹ Năng</div>
+              <div style="font-size:11.5px;color:#0284c7;">Reading • AI Speaking • XP</div>
+            </div>
+          </a>
+
+          <a href="student.html" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#ecfdf5;border:1px solid #a7f3d0;transition:all 0.15s ease;">
+            <div style="font-size:24px;">🎓</div>
+            <div>
+              <div style="font-size:13.5px;font-weight:800;color:#047857;">Cổng Thi Trắc Nghiệm</div>
+              <div style="font-size:11.5px;color:#059669;">Anti-DDoS • Đếm ngược</div>
+            </div>
+          </a>
+
+          <a href="teacher.html" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#fffbeb;border:1px solid #fde68a;transition:all 0.15s ease;">
+            <div style="font-size:24px;">👩‍🏫</div>
+            <div>
+              <div style="font-size:13.5px;font-weight:800;color:#b45309;">Quản Trị Giảng Viên</div>
+              <div style="font-size:11.5px;color:#d97706;">Ngân hàng đề • Quản lý SV</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- UPCOMING DEADLINES WIDGET -->
+      <div class="side-widget-card">
+        <div class="widget-title">
+          <span>⏰ Hạn Nộp Sắp Tới</span>
+          <span style="font-size:11.5px;color:#2563eb;cursor:pointer;">Xem tất cả</span>
+        </div>
+
+        <div class="deadline-item">
+          <div class="deadline-info">
+            <h4>Assignment 1: Unit 4 Reading</h4>
+            <p>120 Học viên • Hạn: 20/10/2026</p>
+          </div>
+          <button class="remind-btn" onclick="alert('Đã gửi thông báo nhắc nhở tới 120 học viên!')">Nhắc nhở</button>
+        </div>
+
+        <div class="deadline-item">
+          <div class="deadline-info">
+            <h4>Assignment 2: AI Micro Practice</h4>
+            <p>150 Học viên • Hạn: 27/10/2026</p>
+          </div>
+          <button class="remind-btn" onclick="alert('Đã gửi thông báo nhắc nhở tới 150 học viên!')">Nhắc nhở</button>
+        </div>
+
+        <div class="deadline-item">
+          <div class="deadline-info">
+            <h4>Midterm Exam: Tiếng Anh K7</h4>
+            <p>210 Học viên • Hạn: 03/11/2026</p>
+          </div>
+          <button class="remind-btn" onclick="alert('Đã gửi thông báo nhắc nhở tới 210 học viên!')">Nhắc nhở</button>
+        </div>
+      </div>
+
+      <!-- RECENT ACTIVITY FEED -->
+      <div class="side-widget-card">
+        <div class="widget-title">
+          <span>⚡ Hoạt Động Gần Đây</span>
+        </div>
+
+        <div class="activity-item">
+          <div class="activity-icon">👨‍🏫</div>
+          <div>
+            <div class="activity-text"><b>Dr. Chen</b> vừa hoàn thành chấm 25 bài thi giữa kỳ.</div>
+            <div class="activity-time">10 phút trước</div>
+          </div>
+        </div>
+
+        <div class="activity-item">
+          <div class="activity-icon" style="background:#ecfdf5;color:#10b981;">🎓</div>
+          <div>
+            <div class="activity-text"><b>Nguyễn Văn A</b> đã hoàn thành <b>Unit 3 Listening</b> (+150 XP).</div>
+            <div class="activity-time">35 phút trước</div>
+          </div>
+        </div>
+
+        <div class="activity-item">
+          <div class="activity-icon" style="background:#fef3c7;color:#f59e0b;">📝</div>
+          <div>
+            <div class="activity-text"><b>Michael Brown</b> vừa nộp bài thi <b>Assignment 2</b>.</div>
+            <div class="activity-time">1 giờ trước</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/index.js?v=6.0"></script>
 </body>
 </html>
+

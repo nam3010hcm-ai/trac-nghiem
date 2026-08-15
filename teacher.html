@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>HỆ THỐNG HỖ TRỢ HỌC TẬP - ÔN TẬP VÀ THI TRẮC NGHIỆM</title>
+<title>K7 EduHub - Quản Trị Hệ Thống LMS & Giảng Viên</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -41,12 +41,26 @@ window.MathJax = {
 </head>
 <body>
 <div class="header">
-  <div class="logo">📘 HỆ THỐNG HỖ TRỢ HỌC TẬP - ÔN TẬP VÀ THI TRẮC NGHIỆM</div>
+  <a href="index.html" class="logo">
+    <div class="logo-flag" style="font-size:26px;">⚡</div>
+    <div class="logo-text-wrap">
+      <div class="logo-title" style="font-size:18px;font-weight:800;letter-spacing:-0.4px;">K7 EduHub</div>
+      <div class="logo-subtitle" style="font-size:11px;color:#93c5fd;">Intelligent Learning Platform</div>
+    </div>
+  </a>
+
   <div class="nav">
-    <a class="nav-btn" href="index.html">🏠 Trang chủ</a>
+    <a class="nav-btn" href="index.html">🏠 Dashboard</a>
     <a class="nav-btn" href="learn.html">📖 Luyện Kỹ Năng</a>
     <a class="nav-btn" href="student.html">🎓 Cổng Thi</a>
-    <a class="nav-btn active" href="teacher.html">👩‍🏫 Quản trị</a>
+    <a class="nav-btn active" href="teacher.html">👩‍🏫 Quản Trị LMS</a>
+  </div>
+
+  <div class="header-actions">
+    <div class="user-profile-badge">
+      <div class="user-avatar-img">K7</div>
+      <span>Admin / Teacher</span>
+    </div>
   </div>
 </div>
 
@@ -111,7 +125,7 @@ window.MathJax = {
 
       // Chuyển sang màn hình quản lý
       document.getElementById('t-login').style.display = 'none';
-      document.getElementById('t-panel').style.display = 'block';
+      document.getElementById('t-panel').style.display = 'flex';
       if (document.getElementById('current-user-email')) {
         document.getElementById('current-user-email').innerText = authUser?.email || email;
       }
@@ -174,56 +188,66 @@ window.MathJax = {
     }
   });
   </script>
+</div>
 
-  <!-- CONTROL CENTER LAYOUT (LEFT SIDEBAR + TOP HEADER + DASHBOARD) -->
-  <div class="admin-layout-wrapper" id="t-panel" style="display:none">
+<!-- CONTROL CENTER LAYOUT (LEFT SIDEBAR + TOP HEADER + DASHBOARD) -->
+<div class="admin-layout-wrapper" id="t-panel" style="display:none">
     <!-- LEFT SIDEBAR -->
     <aside class="admin-sidebar" id="admin-sidebar">
       <div>
         <div class="admin-sidebar-header">
-          <div style="font-size:22px">🏫</div>
+          <div style="font-size:24px">⚡</div>
           <div class="admin-sidebar-logo">
-            HỌC TẬP K7
-            <span>Trung Tâm Điều Hành Dạy - Học - Thi</span>
+            K7 EduHub LMS
+            <span>Hệ Sinh Thái Học Tập & Đánh Giá</span>
           </div>
         </div>
 
         <nav class="admin-sidebar-nav">
-          <!-- ĐIỀU HƯỚNG -->
-          <div class="sidebar-section-title">ĐIỀU HƯỚNG</div>
+          <!-- 1. TỔNG QUAN -->
+          <div class="sidebar-section-title">🏠 TỔNG QUAN</div>
           <a class="sidebar-item active" data-tab="dash" onclick="window.switchTTab('dash')">
-            <span>🏠</span> <span>Tổng quan</span>
+            <span>📊</span> <span>Bảng điều khiển LMS</span>
             <span class="item-badge">KPI</span>
           </a>
 
-          <!-- NỘI DUNG DẠY & HỌC -->
-          <div class="sidebar-section-title">NỘI DUNG DẠY & HỌC</div>
+          <!-- 2. HỌC TẬP & NỘI DUNG -->
+          <div class="sidebar-section-title">📚 HỌC TẬP & NỘI DUNG</div>
+          <a class="sidebar-item" data-tab="unit" onclick="window.switchTTab('unit')">
+            <span>📖</span> <span>Bài học & Unit (5 Kỹ Năng)</span>
+          </a>
+          <a class="sidebar-item" data-tab="c" onclick="window.switchTTab('c')">
+            <span>🗂️</span> <span>Chủ đề & Phần bài giảng</span>
+          </a>
+
+          <!-- 3. NGÂN HÀNG CÂU HỎI -->
+          <div class="sidebar-section-title">🧠 NGÂN HÀNG CÂU HỎI</div>
           <a class="sidebar-item" data-tab="q" onclick="window.switchTTab('q')">
             <span>📚</span> <span>Ngân hàng câu hỏi</span>
           </a>
-          <a class="sidebar-item" data-tab="e" onclick="window.switchTTab('e')">
-            <span>📝</span> <span>Đề thi</span>
-          </a>
-          <a class="sidebar-item" data-tab="unit" onclick="window.switchTTab('unit')">
-            <span>📖</span> <span>Bài học / Unit (5 Kỹ Năng)</span>
-          </a>
-          <a class="sidebar-item" data-tab="c" onclick="window.switchTTab('c')">
-            <span>🗂️</span> <span>Chủ đề & Phần</span>
-          </a>
-          <a class="sidebar-item" data-tab="img" onclick="window.switchTTab('img')">
-            <span>🖼️</span> <span>Thư viện tài nguyên</span>
-          </a>
 
-          <!-- NGƯỜI HỌC & THI CỬ -->
-          <div class="sidebar-section-title">NGƯỜI HỌC & THI CỬ</div>
-          <a class="sidebar-item" data-tab="students" id="tab-btn-students" onclick="window.switchTTab('students')">
-            <span>👥</span> <span>Danh sách Học viên</span>
+          <!-- 4. THI & ĐÁNH GIÁ -->
+          <div class="sidebar-section-title">📝 THI & ĐÁNH GIÁ</div>
+          <a class="sidebar-item" data-tab="e" onclick="window.switchTTab('e')">
+            <span>📝</span> <span>Ma trận & Đề thi</span>
           </a>
           <a class="sidebar-item" data-tab="cohort" onclick="window.switchTTab('cohort')">
-            <span>📅</span> <span>Ca thi / Kíp thi</span>
+            <span>📅</span> <span>Kỳ thi & Ca thi</span>
           </a>
           <a class="sidebar-item" data-tab="r" onclick="window.switchTTab('r')">
-            <span>🏆</span> <span>Kết quả & Báo cáo</span>
+            <span>🏆</span> <span>Kết quả & Phân tích</span>
+          </a>
+
+          <!-- 5. NGƯỜI HỌC -->
+          <div class="sidebar-section-title">👥 QUẢN LÝ NGƯỜI HỌC</div>
+          <a class="sidebar-item" data-tab="students" id="tab-btn-students" onclick="window.switchTTab('students')">
+            <span>👥</span> <span>Học viên & Tiến độ</span>
+          </a>
+
+          <!-- 6. MEDIA LIBRARY -->
+          <div class="sidebar-section-title">🖼️ TÀI NGUYÊN</div>
+          <a class="sidebar-item" data-tab="img" onclick="window.switchTTab('img')">
+            <span>🎵</span> <span>Media Library (Audio & Ảnh)</span>
           </a>
         </nav>
       </div>
@@ -231,10 +255,10 @@ window.MathJax = {
       <!-- SIDEBAR FOOTER WITH USER PROFILE -->
       <div class="admin-sidebar-footer">
         <div class="user-profile-card">
-          <div class="user-profile-avatar">👨‍🏫</div>
+          <div class="user-profile-avatar">⚡</div>
           <div class="user-profile-info">
             <div class="user-profile-name" id="current-user-email">nam3010hcm@gmail.com</div>
-            <div class="user-profile-role" id="user-role-badge">Root Admin</div>
+            <div class="user-profile-role" id="user-role-badge">K7 EduHub Admin</div>
           </div>
         </div>
         <button class="btn btn-sm btn-full" style="margin-top:12px;background:#1e293b;color:#f8fafc;border:1px solid #334155;justify-content:center" id="btn-logout" onclick="if(window.doLogout) window.doLogout();">
@@ -275,11 +299,11 @@ window.MathJax = {
           <!-- WELCOME BANNER -->
           <div class="dash-welcome-banner">
             <div>
-              <div style="font-size:22px;font-weight:800;margin-bottom:4px">Chào buổi tối, Thầy Nam 👋</div>
-              <div style="font-size:13.5px;opacity:0.9">Trung tâm điều hành dạy, học và thi trắc nghiệm • Hệ thống Học tập K7</div>
+              <div style="font-size:22px;font-weight:800;margin-bottom:4px">Chào mừng trở lại, Ban Quản Trị 👋</div>
+              <div style="font-size:13.5px;opacity:0.9">Trung tâm điều hành K7 EduHub • Hệ sinh thái học tập & đánh giá số</div>
             </div>
             <div class="dash-status-pill">
-              <span class="pulse-dot"></span> Hệ thống đang hoạt động bình thường
+              <span class="pulse-dot"></span> K7 EduHub Platform • Online
             </div>
           </div>
 
@@ -1214,10 +1238,9 @@ SV003, Lê Văn C, 12A2, 2025-2026, sv003@gmail.com, 123456"></textarea>
           <button class="btn btn-p" id="btn-save-bulk-students" style="flex:2;" onclick="window.saveBulkStudents();">📥 Tiến hành Nạp Danh Sách</button>
           <button class="btn" style="flex:1;" onclick="window.closeBulkStudentModal();">Hủy</button>
         </div>
-    </div>
-    </div>
+      </div>
+    </main>
   </div>
-</div>
 
 <!-- COMMAND PALETTE MODAL (Ctrl + K / Cmd + K) -->
 <div id="cmd-palette-overlay" class="cmd-palette-overlay" onclick="if(event.target===this) window.closeCommandPalette();">

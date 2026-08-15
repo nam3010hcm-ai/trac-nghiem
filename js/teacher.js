@@ -15,7 +15,7 @@ const db = () => window.supabaseClient;
 
 async function showTeacherPanel(user) {
   $('t-login').style.display = 'none';
-  $('t-panel').style.display = 'block';
+  $('t-panel').style.display = 'flex';
 
   state.currentUserEmail = user?.email || 'nam3010hcm@gmail.com';
 

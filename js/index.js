@@ -1,6 +1,6 @@
 /**
  * =========================================================================
- * TRANG CHỦ & BẢNG VINH DANH HỌC TẬP TUẦN (index.js)
+ * K7 EDUHUB LMS DASHBOARD & LEADERBOARDS (index.js)
  * Weekly Top XP & Top Study Time Leaderboards (Monday to Sunday)
  * =========================================================================
  */
@@ -160,8 +160,50 @@ function esc(s) {
   }[m]));
 }
 
+// 4. BỘ LỌC TÌM KIẾM KHÓA HỌC REALTIME VÀ THAO TÁC DASHBOARD
+function initDashboardInteractions() {
+  const courseSearchInput = document.getElementById('course-filter-search');
+  if (courseSearchInput) {
+    courseSearchInput.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase().trim();
+      const rows = document.querySelectorAll('#courses-table tbody tr');
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(term) ? '' : 'none';
+      });
+    });
+  }
+
+  // Chuyển đổi tab thời gian biểu đồ
+  const periodTabs = document.querySelectorAll('.period-tab');
+  periodTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      periodTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  // Global search input
+  const globalSearchInput = document.getElementById('global-search-input');
+  if (globalSearchInput) {
+    globalSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const query = globalSearchInput.value.trim();
+        if (query) {
+          alert(`Đang tìm kiếm trên K7 EduHub: "${query}"`);
+        }
+      }
+    });
+  }
+}
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', loadWeeklyLeaderboards);
+  document.addEventListener('DOMContentLoaded', () => {
+    loadWeeklyLeaderboards();
+    initDashboardInteractions();
+  });
 } else {
   loadWeeklyLeaderboards();
+  initDashboardInteractions();
 }
+
