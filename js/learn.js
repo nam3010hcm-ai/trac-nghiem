@@ -304,13 +304,30 @@ async function initAuthenticatedLearn() {
 
   const appContainer = document.getElementById('learn-app-container');
   const loginScreen = document.getElementById('learn-login-screen');
+  const headerUserBox = document.getElementById('learn-header-user-box');
+  const headerUserName = document.getElementById('learn-header-user-name');
+
   if (loginScreen) loginScreen.style.display = 'none';
   if (appContainer) appContainer.style.display = 'block';
+  if (headerUserBox) headerUserBox.style.display = 'flex';
+
+  const userDisplayName = `${currentStudent.full_name} - ${currentStudent.class_name || 'Lớp'}`;
+  if (headerUserName) headerUserName.textContent = userDisplayName;
+
+  const welcomeText = document.getElementById('learn-welcome-text');
+  if (welcomeText) welcomeText.textContent = `Chào, ${userDisplayName}!`;
 
   const nameEl = document.getElementById('learn-user-name');
   const classEl = document.getElementById('learn-user-class');
-  if (nameEl) nameEl.textContent = currentStudent.full_name || 'Học viên';
-  if (classEl) classEl.textContent = `Lớp: ${currentStudent.class_name || 'N/A'}`;
+  if (nameEl) nameEl.textContent = userDisplayName;
+  if (classEl) classEl.textContent = `Tên - Đơn vị: ${currentStudent.class_name || 'Khoa KHCB'}`;
+
+  // Nạp ảnh đại diện từ localStorage nếu có
+  const savedAvatar = localStorage.getItem(`avatar_${currentStudent.id}`);
+  if (savedAvatar) {
+    const avatarEl = document.getElementById('user-avatar-display');
+    if (avatarEl) avatarEl.innerHTML = `<img src="${savedAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  }
 
   // Nạp thống kê tuần hiện tại từ Supabase
   try {
@@ -332,9 +349,6 @@ async function initAuthenticatedLearn() {
     console.error("Lỗi nạp stats học viên:", e);
   }
 
-  const weeklyTimeEl = document.getElementById('learn-weekly-time');
-  if (weeklyTimeEl) weeklyTimeEl.textContent = formatStudyTime(currentWeeklyStudySeconds);
-
   loadProfile();
 
   // Khởi chạy bộ theo dõi thời gian học thực tế mỗi 30 giây
@@ -342,14 +356,31 @@ async function initAuthenticatedLearn() {
   studyTrackerInterval = setInterval(() => {
     if (!document.hidden && currentStudent) {
       currentWeeklyStudySeconds += 30;
-      const wtEl = document.getElementById('learn-weekly-time');
-      if (wtEl) wtEl.textContent = formatStudyTime(currentWeeklyStudySeconds);
       syncWeeklyStatsToSupabase(0, 30);
     }
   }, 30000);
 
   await loadUnitsData();
 }
+
+export function updateAvatarFromURL() {
+  const url = document.getElementById('avatar-url-input')?.value.trim();
+  if (!url || !currentStudent) return;
+  localStorage.setItem(`avatar_${currentStudent.id}`, url);
+  const avatarEl = document.getElementById('user-avatar-display');
+  if (avatarEl) avatarEl.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  alert("✅ Đã cập nhật ảnh đại diện thành công!");
+}
+
+export function clearAvatar() {
+  if (!currentStudent) return;
+  localStorage.removeItem(`avatar_${currentStudent.id}`);
+  const avatarEl = document.getElementById('user-avatar-display');
+  if (avatarEl) avatarEl.innerHTML = '🇻🇳';
+}
+
+window.updateAvatarFromURL = updateAvatarFromURL;
+window.clearAvatar = clearAvatar;
 
 window.toggleLearnPassVisible = toggleLearnPassVisible;
 window.loginLearnStudent = loginLearnStudent;
@@ -471,39 +502,83 @@ async function loadUnitsData() {
   if (!allUnits.length) allUnits = DEFAULT_UNITS;
   currentUnit = allUnits[0];
 
-  populateUnitSelector();
+  populateUnitTiles();
   loadCurrentUnitView();
 }
 
-function populateUnitSelector() {
-  const sel = document.getElementById('learn-unit-select');
-  if (!sel) return;
+function populateUnitTiles() {
+  const container = document.getElementById('unit-tiles-container');
+  if (!container) return;
 
-  sel.innerHTML = allUnits.map(u => `
-    <option value="${u.id}" ${u.id === currentUnit.id ? 'selected' : ''}>
-      ${u.title} (${u.level})
-    </option>
-  `).join('');
+  let html = `
+    <div class="unit-card-btn ${!currentUnit || currentUnit.id === 'all' ? 'active' : ''}" onclick="window.selectUnitTile('all')">
+      <div style="font-size:20px">📚</div>
+      <div class="unit-btn-title">Tất cả</div>
+      <div class="unit-btn-desc">Tổng hợp tất cả bài</div>
+    </div>
+  `;
 
-  sel.onchange = (e) => {
-    const chosen = allUnits.find(u => u.id === e.target.value);
-    if (chosen) {
-      currentUnit = chosen;
-      loadCurrentUnitView();
-    }
-  };
+  allUnits.forEach((u, idx) => {
+    const isAct = currentUnit && currentUnit.id === u.id;
+    html += `
+      <div class="unit-card-btn ${isAct ? 'active' : ''}" onclick="window.selectUnitTile('${u.id}')">
+        <div style="font-size:20px">${u.icon || (idx + 1) + '️⃣'}</div>
+        <div class="unit-btn-title">${u.title.split(':')[0] || 'Unit ' + (idx + 1)}</div>
+        <div class="unit-btn-desc">${u.topic || u.level || ''}</div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
 }
+
+export function selectUnitTile(unitId) {
+  if (unitId === 'all') {
+    currentUnit = allUnits[0];
+  } else {
+    const found = allUnits.find(u => u.id === unitId);
+    if (found) currentUnit = found;
+  }
+  populateUnitTiles();
+  loadCurrentUnitView();
+}
+
+export function selectContentType(type, btnEl) {
+  document.querySelectorAll('.content-type-row .type-btn').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  // Chuyển tab tương ứng nếu chọn
+  if (type === 'word' || type === 'mixed') switchSkillTab('languageFocus');
+  if (type === 'phrase' || type === 'sentence') switchSkillTab('writing');
+  if (type === 'dialogue') switchSkillTab('speaking');
+}
+
+export function selectDifficulty(diff, btnEl) {
+  document.querySelectorAll('.difficulty-row .diff-btn').forEach(b => b.classList.remove('active'));
+  if (btnEl && !btnEl.classList.contains('locked')) btnEl.classList.add('active');
+}
+
+export function filterLearningContent() {
+  const q = document.getElementById('learn-search-input')?.value.trim().toLowerCase() || '';
+  if (!q) return;
+  // Tìm kiếm trong flashcards hoặc exercises
+  const foundInUnit = allUnits.find(u => 
+    (u.title || '').toLowerCase().includes(q) || 
+    (u.topic || '').toLowerCase().includes(q)
+  );
+  if (foundInUnit) {
+    currentUnit = foundInUnit;
+    populateUnitTiles();
+    loadCurrentUnitView();
+  }
+}
+
+window.selectUnitTile = selectUnitTile;
+window.selectContentType = selectContentType;
+window.selectDifficulty = selectDifficulty;
+window.filterLearningContent = filterLearningContent;
 
 function loadCurrentUnitView() {
   if (!currentUnit) return;
-
-  const iconEl = document.getElementById('current-unit-icon');
-  const descEl = document.getElementById('current-unit-desc');
-
-  if (iconEl) iconEl.textContent = currentUnit.icon || '📖';
-  if (descEl) descEl.textContent = currentUnit.description || `Chủ đề: ${currentUnit.topic} • Trình độ: ${currentUnit.level}`;
-
-  // Nạp dữ liệu kỹ năng đang active
   switchSkillTab(currentSkillTab);
 }
 
