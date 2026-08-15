@@ -129,6 +129,34 @@ window.MathJax = {
     }
   };
 
+  window.switchTTab = function(tabName) {
+    ['q', 'e', 'r', 'c', 'cohort', 'img'].forEach(function(x) {
+      var content = document.getElementById('tc-' + x);
+      if (content) {
+        if (x === tabName) {
+          content.classList.add('active');
+          content.style.display = 'block';
+        } else {
+          content.classList.remove('active');
+          content.style.display = 'none';
+        }
+      }
+
+      var btn = document.querySelector('.tab-btn[data-tab="' + x + '"]');
+      if (btn) {
+        if (x === tabName) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      }
+    });
+
+    if (typeof window._teacherModuleSwitchTab === 'function') {
+      window._teacherModuleSwitchTab(tabName);
+    }
+  };
+
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
       const emailEl = document.getElementById('t-email');
@@ -148,16 +176,16 @@ window.MathJax = {
           Đang đăng nhập: <b id="current-user-email">...</b>
         </div>
       </div>
-      <button class="btn btn-sm" id="btn-logout">🔒 Đăng xuất</button>
+      <button class="btn btn-sm" id="btn-logout" onclick="if(window.doLogout) window.doLogout();">🔒 Đăng xuất</button>
     </div>
 
     <div class="tab-row">
-      <button class="tab-btn active" data-tab="q">📚 Câu hỏi</button>
-      <button class="tab-btn" data-tab="e">📋 Đề thi</button>
-      <button class="tab-btn" data-tab="r">📊 Kết quả</button>
-      <button class="tab-btn" data-tab="c">🗂️ Chủ đề</button>
-      <button class="tab-btn" data-tab="cohort">📅 Ca thi</button>
-      <button class="tab-btn" data-tab="img">🖼️ Thư viện ảnh</button> <!-- THÊM TAB NÀY -->
+      <button class="tab-btn active" data-tab="q" onclick="window.switchTTab('q')">📚 Câu hỏi</button>
+      <button class="tab-btn" data-tab="e" onclick="window.switchTTab('e')">📋 Đề thi</button>
+      <button class="tab-btn" data-tab="r" onclick="window.switchTTab('r')">📊 Kết quả</button>
+      <button class="tab-btn" data-tab="c" onclick="window.switchTTab('c')">🗂️ Chủ đề</button>
+      <button class="tab-btn" data-tab="cohort" onclick="window.switchTTab('cohort')">📅 Ca thi</button>
+      <button class="tab-btn" data-tab="img" onclick="window.switchTTab('img')">🖼️ Thư viện ảnh</button>
     </div>
 
     <div id="tc-q" class="tab-content active">
@@ -607,6 +635,6 @@ window.MathJax = {
     </div>
 </div>
 
-<script type="module" src="js/teacher.js?v=2.2"></script>
+<script type="module" src="js/teacher.js?v=2.3"></script>
 </body>
 </html>

@@ -122,7 +122,10 @@ async function doLogout() {
 function switchTTab(t) {
   ['q', 'e', 'r', 'c', 'cohort', 'img'].forEach(x => {
     const content = $('tc-' + x);
-    if(content) content.classList.toggle('active', x === t);
+    if(content) {
+      content.classList.toggle('active', x === t);
+      content.style.display = (x === t) ? 'block' : 'none';
+    }
     
     const tabBtn = document.querySelector(`.tab-btn[data-tab="${x}"]`);
     if(tabBtn) tabBtn.classList.toggle('active', x === t);
@@ -138,6 +141,35 @@ function switchTTab(t) {
       }
   }
 }
+
+window.switchTTab = switchTTab;
+window._teacherModuleSwitchTab = switchTTab;
+window.doLogout = doLogout;
+window.openQForm = openQForm;
+window.closeQForm = closeQForm;
+window.saveQ = saveQ;
+window.deleteQ = deleteQ;
+window.renderQuestions = renderQuestions;
+window.updateFltSubcat = updateFltSubcat;
+window.updateQFormSubcat = updateQFormSubcat;
+window.updateEFormSubcat = updateEFormSubcat;
+window.populateCategoryDropdowns = populateCategoryDropdowns;
+window.openEForm = openEForm;
+window.closeEForm = closeEForm;
+window.saveExam = saveExam;
+window.deleteExam = deleteExam;
+window.toggleExamVisibility = toggleExamVisibility;
+window.renderExams = renderExams;
+window.renderResults = renderResults;
+window.clearResults = clearResults;
+window.exportCSV = exportCSV;
+window.addParentCategory = addParentCategory;
+window.deleteParentCategory = deleteParentCategory;
+window.addSubCategory = addSubCategory;
+window.deleteSubCategory = deleteSubCategory;
+window.editSubCategory = editSubCategory;
+window.restoreDefaultCategories = restoreDefaultCategories;
+window.renderCatManagementList = renderCatManagementList;
 
 function initTeacherApp() {
   if (window._teacherAppInitialized) return;
