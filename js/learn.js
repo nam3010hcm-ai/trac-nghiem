@@ -5,7 +5,7 @@
  * =========================================================================
  */
 
-import { LEARN_DATA, DEFAULT_UNITS } from './learn-data.js?v=5.3';
+import { LEARN_DATA, DEFAULT_UNITS } from './learn-data.js';
 
 const db = () => window.supabaseClient;
 
@@ -1665,7 +1665,7 @@ export function switchSkillTab(skill) {
 
 window.switchSkillTab = switchSkillTab;
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initLearnApp() {
   document.querySelectorAll('.skill-tab-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1678,6 +1678,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (student && student.id) {
     await initAuthenticatedLearn();
   } else {
-    await loginGuestStudent();
+    logoutLearnStudent();
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initLearnApp);
+} else {
+  initLearnApp();
+}

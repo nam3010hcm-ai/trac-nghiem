@@ -160,6 +160,8 @@ function esc(s) {
   }[m]));
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadWeeklyLeaderboards);
+} else {
   loadWeeklyLeaderboards();
-});
+}
