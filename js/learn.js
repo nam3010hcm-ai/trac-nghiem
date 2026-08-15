@@ -1,10 +1,18 @@
 /**
  * =========================================================================
  * INTERACTIVE ENGLISH LEARNING HUB - JAVASCRIPT CONTROLLER (learn.js)
+ * Real-time Unit Loading & 5 Skills Execution Engine
  * =========================================================================
  */
 
-import { LEARN_DATA } from './learn-data.js';
+import { LEARN_DATA, DEFAULT_UNITS } from './learn-data.js';
+
+const db = () => window.supabaseClient;
+
+// --- UNITS STATE ---
+let allUnits = [];
+let currentUnit = null;
+let currentSkillTab = 'listening';
 
 // --- GAMIFICATION STATE ---
 const STORE_KEY = 'quiz_learn_profile_v1';
@@ -13,11 +21,10 @@ let userProfile = {
   level: 1,
   streak: 1,
   lastActiveDate: new Date().toDateString(),
-  completedExercises: [],
-  unlockedBadges: []
+  completedExercises: []
 };
 
-// --- AUDIO CONTEXT SOUND ENGINE (Web Audio API) ---
+// --- AUDIO CONTEXT SOUND ENGINE ---
 let audioCtx = null;
 function getAudioCtx() {
   if (!audioCtx) {
@@ -42,9 +49,7 @@ function playTone(freq, type, duration, startTime = 0) {
     gain.connect(ctx.destination);
     osc.start(ctx.currentTime + startTime);
     osc.stop(ctx.currentTime + startTime + duration);
-  } catch (e) {
-    // Silent fail if audio blocked
-  }
+  } catch (e) {}
 }
 
 export function playSuccessSound() {
@@ -68,12 +73,11 @@ export function playLevelUpSound() {
 // --- WEB SPEECH SYNTHESIS (TTS) ---
 export function speakText(text, rate = 1.0, lang = 'en-US') {
   if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel(); // Dừng câu đang phát trước đó
+  window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = lang;
   utter.rate = rate;
 
-  // Ưu tiên chọn giọng tiếng Anh bản ngữ tự nhiên
   const voices = window.speechSynthesis.getVoices();
   const naturalVoice = voices.find(v => (v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Daniel') || v.name.includes('Karen'))));
   if (naturalVoice) utter.voice = naturalVoice;
@@ -81,7 +85,7 @@ export function speakText(text, rate = 1.0, lang = 'en-US') {
   window.speechSynthesis.speak(utter);
 }
 
-// --- CONFETTI ANIMATION ENGINE ---
+// --- CONFETTI ENGINE ---
 export function triggerConfetti() {
   const canvas = document.getElementById('confetti-canvas');
   if (!canvas) return;
@@ -111,7 +115,7 @@ export function triggerConfetti() {
     pieces.forEach(p => {
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.4; // Trọng lực
+      p.vy += 0.4;
       p.rotation += p.rSpeed;
       if (p.y < canvas.height) {
         alive = true;
@@ -134,16 +138,13 @@ export function triggerConfetti() {
   animate();
 }
 
-// --- PROFILE & GAMIFICATION LOGIC ---
+// --- PROFILE & GAMIFICATION ---
 function loadProfile() {
   try {
     const saved = localStorage.getItem(STORE_KEY);
-    if (saved) {
-      userProfile = { ...userProfile, ...JSON.parse(saved) };
-    }
+    if (saved) userProfile = { ...userProfile, ...JSON.parse(saved) };
   } catch (e) {}
 
-  // Kiểm tra Streak ngày học
   const today = new Date().toDateString();
   if (userProfile.lastActiveDate !== today) {
     const yesterday = new Date();
@@ -151,7 +152,7 @@ function loadProfile() {
     if (userProfile.lastActiveDate === yesterday.toDateString()) {
       userProfile.streak += 1;
     } else if (new Date(userProfile.lastActiveDate) < yesterday) {
-      userProfile.streak = 1; // Đứt chuỗi
+      userProfile.streak = 1;
     }
     userProfile.lastActiveDate = today;
     saveProfile();
@@ -161,9 +162,7 @@ function loadProfile() {
 }
 
 function saveProfile() {
-  try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(userProfile));
-  } catch (e) {}
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(userProfile)); } catch (e) {}
 }
 
 export function addXP(amount, reason = '') {
@@ -216,30 +215,111 @@ function showToast(msg) {
 }
 
 // =========================================================================
-// 1. LISTENING MODULE CONTROLLER
+// LOAD UNITS TỪ SUPABASE / DEFAULT
 // =========================================================================
-let currentLisLesson = LEARN_DATA.listening[0];
+async function loadUnitsData() {
+  try {
+    if (db()) {
+      const { data, error } = await db().from('learning_units').select('*').eq('is_hidden', false).order('created_at', { ascending: true });
+      if (!error && data && data.length > 0) {
+        allUnits = data.map(u => ({
+          id: u.id,
+          title: u.title,
+          topic: u.topic || '',
+          level: u.level || 'A2 - B1',
+          icon: u.icon || '📖',
+          description: u.description || '',
+          isHidden: u.is_hidden ?? false,
+          listening: u.listening || [],
+          reading: u.reading || [],
+          speaking: u.speaking || [],
+          writing: u.writing || [],
+          languageFocus: u.language_focus || u.languageFocus || {}
+        }));
+      } else {
+        allUnits = DEFAULT_UNITS.filter(u => !u.isHidden);
+      }
+    } else {
+      allUnits = DEFAULT_UNITS.filter(u => !u.isHidden);
+    }
+  } catch (err) {
+    console.warn("Lỗi tải units:", err);
+    allUnits = DEFAULT_UNITS.filter(u => !u.isHidden);
+  }
+
+  if (!allUnits.length) allUnits = DEFAULT_UNITS;
+  currentUnit = allUnits[0];
+
+  populateUnitSelector();
+  loadCurrentUnitView();
+}
+
+function populateUnitSelector() {
+  const sel = document.getElementById('learn-unit-select');
+  if (!sel) return;
+
+  sel.innerHTML = allUnits.map(u => `
+    <option value="${u.id}" ${u.id === currentUnit.id ? 'selected' : ''}>
+      ${u.title} (${u.level})
+    </option>
+  `).join('');
+
+  sel.onchange = (e) => {
+    const chosen = allUnits.find(u => u.id === e.target.value);
+    if (chosen) {
+      currentUnit = chosen;
+      loadCurrentUnitView();
+    }
+  };
+}
+
+function loadCurrentUnitView() {
+  if (!currentUnit) return;
+
+  const iconEl = document.getElementById('current-unit-icon');
+  const descEl = document.getElementById('current-unit-desc');
+
+  if (iconEl) iconEl.textContent = currentUnit.icon || '📖';
+  if (descEl) descEl.textContent = currentUnit.description || `Chủ đề: ${currentUnit.topic} • Trình độ: ${currentUnit.level}`;
+
+  // Nạp dữ liệu kỹ năng đang active
+  switchSkillTab(currentSkillTab);
+}
+
+// =========================================================================
+// 1. LISTENING MODULE
+// =========================================================================
+let currentLisLesson = null;
 let currentPlaybackSpeed = 1.0;
 
 function initListening() {
+  const list = currentUnit?.listening || [];
+  currentLisLesson = list[0] || null;
   renderListeningLessons();
-  loadListeningLesson(currentLisLesson.id);
+  if (currentLisLesson) loadListeningLesson(currentLisLesson.id);
+  else {
+    const ws = document.getElementById('lis-workspace');
+    if (ws) ws.innerHTML = '<div class="empty">Chưa có bài nghe trong Unit này.</div>';
+  }
 }
 
 function renderListeningLessons() {
   const container = document.getElementById('lis-lesson-list');
+  const list = currentUnit?.listening || [];
   if (!container) return;
-  container.innerHTML = LEARN_DATA.listening.map(item => `
-    <div class="lesson-card ${item.id === currentLisLesson.id ? 'active' : ''}" onclick="window.selectListeningLesson('${item.id}')">
-      <span class="lesson-badge">${item.level}</span>
+  if (!list.length) { container.innerHTML = ''; return; }
+
+  container.innerHTML = list.map(item => `
+    <div class="lesson-card ${currentLisLesson && item.id === currentLisLesson.id ? 'active' : ''}" onclick="window.selectListeningLesson('${item.id}')">
+      <span class="lesson-badge">${item.level || currentUnit.level}</span>
       <div style="font-weight:700;font-size:15px;margin-bottom:4px;color:#1e293b">${item.title}</div>
-      <div style="font-size:12px;color:#64748b">🎯 Chủ đề: ${item.topic} • ⏱ ${item.duration}</div>
+      <div style="font-size:12px;color:#64748b">🎯 Chủ đề: ${item.topic || currentUnit.topic} • ⏱ ${item.duration || '45s'}</div>
     </div>
   `).join('');
 }
 
 window.selectListeningLesson = function(id) {
-  const found = LEARN_DATA.listening.find(l => l.id === id);
+  const found = (currentUnit?.listening || []).find(l => l.id === id);
   if (found) {
     currentLisLesson = found;
     renderListeningLessons();
@@ -250,14 +330,14 @@ window.selectListeningLesson = function(id) {
 function loadListeningLesson(id) {
   const l = currentLisLesson;
   const workspace = document.getElementById('lis-workspace');
-  if (!workspace) return;
+  if (!workspace || !l) return;
 
   workspace.innerHTML = `
     <div class="listening-player-box">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
         <div>
           <div style="font-size:18px;font-weight:800;color:#fff">${l.title}</div>
-          <div style="font-size:13px;color:#94a3b8">🎧 Kỹ năng nghe hiểu • ${l.level} • ${l.topic}</div>
+          <div style="font-size:13px;color:#94a3b8">🎧 Kỹ năng nghe hiểu • ${l.level || currentUnit.level}</div>
         </div>
         <div class="speed-selector-group">
           <button class="speed-btn ${currentPlaybackSpeed === 0.75 ? 'active' : ''}" onclick="window.setListeningSpeed(0.75)">0.75x</button>
@@ -268,18 +348,17 @@ function loadListeningLesson(id) {
 
       <div class="audio-controls-row">
         <button class="play-audio-btn" id="btn-play-lis" onclick="window.playCurrentListeningAudio()">▶</button>
-        <button class="btn btn-sm" onclick="window.playCurrentListeningAudio()" style="background:rgba(255,255,255,0.15);color:#fff;border:none">🔁 Nghe lại từ đầu</button>
+        <button class="btn btn-sm" onclick="window.playCurrentListeningAudio()" style="background:rgba(255,255,255,0.15);color:#fff;border:none">🔁 Nghe lại</button>
         <button class="btn btn-sm" id="btn-toggle-transcript" onclick="window.toggleLisTranscript()" style="background:rgba(255,255,255,0.15);color:#fff;border:none">👁️ Hiện Transcript</button>
       </div>
 
       <div id="lis-transcript-box" style="display:none;background:rgba(0,0,0,0.3);padding:12px 16px;border-radius:8px;font-size:14px;line-height:1.7;color:#e2e8f0;border-left:3px solid #10b981">
-        <b>📝 Transcript:</b><br>${l.audioText}
+        <b>📝 Transcript:</b><br>${l.audioText || ''}
       </div>
     </div>
 
-    <!-- CÁC BÀI TẬP TƯƠNG TÁC -->
     <div style="display:flex;flex-direction:column;gap:20px;">
-      ${renderListeningExercises(l.exercises)}
+      ${renderListeningExercises(l.exercises || [])}
     </div>
   `;
 }
@@ -293,6 +372,7 @@ window.setListeningSpeed = function(spd) {
 };
 
 window.playCurrentListeningAudio = function() {
+  if (!currentLisLesson) return;
   speakText(currentLisLesson.audioText, currentPlaybackSpeed, 'en-US');
   const btn = document.getElementById('btn-play-lis');
   if (btn) {
@@ -318,7 +398,7 @@ function renderListeningExercises(exercises) {
         <div class="card" style="margin:0">
           <div style="font-weight:700;margin-bottom:10px;color:#1e293b">Câu hỏi ${idx + 1}: ${ex.question}</div>
           <div style="display:flex;flex-direction:column;gap:8px">
-            ${ex.options.map((opt, oIdx) => `
+            ${(ex.options || []).map((opt, oIdx) => `
               <button class="opt" onclick="window.checkLisMCQ(${idx}, ${oIdx}, ${ex.answer})" id="lis-opt-${idx}-${oIdx}">
                 <span class="okey">${String.fromCharCode(65 + oIdx)}</span>
                 <span>${opt}</span>
@@ -332,13 +412,13 @@ function renderListeningExercises(exercises) {
       return `
         <div class="card" style="margin:0;border-left:4px solid #3b82f6">
           <div style="font-weight:700;margin-bottom:6px;color:#1e293b">✍️ Câu hỏi ${idx + 1} (Dictation - Nghe chép chính tả):</div>
-          <div style="font-size:13px;color:#64748b;margin-bottom:8px">${ex.prompt} <i>(${ex.hint})</i></div>
+          <div style="font-size:13px;color:#64748b;margin-bottom:8px">${ex.prompt || 'Nghe và gõ lại chính xác câu bạn nghe được:'}</div>
           <div style="display:flex;gap:8px;margin-bottom:8px">
-            <button class="btn btn-sm" onclick="window.speakDictation('${ex.targetSentence.replace(/'/g, "\\'")}')" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe">🔊 Nghe câu này</button>
+            <button class="btn btn-sm" onclick="window.speakDictation('${(ex.targetSentence || '').replace(/'/g, "\\'")}')" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe">🔊 Nghe câu này</button>
           </div>
           <textarea id="dictation-input-${idx}" class="dictation-textarea" placeholder="Gõ lại những gì bạn nghe được..."></textarea>
           <div style="margin-top:10px;display:flex;gap:10px">
-            <button class="btn btn-p" onclick="window.checkDictation(${idx}, '${ex.targetSentence.replace(/'/g, "\\'")}')">Kiểm tra chính tả</button>
+            <button class="btn btn-p" onclick="window.checkDictation(${idx}, '${(ex.targetSentence || '').replace(/'/g, "\\'")}')">Kiểm tra chính tả</button>
           </div>
           <div id="dictation-fb-${idx}" style="display:none;" class="diff-result-view"></div>
         </div>
@@ -384,10 +464,7 @@ window.checkDictation = function(idx, targetSentence) {
   if (!inputEl || !fb) return;
 
   const userInput = inputEl.value.trim();
-  if (!userInput) {
-    alert('Vui lòng gõ nội dung trước khi kiểm tra!');
-    return;
-  }
+  if (!userInput) { alert('Vui lòng gõ nội dung trước khi kiểm tra!'); return; }
 
   const cleanTarget = targetSentence.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '').toLowerCase().split(/\s+/);
   const cleanUser = userInput.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '').toLowerCase().split(/\s+/);
@@ -422,29 +499,38 @@ window.checkDictation = function(idx, targetSentence) {
 };
 
 // =========================================================================
-// 2. READING MODULE CONTROLLER (SPLIT SCREEN + TRA TỪ NHANH)
+// 2. READING MODULE
 // =========================================================================
-let currentReadLesson = LEARN_DATA.reading[0];
+let currentReadLesson = null;
 
 function initReading() {
+  const list = currentUnit?.reading || [];
+  currentReadLesson = list[0] || null;
   renderReadingLessons();
-  loadReadingLesson(currentReadLesson.id);
+  if (currentReadLesson) loadReadingLesson(currentReadLesson.id);
+  else {
+    const ws = document.getElementById('read-workspace');
+    if (ws) ws.innerHTML = '<div class="empty">Chưa có bài đọc trong Unit này.</div>';
+  }
 }
 
 function renderReadingLessons() {
   const container = document.getElementById('read-lesson-list');
+  const list = currentUnit?.reading || [];
   if (!container) return;
-  container.innerHTML = LEARN_DATA.reading.map(item => `
-    <div class="lesson-card ${item.id === currentReadLesson.id ? 'active' : ''}" onclick="window.selectReadingLesson('${item.id}')">
-      <span class="lesson-badge">${item.level}</span>
+  if (!list.length) { container.innerHTML = ''; return; }
+
+  container.innerHTML = list.map(item => `
+    <div class="lesson-card ${currentReadLesson && item.id === currentReadLesson.id ? 'active' : ''}" onclick="window.selectReadingLesson('${item.id}')">
+      <span class="lesson-badge">${item.level || currentUnit.level}</span>
       <div style="font-weight:700;font-size:15px;margin-bottom:4px;color:#1e293b">${item.title}</div>
-      <div style="font-size:12px;color:#64748b">🎯 Chủ đề: ${item.topic}</div>
+      <div style="font-size:12px;color:#64748b">🎯 Chủ đề: ${item.topic || currentUnit.topic}</div>
     </div>
   `).join('');
 }
 
 window.selectReadingLesson = function(id) {
-  const found = LEARN_DATA.reading.find(r => r.id === id);
+  const found = (currentUnit?.reading || []).find(r => r.id === id);
   if (found) {
     currentReadLesson = found;
     renderReadingLessons();
@@ -455,18 +541,18 @@ window.selectReadingLesson = function(id) {
 function loadReadingLesson(id) {
   const r = currentReadLesson;
   const workspace = document.getElementById('read-workspace');
-  if (!workspace) return;
+  if (!workspace || !r) return;
 
-  // Xử lý làm nổi bật từ vựng có thể click tra từ
-  let annotatedPassage = r.passage;
-  Object.keys(r.vocabulary).forEach(word => {
-    const regex = new RegExp(`\\b(${word})\\b`, 'gi');
-    annotatedPassage = annotatedPassage.replace(regex, `<span class="vocab-tag" onclick="window.showVocabLookup('$1')">$1</span>`);
-  });
+  let annotatedPassage = r.passage || '';
+  if (r.vocabulary) {
+    Object.keys(r.vocabulary).forEach(word => {
+      const regex = new RegExp(`\\b(${word})\\b`, 'gi');
+      annotatedPassage = annotatedPassage.replace(regex, `<span class="vocab-tag" onclick="window.showVocabLookup('$1')">$1</span>`);
+    });
+  }
 
   workspace.innerHTML = `
     <div class="reading-split-view">
-      <!-- CỘT BÊN TRÁI: ĐOẠN VĂN ĐỌC HIỂU -->
       <div class="reading-passage-box">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid #e2e8f0;padding-bottom:8px">
           <h3 style="margin:0;font-size:17px;color:#1e293b">${r.title}</h3>
@@ -475,15 +561,15 @@ function loadReadingLesson(id) {
         <div style="white-space:pre-wrap;">${annotatedPassage}</div>
       </div>
 
-      <!-- CỘT BÊN PHẢI: BỘ CÂU HỎI TƯƠNG TÁC -->
       <div style="display:flex;flex-direction:column;gap:16px;max-height:520px;overflow-y:auto;padding-right:6px">
-        ${renderReadingExercises(r.exercises)}
+        ${renderReadingExercises(r.exercises || [])}
       </div>
     </div>
   `;
 }
 
 window.showVocabLookup = function(word) {
+  if (!currentReadLesson || !currentReadLesson.vocabulary) return;
   const key = Object.keys(currentReadLesson.vocabulary).find(k => k.toLowerCase() === word.toLowerCase());
   const data = key ? currentReadLesson.vocabulary[key] : null;
   if (!data) return;
@@ -500,27 +586,25 @@ window.showVocabLookup = function(word) {
     <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px">
       <div>
         <span style="font-size:18px;font-weight:800;color:#0369a1">${word}</span>
-        <span style="font-size:12px;color:#64748b;margin-left:4px">(${data.pos})</span>
+        <span style="font-size:12px;color:#64748b;margin-left:4px">(${data.pos || 'word'})</span>
       </div>
       <button onclick="document.getElementById('vocab-lookup-card').style.display='none'" style="border:none;background:none;cursor:pointer;color:#94a3b8;font-size:16px">✖</button>
     </div>
-    <div style="font-family:'Courier New',monospace;color:#d97706;font-size:13px;margin-bottom:8px">${data.ipa}</div>
-    <div style="font-size:14px;color:#1e293b;font-weight:600;margin-bottom:10px">${data.meaning}</div>
+    <div style="font-family:'Courier New',monospace;color:#d97706;font-size:13px;margin-bottom:8px">${data.ipa || ''}</div>
+    <div style="font-size:14px;color:#1e293b;font-weight:600;margin-bottom:10px">${data.meaning || ''}</div>
     <button class="btn btn-sm btn-p" onclick="window.speakVocab('${word}')" style="width:100%">🔊 Phát âm chuẩn</button>
   `;
   modal.style.display = 'block';
 };
 
-window.speakVocab = function(word) {
-  speakText(word, 0.9, 'en-US');
-};
+window.speakVocab = function(word) { speakText(word, 0.9, 'en-US'); };
 
 function renderReadingExercises(exercises) {
   return exercises.map((ex, idx) => `
     <div class="card" style="margin:0">
       <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#1e293b">Câu ${idx + 1}: ${ex.question}</div>
       <div style="display:flex;flex-direction:column;gap:6px">
-        ${ex.options.map((opt, oIdx) => `
+        ${(ex.options || []).map((opt, oIdx) => `
           <button class="opt" onclick="window.checkReadMCQ(${idx}, ${oIdx}, ${ex.answer})" id="read-opt-${idx}-${oIdx}">
             <span class="okey">${String.fromCharCode(65 + oIdx)}</span>
             <span>${opt}</span>
@@ -543,7 +627,7 @@ window.checkReadMCQ = function(exIdx, chosenIdx, correctIdx) {
   if (chosenIdx === correctIdx) {
     btn.classList.add('correct');
     fb.className = 'fb fb-ok';
-    fb.innerHTML = '🎉 <b>Chính xác!</b> ' + (currentReadLesson.exercises[exIdx].explain || '');
+    fb.innerHTML = '🎉 <b>Chính xác!</b> ' + (currentReadLesson.exercises[exIdx]?.explain || '');
     fb.style.display = 'block';
     playSuccessSound();
     addXP(15, 'Đọc hiểu đúng');
@@ -552,38 +636,47 @@ window.checkReadMCQ = function(exIdx, chosenIdx, correctIdx) {
     const correctBtn = document.getElementById(`read-opt-${exIdx}-${correctIdx}`);
     if (correctBtn) correctBtn.classList.add('correct');
     fb.className = 'fb fb-bad';
-    fb.innerHTML = '❌ <b>Chưa đúng.</b> ' + (currentReadLesson.exercises[exIdx].explain || '');
+    fb.innerHTML = '❌ <b>Chưa đúng.</b> ' + (currentReadLesson.exercises[exIdx]?.explain || '');
     fb.style.display = 'block';
     playWrongSound();
   }
 };
 
 // =========================================================================
-// 3. SPEAKING MODULE CONTROLLER (MICROPHONE & PHONETICS)
+// 3. SPEAKING MODULE
 // =========================================================================
-let currentSpkLesson = LEARN_DATA.speaking[0];
+let currentSpkLesson = null;
 let isRecording = false;
 let speechRecognizer = null;
 
 function initSpeaking() {
+  const list = currentUnit?.speaking || [];
+  currentSpkLesson = list[0] || null;
   renderSpeakingLessons();
-  loadSpeakingLesson(currentSpkLesson.id);
+  if (currentSpkLesson) loadSpeakingLesson(currentSpkLesson.id);
+  else {
+    const ws = document.getElementById('spk-workspace');
+    if (ws) ws.innerHTML = '<div class="empty">Chưa có bài nói trong Unit này.</div>';
+  }
 }
 
 function renderSpeakingLessons() {
   const container = document.getElementById('spk-lesson-list');
+  const list = currentUnit?.speaking || [];
   if (!container) return;
-  container.innerHTML = LEARN_DATA.speaking.map(item => `
-    <div class="lesson-card ${item.id === currentSpkLesson.id ? 'active' : ''}" onclick="window.selectSpeakingLesson('${item.id}')">
-      <span class="lesson-badge">${item.level}</span>
+  if (!list.length) { container.innerHTML = ''; return; }
+
+  container.innerHTML = list.map(item => `
+    <div class="lesson-card ${currentSpkLesson && item.id === currentSpkLesson.id ? 'active' : ''}" onclick="window.selectSpeakingLesson('${item.id}')">
+      <span class="lesson-badge">${item.level || currentUnit.level}</span>
       <div style="font-weight:700;font-size:15px;margin-bottom:4px;color:#1e293b">${item.title}</div>
-      <div style="font-size:12px;color:#64748b">🎯 Chủ đề: ${item.topic}</div>
+      <div style="font-size:12px;color:#64748b">🎯 Chủ đề: ${item.topic || currentUnit.topic}</div>
     </div>
   `).join('');
 }
 
 window.selectSpeakingLesson = function(id) {
-  const found = LEARN_DATA.speaking.find(s => s.id === id);
+  const found = (currentUnit?.speaking || []).find(s => s.id === id);
   if (found) {
     currentSpkLesson = found;
     renderSpeakingLessons();
@@ -594,7 +687,7 @@ window.selectSpeakingLesson = function(id) {
 function loadSpeakingLesson(id) {
   const s = currentSpkLesson;
   const workspace = document.getElementById('spk-workspace');
-  if (!workspace) return;
+  if (!workspace || !s) return;
 
   if (s.phrases) {
     workspace.innerHTML = `
@@ -604,8 +697,8 @@ function loadSpeakingLesson(id) {
             <div style="display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:8px">
               <div>
                 <div style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:4px">${p.text}</div>
-                <div style="font-family:'Courier New',monospace;color:#e11d48;font-size:14px">${p.ipa}</div>
-                <div style="font-size:13px;color:#475569;margin-top:4px">💡 <i>${p.meaning}</i></div>
+                <div style="font-family:'Courier New',monospace;color:#e11d48;font-size:14px">${p.ipa || ''}</div>
+                <div style="font-size:13px;color:#475569;margin-top:4px">💡 <i>${p.meaning || ''}</i></div>
               </div>
               <button class="btn btn-sm" onclick="window.speakPronunciation('${p.text.replace(/'/g, "\\'")}')" style="background:#fff1f2;color:#be123c;border:1px solid #fecdd3">🔊 Nghe mẫu</button>
             </div>
@@ -628,15 +721,15 @@ function loadSpeakingLesson(id) {
         <div style="display:flex;flex-direction:column;gap:14px">
           ${s.dialogue.map((d, idx) => `
             <div style="display:flex;gap:12px;align-items:flex-start;${d.isUser ? 'flex-direction:row-reverse' : ''}">
-              <div style="font-size:28px">${d.avatar}</div>
+              <div style="font-size:28px">${d.avatar || '👤'}</div>
               <div style="max-width:80%;background:${d.isUser ? '#eff6ff' : '#f1f5f9'};padding:12px 16px;border-radius:12px;border:${d.isUser ? '1px solid #bfdbfe' : '1px solid #e2e8f0'}">
                 <div style="font-weight:700;font-size:12px;color:${d.isUser ? '#1d4ed8' : '#475569'};margin-bottom:4px">${d.role}</div>
                 <div style="font-size:14px;color:#1e293b;line-height:1.5">${d.isUser ? d.targetText : d.text}</div>
                 ${d.meaning ? `<div style="font-size:12px;color:#64748b;margin-top:4px"><i>${d.meaning}</i></div>` : ''}
                 ${d.isUser ? `
                   <div style="margin-top:8px;display:flex;gap:8px">
-                    <button class="btn btn-sm" onclick="window.speakPronunciation('${d.targetText.replace(/'/g, "\\'")}')" style="background:#fff;font-size:11px">🔊 Nghe mẫu</button>
-                    <button class="btn btn-sm btn-p" onclick="window.togglePronunciationRecording('dlg-${idx}', '${d.targetText.replace(/'/g, "\\'")}')" style="font-size:11px">🎙️ Đọc câu này</button>
+                    <button class="btn btn-sm" onclick="window.speakPronunciation('${(d.targetText || '').replace(/'/g, "\\'")}')" style="background:#fff;font-size:11px">🔊 Nghe mẫu</button>
+                    <button class="btn btn-sm btn-p" onclick="window.togglePronunciationRecording('dlg-${idx}', '${(d.targetText || '').replace(/'/g, "\\'")}')" style="font-size:11px">🎙️ Đọc câu này</button>
                   </div>
                   <div id="spk-score-dlg-${idx}" style="margin-top:6px;font-weight:700;font-size:13px;color:#047857"></div>
                 ` : ''}
@@ -649,9 +742,7 @@ function loadSpeakingLesson(id) {
   }
 }
 
-window.speakPronunciation = function(text) {
-  speakText(text, 0.9, 'en-US');
-};
+window.speakPronunciation = function(text) { speakText(text, 0.9, 'en-US'); };
 
 window.togglePronunciationRecording = function(idx, targetText) {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -679,16 +770,13 @@ window.togglePronunciationRecording = function(idx, targetText) {
   speechRecognizer.onstart = () => {
     isRecording = true;
     if (btn) {
-      btn.textContent = '🔴 Đang nghe bạn nói... (Bấm để dừng)';
+      btn.textContent = '🔴 Đang nghe bạn nói...';
       btn.classList.add('recording');
     }
   };
 
   speechRecognizer.onresult = (event) => {
     const transcript = event.results[0][0].transcript;
-    const confidence = event.results[0][0].confidence;
-    
-    // Tính điểm phát âm
     const score = calculateSpeakingAccuracy(targetText, transcript);
     if (scoreEl) {
       const color = score >= 80 ? '#16a34a' : score >= 60 ? '#f59e0b' : '#dc2626';
@@ -737,7 +825,7 @@ function calculateSpeakingAccuracy(target, actual) {
 }
 
 // =========================================================================
-// 4. WRITING MODULE CONTROLLER (SCRAMBLE & ERROR CORRECTION)
+// 4. WRITING MODULE
 // =========================================================================
 let currentWrtCategory = 'scramble';
 
@@ -752,26 +840,26 @@ window.selectWritingTab = function(type) {
 
 function loadWritingView(type) {
   const workspace = document.getElementById('wrt-workspace');
-  if (!workspace) return;
+  if (!workspace || !currentUnit) return;
+
+  const wrtData = currentUnit.writing || [];
 
   if (type === 'scramble') {
-    const data = LEARN_DATA.writing.find(w => w.id === 'wrt_scramble');
+    const scrambleGroup = wrtData.find(w => w.id?.includes('scramble')) || wrtData[0] || { items: [] };
     workspace.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:18px">
-        ${data.items.map((item, idx) => {
-          // Xáo trộn từ
-          const shuffled = [...item.words].sort(() => Math.random() - 0.5);
+        ${(scrambleGroup.items || []).map((item, idx) => {
+          const wordsList = item.words || item.correctSentence?.split(/\s+/) || [];
+          const shuffled = [...wordsList].sort(() => Math.random() - 0.5);
           return `
             <div class="card" style="margin:0;border-left:4px solid #8b5cf6">
               <div style="font-weight:700;font-size:15px;margin-bottom:4px;color:#1e293b">Câu ${idx + 1}: Sắp xếp các từ thành câu hoàn chỉnh</div>
-              <div style="font-size:12px;color:#64748b;margin-bottom:10px">💡 Gợi ý: ${item.hint}</div>
+              <div style="font-size:12px;color:#64748b;margin-bottom:10px">💡 Gợi ý: ${item.hint || ''}</div>
               
-              <!-- KHUNG CHỨA CÂU ĐÃ GHÉP -->
               <div class="assembled-sentence-box" id="sc-assembled-${idx}">
                 <span style="color:#94a3b8;font-size:13px" id="sc-placeholder-${idx}">(Bấm các từ bên dưới để đưa vào đây)</span>
               </div>
 
-              <!-- KHUNG CHỨA CÁC TỪ RỜI RẠC -->
               <div class="scramble-word-chips" id="sc-pool-${idx}">
                 ${shuffled.map((w, wIdx) => `
                   <button class="word-chip-btn" id="sc-btn-${idx}-${wIdx}" onclick="window.placeWordChip(${idx}, ${wIdx}, '${w.replace(/'/g, "\\'")}')">${w}</button>
@@ -779,7 +867,7 @@ function loadWritingView(type) {
               </div>
 
               <div style="display:flex;gap:10px;margin-top:10px">
-                <button class="btn btn-p" onclick="window.checkScrambleSentence(${idx}, '${item.correctSentence.replace(/'/g, "\\'")}')">✅ Kiểm tra câu</button>
+                <button class="btn btn-p" onclick="window.checkScrambleSentence(${idx}, '${(item.correctSentence || '').replace(/'/g, "\\'")}')">✅ Kiểm tra câu</button>
                 <button class="btn btn-sm" onclick="window.resetScramble(${idx})">🔄 Xếp lại</button>
               </div>
               <div id="sc-fb-${idx}" class="fb" style="display:none"></div>
@@ -789,10 +877,10 @@ function loadWritingView(type) {
       </div>
     `;
   } else if (type === 'error_fix') {
-    const data = LEARN_DATA.writing.find(w => w.id === 'wrt_error_fix');
+    const errorGroup = wrtData.find(w => w.id?.includes('error_fix')) || { items: [] };
     workspace.innerHTML = `
       <div style="display:flex;flex-direction:column;gap:18px">
-        ${data.items.map((item, idx) => `
+        ${(errorGroup.items || []).map((item, idx) => `
           <div class="card" style="margin:0;border-left:4px solid #f59e0b">
             <div style="font-weight:700;font-size:15px;margin-bottom:6px;color:#1e293b">Câu ${idx + 1}: Tìm và sửa lỗi sai trong câu</div>
             <div style="font-size:16px;color:#1e293b;padding:12px;background:#fffbeb;border-radius:8px;margin-bottom:12px;border:1px solid #fef3c7">
@@ -808,7 +896,7 @@ function loadWritingView(type) {
                 <input type="text" id="err-fix-${idx}" placeholder="VD: been">
               </div>
             </div>
-            <button class="btn btn-p" style="margin-top:12px" onclick="window.checkErrorFix(${idx}, '${item.errorWord}', '${item.correctWord}', '${item.explain.replace(/'/g, "\\'")}')">Kiểm tra sửa lỗi</button>
+            <button class="btn btn-p" style="margin-top:12px" onclick="window.checkErrorFix(${idx}, '${item.errorWord}', '${item.correctWord}', '${(item.explain || '').replace(/'/g, "\\'")}')">Kiểm tra sửa lỗi</button>
             <div id="err-fb-${idx}" class="fb" style="display:none"></div>
           </div>
         `).join('')}
@@ -893,7 +981,7 @@ window.checkErrorFix = function(idx, errorWord, correctWord, explain) {
   const fb = document.getElementById(`err-fb-${idx}`);
   if (!fb) return;
 
-  if (userErr === errorWord.toLowerCase() && (userFix === correctWord.toLowerCase() || userFix.includes(correctWord.toLowerCase()))) {
+  if (userErr === errorWord?.toLowerCase() && (userFix === correctWord?.toLowerCase() || userFix.includes(correctWord?.toLowerCase()))) {
     fb.className = 'fb fb-ok';
     fb.innerHTML = `🎉 <b>Chính xác!</b> ${explain}`;
     fb.style.display = 'block';
@@ -908,7 +996,7 @@ window.checkErrorFix = function(idx, errorWord, correctWord, explain) {
 };
 
 // =========================================================================
-// 5. LANGUAGE FOCUS MODULE CONTROLLER (3D FLASHCARDS & IDIOM MATCHING)
+// 5. LANGUAGE FOCUS MODULE
 // =========================================================================
 let currentCardIdx = 0;
 let matchSelectedLeft = null;
@@ -916,25 +1004,26 @@ let matchSelectedRight = null;
 let matchedCount = 0;
 
 function initLanguageFocus() {
+  currentCardIdx = 0;
   loadLanguageFocusView();
 }
 
 function loadLanguageFocusView() {
   const workspace = document.getElementById('lang-workspace');
-  if (!workspace) return;
+  if (!workspace || !currentUnit) return;
 
-  const fCards = LEARN_DATA.languageFocus.flashcards;
-  const currentCard = fCards[currentCardIdx];
+  const fCards = currentUnit.languageFocus?.flashcards || [];
+  const currentCard = fCards[currentCardIdx] || { word: 'Practice', meaning: 'Luyện tập', ipa: '/ˈpræk.tɪs/', pos: 'noun' };
 
   workspace.innerHTML = `
     <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px">
       <button class="btn ${window._langTab === 'cards' || !window._langTab ? 'btn-p' : ''}" onclick="window.switchLangSubTab('cards')">🎴 Thẻ Từ Vựng 3D</button>
-      <button class="btn ${window._langTab === 'match' ? 'btn-p' : ''}" onclick="window.switchLangSubTab('match')">🧩 Nối Thành Ngữ (Idioms)</button>
+      <button class="btn ${window._langTab === 'match' ? 'btn-p' : ''}" onclick="window.switchLangSubTab('match')">🧩 Nối Từ & Thành Ngữ</button>
       <button class="btn ${window._langTab === 'quiz' ? 'btn-p' : ''}" onclick="window.switchLangSubTab('quiz')">⚡ Thử Thách Ngữ Pháp</button>
     </div>
 
     <div id="lang-subtab-container">
-      ${renderFlashcardsView(currentCard, fCards.length)}
+      ${renderFlashcardsView(currentCard, fCards.length || 1)}
     </div>
   `;
 }
@@ -942,11 +1031,11 @@ function loadLanguageFocusView() {
 window.switchLangSubTab = function(tab) {
   window._langTab = tab;
   const container = document.getElementById('lang-subtab-container');
-  if (!container) return;
+  if (!container || !currentUnit) return;
 
   if (tab === 'cards') {
-    const fCards = LEARN_DATA.languageFocus.flashcards;
-    container.innerHTML = renderFlashcardsView(fCards[currentCardIdx], fCards.length);
+    const fCards = currentUnit.languageFocus?.flashcards || [];
+    container.innerHTML = renderFlashcardsView(fCards[currentCardIdx] || fCards[0], fCards.length);
   } else if (tab === 'match') {
     container.innerHTML = renderMatchPuzzleView();
   } else if (tab === 'quiz') {
@@ -955,32 +1044,30 @@ window.switchLangSubTab = function(tab) {
 };
 
 function renderFlashcardsView(card, total) {
+  if (!card) return '<div class="empty">Chưa có thẻ từ vựng trong Unit này.</div>';
   return `
     <div style="text-align:center;max-width:500px;margin:0 auto">
       <div style="font-size:13px;color:#64748b;margin-bottom:10px">Thẻ ${currentCardIdx + 1} / ${total} • Bấm vào thẻ để lật mặt xem nghĩa</div>
       
-      <!-- 3D FLASHCARD -->
       <div class="flashcard-3d-scene" id="flashcard-scene" onclick="this.classList.toggle('flipped')">
         <div class="flashcard-3d-inner">
-          <!-- MẶT TRƯỚC -->
           <div class="flashcard-face">
-            <div style="font-size:12px;color:#a16207;font-weight:700;margin-bottom:4px;text-transform:uppercase">${card.pos}</div>
-            <div class="flashcard-word">${card.word}</div>
-            <div class="flashcard-ipa">${card.ipa}</div>
+            <div style="font-size:12px;color:#a16207;font-weight:700;margin-bottom:4px;text-transform:uppercase">${card.pos || ''}</div>
+            <div class="flashcard-word">${card.word || ''}</div>
+            <div class="flashcard-ipa">${card.ipa || ''}</div>
             <button class="btn btn-sm btn-p" onclick="event.stopPropagation(); window.speakVocab('${card.word}')" style="background:#f59e0b;border-color:#f59e0b">🔊 Nghe phát âm</button>
           </div>
-          <!-- MẶT SAU -->
           <div class="flashcard-face flashcard-back">
-            <div class="flashcard-meaning">${card.meaning}</div>
-            <div class="flashcard-example">"${card.example}"</div>
-            <div style="font-size:12px;color:#047857;margin-top:10px"><b>Đồng nghĩa:</b> ${card.synonyms}</div>
+            <div class="flashcard-meaning">${card.meaning || ''}</div>
+            <div class="flashcard-example">"${card.example || ''}"</div>
+            ${card.synonyms ? `<div style="font-size:12px;color:#047857;margin-top:10px"><b>Đồng nghĩa:</b> ${card.synonyms}</div>` : ''}
           </div>
         </div>
       </div>
 
       <div style="display:flex;gap:12px;justify-content:center;margin-top:16px">
         <button class="btn" onclick="window.prevFlashcard()" ${currentCardIdx === 0 ? 'disabled' : ''}>← Từ trước</button>
-        <button class="btn btn-p" onclick="window.nextFlashcard()" ${currentCardIdx === total - 1 ? 'disabled' : ''}>Từ tiếp theo →</button>
+        <button class="btn btn-p" onclick="window.nextFlashcard()" ${currentCardIdx >= total - 1 ? 'disabled' : ''}>Từ tiếp theo →</button>
       </div>
     </div>
   `;
@@ -994,7 +1081,7 @@ window.prevFlashcard = function() {
 };
 
 window.nextFlashcard = function() {
-  const fCards = LEARN_DATA.languageFocus.flashcards;
+  const fCards = currentUnit?.languageFocus?.flashcards || [];
   if (currentCardIdx < fCards.length - 1) {
     currentCardIdx++;
     addXP(5, 'Học từ vựng mới');
@@ -1003,7 +1090,9 @@ window.nextFlashcard = function() {
 };
 
 function renderMatchPuzzleView() {
-  const pairs = LEARN_DATA.languageFocus.matchPairs;
+  const pairs = currentUnit?.languageFocus?.matchPairs || [];
+  if (!pairs.length) return '<div class="empty">Chưa có bài nối từ trong Unit này.</div>';
+
   const lefts = [...pairs].sort(() => Math.random() - 0.5);
   const rights = [...pairs].sort(() => Math.random() - 0.5);
   matchedCount = 0;
@@ -1012,7 +1101,7 @@ function renderMatchPuzzleView() {
 
   return `
     <div class="card" style="max-width:700px;margin:0 auto">
-      <div style="font-weight:700;font-size:16px;margin-bottom:6px;color:#1e293b">🧩 Ghép cặp Thành ngữ Tiếng Anh (Idioms Match)</div>
+      <div style="font-weight:700;font-size:16px;margin-bottom:6px;color:#1e293b">🧩 Ghép cặp Từ vựng & Thành ngữ (Match Pairs)</div>
       <div style="font-size:13px;color:#64748b;margin-bottom:14px">Bấm 1 ô bên trái rồi bấm 1 ô bên phải mang nghĩa tương ứng.</div>
 
       <div class="match-puzzle-grid">
@@ -1024,7 +1113,7 @@ function renderMatchPuzzleView() {
         </div>
       </div>
       <div id="match-puzzle-win" style="display:none;text-align:center;padding:16px;background:#ecfdf5;border-radius:10px;color:#047857;font-weight:700;margin-top:14px">
-        🎉 Chúc mừng! Bạn đã ghép chính xác toàn bộ các thành ngữ!
+        🎉 Chúc mừng! Bạn đã ghép chính xác toàn bộ các cặp!
       </div>
     </div>
   `;
@@ -1061,7 +1150,8 @@ function checkPuzzlePair() {
       addXP(10, 'Nối thành ngữ đúng');
       matchedCount++;
 
-      if (matchedCount === LEARN_DATA.languageFocus.matchPairs.length) {
+      const pairs = currentUnit?.languageFocus?.matchPairs || [];
+      if (matchedCount === pairs.length) {
         triggerConfetti();
         const winBox = document.getElementById('match-puzzle-win');
         if (winBox) winBox.style.display = 'block';
@@ -1078,14 +1168,16 @@ function checkPuzzlePair() {
 }
 
 function renderGrammarQuizView() {
-  const quiz = LEARN_DATA.languageFocus.grammarChallenge;
+  const quiz = currentUnit?.languageFocus?.grammarChallenge || [];
+  if (!quiz.length) return '<div class="empty">Chưa có thử thách ngữ pháp trong Unit này.</div>';
+
   return `
     <div style="display:flex;flex-direction:column;gap:16px;max-width:700px;margin:0 auto">
       ${quiz.map((q, idx) => `
         <div class="card" style="margin:0">
           <div style="font-weight:700;font-size:15px;margin-bottom:8px;color:#1e293b">Câu ${idx + 1}: ${q.question}</div>
           <div style="display:flex;flex-direction:column;gap:6px">
-            ${q.options.map((opt, oIdx) => `
+            ${(q.options || []).map((opt, oIdx) => `
               <button class="opt" onclick="window.checkGrammarQuiz(${idx}, ${oIdx}, ${q.answer})" id="gq-opt-${idx}-${oIdx}">
                 <span class="okey">${String.fromCharCode(65 + oIdx)}</span>
                 <span>${opt}</span>
@@ -1102,15 +1194,17 @@ function renderGrammarQuizView() {
 window.checkGrammarQuiz = function(qIdx, chosenIdx, correctIdx) {
   const fb = document.getElementById(`gq-fb-${qIdx}`);
   const btn = document.getElementById(`gq-opt-${qIdx}-${chosenIdx}`);
-  if (!fb || !btn) return;
+  if (!fb || !btn || !currentUnit) return;
 
   const allBtns = document.querySelectorAll(`[id^="gq-opt-${qIdx}-"]`);
   allBtns.forEach(b => (b.disabled = true));
 
+  const quizItem = currentUnit.languageFocus?.grammarChallenge?.[qIdx];
+
   if (chosenIdx === correctIdx) {
     btn.classList.add('correct');
     fb.className = 'fb fb-ok';
-    fb.innerHTML = '🎉 <b>Chính xác!</b> ' + LEARN_DATA.languageFocus.grammarChallenge[qIdx].explain;
+    fb.innerHTML = '🎉 <b>Chính xác!</b> ' + (quizItem?.explain || '');
     fb.style.display = 'block';
     playSuccessSound();
     addXP(15, 'Ngữ pháp đúng');
@@ -1119,16 +1213,18 @@ window.checkGrammarQuiz = function(qIdx, chosenIdx, correctIdx) {
     const correctBtn = document.getElementById(`gq-opt-${qIdx}-${correctIdx}`);
     if (correctBtn) correctBtn.classList.add('correct');
     fb.className = 'fb fb-bad';
-    fb.innerHTML = '❌ <b>Chưa đúng.</b> ' + LEARN_DATA.languageFocus.grammarChallenge[qIdx].explain;
+    fb.innerHTML = '❌ <b>Chưa đúng.</b> ' + (quizItem?.explain || '');
     fb.style.display = 'block';
     playWrongSound();
   }
 };
 
 // =========================================================================
-// MAIN APP INITIALIZATION
+// MAIN CONTROLLER INITIALIZATION
 // =========================================================================
 function switchSkillTab(skill) {
+  currentSkillTab = skill;
+
   document.querySelectorAll('.skill-tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.skill === skill);
   });
@@ -1146,14 +1242,12 @@ function switchSkillTab(skill) {
 
 window.switchSkillTab = switchSkillTab;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   loadProfile();
   
-  // Gắn sự kiện chuyển tab
   document.querySelectorAll('.skill-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => switchSkillTab(btn.dataset.skill));
   });
 
-  // Mặc định khởi tạo kỹ năng Listening
-  switchSkillTab('listening');
+  await loadUnitsData();
 });

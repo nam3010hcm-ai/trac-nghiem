@@ -8,6 +8,7 @@ import { populateCategoryDropdowns, updateFltSubcat, updateQFormSubcat, updateEF
 import { openQForm, closeQForm, saveQ, deleteQ, renderQuestions } from './questions.js';
 import { openEForm, closeEForm, saveExam, deleteExam, toggleExamVisibility, renderExams, populateExamSelect } from './exams.js';
 import { renderResults, clearResults, exportCSV } from './results.js';
+import { loadUnits, renderUnitsList, openUnitEditor, closeUnitEditor, switchDesignerSkillTab, saveUnit, deleteUnit, toggleUnitVisibility } from './units.js';
 
 const db = () => window.supabaseClient;
 
@@ -39,6 +40,7 @@ async function showTeacherPanel(user) {
     renderResults();
     renderCatManagementList();
     loadCohorts(); 
+    loadUnits().then(() => renderUnitsList());
     if (typeof window.populateCohortExams === 'function') {
       window.populateCohortExams(); 
     }
@@ -123,7 +125,7 @@ async function doLogout() {
 }
 
 function switchTTab(t) {
-  ['q', 'e', 'r', 'c', 'cohort', 'img'].forEach(x => {
+  ['q', 'e', 'unit', 'r', 'c', 'cohort', 'img'].forEach(x => {
     const content = $('tc-' + x);
     if(content) {
       content.classList.toggle('active', x === t);
@@ -134,6 +136,7 @@ function switchTTab(t) {
     if(tabBtn) tabBtn.classList.toggle('active', x === t);
   });
 
+  if (t === 'unit') renderUnitsList();
   if (t === 'r') renderResults();
   if (t === 'c') renderCatManagementList();
   if (t === 'img' && typeof window.loadGallery === 'function') window.loadGallery();
@@ -148,6 +151,13 @@ function switchTTab(t) {
 window.switchTTab = switchTTab;
 window._teacherModuleSwitchTab = switchTTab;
 window.doLogout = doLogout;
+window.openUnitEditor = openUnitEditor;
+window.closeUnitEditor = closeUnitEditor;
+window.switchDesignerSkillTab = switchDesignerSkillTab;
+window.saveUnit = saveUnit;
+window.deleteUnit = deleteUnit;
+window.toggleUnitVisibility = toggleUnitVisibility;
+window.renderUnitsList = renderUnitsList;
 window.openQForm = openQForm;
 window.closeQForm = closeQForm;
 window.saveQ = saveQ;
