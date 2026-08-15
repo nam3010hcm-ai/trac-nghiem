@@ -71,38 +71,20 @@ window.supabaseClient = (window.supabase && typeof window.supabase.createClient 
 
     if (!email || !pass) {
       if (err) { err.style.display = 'block'; err.innerText = '❌ Vui lòng nhập email và mật khẩu!'; }
-      alert('Vui lòng nhập đầy đủ Email và Mật khẩu!');
       return;
     }
 
     if (btn) { btn.disabled = true; btn.innerText = 'Đang đăng nhập...'; }
 
     try {
-      const client = (window.supabase && typeof window.supabase.createClient === 'function')
-        ? window.supabase.createClient("https://xuioxmjufpfdblecjvuv.supabase.co", "sb_publishable_eKhgTzsFTVwL5mGwZTWWbQ_yogb4Hpc")
-        : null;
+      // Dùng ĐÚNG window.supabaseClient - cùng client với toàn bộ module JS
+      const client = window.supabaseClient;
+      if (!client) throw new Error("Supabase client chưa sẵn sàng. Hãy tải lại trang!");
 
-      let authUser = null;
+      const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
+      if (error) throw error;
 
-      if (client) {
-        const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
-        if (error) throw error;
-        authUser = data.user;
-      } else {
-        // Fallback fetch API trực tiếp
-        const res = await fetch("https://xuioxmjufpfdblecjvuv.supabase.co/auth/v1/token?grant_type=password", {
-          method: "POST",
-          headers: {
-            "apikey": "sb_publishable_eKhgTzsFTVwL5mGwZTWWbQ_yogb4Hpc",
-            "Authorization": "Bearer sb_publishable_eKhgTzsFTVwL5mGwZTWWbQ_yogb4Hpc",
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ email, password: pass })
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error_description || json.msg || json.message || "Đăng nhập thất bại");
-        authUser = json.user;
-      }
+      const authUser = data.user;
 
       if (err) err.style.display = 'none';
 
@@ -113,6 +95,7 @@ window.supabaseClient = (window.supabase && typeof window.supabase.createClient 
         document.getElementById('current-user-email').innerText = authUser?.email || email;
       }
 
+      // Gọi hàm khởi tạo panel từ module JS
       if (typeof window.initTeacherPanelDirect === 'function') {
         await window.initTeacherPanelDirect(authUser);
       }
@@ -124,10 +107,7 @@ window.supabaseClient = (window.supabase && typeof window.supabase.createClient 
       } else if (msg.includes('Invalid login credentials')) {
         msg = 'Sai email hoặc mật khẩu! Vui lòng kiểm tra lại.';
       }
-      if (err) {
-        err.style.display = 'block';
-        err.innerText = '❌ ' + msg;
-      }
+      if (err) { err.style.display = 'block'; err.innerText = '❌ ' + msg; }
       alert('❌ ' + msg);
     } finally {
       if (btn) { btn.disabled = false; btn.innerText = 'Đăng nhập'; }
@@ -640,6 +620,6 @@ window.supabaseClient = (window.supabase && typeof window.supabase.createClient 
     </div>
 </div>
 
-<script type="module" src="js/teacher.js?v=3.1"></script>
+<script type="module" src="js/teacher.js?v=3.2"></script>
 </body>
 </html>
