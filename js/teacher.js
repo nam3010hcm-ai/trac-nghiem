@@ -18,6 +18,8 @@ async function showTeacherPanel(user) {
     $('current-user-email').innerText = user?.email || 'Quản trị viên';
   }
 
+  initTeacherApp();
+
   try {
     await initData(true);
   } catch(e) {
