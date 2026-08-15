@@ -5,7 +5,7 @@
  * =========================================================================
  */
 
-import { LEARN_DATA, DEFAULT_UNITS } from './learn-data.js';
+import { LEARN_DATA, DEFAULT_UNITS } from './learn-data.js?v=5.1';
 
 const db = () => window.supabaseClient;
 
