@@ -14,6 +14,11 @@ window.MathJax = {
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2.48.1/dist/umd/supabase.js"></script>
+<script>
+window.supabaseClient = (window.supabase && typeof window.supabase.createClient === 'function')
+  ? window.supabase.createClient("https://xuioxmjufpfdblecjvuv.supabase.co", "sb_publishable_eKhgTzsFTVwL5mGwZTWWbQ_yogb4Hpc", { auth: { persistSession: true, autoRefreshToken: true } })
+  : null;
+</script>
 </head>
 <body>
 <div class="header">
@@ -635,6 +640,6 @@ window.MathJax = {
     </div>
 </div>
 
-<script type="module" src="js/teacher.js?v=2.5"></script>
+<script type="module" src="js/teacher.js?v=3.0"></script>
 </body>
 </html>
