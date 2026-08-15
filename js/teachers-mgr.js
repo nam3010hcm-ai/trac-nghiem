@@ -63,6 +63,15 @@ export function renderTeachersList() {
   container.innerHTML = filtered.map(t => {
     const isActive = t.is_active !== false;
     const isRoot = isRootUser(t.email);
+
+    // Tính toán tài nguyên do giảng viên này tạo ra
+    const questionsCount = (window.state?.questions || []).filter(q => (q.created_by || q.createdBy || '').toLowerCase() === (t.email || '').toLowerCase()).length;
+    const examsCount = (window.state?.exams || []).filter(e => (e.created_by || e.createdBy || '').toLowerCase() === (t.email || '').toLowerCase()).length;
+    const unitsCount = (window.state?.units || []).filter(u => (u.created_by || u.createdBy || '').toLowerCase() === (t.email || '').toLowerCase()).length;
+
+    const loginTime = t.last_login_at ? new Date(t.last_login_at).toLocaleString('vi-VN') : 'Chưa có nhật ký';
+    const logoutTime = t.last_logout_at ? new Date(t.last_logout_at).toLocaleString('vi-VN') : 'Đang online / Chưa xuất';
+
     return `
       <tr>
         <td>
@@ -79,9 +88,17 @@ export function renderTeachersList() {
         <td><b>${esc(t.email)}</b></td>
         <td><span class="cat-badge" style="background:#f1f5f9;color:#334155;">${esc(t.department || 'Bộ Môn Chung')}</span></td>
         <td>
-          <span class="status-badge ${isRoot ? 'status-active' : 'status-completed'}" style="${isRoot ? 'background:#fef3c7;color:#92400e;' : ''}">
-            ${isRoot ? '👑 Root Admin' : '👨‍🏫 Giảng Viên'}
-          </span>
+          <div style="font-size:11.5px;color:#334155;">
+            <div><b>📚 ${questionsCount}</b> Câu hỏi</div>
+            <div><b>📝 ${examsCount}</b> Đề thi</div>
+            <div><b>📖 ${unitsCount}</b> Unit bài học</div>
+          </div>
+        </td>
+        <td>
+          <div style="font-size:11px;color:#475569;line-height:1.4;">
+            <div>🟢 In: <b>${loginTime}</b></div>
+            <div>🔴 Out: <b>${logoutTime}</b></div>
+          </div>
         </td>
         <td>
           <span class="status-badge ${isActive ? 'status-active' : 'status-pending'}">

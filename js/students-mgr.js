@@ -68,13 +68,31 @@ export function renderStudentsList() {
 
   container.innerHTML = filtered.map((st, idx) => {
     const isActive = st.is_active !== false;
+
+    // Tính toán kết quả học tập của học viên từ window.state.results
+    const stResults = (window.state?.results || []).filter(r => String(r.sid || '').toLowerCase() === String(st.id || '').toLowerCase());
+    const totalExams = stResults.length;
+    const avgScore = totalExams > 0 ? (stResults.reduce((acc, curr) => acc + (parseFloat(curr.manual_score ?? curr.score) || 0), 0) / totalExams).toFixed(1) : 'N/A';
+    
+    const loginTime = st.last_login_at ? new Date(st.last_login_at).toLocaleString('vi-VN') : 'Chưa có';
+    const logoutTime = st.last_logout_at ? new Date(st.last_logout_at).toLocaleString('vi-VN') : '—';
+
     return `
       <tr style="${isActive ? '' : 'background:#fef2f2;opacity:0.8'}">
         <td style="font-weight:700;color:#1e293b">${idx + 1}</td>
         <td><span class="abadge" style="background:#e0f2fe;color:#0369a1;font-weight:700">${esc(st.id)}</span></td>
-        <td style="font-weight:700;color:#0f172a">${esc(st.full_name)}</td>
-        <td><span class="abadge" style="background:#f1f5f9;color:#334155">${esc(st.class_name || '')}</span></td>
-        <td style="font-size:13px;color:#64748b">${esc(st.academic_year || '')}</td>
+        <td style="font-weight:700;color:#0f172a">
+          <div>${esc(st.full_name || st.student_name)}</div>
+          <div style="font-size:11px;color:#64748b;font-weight:normal;">Lần đăng nhập: ${loginTime}</div>
+        </td>
+        <td><span class="abadge" style="background:#f1f5f9;color:#334155">${esc(st.class_name || 'K7')}</span></td>
+        <td>
+          <div style="font-size:12px;color:#0f172a;">
+            <div><b>📝 ${totalExams}</b> Bài thi</div>
+            <div><b>⭐ ĐTB: ${avgScore}</b></div>
+            <div style="color:#16a34a;font-weight:700;">⚡ ${st.total_xp || 0} XP</div>
+          </div>
+        </td>
         <td style="font-family:monospace;color:#2563eb;font-size:13px">${esc(st.email)}</td>
         <td>
           <span style="font-family:monospace;background:#f8fafc;padding:3px 6px;border-radius:4px;border:1px solid #e2e8f0;font-size:12px">

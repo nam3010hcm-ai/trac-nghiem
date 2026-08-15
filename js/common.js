@@ -36,8 +36,45 @@ export function isRootUser(email) {
   return String(email).trim().toLowerCase() === ROOT_ADMIN_EMAIL.toLowerCase();
 }
 
-export async function globalLogout() {
+export async function logUserAuthEvent(userEmail, userType = 'teacher', eventType = 'login') {
+  if (!userEmail) return;
+  const nowStr = new Date().toISOString();
   try {
+    const client = window.supabaseClient;
+    if (client) {
+      await client.from('user_auth_logs').insert([{
+        user_email: userEmail,
+        user_type: userType,
+        event_type: eventType,
+        timestamp: nowStr
+      }]);
+
+      const targetTable = userType === 'student' ? 'students' : 'teachers';
+      const payload = eventType === 'login' ? { last_login_at: nowStr } : { last_logout_at: nowStr };
+      await client.from(targetTable).update(payload).eq('email', userEmail);
+    }
+  } catch (e) {
+    console.warn("Lỗi logUserAuthEvent:", e);
+  }
+}
+
+export async function globalLogout() {
+  const stUserRaw = localStorage.getItem('st_user');
+  const tcUserRaw = localStorage.getItem('teacher_user');
+
+  try {
+    let email = '';
+    let userType = 'teacher';
+    if (stUserRaw) {
+      try { email = JSON.parse(stUserRaw).email || JSON.parse(stUserRaw).sid; userType = 'student'; } catch(e){}
+    } else if (tcUserRaw) {
+      try { email = JSON.parse(tcUserRaw).email; userType = 'teacher'; } catch(e){}
+    }
+
+    if (email) {
+      await logUserAuthEvent(email, userType, 'logout');
+    }
+
     if (window.supabaseClient && window.supabaseClient.auth) {
       await window.supabaseClient.auth.signOut();
     }
@@ -57,7 +94,7 @@ export function canEditItem(item, currentUserEmail) {
   if (!currentUserEmail) return true;
   if (isRootUser(currentUserEmail)) return true;
   const creator = item?.created_by || item?.createdBy;
-  if (!creator) return true;
+  if (!creator) return false;
   return String(creator).trim().toLowerCase() === String(currentUserEmail).trim().toLowerCase();
 }
 
