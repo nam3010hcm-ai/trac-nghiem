@@ -75,8 +75,8 @@ export async function deleteParentCategory(parent){
       }
     }
     refreshCategoryUI();
-    if(typeof renderQuestions === 'function') renderQuestions();
-    if(typeof renderExams === 'function') renderExams();
+    if(typeof window.renderQuestions === 'function') window.renderQuestions();
+    if(typeof window.renderExams === 'function') window.renderExams();
     alert('✅ Đã xóa chủ đề cha!');
   } catch(e) {
     console.error("Lỗi xóa chủ đề cha:", e);
@@ -127,8 +127,8 @@ export async function deleteSubCategory(parent, sub){
       }
     }
     refreshCategoryUI();
-    if(typeof renderQuestions === 'function') renderQuestions();
-    if(typeof renderExams === 'function') renderExams();
+    if(typeof window.renderQuestions === 'function') window.renderQuestions();
+    if(typeof window.renderExams === 'function') window.renderExams();
     alert('✅ Đã xóa phần con!');
   } catch(e) {
     console.error("Lỗi xóa phần con:", e);
@@ -159,9 +159,9 @@ export async function editSubCategory(parent, oldSub){
       if(e.subcat === oldSub){ e.subcat = newSub; await supabase.from('exams').update({ subcat: newSub }).eq('id', e.id); eCount++; }
     }
     refreshCategoryUI();
-    renderQuestions();
-    renderExams();
-    populateExamSelect();
+    if(typeof window.renderQuestions === 'function') window.renderQuestions();
+    if(typeof window.renderExams === 'function') window.renderExams();
+    if(typeof window.populateExamSelect === 'function') window.populateExamSelect();
     alert(`✅ Đổi tên thành công!\nĐồng bộ: ${qCount} câu hỏi, ${eCount} đề thi`);
   } catch(e) {
     console.error("Lỗi đổi tên phần con:", e);
