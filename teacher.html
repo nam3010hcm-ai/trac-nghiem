@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Quản trị - Trắc nghiệm</title>
+<link rel="stylesheet" href="css/style.css"/>
+
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<div class="header">
+  <div class="logo">Quiz<span> Trắc Nghiệm </span></div>
+  <div class="nav">
+    <a class="nav-btn" href="student.html">🎓 Học viên</a>
+    <a class="nav-btn active" href="teacher.html">👩‍🏫 Quản trị viên</a>
+  </div>
+</div>
+
+<div class="main">
+  <div id="t-login" class="card" style="max-width:400px;margin:60px auto">
+    <div style="font-size:18px;font-weight:700;margin-bottom:16px;text-align:center">
+      🔐 Đăng nhập Quản trị
+    </div>
+
+    <div class="fg">
+      <label>Email quản trị</label>
+      <input
+        type="email"
+        id="t-email"
+        
+        placeholder="Nhập email quản trị..."
+      />
+    </div>
+
+    <div class="fg">
+      <label>Mật khẩu</label>
+      <div class="password-row">
+        <input type="password" id="t-pass" placeholder="Nhập mật khẩu...">
+        <button type="button" id="btn-toggle-pass">👁 Hiện</button>
+      </div>
+    </div>
+
+    <div id="t-err" style="color:#dc2626;font-size:13px;margin-bottom:10px;display:none">
+      ❌ Email hoặc mật khẩu không đúng!
+    </div>
+
+    <button class="btn btn-p btn-full" id="btn-login">Đăng nhập</button>
+  </div>
+
+  <div id="t-panel" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:18px;font-weight:700">Quản lý hệ thống</div>
+        <div class="login-info">
+          Đang đăng nhập: <b id="current-user-email">...</b>
+        </div>
+      </div>
+      <button class="btn btn-sm" id="btn-logout">🔒 Đăng xuất</button>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab-btn active" data-tab="q">📚 Câu hỏi</button>
+      <button class="tab-btn" data-tab="e">📋 Đề thi</button>
+      <button class="tab-btn" data-tab="r">📊 Kết quả</button>
+      <button class="tab-btn" data-tab="c">🗂️ Chủ đề</button>
+      <button class="tab-btn" data-tab="cohort">📅 Ca thi</button>
+      <button class="tab-btn" data-tab="img">🖼️ Thư viện ảnh</button> <!-- THÊM TAB NÀY -->
+    </div>
+
+    <div id="tc-q" class="tab-content active">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="sec-title" style="margin:0">Ngân hàng câu hỏi (<span id="q-count">0</span>)</div>
+        <button class="btn btn-p" id="btn-open-qform">+ Thêm câu hỏi</button>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <select id="flt-cat" style="flex:1;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px">
+          <option value="">(Tất cả chủ đề)</option>
+        </select>
+        <select id="flt-subcat" style="flex:2;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px">
+          <option value="">(Tất cả phần)</option>
+        </select>
+        <button class="btn" id="btn-filter-q">Lọc</button>
+      </div>
+
+      <div id="qform" style="display:none" class="card">
+        <div class="sec-title" id="qform-title">Thêm câu hỏi mới</div>
+
+        <div class="fg">
+          <label>Loại câu hỏi</label>
+          <select id="qf-type">
+            <option value="mcq_single">Trắc nghiệm - chọn 1 đáp án</option>
+            <option value="mcq_multi">Trắc nghiệm - chọn nhiều đáp án</option>
+            <option value="fill_blank">Điền từ vào chỗ trống</option>
+            <option value="drag_drop">Kéo-thả vào chỗ trống</option>
+            <option value="matching">Ghép cặp</option>
+            <option value="essay">📝 Tự luận (Writing / Essay)</option>
+          </select>
+        </div>
+
+        <div class="grid2" style="margin-bottom:10px; background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+          <div class="fg" style="margin:0">
+            <label style="color: #3b82f6; font-weight: 700;">📂 1. Ngân hàng câu hỏi</label>
+            <select id="qf-cat"></select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="color: #10b981; font-weight: 700;">🏷️ 2. Thuộc PART (Phần thi) *</label>
+            <select id="qf-subcat"></select>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label>Nội dung câu hỏi</label>
+          <textarea id="qf-text" placeholder="Nhập câu hỏi... (Điền từ / Kéo-thả: dùng ___ để đánh dấu chỗ trống, VD: She ___ to school every day.)"></textarea>
+        </div>
+
+        <div class="fg">
+          <label>🎧 Audio bài nghe (MP3 / WAV / M4A - Môn Tiếng Anh)</label>
+          <div style="display:flex; gap:10px; margin-bottom: 8px;">
+            <input type="file" id="qf-audio-file" accept="audio/*" style="flex:1;">
+            <button type="button" class="btn btn-sm" id="btn-clear-audio" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; display:none;">✖ Xóa Audio</button>
+          </div>
+          <div id="audio-upload-progress" style="display:none; margin-bottom:8px;">
+            <div style="font-size:12px; color:#0284c7; font-weight:600; margin-bottom:3px;" id="audio-upload-text">Đang tải lên: 0%</div>
+            <div class="pbar" style="margin:0; height:6px; background:#e0f2fe;"><div id="audio-upload-fill" class="pfill" style="width:0%; background:#0284c7;"></div></div>
+          </div>
+          <input id="qf-audio" placeholder="Link file audio trên đám mây (hoặc tự động tạo sau khi chọn file ở trên)...">
+          <div id="audio-preview" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="fg">
+          <label>🖼️ Hình ảnh minh họa câu hỏi</label>
+          <div style="display:flex; gap:10px; margin-bottom: 8px;">
+            <input type="file" id="qf-image-file" accept="image/*" style="flex:1;">
+            <button type="button" class="btn btn-sm" id="btn-open-gallery" style="background:#f3e8ff; color:#7c3aed; border:1px solid #ddd6fe; font-weight:600; white-space:nowrap;">📂 Chọn từ Thư viện</button>
+            <button type="button" class="btn btn-sm" id="btn-clear-image" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; display:none;">✖ Xóa Ảnh</button>
+          </div>
+          <div id="image-upload-progress" style="display:none; margin-bottom:8px;">
+            <div style="font-size:12px; color:#7c3aed; font-weight:600; margin-bottom:3px;" id="image-upload-text">Đang tải lên: 0%</div>
+            <div class="pbar" style="margin:0; height:6px; background:#f5f3ff;"><div id="image-upload-fill" class="pfill" style="width:0%; background:#7c3aed;"></div></div>
+          </div>
+          <input id="qf-image" placeholder="Link ảnh trực tiếp trên đám mây (hoặc tự động tạo sau khi chọn file)...">
+          <div id="image-preview" style="margin-top:8px;"></div>
+        </div>
+        
+        <div class="info-note">
+          Có thể gõ công thức Toán bằng LaTeX, ví dụ:
+          <b>$x^2 + 2x + 1$</b>, <b>\(\frac{a}{b}\)</b>
+        </div>
+
+        <div id="qf-mcq-block">
+          <div class="grid2">
+            <div class="fg" style="margin:0"><label>Đáp án A</label><input id="qf-a"/></div>
+            <div class="fg" style="margin:0"><label>Đáp án B</label><input id="qf-b"/></div>
+            <div class="fg" style="margin:0"><label>Đáp án C</label><input id="qf-c"/></div>
+            <div class="fg" style="margin:0"><label>Đáp án D</label><input id="qf-d"/></div>
+          </div>
+
+          <div class="fg" id="qf-ans-single-wrap">
+            <label>Đáp án đúng</label>
+            <select id="qf-ans">
+              <option value="0">A</option>
+              <option value="1">B</option>
+              <option value="2">C</option>
+              <option value="3">D</option>
+            </select>
+          </div>
+
+          <div class="fg" id="qf-ans-multi-wrap" style="display:none">
+            <label>Đáp án đúng (có thể chọn nhiều ô)</label>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;padding:8px 0">
+              <label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" id="qf-ans-m0"> A</label>
+              <label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" id="qf-ans-m1"> B</label>
+              <label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" id="qf-ans-m2"> C</label>
+              <label style="display:flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" id="qf-ans-m3"> D</label>
+            </div>
+          </div>
+        </div>
+
+        <div id="qf-fillblank-block" style="display:none">
+          <div class="fg" id="qf-bank-wrap" style="display:none">
+            <label>🧩 Ngân hàng từ để kéo-thả (cách nhau bởi dấu phẩy, có thể lặp lại từ nếu cần dùng 2 lần)</label>
+            <input id="qf-bank" placeholder="am, is, are">
+          </div>
+          <div class="info-note">Số ô đáp án tự sinh theo số dấu <b>___</b> trong câu hỏi. Nhập nhiều đáp án đúng cho 1 chỗ trống bằng cách cách nhau dấu <b>|</b> (VD: <b>is|'s</b>).</div>
+          <div id="qf-blanks-wrap"></div>
+        </div>
+
+        <div id="qf-matching-block" style="display:none">
+          <div class="fg">
+            <label>🔗 Danh sách cặp ghép (mỗi dòng 1 cặp, ngăn cách bằng dấu =)</label>
+            <textarea id="qf-pairs" placeholder="Cat = Con mèo&#10;Dog = Con chó&#10;Bird = Con chim"></textarea>
+          </div>
+        </div>
+
+        <div class="fg" style="margin-top: 15px; border-top: 1px dashed #cbd5e1; padding-top: 15px;">
+            <label style="color: #059669; font-weight: 700;">💡 Giải thích đáp án (Không bắt buộc)</label>
+            <textarea id="qf-explain" style="width: 100%; height: 80px; padding: 10px; border: 1.5px solid #e2e8f0; border-radius: 6px; font-family: inherit; font-size: 14px; resize: vertical;" placeholder="Nhập lời giải thích chi tiết cho câu hỏi này. (Sẽ chỉ hiển thị ở chế độ Ôn luyện)"></textarea>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-p" id="btn-save-q">✅ Lưu câu hỏi</button>
+          <button class="btn" id="btn-close-qform">Hủy</button>
+        </div>
+      </div>
+
+      <div id="q-list"></div>
+    </div>
+
+    <div id="tc-e" class="tab-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="sec-title" style="margin:0">Danh sách đề thi</div>
+        <button class="btn btn-p" id="btn-open-eform">+ Tạo đề thi</button>
+      </div>
+
+      <div id="eform" style="display:none" class="card">
+        <div class="sec-title">Tạo đề thi mới</div>
+
+        <div class="fg">
+          <label>Tên đề thi</label>
+          <input id="ef-name" placeholder="VD: Đề kiểm tra giữa kỳ"/>
+        </div>
+
+        <div class="fg">
+          <label>Mô tả</label>
+          <input id="ef-desc" placeholder="Mô tả ngắn..."/>
+        </div>
+
+        <div class="grid2">
+          <div class="fg" style="margin:0">
+            <label>Số câu hỏi</label>
+            <input type="number" id="ef-count" value="10" min="1" max="50"/>
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Giới hạn thời gian (phút, 0=không)</label>
+            <input type="number" id="ef-time" value="0" min="0"/>
+          </div>
+        </div>
+        <div class="info-note">📌 Lọc câu hỏi cho đề: chọn chủ đề cha rồi chọn phần con (tùy chọn)</div>
+
+        <div class="grid2">
+          <div class="fg" style="margin:0">
+            <label>Lọc theo chủ đề cha</label>
+            <select id="ef-cat">
+              <option value="">(Tất cả chủ đề)</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Lọc theo phần con</label>
+            <select id="ef-subcat">
+              <option value="">(Không lọc theo phần)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-p" id="btn-save-exam">✅ Tạo đề thi</button>
+          <button class="btn" id="btn-close-eform">Hủy</button>
+        </div>
+      </div>
+      
+      <!-- GIAO DIỆN QUẢN LÝ CÂU HỎI TRONG ĐỀ -->
+      <div id="exam-q-manager" style="display:none" class="card">
+          <div class="sec-title" style="display:flex;justify-content:space-between; align-items:center;">
+              <span>Quản lý câu hỏi: <span id="eqm-name" style="color:#1d9e75"></span></span>
+              <button class="btn btn-sm" id="btn-close-eqm">Đóng</button>
+          </div>
+          <div class="info-note">
+              📌 Kéo các câu hỏi thủ công vào đề sẽ thay thế cơ chế lấy ngẫu nhiên ban đầu. Số lượng câu hỏi của đề thi sẽ tự động chốt theo số câu bạn chọn ở cột phải.
+          </div>
+          
+          <div style="display:flex; gap: 20px; flex-wrap:wrap; margin-top:14px;">
+              <!-- Cột trái: Ngân hàng -->
+              <div style="flex:1; min-width:300px; border:1px solid #e5e7eb; border-radius:8px; padding:10px; background:#f8fafc;">
+                  <div style="font-weight:700; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; color:#334155;">
+                      <span>Ngân hàng câu hỏi</span>
+                      <select id="eqm-filter-cat" style="padding:4px; max-width:150px; font-size:13px; border:1px solid #cbd5e1; border-radius:4px;"></select>
+                  </div>
+                  <div id="eqm-available-list" style="max-height:400px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+              </div>
+      
+              <!-- Cột phải: Đã chọn -->
+              <div style="flex:1; min-width:300px; border:1px solid #10b981; border-radius:8px; padding:10px; background:#f0fdf4;">
+                  <div style="font-weight:700; margin-bottom:8px; color:#065f46;">
+                      Đã thêm vào đề (<span id="eqm-selected-count">0</span> câu)
+                  </div>
+                  <div id="eqm-selected-list" style="max-height:400px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+              </div>
+          </div>
+      </div>
+      <div id="e-list"></div>
+    </div>
+    
+    <div id="tc-r" class="tab-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <div class="sec-title" style="margin:0">Kết quả làm bài (<span id="r-count">0</span>)</div>
+        <div style="display:flex;gap:8px; align-items:center;">
+          <!-- 1. BỘ LỌC CA THI -->
+          <select id="flt-r-cohort" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; background: white; outline: none; cursor: pointer;">
+            <option value="">(Tất cả Ca thi)</option>
+          </select>
+          <button class="btn" id="btn-export">⬇ Xuất CSV</button>
+          <button class="btn btn-danger btn-sm" id="btn-clear-results">🗑 Xóa tất cả</button>
+        </div>
+      </div>
+
+      <div id="stats-summary"></div>
+
+      <div class="card" style="padding:10px 16px">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <!-- 2. CẬP NHẬT 9 CỘT CHO KHỚP VỚI HÀM RENDER JS -->
+              <tr>
+                <th style="text-align:center; width:50px;">STT</th>
+                <th>Mã HV</th>
+                <th>Họ và Tên</th>
+                <th>Ca thi</th>
+                <th>Đề thi</th>
+                <th style="text-align:center;">Điểm</th>
+                <th style="text-align:center;">Câu đúng</th>
+                <th style="text-align:center;">Thời gian</th>
+                <th>Lúc nộp</th>
+              </tr>
+            </thead>
+            <tbody id="r-tbody">
+              <!-- JS renderResults sẽ đổ dữ liệu vào đây -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="tc-c" class="tab-content">
+      <div class="sec-title">Quản lý Ngân hàng & Cấu trúc PART</div>
+      <div class="info-note">
+        💡 <b>Mẹo:</b> Hãy tạo "Ngân hàng" trước (Ví dụ: Đề Tiếng Anh Số 1), sau đó tạo các "PART" (Ví dụ: PART I: LISTENING, PART II: READING) thuộc về Ngân hàng đó.
+      </div>
+
+      <div class="grid2">
+        <div class="card" style="padding:16px; border-top: 4px solid #3b82f6;">
+          <div style="font-weight:700;font-size:14px;margin-bottom:10px;color:#1e293b">
+            📂 1. TẠO NGÂN HÀNG CHỨA ĐỀ
+          </div>
+          <div class="fg">
+            <label>Tên Ngân hàng</label>
+            <input id="new-parent-cat" placeholder="Ví dụ: Tiếng Anh K12 - Đề 01..."/>
+          </div>
+          <button class="btn btn-p btn-full" id="btn-add-parent">Tạo Ngân Hàng Mới</button>
+        </div>
+
+        <div class="card" style="padding:16px; border-top: 4px solid #10b981;">
+          <div style="font-weight:700;font-size:14px;margin-bottom:10px;color:#1e293b">
+            🏷️ 2. TẠO PART (PHẦN THI CHI TIẾT)
+          </div>
+          <div class="info-note" style="margin-top: 0px; margin-bottom: 12px; font-size: 12px; color: #b45309; background: #fffbeb; padding: 8px; border-radius: 4px; border-left: 3px solid #f59e0b;">
+            💡 <b>Quy định điểm số:</b> Gõ thêm <b>[số điểm]</b> ở cuối tên PART để hệ thống tự động chia điểm cho các câu hỏi bên trong.<br>
+            <i>VD: PART I: LISTENING [2]</i> (Hệ thống hiểu Part này tối đa 2 điểm).
+          </div>
+          <div class="fg">
+            <label>Nằm trong Ngân hàng nào?</label>
+            <select id="add-sub-parent"></select>
+          </div>
+          <div class="fg">
+            <label>Tên PART</label>
+            <input id="new-sub-cat" placeholder="Ví dụ: PART I: LISTENING..."/>
+          </div>
+          <button class="btn btn-p btn-full" id="btn-add-sub" style="background: #10b981;">Tạo PART Mới</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;padding-bottom:8px;margin-bottom:14px">
+          <div style="font-weight:700;font-size:14px;color:#1e293b">
+            🗂️ CẤU TRÚC NGÂN HÀNG & PART HIỆN TẠI
+          </div>
+          <button class="btn btn-sm btn-warn" id="btn-restore">🔄 Khôi phục danh mục gốc</button>
+        </div>
+        <div id="cat-management-list"></div>
+      </div>
+    </div>
+    
+    <div id="tc-cohort" class="tab-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div class="sec-title" style="margin:0">Quản lý Ca thi / Lớp học</div>
+        </div>
+
+        <div class="card" style="margin-bottom: 20px; padding: 16px;">
+            <div style="font-weight:700;font-size:13px;margin-bottom:10px;color:#475569">
+                ➕ TẠO CA THI BẢO MẬT
+            </div>
+            
+            <div class="grid2">
+                <div class="fg" style="margin:0">
+                    <label>Tên Ca thi</label>
+                    <input id="t-cohort-name" placeholder="VD: Ca 1 - Sáng 20/10..."/>
+                </div>
+                <div class="fg" style="margin:0">
+                    <label>Mã truy cập (Để trống sẽ tự tạo)</label>
+                    <input id="t-cohort-code" placeholder="VD: K6A2B"/>
+                </div>
+            </div>
+        
+            <div class="grid2" style="margin-top:14px">
+                <div class="fg" style="margin:0">
+                    <label>Thời gian mở phòng thi</label>
+                    <input type="datetime-local" id="t-cohort-start"/>
+                </div>
+                <div class="fg" style="margin:0">
+                    <label>Thời gian đóng phòng thi</label>
+                    <input type="datetime-local" id="t-cohort-end"/>
+                    <div class="fg" style="margin-top:14px">
+                        <label>Chế độ làm bài</label>
+                        <select id="t-cohort-mode" style="padding: 8px; width: 100%; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            <option value="practice">📖 Ôn luyện (Hiện đáp án đúng/sai ngay sau mỗi câu)</option>
+                            <option value="exam">📝 Thi thật (Ẩn đáp án, có danh sách câu hỏi, cho phép sửa đáp án)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="fg" style="margin-top:14px">
+                <label>Chọn các Đề thi được phép làm trong ca này</label>
+                <div id="t-cohort-exams" style="border:1.5px solid #e5e7eb; border-radius:8px; padding:10px; max-height:150px; overflow-y:auto; background:#f8fafc;">
+                    <div style="color:#64748b; font-size:13px;">Đang tải danh sách đề thi...</div>
+                </div>
+            </div>
+        
+            <button class="btn btn-p btn-full" id="btn-add-cohort" style="margin-top:10px;">✅ Tạo Ca thi</button>
+        </div>
+
+        <div class="card" style="padding:10px 16px">
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tên Ca thi</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="t-cohort-list">
+                        <tr><td colspan="3" style="text-align:center; padding: 10px;">Đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB THƯ VIỆN ẢNH -->
+    <div id="tc-img" class="tab-content">
+      <div class="sec-title">Quản lý Thư viện Hình ảnh</div>
+      <div class="info-note">Tải ảnh lên đây 1 lần để dùng chung cho nhiều câu hỏi (VD: 1 đoạn văn tiếng Anh dùng cho 5 câu).</div>
+      
+      <div class="card" style="margin-bottom: 20px; padding: 16px; border-top: 4px solid #8b5cf6;">
+        <div style="font-weight:700; margin-bottom:10px; color: #1e293b;">➕ Thêm ảnh mới vào Thư viện</div>
+        <div class="grid2">
+            <div class="fg" style="margin:0;">
+              <label>Tên gợi nhớ (VD: Bài đọc Part 3 - Test 1)</label>
+              <input type="text" id="gal-name" placeholder="Nhập tên ảnh...">
+            </div>
+            <div class="fg" style="margin:0;">
+              <label>Chọn file ảnh</label>
+              <input type="file" id="gal-file" accept="image/*">
+            </div>
+        </div>
+        <div id="gal-preview" style="margin-top:10px;"></div>
+        <input type="hidden" id="gal-base64">
+        <button class="btn btn-p" id="btn-upload-gal" style="margin-top:14px; background: #8b5cf6;">Tải lên Thư viện</button>
+      </div>
+
+      <div class="card" style="padding:16px;">
+        <div style="font-weight:700; margin-bottom:14px; color: #1e293b;">🗂️ Danh sách hình ảnh hiện có</div>
+        <div id="gallery-list" style="display:flex; flex-wrap:wrap; gap:15px;">
+            Đang tải thư viện...
+        </div>
+      </div>
+    </div>
+    <!-- KẾT THÚC TAB THƯ VIỆN -->
+
+  </div><!-- Đây là thẻ đóng của <div id="t-panel"> -->
+</div><!-- Đây là thẻ đóng của <div class="main"> -->
+
+<!-- MODAL CHẤM BÀI TỰ LUẬN -->
+<div id="grade-modal" class="screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div class="card" style="width:90%; max-width:600px; max-height:90vh; overflow-y:auto; position:relative;">
+        <h3 style="margin-top:0; color:#1e293b;">📝 Chấm bài Tự Luận</h3>
+        <div id="grade-student-info" style="font-size:13px; color:#64748b; margin-bottom:15px;"></div>
+        
+        <div id="grade-essay-content" style="background:#f8fafc; padding:15px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:15px; font-family:serif; line-height:1.6; white-space:pre-wrap;">
+        </div>
+
+        <div class="fg">
+            <label>Điểm cho phần Writing này (VD: Tối đa 2.0)</label>
+            <input type="number" id="grade-score-input" step="0.1" min="0" placeholder="Nhập điểm số...">
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-p" id="btn-save-grade" style="flex:1;">✅ Lưu điểm & Cập nhật Tổng</button>
+            <button class="btn" id="btn-close-grade" style="flex:1;">Hủy</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CHỌN ẢNH TỪ THƯ VIỆN -->
+<div id="modal-select-gallery" class="screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+    <div class="card" style="width:90%; max-width:850px; max-height:90vh; overflow-y:auto; position:relative;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 2px solid #e2e8f0; padding-bottom:10px;">
+            <h3 style="margin:0; color:#1e293b;">📂 Chọn ảnh từ Thư viện</h3>
+            <button class="btn btn-sm" id="btn-close-gallery-modal">Đóng</button>
+        </div>
+        <div class="info-note">Bấm vào bức ảnh bạn muốn chèn vào câu hỏi hiện tại.</div>
+        <div id="modal-gallery-list" style="display:flex; flex-wrap:wrap; gap:15px;">Đang tải...</div>
+    </div>
+</div>
+
+<script type="module" src="js/teacher.js"></script>
+</body>
+</html>
