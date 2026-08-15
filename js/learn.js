@@ -138,6 +138,223 @@ export function triggerConfetti() {
   animate();
 }
 
+// --- STUDENT AUTHENTICATION & WEEKLY STATS TRACKING ---
+const STUDENT_AUTH_KEY = 'quiz_student_auth_session_v1';
+let currentStudent = null;
+let currentWeeklyStudySeconds = 0;
+let currentWeeklyXP = 0;
+let studyTrackerInterval = null;
+
+export function getWeeklyPeriod() {
+  const now = new Date();
+  const day = now.getDay();
+  const diffToMonday = (day + 6) % 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+  return `week_${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+}
+
+export function formatStudyTime(seconds = 0) {
+  if (!seconds || seconds <= 0) return '0 phút';
+  const mins = Math.floor(seconds / 60);
+  if (mins < 60) return `${mins} phút`;
+  const hours = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  return `${hours} giờ ${remMins > 0 ? remMins + ' phút' : ''}`;
+}
+
+export function getAuthenticatedStudent() {
+  try {
+    const raw = sessionStorage.getItem(STUDENT_AUTH_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function toggleLearnPassVisible() {
+  const input = document.getElementById('learn-auth-pass');
+  if (!input) return;
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+export async function loginLearnStudent() {
+  const email = document.getElementById('learn-auth-email')?.value.trim().toLowerCase();
+  const pass = document.getElementById('learn-auth-pass')?.value.trim();
+  const errBox = document.getElementById('learn-login-err');
+  const btn = document.getElementById('btn-learn-login');
+
+  if (errBox) errBox.style.display = 'none';
+
+  if (!email || !pass) {
+    if (errBox) {
+      errBox.textContent = 'Vui lòng nhập đầy đủ Gmail và Mật khẩu!';
+      errBox.style.display = 'block';
+    }
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Đang xác thực...'; }
+
+  try {
+    const { data, error } = await db()
+      .from('students')
+      .select('*')
+      .eq('email', email)
+      .eq('password', pass)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      if (errBox) {
+        errBox.textContent = '❌ Gmail hoặc mật khẩu không chính xác!';
+        errBox.style.display = 'block';
+      }
+      return;
+    }
+
+    if (data.is_active === false) {
+      if (errBox) {
+        errBox.textContent = '⛔ Tài khoản học viên của bạn đã bị khóa. Vui lòng liên hệ quản trị viên!';
+        errBox.style.display = 'block';
+      }
+      return;
+    }
+
+    // Đăng nhập thành công
+    sessionStorage.setItem(STUDENT_AUTH_KEY, JSON.stringify(data));
+    await initAuthenticatedLearn();
+  } catch (err) {
+    console.error("Lỗi đăng nhập learn:", err);
+    if (errBox) {
+      errBox.textContent = '❌ Lỗi kết nối máy chủ: ' + (err.message || '');
+      errBox.style.display = 'block';
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Đăng Nhập Bắt Đầu Học →'; }
+  }
+}
+
+export function logoutLearnStudent() {
+  sessionStorage.removeItem(STUDENT_AUTH_KEY);
+  if (studyTrackerInterval) clearInterval(studyTrackerInterval);
+  studyTrackerInterval = null;
+  currentStudent = null;
+
+  const appContainer = document.getElementById('learn-app-container');
+  const loginScreen = document.getElementById('learn-login-screen');
+  if (appContainer) appContainer.style.display = 'none';
+  if (loginScreen) loginScreen.style.display = 'block';
+}
+
+async function syncWeeklyStatsToSupabase(deltaXP = 0, deltaSeconds = 0) {
+  if (!currentStudent || !db()) return;
+
+  const weekKey = getWeeklyPeriod();
+  const recordId = `${currentStudent.id}_${weekKey}`;
+
+  try {
+    // 1. Kiểm tra bản ghi tuần hiện tại
+    const { data: existing } = await db()
+      .from('student_learning_stats')
+      .select('*')
+      .eq('id', recordId)
+      .maybeSingle();
+
+    let newWeeklyXP = (existing?.weekly_xp || 0) + deltaXP;
+    let newWeeklyTime = (existing?.weekly_time_seconds || 0) + deltaSeconds;
+    let newTotalXP = (existing?.total_xp || 0) + deltaXP;
+    let newTotalTime = (existing?.total_time_seconds || 0) + deltaSeconds;
+
+    currentWeeklyXP = newWeeklyXP;
+    currentWeeklyStudySeconds = newWeeklyTime;
+
+    const payload = {
+      id: recordId,
+      student_id: currentStudent.id,
+      student_name: currentStudent.full_name,
+      class_name: currentStudent.class_name || '',
+      email: currentStudent.email,
+      week_key: weekKey,
+      weekly_xp: newWeeklyXP,
+      weekly_time_seconds: newWeeklyTime,
+      total_xp: newTotalXP,
+      total_time_seconds: newTotalTime,
+      last_active: Date.now()
+    };
+
+    await db().from('student_learning_stats').upsert([payload], { onConflict: 'id' });
+
+    const weeklyTimeEl = document.getElementById('learn-weekly-time');
+    if (weeklyTimeEl) weeklyTimeEl.textContent = formatStudyTime(currentWeeklyStudySeconds);
+
+  } catch (err) {
+    console.error("Lỗi syncWeeklyStatsToSupabase:", err);
+  }
+}
+
+async function initAuthenticatedLearn() {
+  currentStudent = getAuthenticatedStudent();
+  if (!currentStudent) {
+    logoutLearnStudent();
+    return;
+  }
+
+  const appContainer = document.getElementById('learn-app-container');
+  const loginScreen = document.getElementById('learn-login-screen');
+  if (loginScreen) loginScreen.style.display = 'none';
+  if (appContainer) appContainer.style.display = 'block';
+
+  const nameEl = document.getElementById('learn-user-name');
+  const classEl = document.getElementById('learn-user-class');
+  if (nameEl) nameEl.textContent = currentStudent.full_name || 'Học viên';
+  if (classEl) classEl.textContent = `Lớp: ${currentStudent.class_name || 'N/A'}`;
+
+  // Nạp thống kê tuần hiện tại từ Supabase
+  try {
+    const weekKey = getWeeklyPeriod();
+    const recordId = `${currentStudent.id}_${weekKey}`;
+    const { data: stats } = await db()
+      .from('student_learning_stats')
+      .select('*')
+      .eq('id', recordId)
+      .maybeSingle();
+
+    if (stats) {
+      currentWeeklyXP = stats.weekly_xp || 0;
+      currentWeeklyStudySeconds = stats.weekly_time_seconds || 0;
+      userProfile.xp = stats.total_xp || stats.weekly_xp || 0;
+      userProfile.level = Math.floor(userProfile.xp / 100) + 1;
+    }
+  } catch (e) {
+    console.error("Lỗi nạp stats học viên:", e);
+  }
+
+  const weeklyTimeEl = document.getElementById('learn-weekly-time');
+  if (weeklyTimeEl) weeklyTimeEl.textContent = formatStudyTime(currentWeeklyStudySeconds);
+
+  loadProfile();
+
+  // Khởi chạy bộ theo dõi thời gian học thực tế mỗi 30 giây
+  if (studyTrackerInterval) clearInterval(studyTrackerInterval);
+  studyTrackerInterval = setInterval(() => {
+    if (!document.hidden && currentStudent) {
+      currentWeeklyStudySeconds += 30;
+      const wtEl = document.getElementById('learn-weekly-time');
+      if (wtEl) wtEl.textContent = formatStudyTime(currentWeeklyStudySeconds);
+      syncWeeklyStatsToSupabase(0, 30);
+    }
+  }, 30000);
+
+  await loadUnitsData();
+}
+
+window.toggleLearnPassVisible = toggleLearnPassVisible;
+window.loginLearnStudent = loginLearnStudent;
+window.logoutLearnStudent = logoutLearnStudent;
+
 // --- PROFILE & GAMIFICATION ---
 function loadProfile() {
   try {
@@ -167,10 +384,14 @@ function saveProfile() {
 
 export function addXP(amount, reason = '') {
   userProfile.xp += amount;
+  currentWeeklyXP += amount;
   const oldLevel = userProfile.level;
   userProfile.level = Math.floor(userProfile.xp / 100) + 1;
   saveProfile();
   renderProfileStats();
+
+  // Đồng bộ lên Supabase cho Bảng Vinh Danh Tuần
+  syncWeeklyStatsToSupabase(amount, 0);
 
   if (userProfile.level > oldLevel) {
     playLevelUpSound();
@@ -1243,11 +1464,14 @@ function switchSkillTab(skill) {
 window.switchSkillTab = switchSkillTab;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  loadProfile();
-  
   document.querySelectorAll('.skill-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => switchSkillTab(btn.dataset.skill));
   });
 
-  await loadUnitsData();
+  const student = getAuthenticatedStudent();
+  if (student && student.id) {
+    await initAuthenticatedLearn();
+  } else {
+    logoutLearnStudent();
+  }
 });
