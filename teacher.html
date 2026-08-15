@@ -13,11 +13,26 @@ window.MathJax = {
 };
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-<script src="https://unpkg.com/@supabase/supabase-js@2.48.1/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1/dist/umd/supabase.min.js"></script>
 <script>
-window.supabaseClient = (window.supabase && typeof window.supabase.createClient === 'function')
-  ? window.supabase.createClient("https://xuioxmjufpfdblecjvuv.supabase.co", "sb_publishable_eKhgTzsFTVwL5mGwZTWWbQ_yogb4Hpc", { auth: { persistSession: true, autoRefreshToken: true } })
-  : null;
+(function() {
+  var SB_URL = "https://xuioxmjufpfdblecjvuv.supabase.co";
+  var SB_KEY = "sb_publishable_eKhgTzsFTVwL5mGwZTWWbQ_yogb4Hpc";
+  try {
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+      window.supabaseClient = window.supabase.createClient(SB_URL, SB_KEY, {
+        auth: { persistSession: true, autoRefreshToken: true }
+      });
+    } else {
+      console.error('[Supabase] UMD library not loaded! window.supabase =', window.supabase);
+      window.supabaseClient = null;
+    }
+  } catch(e) {
+    console.error('[Supabase] Failed to create client:', e);
+    window.supabaseClient = null;
+  }
+  console.log('[Supabase] window.supabaseClient =', window.supabaseClient ? 'OK' : 'NULL');
+})();
 </script>
 </head>
 <body>
