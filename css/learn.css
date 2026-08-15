@@ -1,0 +1,645 @@
+/* =========================================================================
+   INTERACTIVE ENGLISH LEARNING HUB - STYLESHEET (learn.css)
+   ========================================================================= */
+
+:root {
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --secondary-color: #10b981;
+  --accent-purple: #8b5cf6;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 50%, #fdf2f8 100%);
+  --card-bg: #ffffff;
+  --card-border: #e2e8f0;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --xp-gold: #fbbf24;
+}
+
+body.learn-body {
+  background: #f8fafc;
+  color: var(--text-main);
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+/* ===== GAMIFICATION HEADER BAR ===== */
+.gamify-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 10px 20px;
+  position: sticky;
+  top: 57px;
+  z-index: 90;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.gamify-wrap {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.user-stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.stat-pill.streak-pill {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #ffedd5;
+}
+
+.stat-pill.xp-pill {
+  background: #fefce8;
+  color: #a16207;
+  border-color: #fef08a;
+}
+
+.stat-pill.level-pill {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #dbeafe;
+}
+
+.xp-progress-box {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 120px;
+}
+
+.xp-progress-bar {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #eab308);
+  width: 35%;
+  border-radius: 4px;
+  transition: width 0.5s ease-out;
+}
+
+/* ===== SKILL NAVIGATION TABS ===== */
+.skill-nav-row {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0;
+  background: #ffffff;
+  padding: 8px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.skill-tab-btn {
+  flex: 1;
+  min-width: 130px;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.skill-tab-btn .tab-icon {
+  font-size: 22px;
+}
+
+.skill-tab-btn:hover {
+  background: #f8fafc;
+  color: var(--text-main);
+}
+
+.skill-tab-btn.active[data-skill="listening"] {
+  background: #eff6ff;
+  color: #1d4ed8;
+  box-shadow: 0 2px 6px rgba(37,99,235,0.15);
+}
+
+.skill-tab-btn.active[data-skill="reading"] {
+  background: #ecfdf5;
+  color: #047857;
+  box-shadow: 0 2px 6px rgba(16,185,129,0.15);
+}
+
+.skill-tab-btn.active[data-skill="speaking"] {
+  background: #fdf2f8;
+  color: #be185d;
+  box-shadow: 0 2px 6px rgba(244,63,94,0.15);
+}
+
+.skill-tab-btn.active[data-skill="writing"] {
+  background: #f5f3ff;
+  color: #6d28d9;
+  box-shadow: 0 2px 6px rgba(139,92,246,0.15);
+}
+
+.skill-tab-btn.active[data-skill="languageFocus"] {
+  background: #fffbeb;
+  color: #b45309;
+  box-shadow: 0 2px 6px rgba(245,158,11,0.15);
+}
+
+/* ===== MAIN CONTENT CONTAINER ===== */
+.learn-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+.skill-content-panel {
+  display: none;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.skill-content-panel.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== LESSON SELECTOR CARDS ===== */
+.lesson-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.lesson-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.lesson-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary-color);
+  box-shadow: 0 6px 14px rgba(37,99,235,0.08);
+}
+
+.lesson-card.active {
+  border-color: var(--primary-color);
+  background: #f8fbff;
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.2);
+}
+
+.lesson-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #e2e8f0;
+  color: #475569;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+
+/* ===== INTERACTIVE EXERCISE WORKSPACE ===== */
+.exercise-workspace {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+  margin-bottom: 24px;
+}
+
+/* ===== 1. LISTENING UI ===== */
+.listening-player-box {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.audio-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.play-audio-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background: #10b981;
+  color: #fff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+  transition: all 0.2s ease;
+}
+
+.play-audio-btn:hover {
+  transform: scale(1.06);
+  background: #059669;
+}
+
+.speed-selector-group {
+  display: flex;
+  gap: 6px;
+  background: rgba(255,255,255,0.1);
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.speed-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.speed-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.dictation-input-box {
+  margin-top: 14px;
+}
+
+.dictation-textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1.5px solid #cbd5e1;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+}
+
+.dictation-textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+
+.diff-result-view {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.diff-word-correct { color: #16a34a; font-weight: 700; }
+.diff-word-wrong { color: #dc2626; text-decoration: line-through; margin-right: 4px; font-weight: 600; }
+.diff-word-missing { color: #ea580c; text-decoration: underline; font-weight: 600; }
+
+/* ===== 2. READING UI (SPLIT SCREEN & VOCABULARY LOOKUP) ===== */
+.reading-split-view {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.reading-passage-box {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  max-height: 520px;
+  overflow-y: auto;
+  font-size: 15px;
+  line-height: 1.8;
+  color: #334155;
+}
+
+.vocab-tag {
+  background: #e0f2fe;
+  color: #0284c7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px dotted #0284c7;
+  transition: all 0.15s;
+}
+
+.vocab-tag:hover {
+  background: #bae6fd;
+  color: #0369a1;
+}
+
+.vocab-modal-card {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #ffffff;
+  border: 1.5px solid #bae6fd;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  max-width: 320px;
+  z-index: 1000;
+  animation: slideUp 0.25s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== 3. SPEAKING UI (MICROPHONE & PHONETICS SCORE) ===== */
+.speaking-card {
+  text-align: center;
+  padding: 24px;
+}
+
+.mic-recorder-wrap {
+  margin: 20px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.mic-btn {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+  color: #ffffff;
+  font-size: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(244,63,94,0.35);
+  transition: all 0.2s ease;
+}
+
+.mic-btn.recording {
+  animation: pulseMic 1.2s infinite;
+  background: #dc2626;
+}
+
+@keyframes pulseMic {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220,38,38,0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 18px rgba(220,38,38,0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220,38,38,0); }
+}
+
+.phonetic-score-badge {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 10px 0;
+}
+
+.spoken-transcript-result {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 14px auto;
+  max-width: 600px;
+}
+
+/* ===== 4. WRITING UI (SCRAMBLE & ERROR CORRECTION) ===== */
+.scramble-word-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1.5px dashed #cbd5e1;
+  min-height: 60px;
+  margin: 12px 0;
+}
+
+.word-chip-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #8b5cf6;
+  background: #ffffff;
+  color: #6d28d9;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.word-chip-btn:hover {
+  background: #f5f3ff;
+  transform: translateY(-1px);
+}
+
+.word-chip-btn.placed {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.assembled-sentence-box {
+  min-height: 52px;
+  background: #f5f3ff;
+  border: 2px solid #8b5cf6;
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+/* ===== 5. LANGUAGE FOCUS UI (3D FLASHCARDS & MATCHING) ===== */
+.flashcard-3d-scene {
+  perspective: 1000px;
+  max-width: 440px;
+  height: 280px;
+  margin: 20px auto;
+  cursor: pointer;
+}
+
+.flashcard-3d-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.flashcard-3d-scene.flipped .flashcard-3d-inner {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  border: 2px solid #fde68a;
+  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-color: #f59e0b;
+}
+
+.flashcard-word {
+  font-size: 32px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.flashcard-ipa {
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  color: #d97706;
+  margin-bottom: 12px;
+}
+
+.flashcard-meaning {
+  font-size: 18px;
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 10px;
+}
+
+.flashcard-example {
+  font-size: 14px;
+  color: #475569;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* Matching Puzzle Grid */
+.match-puzzle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.match-puzzle-chip {
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.match-puzzle-chip:hover {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.match-puzzle-chip.selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.3);
+}
+
+.match-puzzle-chip.matched {
+  border-color: #10b981;
+  background: #ecfdf5;
+  color: #047857;
+  cursor: default;
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+
+/* ===== CONFETTI CANVAS ===== */
+#confetti-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ===== RESPONSIVE BREAKPOINTS ===== */
+@media (max-width: 768px) {
+  .reading-split-view {
+    grid-template-columns: 1fr;
+  }
+  .gamify-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .match-puzzle-grid {
+    grid-template-columns: 1fr;
+  }
+}

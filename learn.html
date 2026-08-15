@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Học Tập & Luyện Kỹ Năng Tiếng Anh - Quiz</title>
+<link rel="stylesheet" href="css/style.css"/>
+<link rel="stylesheet" href="css/learn.css"/>
+</head>
+
+<body class="learn-body">
+<!-- HEADER ĐIỀU HƯỚNG CHUNG -->
+<div class="header">
+  <div class="logo">Quiz<span> English Hub </span></div>
+  <div class="nav">
+    <a class="nav-btn" href="index.html">🏠 Trang chủ</a>
+    <a class="nav-btn active" href="learn.html">📖 Luyện Kỹ Năng</a>
+    <a class="nav-btn" href="student.html">🎓 Cổng Thi</a>
+    <a class="nav-btn" href="teacher.html">👩‍🏫 Quản trị</a>
+  </div>
+</div>
+
+<!-- THANH GAMIFICATION & TIẾN ĐỘ HỌC TẬP -->
+<div class="gamify-header">
+  <div class="gamify-wrap">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:24px">🌟</div>
+      <div>
+        <div style="font-size:14px;font-weight:800;color:#1e293b">Hành Trình Chinh Phục Tiếng Anh</div>
+        <div style="font-size:11px;color:#64748b">Luyện tập mỗi ngày để nâng cao phản xạ 5 kỹ năng</div>
+      </div>
+    </div>
+
+    <div class="user-stats-bar">
+      <!-- LEVEL & XP -->
+      <div class="stat-pill level-pill">
+        <span>🏆</span>
+        <span id="user-level-val">Cấp 1</span>
+      </div>
+
+      <div class="xp-progress-box">
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#a16207">
+          <span>Kinh nghiệm</span>
+          <span><span id="user-xp-val">0</span> XP</span>
+        </div>
+        <div class="xp-progress-bar">
+          <div class="xp-fill" id="user-xp-fill"></div>
+        </div>
+      </div>
+
+      <!-- STREAK -->
+      <div class="stat-pill streak-pill">
+        <span>🔥</span>
+        <span id="user-streak-val">1 ngày</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NỘI DUNG CHÍNH -->
+<div class="learn-container">
+  <!-- THANH CHỌN 5 KỸ NĂNG -->
+  <div class="skill-nav-row">
+    <button class="skill-tab-btn active" data-skill="listening">
+      <span class="tab-icon">🎧</span>
+      <span>1. LISTENING</span>
+    </button>
+    <button class="skill-tab-btn" data-skill="reading">
+      <span class="tab-icon">📖</span>
+      <span>2. READING</span>
+    </button>
+    <button class="skill-tab-btn" data-skill="speaking">
+      <span class="tab-icon">🗣️</span>
+      <span>3. SPEAKING</span>
+    </button>
+    <button class="skill-tab-btn" data-skill="writing">
+      <span class="tab-icon">✍️</span>
+      <span>4. WRITING</span>
+    </button>
+    <button class="skill-tab-btn" data-skill="languageFocus">
+      <span class="tab-icon">🔍</span>
+      <span>5. LANGUAGE FOCUS</span>
+    </button>
+  </div>
+
+  <!-- 1. PHÂN HỆ LISTENING -->
+  <div class="skill-content-panel active" id="skill-panel-listening">
+    <div style="margin-bottom:12px;font-weight:700;font-size:15px;color:#1e293b">🎧 Chọn Bài Luyện Nghe:</div>
+    <div class="lesson-selector-grid" id="lis-lesson-list"></div>
+    <div class="exercise-workspace" id="lis-workspace"></div>
+  </div>
+
+  <!-- 2. PHÂN HỆ READING -->
+  <div class="skill-content-panel" id="skill-panel-reading">
+    <div style="margin-bottom:12px;font-weight:700;font-size:15px;color:#1e293b">📖 Chọn Bài Đọc Hiểu:</div>
+    <div class="lesson-selector-grid" id="read-lesson-list"></div>
+    <div class="exercise-workspace" id="read-workspace"></div>
+  </div>
+
+  <!-- 3. PHÂN HỆ SPEAKING -->
+  <div class="skill-content-panel" id="skill-panel-speaking">
+    <div style="margin-bottom:12px;font-weight:700;font-size:15px;color:#1e293b">🗣️ Chọn Chủ Đề Luyện Nói & Phát Âm:</div>
+    <div class="lesson-selector-grid" id="spk-lesson-list"></div>
+    <div class="exercise-workspace" id="spk-workspace"></div>
+  </div>
+
+  <!-- 4. PHÂN HỆ WRITING -->
+  <div class="skill-content-panel" id="skill-panel-writing">
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <button class="btn btn-p" onclick="window.selectWritingTab('scramble')">🧩 Xếp Từ Thành Câu</button>
+      <button class="btn" onclick="window.selectWritingTab('error_fix')">🔍 Tìm & Sửa Lỗi Sai</button>
+    </div>
+    <div class="exercise-workspace" id="wrt-workspace"></div>
+  </div>
+
+  <!-- 5. PHÂN HỆ LANGUAGE FOCUS -->
+  <div class="skill-content-panel" id="skill-panel-languageFocus">
+    <div class="exercise-workspace" id="lang-workspace"></div>
+  </div>
+</div>
+
+<!-- CANVAS HIỆU ỨNG PHÁO HOA CONFETTI -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- SCRIPT CONTROLLER -->
+<script type="module" src="js/learn.js?v=1.0"></script>
+</body>
+</html>
