@@ -604,64 +604,71 @@ window.cancelEditCohort = () => {
 };
 
 // 2. Bắt sự kiện Thêm hoặc Cập nhật ca thi
+window.addCohort = async () => {
+    const name = document.getElementById("t-cohort-name")?.value?.trim();
+    const mode = document.getElementById("t-cohort-mode") ? document.getElementById("t-cohort-mode").value : 'practice';
+    let code = document.getElementById("t-cohort-code")?.value?.trim();
+    const startTime = document.getElementById("t-cohort-start")?.value;
+    const endTime = document.getElementById("t-cohort-end")?.value;
+    
+    const checkedExams = Array.from(document.querySelectorAll('.cohort-exam-cb:checked')).map(cb => parseInt(cb.value));
+
+    if (!name) { alert("Vui lòng nhập tên ca thi!"); return; }
+    if (!startTime || !endTime) { alert("Vui lòng chọn thời gian bắt đầu và kết thúc!"); return; }
+    if (new Date(startTime) >= new Date(endTime)) { alert("Thời gian kết thúc phải lớn hơn thời gian bắt đầu!"); return; }
+    if (checkedExams.length === 0) { alert("Vui lòng chọn ít nhất 1 đề thi cho ca này!"); return; }
+
+    if (!code) code = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    const btnAddCohort = document.getElementById("btn-add-cohort");
+    if(btnAddCohort) {
+      btnAddCohort.disabled = true;
+      btnAddCohort.textContent = "Đang lưu...";
+    }
+    
+    try {
+        if (editingCohortId) {
+            const { error } = await supabase.from('cohorts').update({
+                name: name,
+                code: code,
+                start_time: startTime,
+                end_time: endTime,
+                allowed_exams: checkedExams,
+                mode: mode
+            }).eq('id', editingCohortId);
+            if (error) throw error;
+            alert("✅ Đã cập nhật ca thi thành công!");
+        } else {
+            const { error } = await supabase.from('cohorts').insert([{
+                name: name,
+                code: code,
+                start_time: startTime,
+                end_time: endTime,
+                allowed_exams: checkedExams,
+                mode: mode,
+                status: "active",
+                created_at: Date.now()
+            }]);
+            if (error) throw error;
+            alert(`✅ Tạo ca thi thành công!\nMã truy cập cho học viên là: ${code}`);
+        }
+        
+        window.cancelEditCohort();
+        loadCohorts(); 
+    } catch (error) {
+        console.error("Lỗi khi lưu ca thi:", error);
+        alert("❌ Đã có lỗi xảy ra: " + (error.message || ''));
+    } finally {
+        if(btnAddCohort) {
+          btnAddCohort.disabled = false;
+          btnAddCohort.textContent = editingCohortId ? "💾 Cập nhật Ca thi" : "✅ Tạo Ca thi";
+        }
+    }
+};
+
 const btnAddCohort = document.getElementById("btn-add-cohort");
 if (btnAddCohort) {
-    btnAddCohort.addEventListener("click", async () => {
-        const name = document.getElementById("t-cohort-name").value.trim();
-        const mode = document.getElementById("t-cohort-mode") ? document.getElementById("t-cohort-mode").value : 'practice';
-        let code = document.getElementById("t-cohort-code").value.trim();
-        const startTime = document.getElementById("t-cohort-start").value;
-        const endTime = document.getElementById("t-cohort-end").value;
-        
-        const checkedExams = Array.from(document.querySelectorAll('.cohort-exam-cb:checked')).map(cb => parseInt(cb.value));
-
-        if (!name) { alert("Vui lòng nhập tên ca thi!"); return; }
-        if (!startTime || !endTime) { alert("Vui lòng chọn thời gian bắt đầu và kết thúc!"); return; }
-        if (new Date(startTime) >= new Date(endTime)) { alert("Thời gian kết thúc phải lớn hơn thời gian bắt đầu!"); return; }
-        if (checkedExams.length === 0) { alert("Vui lòng chọn ít nhất 1 đề thi cho ca này!"); return; }
-
-        if (!code) code = Math.random().toString(36).substring(2, 8).toUpperCase();
-
-        btnAddCohort.disabled = true;
-        btnAddCohort.textContent = "Đang lưu...";
-        
-        try {
-            if (editingCohortId) {
-                const { error } = await supabase.from('cohorts').update({
-                    name: name,
-                    code: code,
-                    start_time: startTime,
-                    end_time: endTime,
-                    allowed_exams: checkedExams,
-                    mode: mode
-                }).eq('id', editingCohortId);
-                if (error) throw error;
-                alert("Đã cập nhật ca thi thành công!");
-            } else {
-                const { error } = await supabase.from('cohorts').insert([{
-                    name: name,
-                    code: code,
-                    start_time: startTime,
-                    end_time: endTime,
-                    allowed_exams: checkedExams,
-                    mode: mode,
-                    status: "active",
-                    created_at: Date.now()
-                }]);
-                if (error) throw error;
-                alert(`Tạo ca thi thành công!\nMã truy cập cho học viên là: ${code}`);
-            }
-            
-            window.cancelEditCohort();
-            loadCohorts(); 
-        } catch (error) {
-            console.error("Lỗi khi lưu ca thi:", error);
-            alert("Đã có lỗi xảy ra: " + (error.message || ''));
-        } finally {
-            btnAddCohort.disabled = false;
-            btnAddCohort.textContent = editingCohortId ? "💾 Cập nhật Ca thi" : "✅ Tạo Ca thi";
-        }
-    });
+    btnAddCohort.addEventListener("click", window.addCohort);
 }
 
 // 3. Hàm đổi mã bảo mật

@@ -358,28 +358,56 @@ export async function saveQ(){
     fields.pairs = pairs;
   }
 
-  if(editQId){
-    const q = state.questions.find(x => x.id === editQId);
-    delete q.opts; delete q.ans; delete q.blanks; delete q.bank; delete q.pairs;
-    Object.assign(q, { cat, subcat, text, image, audio, explain, ...fields }); 
-    const { error } = await supabase.from('questions').update({ cat, subcat, text, image, audio, explain, ...fields }).eq('id', editQId);
-    if(error) console.error("Lỗi cập nhật câu hỏi:", error);
-  }else{
-    const newQ = { id: state.nextQId++, cat, subcat, text, image, audio, explain, ...fields }; 
-    state.questions.push(newQ);
-    const { error } = await supabase.from('questions').insert([newQ]);
-    if(error) console.error("Lỗi thêm câu hỏi mới:", error);
+  const saveBtn = $('btn-save-q');
+  if(saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Đang lưu...'; }
+
+  try {
+    if(editQId){
+      const q = state.questions.find(x => x.id === editQId);
+      if(q) {
+        delete q.opts; delete q.ans; delete q.blanks; delete q.bank; delete q.pairs;
+        Object.assign(q, { cat, subcat, text, image, audio, explain, ...fields }); 
+      }
+      const { error } = await supabase.from('questions').update({ cat, subcat, text, image, audio, explain, ...fields }).eq('id', editQId);
+      if(error) throw error;
+      alert("✅ Đã cập nhật câu hỏi thành công!");
+    }else{
+      const payload = { cat, subcat, text, image, audio, explain, ...fields }; 
+      const { data, error } = await supabase.from('questions').insert([payload]).select();
+      if(error) throw error;
+      const created = data?.[0] || { id: state.nextQId++, ...payload };
+      state.questions.unshift({
+        ...created,
+        id: Number(created.id),
+        opts: created.opts || [],
+        blanks: created.blanks || [],
+        bank: created.bank || [],
+        pairs: created.pairs || []
+      });
+      alert("✅ Đã tạo câu hỏi mới thành công!");
+    }
+    closeQForm();
+    renderQuestions();
+  } catch(error) {
+    console.error("Lỗi lưu câu hỏi:", error);
+    alert("❌ Lỗi khi lưu câu hỏi: " + (error.message || ''));
+  } finally {
+    if(saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '✅ Lưu câu hỏi'; }
   }
-  closeQForm();
-  renderQuestions();
 }
 
 export async function deleteQ(id){
-  if(!confirm('Xóa câu hỏi này?')) return;
-  state.questions = state.questions.filter(q => q.id !== id);
-  const { error } = await supabase.from('questions').delete().eq('id', id);
-  if(error) console.error("Lỗi xóa câu hỏi:", error);
-  renderQuestions();
+  if(!confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')) return;
+  try {
+    const { error } = await supabase.from('questions').delete().eq('id', id);
+    if(error) throw error;
+    state.questions = state.questions.filter(q => Number(q.id) !== Number(id));
+    alert('✅ Đã xóa câu hỏi!');
+    renderQuestions();
+  } catch(e) {
+    console.error("Lỗi xóa câu hỏi:", e);
+    alert("❌ Lỗi khi xóa câu hỏi: " + (e.message || ''));
+  }
 }
 
 function filteredQuestions(){

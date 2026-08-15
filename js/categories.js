@@ -9,10 +9,7 @@ async function syncCategoriesToSupabase(){
       name,
       subcategories: state.SUBCATS[name] || []
     }));
-    await supabase.from('categories').delete().neq('name', '___NONE___');
-    if (inserts.length > 0) {
-      await supabase.from('categories').insert(inserts);
-    }
+    await supabase.from('categories').upsert(inserts, { onConflict: 'name' });
   }catch(e){
     console.error("Lỗi đồng bộ danh mục Supabase:", e);
   }
@@ -45,10 +42,16 @@ export async function addParentCategory(){
   const exists = Object.keys(state.SUBCATS).some(c => c.toLowerCase() === name.toLowerCase());
   if(exists){ alert('Chủ đề cha này đã tồn tại!'); return; }
   state.SUBCATS[name] = [];
-  await syncCategoriesToSupabase();
-  $('new-parent-cat').value = '';
-  refreshCategoryUI();
-  alert('✅ Đã thêm chủ đề cha!');
+  try {
+    const { error } = await supabase.from('categories').upsert([{ name, subcategories: [] }], { onConflict: 'name' });
+    if(error) throw error;
+    $('new-parent-cat').value = '';
+    refreshCategoryUI();
+    alert('✅ Đã thêm chủ đề cha thành công!');
+  } catch(e) {
+    console.error("Lỗi thêm chủ đề cha:", e);
+    alert("❌ Lỗi khi thêm chủ đề cha: " + (e.message || ''));
+  }
 }
 
 export async function deleteParentCategory(parent){
@@ -59,25 +62,28 @@ export async function deleteParentCategory(parent){
   delete updatedSubcats[parent];
   state.SUBCATS = updatedSubcats;
 
-  for(const q of (state.questions || [])){
-    if(q.cat === parent || subs.includes(q.subcat)){ 
-        q.cat=''; q.subcat=''; 
-        await supabase.from('questions').update({ cat: '', subcat: '' }).eq('id', q.id);
+  try {
+    await supabase.from('categories').delete().eq('name', parent);
+    for(const q of (state.questions || [])){
+      if(q.cat === parent || subs.includes(q.subcat)){ 
+          q.cat=''; q.subcat=''; 
+          await supabase.from('questions').update({ cat: '', subcat: '' }).eq('id', q.id);
+      }
     }
-  }
-  for(const e of (state.exams || [])){
-    if(e.cat === parent || subs.includes(e.subcat)){ 
-        e.cat=''; e.subcat=''; 
-        await supabase.from('exams').update({ cat: '', subcat: '' }).eq('id', e.id);
+    for(const e of (state.exams || [])){
+      if(e.cat === parent || subs.includes(e.subcat)){ 
+          e.cat=''; e.subcat=''; 
+          await supabase.from('exams').update({ cat: '', subcat: '' }).eq('id', e.id);
+      }
     }
+    refreshCategoryUI();
+    if(typeof renderQuestions === 'function') renderQuestions();
+    if(typeof renderExams === 'function') renderExams();
+    alert('✅ Đã xóa chủ đề cha!');
+  } catch(e) {
+    console.error("Lỗi xóa chủ đề cha:", e);
+    alert("❌ Lỗi khi xóa chủ đề cha: " + (e.message || ''));
   }
-  
-  await syncCategoriesToSupabase();
-  
-  refreshCategoryUI();
-  if(typeof renderQuestions === 'function') renderQuestions();
-  if(typeof renderExams === 'function') renderExams();
-  alert('✅ Đã xóa chủ đề cha!');
 }
 
 export async function addSubCategory(){
@@ -89,10 +95,16 @@ export async function addSubCategory(){
   const exists = state.SUBCATS[parent].some(s => s.trim().toLowerCase() === subName.trim().toLowerCase());
   if(exists){ alert('Phần con này đã tồn tại!'); return; }
   state.SUBCATS[parent].push(subName);
-  await syncCategoriesToSupabase();
-  $('new-sub-cat').value = '';
-  refreshCategoryUI();
-  alert('✅ Đã thêm chủ đề con!');
+  try {
+    const { error } = await supabase.from('categories').update({ subcategories: state.SUBCATS[parent] }).eq('name', parent);
+    if(error) throw error;
+    $('new-sub-cat').value = '';
+    refreshCategoryUI();
+    alert('✅ Đã thêm phần con thành công!');
+  } catch(e) {
+    console.error("Lỗi thêm phần con:", e);
+    alert("❌ Lỗi khi thêm phần con: " + (e.message || ''));
+  }
 }
 
 export async function deleteSubCategory(parent, sub){
@@ -102,25 +114,28 @@ export async function deleteSubCategory(parent, sub){
   updatedSubcats[parent] = (updatedSubcats[parent] || []).filter(s => s !== sub);
   state.SUBCATS = updatedSubcats;
 
-  for(const q of (state.questions || [])){
-    if(q.subcat === sub){ 
-        q.subcat = ''; 
-        await supabase.from('questions').update({ subcat: '' }).eq('id', q.id);
+  try {
+    await supabase.from('categories').update({ subcategories: state.SUBCATS[parent] }).eq('name', parent);
+    for(const q of (state.questions || [])){
+      if(q.subcat === sub){ 
+          q.subcat = ''; 
+          await supabase.from('questions').update({ subcat: '' }).eq('id', q.id);
+      }
     }
-  }
-  for(const e of (state.exams || [])){
-    if(e.subcat === sub){ 
-        e.subcat = ''; 
-        await supabase.from('exams').update({ subcat: '' }).eq('id', e.id);
+    for(const e of (state.exams || [])){
+      if(e.subcat === sub){ 
+          e.subcat = ''; 
+          await supabase.from('exams').update({ subcat: '' }).eq('id', e.id);
+      }
     }
+    refreshCategoryUI();
+    if(typeof renderQuestions === 'function') renderQuestions();
+    if(typeof renderExams === 'function') renderExams();
+    alert('✅ Đã xóa phần con!');
+  } catch(e) {
+    console.error("Lỗi xóa phần con:", e);
+    alert("❌ Lỗi khi xóa phần con: " + (e.message || ''));
   }
-  
-  await syncCategoriesToSupabase();
-  
-  refreshCategoryUI();
-  if(typeof renderQuestions === 'function') renderQuestions();
-  if(typeof renderExams === 'function') renderExams();
-  alert('✅ Đã xóa chủ đề con!');
 }
 
 export async function editSubCategory(parent, oldSub){
@@ -136,28 +151,37 @@ export async function editSubCategory(parent, oldSub){
   const idx = state.SUBCATS[parent].indexOf(oldSub);
   if(idx === -1) return;
   state.SUBCATS[parent][idx] = newSub;
-  await syncCategoriesToSupabase();
-
-  let qCount = 0, eCount = 0;
-  for(const q of state.questions){
-    if(q.subcat === oldSub){ q.subcat = newSub; await supabase.from('questions').update({ subcat: newSub }).eq('id', q.id); qCount++; }
+  try {
+    await supabase.from('categories').update({ subcategories: state.SUBCATS[parent] }).eq('name', parent);
+    let qCount = 0, eCount = 0;
+    for(const q of state.questions){
+      if(q.subcat === oldSub){ q.subcat = newSub; await supabase.from('questions').update({ subcat: newSub }).eq('id', q.id); qCount++; }
+    }
+    for(const e of state.exams){
+      if(e.subcat === oldSub){ e.subcat = newSub; await supabase.from('exams').update({ subcat: newSub }).eq('id', e.id); eCount++; }
+    }
+    refreshCategoryUI();
+    renderQuestions();
+    renderExams();
+    populateExamSelect();
+    alert(`✅ Đổi tên thành công!\nĐồng bộ: ${qCount} câu hỏi, ${eCount} đề thi`);
+  } catch(e) {
+    console.error("Lỗi đổi tên phần con:", e);
+    alert("❌ Lỗi khi đổi tên: " + (e.message || ''));
   }
-  for(const e of state.exams){
-    if(e.subcat === oldSub){ e.subcat = newSub; await supabase.from('exams').update({ subcat: newSub }).eq('id', e.id); eCount++; }
-  }
-  refreshCategoryUI();
-  renderQuestions();
-  renderExams();
-  populateExamSelect();
-  alert(`✅ Đổi tên thành công!\nĐồng bộ: ${qCount} câu hỏi, ${eCount} đề thi`);
 }
 
 export async function restoreDefaultCategories(){
   if(!confirm('Khôi phục danh mục gốc? Các chủ đề bạn tạo thêm có thể bị xóa.')) return;
   state.SUBCATS = clone(DEFAULT_SUBCATS);
-  await syncCategoriesToSupabase();
-  refreshCategoryUI();
-  alert('✅ Đã khôi phục danh mục gốc!');
+  try {
+    await syncCategoriesToSupabase();
+    refreshCategoryUI();
+    alert('✅ Đã khôi phục danh mục gốc!');
+  } catch(e) {
+    console.error("Lỗi khôi phục danh mục:", e);
+    alert("❌ Lỗi khi khôi phục: " + (e.message || ''));
+  }
 }
 
 export function renderCatManagementList(){

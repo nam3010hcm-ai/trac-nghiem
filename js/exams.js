@@ -76,37 +76,60 @@ export async function saveExam(){
   const desc = $('ef-desc').value.trim();
   const timeLimit = parseInt($('ef-time').value) || 0;
   
-  const editId = $('btn-save-exam').dataset.editId ? parseInt($('btn-save-exam').dataset.editId) : null;
-  
-  if (editId) {
-    const exam = state.exams.find(e => e.id === editId);
-    if(exam){
-      Object.assign(exam, { name, desc, count, cat, subcat, timeLimit });
+  const saveBtn = $('btn-save-exam');
+  if(saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Đang lưu...'; }
+
+  try {
+    if (editId) {
+      const exam = state.exams.find(e => e.id === editId);
+      if(exam){
+        Object.assign(exam, { name, desc, count, cat, subcat, timeLimit });
+      }
       const { error } = await supabase.from('exams').update({
         name, description: desc, count, cat, subcat, time_limit: timeLimit
       }).eq('id', editId);
-      if(error) console.error("Lỗi cập nhật đề thi:", error);
+      if(error) throw error;
+      alert("✅ Cập nhật đề thi thành công!");
+    } else {
+      const payload = {
+        name,
+        description: desc,
+        count,
+        cat,
+        subcat,
+        time_limit: timeLimit,
+        is_hidden: false,
+        q_ids: []
+      };
+      const { data, error } = await supabase.from('exams').insert([payload]).select();
+      if(error) throw error;
+      const created = data?.[0] || { id: state.nextEId++, ...payload };
+      state.exams.unshift({
+        id: Number(created.id),
+        name: created.name,
+        desc: created.description || created.desc || '',
+        count: created.count || 10,
+        cat: created.cat || '',
+        subcat: created.subcat || '',
+        timeLimit: created.time_limit ?? 0,
+        isHidden: created.is_hidden ?? false,
+        qIds: created.q_ids || []
+      });
+      alert("✅ Tạo đề thi mới thành công!");
     }
-  } else {
-    const newE = { id: state.nextEId++, name, desc, count, cat, subcat, timeLimit, isHidden: false, qIds: [] };
-    state.exams.push(newE);
-    const { error } = await supabase.from('exams').insert([{
-      id: newE.id,
-      name,
-      description: desc,
-      count,
-      cat,
-      subcat,
-      time_limit: timeLimit,
-      is_hidden: false,
-      q_ids: []
-    }]);
-    if(error) console.error("Lỗi tạo đề thi mới:", error);
-  }
 
-  closeEForm();
-  renderExams();
-  populateExamSelect();
+    closeEForm();
+    renderExams();
+    populateExamSelect();
+    if (typeof window.populateCohortExams === 'function') {
+      window.populateCohortExams();
+    }
+  } catch(error) {
+    console.error("Lỗi khi lưu đề thi:", error);
+    alert("❌ Lỗi khi lưu đề thi: " + (error.message || ''));
+  } finally {
+    if(saveBtn) { saveBtn.disabled = false; saveBtn.textContent = editId ? '✅ Cập nhật' : '✅ Tạo đề thi'; }
+  }
 }
 
 export async function deleteExam(id) {
