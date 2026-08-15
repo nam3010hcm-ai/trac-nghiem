@@ -442,43 +442,64 @@ async function finishExam(){
   showScreen('sc-result'); typesetMath($('sc-result'));
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-  await initData(false);
-  loadActiveCohorts(); 
+async function initStudentApp() {
+  if (window._studentAppInitialized) return;
+  window._studentAppInitialized = true;
+
+  try {
+    await initData(false);
+    loadActiveCohorts(); 
+  } catch(e) {
+    console.error("Lỗi initData student:", e);
+  }
+
   const raw = localStorage.getItem(STORE_KEY);
   if(raw) {
     try{
       const saved = JSON.parse(raw);
-      if(saved?.qs?.length && confirm('Phát hiện bài làm chưa hoàn thành. Đồng chí có muốn tiếp tục không?')){
+      if(saved?.qs?.length && confirm('Phát hiện bài làm chưa hoàn thành. Bạn có muốn tiếp tục không?')){
         qState = saved; startTimer(); showStudentBadge(); showScreen('sc-quiz'); renderPart();
       }
     }catch{ clearPersist(); }
   }
 
-  $('s-cohort').addEventListener('change', () => {
-      const cohortName = $('s-cohort').value;
-      const codeInput = $('s-cohort-code').value.trim().toUpperCase();
-      const examSelect = $('s-exam');
-      examSelect.innerHTML = '<option value="" disabled selected>-- Nhập đúng mã ca thi để tải đề --</option>';
-      if ($('s-exam-desc')) $('s-exam-desc').textContent = '';
-      if (!cohortName) return;
-      const cohort = activeCohortsData[cohortName];
-      if (cohort && codeInput === cohort.code) {
-          const allowed = cohort.allowedExams || [];
-          const availableExams = state.exams.filter(e => allowed.includes(e.id) && !e.isHidden);
-          examSelect.innerHTML = availableExams.length === 0 ? '<option value="" disabled selected>-- Chưa có đề thi --</option>' : '<option value="" disabled selected>-- Chọn đề thi --</option>' + availableExams.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
-      }
-  });
+  if ($('s-cohort')) {
+    $('s-cohort').addEventListener('change', () => {
+        const cohortName = $('s-cohort').value;
+        const codeInput = $('s-cohort-code')?.value.trim().toUpperCase() || '';
+        const examSelect = $('s-exam');
+        if (!examSelect) return;
+        examSelect.innerHTML = '<option value="" disabled selected>-- Nhập đúng mã ca thi để tải đề --</option>';
+        if ($('s-exam-desc')) $('s-exam-desc').textContent = '';
+        if (!cohortName) return;
+        const cohort = activeCohortsData[cohortName];
+        if (cohort && codeInput === cohort.code) {
+            const allowed = cohort.allowedExams || [];
+            const availableExams = state.exams.filter(e => allowed.includes(e.id) && !e.isHidden);
+            examSelect.innerHTML = availableExams.length === 0 ? '<option value="" disabled selected>-- Chưa có đề thi --</option>' : '<option value="" disabled selected>-- Chọn đề thi --</option>' + availableExams.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+        }
+    });
+  }
   
-  $('s-cohort-code').addEventListener('input', () => $('s-cohort').dispatchEvent(new Event('change')));
-  $('s-exam').addEventListener('change', updateExamDesc);
-  $('btn-start').addEventListener('click', startExam);
-  $('btn-next').addEventListener('click', () => { qState.partIdx++; persist(); renderPart(); window.scrollTo(0,0); });
-  $('btn-prev').addEventListener('click', () => { qState.partIdx--; persist(); renderPart(); window.scrollTo(0,0); });
-  $('btn-finish').addEventListener('click', finishExam);
-  $('btn-home').addEventListener('click', () => { clearInterval(qState.timer); clearPersist(); showScreen('sc-home'); });
-  $('btn-retake').addEventListener('click', () => {
-      qState.partIdx = 0; qState.answers = []; qState.startTime = Date.now();
-      persist(); startTimer(); showScreen('sc-quiz'); renderPart();
-  });
-});
+  if ($('s-cohort-code')) {
+    $('s-cohort-code').addEventListener('input', () => $('s-cohort')?.dispatchEvent(new Event('change')));
+  }
+  if ($('s-exam')) $('s-exam').addEventListener('change', updateExamDesc);
+  if ($('btn-start')) $('btn-start').addEventListener('click', startExam);
+  if ($('btn-next')) $('btn-next').addEventListener('click', () => { qState.partIdx++; persist(); renderPart(); window.scrollTo(0,0); });
+  if ($('btn-prev')) $('btn-prev').addEventListener('click', () => { qState.partIdx--; persist(); renderPart(); window.scrollTo(0,0); });
+  if ($('btn-finish')) $('btn-finish').addEventListener('click', finishExam);
+  if ($('btn-home')) $('btn-home').addEventListener('click', () => { clearInterval(qState.timer); clearPersist(); showScreen('sc-home'); });
+  if ($('btn-retake')) {
+    $('btn-retake').addEventListener('click', () => {
+        qState.partIdx = 0; qState.answers = []; qState.startTime = Date.now();
+        persist(); startTimer(); showScreen('sc-quiz'); renderPart();
+    });
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initStudentApp);
+} else {
+  initStudentApp();
+}

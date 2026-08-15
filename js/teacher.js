@@ -126,21 +126,28 @@ function switchTTab(t) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  $('btn-login').addEventListener('click', doLogin);
+function initTeacherApp() {
+  if (window._teacherAppInitialized) return;
+  window._teacherAppInitialized = true;
+
+  if ($('btn-login')) $('btn-login').addEventListener('click', doLogin);
   if ($('btn-toggle-pass')) {
     $('btn-toggle-pass').addEventListener('click', togglePasswordVisibility);
   }
 
-  $('t-email').addEventListener('keydown', e => {
-    if (e.key === 'Enter') doLogin();
-  });
+  if ($('t-email')) {
+    $('t-email').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+  }
 
-  $('t-pass').addEventListener('keydown', e => {
-    if (e.key === 'Enter') doLogin();
-  });
+  if ($('t-pass')) {
+    $('t-pass').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+  }
 
-  $('btn-logout').addEventListener('click', doLogout);
+  if ($('btn-logout')) $('btn-logout').addEventListener('click', doLogout);
 
   onAuthStateChanged(async user => {
     if (user) {
@@ -156,106 +163,210 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => switchTTab(btn.dataset.tab))
   );
 
+  if ($('flt-cat')) {
+    $('flt-cat').addEventListener('change', () => {
+      updateFltSubcat();
 
-$('flt-cat').addEventListener('change', () => {
-  updateFltSubcat();
+      const cat = $('flt-cat').value;
+      if ($('qf-cat')) $('qf-cat').value = cat;
+      updateQFormSubcat();
 
-  const cat = $('flt-cat').value;
-  $('qf-cat').value = cat;
-  updateQFormSubcat();
-
-  const subcat = $('flt-subcat').value;
-  if (subcat) $('qf-subcat').value = subcat;
-});
-
-$('qf-cat').addEventListener('change', updateQFormSubcat);
-$('ef-cat').addEventListener('change', updateEFormSubcat);
-$('flt-r-cohort')?.addEventListener('change', renderResults);
-$('btn-filter-q').addEventListener('click', () => {
-  renderQuestions();
-
-  const cat = $('flt-cat').value;
-  const subcat = $('flt-subcat').value;
-
-  if (cat) {
-    $('qf-cat').value = cat;
-    updateQFormSubcat();
+      const subcat = $('flt-subcat')?.value;
+      if (subcat && $('qf-subcat')) $('qf-subcat').value = subcat;
+    });
   }
 
-  if (subcat) {
-    $('qf-subcat').value = subcat;
+  if ($('qf-cat')) $('qf-cat').addEventListener('change', updateQFormSubcat);
+  if ($('ef-cat')) $('ef-cat').addEventListener('change', updateEFormSubcat);
+  if ($('flt-r-cohort')) $('flt-r-cohort').addEventListener('change', renderResults);
+  
+  if ($('btn-filter-q')) {
+    $('btn-filter-q').addEventListener('click', () => {
+      renderQuestions();
+
+      const cat = $('flt-cat')?.value;
+      const subcat = $('flt-subcat')?.value;
+
+      if (cat && $('qf-cat')) {
+        $('qf-cat').value = cat;
+        updateQFormSubcat();
+      }
+
+      if (subcat && $('qf-subcat')) {
+        $('qf-subcat').value = subcat;
+      }
+    });
   }
-});
 
-$('btn-open-qform').addEventListener('click', () => {
-  openQForm();
+  if ($('btn-open-qform')) {
+    $('btn-open-qform').addEventListener('click', () => {
+      openQForm();
 
-  const cat = $('flt-cat').value;
-  const subcat = $('flt-subcat').value;
+      const cat = $('flt-cat')?.value;
+      const subcat = $('flt-subcat')?.value;
 
-  if (cat) {
-    $('qf-cat').value = cat;
-    updateQFormSubcat();
+      if (cat && $('qf-cat')) {
+        $('qf-cat').value = cat;
+        updateQFormSubcat();
+      }
+
+      if (subcat && $('qf-subcat')) {
+        $('qf-subcat').value = subcat;
+      }
+    });
   }
 
-  if (subcat) {
-    $('qf-subcat').value = subcat;
+  if ($('btn-close-qform')) $('btn-close-qform').addEventListener('click', closeQForm);
+  if ($('btn-save-q')) $('btn-save-q').addEventListener('click', saveQ);
+
+  if ($('q-list')) {
+    $('q-list').addEventListener('click', e => {
+      const btn = e.target.closest('.q-action');
+      if (!btn) return;
+
+      const id = parseInt(btn.dataset.id);
+      if (btn.dataset.action === 'edit') openQForm(id);
+      if (btn.dataset.action === 'delete') deleteQ(id);
+    });
   }
-});
 
-$('btn-close-qform').addEventListener('click', closeQForm);
-$('btn-save-q').addEventListener('click', saveQ);
+  if ($('btn-open-eform')) $('btn-open-eform').addEventListener('click', openEForm);
+  if ($('btn-close-eform')) $('btn-close-eform').addEventListener('click', closeEForm);
+  if ($('btn-save-exam')) $('btn-save-exam').addEventListener('click', saveExam);
 
-$('q-list').addEventListener('click', e => {
-  const btn = e.target.closest('.q-action');
-  if (!btn) return;
+  if ($('e-list')) {
+    $('e-list').addEventListener('click', e => {
+      const btn = e.target.closest('.e-action');
+      if (!btn) return;
 
-  const id = parseInt(btn.dataset.id);
-  if (btn.dataset.action === 'edit') openQForm(id);
-  if (btn.dataset.action === 'delete') deleteQ(id);
-});
+      const id = isNaN(btn.dataset.id) ? btn.dataset.id : Number(btn.dataset.id);
 
-$('btn-open-eform').addEventListener('click', openEForm);
-$('btn-close-eform').addEventListener('click', closeEForm);
-$('btn-save-exam').addEventListener('click', saveExam);
-
-$('e-list').addEventListener('click', e => {
-  const btn = e.target.closest('.e-action');
-  if (!btn) return;
-
-  // Lấy ID và ép kiểu an toàn (để dùng được cho cả ID dạng số lẫn chữ)
-  const id = isNaN(btn.dataset.id) ? btn.dataset.id : Number(btn.dataset.id);
-
-  if (btn.dataset.action === 'toggle') {
-      toggleExamVisibility(id);
-  } else if (btn.dataset.action === 'delete') {
-      deleteExam(id);
-  } else if (btn.dataset.action === 'edit') {
-      openEForm(id); 
-  } else if (btn.dataset.action === 'manage-q') {
-      window.openExamQuestionManager(id);
+      if (btn.dataset.action === 'toggle') {
+          toggleExamVisibility(id);
+      } else if (btn.dataset.action === 'delete') {
+          deleteExam(id);
+      } else if (btn.dataset.action === 'edit') {
+          openEForm(id); 
+      } else if (btn.dataset.action === 'manage-q') {
+          window.openExamQuestionManager(id);
+      }
+    });
   }
-});
 
-$('btn-add-parent').addEventListener('click', addParentCategory);
-$('btn-add-sub').addEventListener('click', addSubCategory);
-$('btn-restore').addEventListener('click', restoreDefaultCategories);
+  if ($('btn-add-parent')) $('btn-add-parent').addEventListener('click', addParentCategory);
+  if ($('btn-add-sub')) $('btn-add-sub').addEventListener('click', addSubCategory);
+  if ($('btn-restore')) $('btn-restore').addEventListener('click', restoreDefaultCategories);
 
-$('cat-management-list').addEventListener('click', e => {
-  const btn = e.target.closest('.cat-action');
-  if (!btn) return;
+  if ($('cat-management-list')) {
+    $('cat-management-list').addEventListener('click', e => {
+      const btn = e.target.closest('.cat-action');
+      if (!btn) return;
 
-  const parent = btn.dataset.parent;
-  const sub = btn.dataset.sub;
+      const parent = btn.dataset.parent;
+      const sub = btn.dataset.sub;
 
-  if (btn.dataset.action === 'delete-parent') deleteParentCategory(parent);
-  if (btn.dataset.action === 'edit-sub') editSubCategory(parent, sub);
-  if (btn.dataset.action === 'delete-sub') deleteSubCategory(parent, sub);
-});
+      if (btn.dataset.action === 'delete-parent') deleteParentCategory(parent);
+      if (btn.dataset.action === 'edit-sub') editSubCategory(parent, sub);
+      if (btn.dataset.action === 'delete-sub') deleteSubCategory(parent, sub);
+    });
+  }
 
-$('btn-export').addEventListener('click', exportCSV);
-$('btn-clear-results').addEventListener('click', clearResults);
-});
+  if ($('btn-export')) $('btn-export').addEventListener('click', exportCSV);
+  if ($('btn-clear-results')) $('btn-clear-results').addEventListener('click', clearResults);
+
+  // Gallery file upload
+  const galFile = document.getElementById('gal-file');
+  let selectedGalFile = null;
+
+  if (galFile) {
+      galFile.addEventListener('change', e => {
+          selectedGalFile = e.target.files[0];
+          if (!selectedGalFile) {
+              document.getElementById('gal-preview').innerHTML = '';
+              return;
+          }
+          const objectUrl = URL.createObjectURL(selectedGalFile);
+          document.getElementById('gal-preview').innerHTML = `<img src="${objectUrl}" style="max-height:150px; border-radius:6px; border:1px solid #cbd5e1;">`;
+      });
+  }
+
+  const btnUploadGal = document.getElementById('btn-upload-gal');
+  if (btnUploadGal) {
+      btnUploadGal.addEventListener('click', async () => {
+          const name = document.getElementById('gal-name').value.trim();
+          if (!name) { alert("Vui lòng nhập tên gợi nhớ cho ảnh!"); return; }
+          if (!selectedGalFile) { alert("Vui lòng chọn 1 file ảnh!"); return; }
+
+          btnUploadGal.disabled = true;
+          btnUploadGal.textContent = "Đang tải lên Supabase Storage...";
+          try {
+              const downloadURL = await uploadMediaFile(selectedGalFile, 'image-bank', (pct) => {
+                  btnUploadGal.textContent = `Đang tải lên: ${pct}%...`;
+              });
+              const { error } = await supabase.from('gallery').insert([{ name: name, url: downloadURL, created_at: Date.now() }]);
+              if(error) throw error;
+              alert("Đã lưu ảnh vào thư viện đám mây!");
+              document.getElementById('gal-name').value = '';
+              document.getElementById('gal-file').value = '';
+              document.getElementById('gal-preview').innerHTML = '';
+              selectedGalFile = null;
+              if (window.loadGallery) window.loadGallery();
+          } catch (e) { console.error(e); alert("Lỗi khi tải ảnh lên: " + (e.message || '')); }
+          btnUploadGal.disabled = false;
+          btnUploadGal.textContent = "Tải lên Thư viện";
+      });
+  }
+
+  // Chấm bài tự luận
+  let currentGradeResultId = null;
+
+  window.openGradeModal = function(resultId) {
+      const modal = document.getElementById('grade-modal');
+      if (!modal) return;
+      const res = state.results.find(r => String(r.id) === String(resultId));
+      if (!res) return;
+
+      currentGradeResultId = resultId;
+      document.getElementById('grade-student-info').innerHTML = `Học viên: <b>${esc(res.student)}</b> (${esc(res.sid || '')}) | Đề: <b>${esc(res.exam)}</b>`;
+      
+      let essayHtml = '';
+      if (Array.isArray(res.answers)) {
+          res.answers.forEach((ans, i) => {
+              if (typeof ans === 'string' && ans.length > 5) {
+                  essayHtml += `<div style="margin-bottom:10px;"><b>Bài làm câu ${i+1}:</b><div style="background:#fff; padding:10px; border-radius:6px; border:1px solid #cbd5e1; margin-top:4px;">${esc(ans)}</div></div>`;
+              }
+          });
+      }
+      document.getElementById('grade-essay-content').innerHTML = essayHtml || '<i>Học viên không có phần trả lời tự luận hoặc đã nộp trống.</i>';
+      document.getElementById('grade-score-input').value = res.manualScore || 0;
+      modal.style.display = 'flex';
+  };
+
+  document.getElementById('btn-close-grade')?.addEventListener('click', () => {
+      document.getElementById('grade-modal').style.display = 'none';
+      currentGradeResultId = null;
+  });
+
+  document.getElementById('btn-save-grade')?.addEventListener('click', async () => {
+      if (!currentGradeResultId) return;
+      const scoreVal = parseFloat(document.getElementById('grade-score-input').value) || 0;
+      const res = state.results.find(r => String(r.id) === String(currentGradeResultId));
+      if (res) {
+          res.manualScore = scoreVal;
+          const { error } = await supabase.from('results').update({ manual_score: scoreVal }).eq('id', currentGradeResultId);
+          if(error) console.error("Lỗi lưu điểm tự luận:", error);
+          renderResults();
+      }
+      document.getElementById('grade-modal').style.display = 'none';
+      alert("✅ Đã cập nhật điểm tự luận thành công!");
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTeacherApp);
+} else {
+  initTeacherApp();
+}
 
 // ==========================================
 // QUẢN LÝ CA THI / LỚP HỌC (COHORTS)
@@ -702,93 +813,7 @@ function renderGallery() {
     if(modalList) modalList.innerHTML = modalHtml;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const galFile = document.getElementById('gal-file');
-    let selectedGalFile = null;
 
-    if (galFile) {
-        galFile.addEventListener('change', e => {
-            selectedGalFile = e.target.files[0];
-            if (!selectedGalFile) {
-                document.getElementById('gal-preview').innerHTML = '';
-                return;
-            }
-            const objectUrl = URL.createObjectURL(selectedGalFile);
-            document.getElementById('gal-preview').innerHTML = `<img src="${objectUrl}" style="max-height:150px; border-radius:6px; border:1px solid #cbd5e1;">`;
-        });
-    }
-
-    const btnUploadGal = document.getElementById('btn-upload-gal');
-    if (btnUploadGal) {
-        btnUploadGal.addEventListener('click', async () => {
-            const name = document.getElementById('gal-name').value.trim();
-            if (!name) { alert("Vui lòng nhập tên gợi nhớ cho ảnh!"); return; }
-            if (!selectedGalFile) { alert("Vui lòng chọn 1 file ảnh!"); return; }
-
-            btnUploadGal.disabled = true;
-            btnUploadGal.textContent = "Đang tải lên Supabase Storage...";
-            try {
-                const downloadURL = await uploadMediaFile(selectedGalFile, 'image-bank', (pct) => {
-                    btnUploadGal.textContent = `Đang tải lên: ${pct}%...`;
-                });
-                const { error } = await supabase.from('gallery').insert([{ name: name, url: downloadURL, created_at: Date.now() }]);
-                if(error) throw error;
-                alert("Đã lưu ảnh vào thư viện đám mây!");
-                document.getElementById('gal-name').value = '';
-                document.getElementById('gal-file').value = '';
-                document.getElementById('gal-preview').innerHTML = '';
-                selectedGalFile = null;
-                if (window.loadGallery) window.loadGallery();
-            } catch (e) { console.error(e); alert("Lỗi khi tải ảnh lên: " + (e.message || '')); }
-            btnUploadGal.disabled = false;
-            btnUploadGal.textContent = "Tải lên Thư viện";
-        });
-    }
-
-    // XỬ LÝ CHẤM BÀI TỰ LUẬN
-    let currentGradeResultId = null;
-
-    window.openGradeModal = function(resultId) {
-        const modal = document.getElementById('grade-modal');
-        if (!modal) return;
-        const res = state.results.find(r => String(r.id) === String(resultId));
-        if (!res) return;
-
-        currentGradeResultId = resultId;
-        document.getElementById('grade-student-info').innerHTML = `Học viên: <b>${esc(res.student)}</b> (${esc(res.sid || '')}) | Đề: <b>${esc(res.exam)}</b>`;
-        
-        let essayHtml = '';
-        if (Array.isArray(res.answers)) {
-            res.answers.forEach((ans, i) => {
-                if (typeof ans === 'string' && ans.length > 5) {
-                    essayHtml += `<div style="margin-bottom:10px;"><b>Bài làm câu ${i+1}:</b><div style="background:#fff; padding:10px; border-radius:6px; border:1px solid #cbd5e1; margin-top:4px;">${esc(ans)}</div></div>`;
-                }
-            });
-        }
-        document.getElementById('grade-essay-content').innerHTML = essayHtml || '<i>Học viên không có phần trả lời tự luận hoặc đã nộp trống.</i>';
-        document.getElementById('grade-score-input').value = res.manualScore || 0;
-        modal.style.display = 'flex';
-    };
-
-    document.getElementById('btn-close-grade')?.addEventListener('click', () => {
-        document.getElementById('grade-modal').style.display = 'none';
-        currentGradeResultId = null;
-    });
-
-    document.getElementById('btn-save-grade')?.addEventListener('click', async () => {
-        if (!currentGradeResultId) return;
-        const scoreVal = parseFloat(document.getElementById('grade-score-input').value) || 0;
-        const res = state.results.find(r => String(r.id) === String(currentGradeResultId));
-        if (res) {
-            res.manualScore = scoreVal;
-            const { error } = await supabase.from('results').update({ manual_score: scoreVal }).eq('id', currentGradeResultId);
-            if(error) console.error("Lỗi lưu điểm tự luận:", error);
-            renderResults();
-        }
-        document.getElementById('grade-modal').style.display = 'none';
-        alert("✅ Đã cập nhật điểm tự luận thành công!");
-    });
-});
 
 window.deleteGalleryItem = async function(id) {
     if (!confirm("Xóa ảnh này khỏi thư viện?\nLưu ý: Các câu hỏi đang dùng ảnh này không bị ảnh hưởng, nhưng ảnh sẽ biến mất khỏi thư viện.")) return;
