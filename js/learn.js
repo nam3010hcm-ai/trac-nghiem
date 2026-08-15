@@ -507,6 +507,30 @@ function safeObj(val, fallback = {}) {
   return fallback;
 }
 
+function getUnitSkillList(unit, skillName) {
+  let list = safeArray(unit?.[skillName], []);
+  if (!list.length) {
+    const defMatch = DEFAULT_UNITS.find(d => d.id === unit?.id) || DEFAULT_UNITS[0];
+    list = safeArray(defMatch?.[skillName], []);
+  }
+  if (!list.length && DEFAULT_UNITS[0]?.[skillName]) {
+    list = safeArray(DEFAULT_UNITS[0][skillName], []);
+  }
+  return list;
+}
+
+function getUnitSkillObj(unit, skillName) {
+  let obj = safeObj(unit?.[skillName], {});
+  if (!obj || !Object.keys(obj).length) {
+    const defMatch = DEFAULT_UNITS.find(d => d.id === unit?.id) || DEFAULT_UNITS[0];
+    obj = safeObj(defMatch?.[skillName], {});
+  }
+  if ((!obj || !Object.keys(obj).length) && DEFAULT_UNITS[0]?.[skillName]) {
+    obj = safeObj(DEFAULT_UNITS[0][skillName], {});
+  }
+  return obj;
+}
+
 // LOAD UNITS TỪ SUPABASE / DEFAULT
 // =========================================================================
 async function loadUnitsData() {
@@ -683,7 +707,7 @@ let currentLisLesson = null;
 let currentPlaybackSpeed = 1.0;
 
 function initListening() {
-  const list = currentUnit?.listening || [];
+  const list = getUnitSkillList(currentUnit, 'listening');
   currentLisLesson = list[0] || null;
   renderListeningLessons();
   if (currentLisLesson) loadListeningLesson(currentLisLesson.id);
@@ -695,9 +719,12 @@ function initListening() {
 
 function renderListeningLessons() {
   const container = document.getElementById('lis-lesson-list');
-  const list = currentUnit?.listening || [];
+  const list = getUnitSkillList(currentUnit, 'listening');
   if (!container) return;
-  if (!list.length) { container.innerHTML = ''; return; }
+  if (!list.length) {
+    container.innerHTML = '<div style="color:#64748b;font-size:13px;padding:12px;text-align:center;width:100%">📭 Chưa có bài nghe trong Unit này.</div>';
+    return;
+  }
 
   container.innerHTML = list.map(item => {
     const isSelected = currentLisLesson && item.id === currentLisLesson.id;
@@ -715,7 +742,8 @@ function renderListeningLessons() {
 }
 
 window.selectListeningLesson = function(id) {
-  const found = (currentUnit?.listening || []).find(l => l.id === id);
+  const list = getUnitSkillList(currentUnit, 'listening');
+  const found = list.find(l => l.id === id);
   if (found) {
     currentLisLesson = found;
     renderListeningLessons();
@@ -905,7 +933,7 @@ window.checkDictation = function(idx, targetSentence) {
 let currentReadLesson = null;
 
 function initReading() {
-  const list = currentUnit?.reading || [];
+  const list = getUnitSkillList(currentUnit, 'reading');
   currentReadLesson = list[0] || null;
   renderReadingLessons();
   if (currentReadLesson) loadReadingLesson(currentReadLesson.id);
@@ -917,9 +945,12 @@ function initReading() {
 
 function renderReadingLessons() {
   const container = document.getElementById('read-lesson-list');
-  const list = currentUnit?.reading || [];
+  const list = getUnitSkillList(currentUnit, 'reading');
   if (!container) return;
-  if (!list.length) { container.innerHTML = ''; return; }
+  if (!list.length) {
+    container.innerHTML = '<div style="color:#64748b;font-size:13px;padding:12px;text-align:center;width:100%">📭 Chưa có bài đọc trong Unit này.</div>';
+    return;
+  }
 
   container.innerHTML = list.map(item => {
     const isSelected = currentReadLesson && item.id === currentReadLesson.id;
@@ -937,7 +968,8 @@ function renderReadingLessons() {
 }
 
 window.selectReadingLesson = function(id) {
-  const found = (currentUnit?.reading || []).find(r => r.id === id);
+  const list = getUnitSkillList(currentUnit, 'reading');
+  const found = list.find(r => r.id === id);
   if (found) {
     currentReadLesson = found;
     renderReadingLessons();
@@ -1062,7 +1094,7 @@ let isRecording = false;
 let speechRecognizer = null;
 
 function initSpeaking() {
-  const list = currentUnit?.speaking || [];
+  const list = getUnitSkillList(currentUnit, 'speaking');
   currentSpkLesson = list[0] || null;
   renderSpeakingLessons();
   if (currentSpkLesson) loadSpeakingLesson(currentSpkLesson.id);
@@ -1074,9 +1106,12 @@ function initSpeaking() {
 
 function renderSpeakingLessons() {
   const container = document.getElementById('spk-lesson-list');
-  const list = currentUnit?.speaking || [];
+  const list = getUnitSkillList(currentUnit, 'speaking');
   if (!container) return;
-  if (!list.length) { container.innerHTML = ''; return; }
+  if (!list.length) {
+    container.innerHTML = '<div style="color:#64748b;font-size:13px;padding:12px;text-align:center;width:100%">📭 Chưa có bài nói trong Unit này.</div>';
+    return;
+  }
 
   container.innerHTML = list.map(item => {
     const isSelected = currentSpkLesson && item.id === currentSpkLesson.id;
@@ -1094,7 +1129,8 @@ function renderSpeakingLessons() {
 }
 
 window.selectSpeakingLesson = function(id) {
-  const found = (currentUnit?.speaking || []).find(s => s.id === id);
+  const list = getUnitSkillList(currentUnit, 'speaking');
+  const found = list.find(s => s.id === id);
   if (found) {
     currentSpkLesson = found;
     renderSpeakingLessons();
@@ -1260,7 +1296,7 @@ function loadWritingView(type) {
   const workspace = document.getElementById('wrt-workspace');
   if (!workspace || !currentUnit) return;
 
-  const wrtData = currentUnit.writing || [];
+  const wrtData = getUnitSkillList(currentUnit, 'writing');
 
   if (type === 'scramble') {
     const scrambleGroup = wrtData.find(w => w.id?.includes('scramble')) || wrtData[0] || { items: [] };
@@ -1430,7 +1466,8 @@ function loadLanguageFocusView() {
   const workspace = document.getElementById('lang-workspace');
   if (!workspace || !currentUnit) return;
 
-  const fCards = currentUnit.languageFocus?.flashcards || [];
+  const langObj = getUnitSkillObj(currentUnit, 'languageFocus');
+  const fCards = safeArray(langObj?.flashcards, []);
   const currentCard = fCards[currentCardIdx] || { word: 'Practice', meaning: 'Luyện tập', ipa: '/ˈpræk.tɪs/', pos: 'noun' };
 
   workspace.innerHTML = `
