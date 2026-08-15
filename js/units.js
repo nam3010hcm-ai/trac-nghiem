@@ -7,6 +7,7 @@
 
 import { DEFAULT_UNITS } from './learn-data.js';
 import { state, $, esc, clone, canEditItem, isRootUser } from './common.js';
+import { subjectsList, modulesList } from './curriculum.js';
 
 const db = () => window.supabaseClient;
 
@@ -58,8 +59,8 @@ export async function loadUnits() {
       // Chèn các Unit mặc định lên Supabase
       const inserts = DEFAULT_UNITS.map((u, i) => ({
         id: u.id,
-        subject: u.subject || 'Tiếng Anh (English)',
-        module: u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)',
+        subject: u.subject || '🇬🇧 Tiếng Anh',
+        module: u.module || 'English B1 - General & Academic Skills',
         title: u.title,
         topic: u.topic || '',
         level: u.level || 'A2 - B1',
@@ -77,8 +78,8 @@ export async function loadUnits() {
     } else {
       unitsState = data.map(u => ({
         id: u.id,
-        subject: u.subject || 'Tiếng Anh (English)',
-        module: u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)',
+        subject: u.subject || '🇬🇧 Tiếng Anh',
+        module: u.module || 'English B1 - General & Academic Skills',
         title: u.title,
         topic: u.topic || '',
         level: u.level || 'A2 - B1',
@@ -91,6 +92,13 @@ export async function loadUnits() {
         writing: u.writing || [],
         languageFocus: u.language_focus || u.languageFocus || {}
       }));
+
+      // Nếu trong data chưa có các unit của môn Toán, Lý, Tin học thì bổ sung từ DEFAULT_UNITS
+      DEFAULT_UNITS.forEach(defUnit => {
+        if (!unitsState.some(u => u.id === defUnit.id)) {
+          unitsState.push(clone(defUnit));
+        }
+      });
     }
   } catch (err) {
     console.error("Lỗi loadUnits:", err);
@@ -103,16 +111,33 @@ export async function loadUnits() {
 export function populateUnitFilters() {
   const subSel = document.getElementById('flt-unit-subject');
   const modSel = document.getElementById('flt-unit-module');
-  if (!subSel || !modSel) return;
+  if (!subSel) return;
 
   const currentSub = subSel.value;
-  const currentMod = modSel.value;
 
-  const subjects = [...new Set(unitsState.map(u => u.subject || 'Tiếng Anh (English)'))];
-  subSel.innerHTML = '<option value="">Tất cả Môn học</option>' + subjects.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
-  if (currentSub && subjects.includes(currentSub)) subSel.value = currentSub;
+  // Lấy toàn bộ danh sách Môn học từ subjectsList + unitsState
+  const subjectsMap = new Map();
+  
+  // 1. Thêm từ subjectsList trong curriculum.js
+  (subjectsList || []).forEach(s => {
+    subjectsMap.set(s.name, s.name);
+  });
+
+  // 2. Thêm từ các units hiện có
+  unitsState.forEach(u => {
+    if (u.subject && !subjectsMap.has(u.subject)) {
+      subjectsMap.set(u.subject, u.subject);
+    }
+  });
+
+  const uniqueSubjects = Array.from(subjectsMap.values());
+
+  subSel.innerHTML = '<option value="">✓ Tất cả Môn học</option>' + uniqueSubjects.map(s => `
+    <option value="${esc(s)}" ${s === currentSub ? 'selected' : ''}>${esc(s)}</option>
+  `).join('');
 
   updateModuleFilterOptions();
+  updateDatalists();
 }
 
 export function updateModuleFilterOptions() {
@@ -121,13 +146,76 @@ export function updateModuleFilterOptions() {
   if (!modSel) return;
 
   const selSubject = subSel?.value;
-  let filteredUnits = unitsState;
-  if (selSubject) {
-    filteredUnits = unitsState.filter(u => (u.subject || 'Tiếng Anh (English)') === selSubject);
+  const currentMod = modSel.value;
+  const modulesMap = new Map();
+
+  if (!selSubject) {
+    // Nếu chọn Tất cả Môn: Lấy toàn bộ modules từ modulesList + unitsState
+    (modulesList || []).forEach(m => modulesMap.set(m.title, m.title));
+    unitsState.forEach(u => {
+      if (u.module) modulesMap.set(u.module, u.module);
+    });
+  } else {
+    // Lấy modules thuộc môn học đã chọn
+    const matchedSub = (subjectsList || []).find(s => 
+      s.name === selSubject || 
+      selSubject.includes(s.code) || 
+      selSubject.toLowerCase().includes(s.name.toLowerCase().replace(/^[^\w\s\u00C0-\u1EF9]+/u, '').trim())
+    );
+
+    if (matchedSub) {
+      (modulesList || []).filter(m => m.subject_id === matchedSub.id).forEach(m => {
+        modulesMap.set(m.title, m.title);
+      });
+    }
+
+    unitsState.filter(u => matchSubject(u.subject, selSubject)).forEach(u => {
+      if (u.module) modulesMap.set(u.module, u.module);
+    });
   }
 
-  const modules = [...new Set(filteredUnits.map(u => u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)'))];
-  modSel.innerHTML = '<option value="">Tất cả Học phần</option>' + modules.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+  const uniqueModules = Array.from(modulesMap.values());
+  modSel.innerHTML = '<option value="">✓ Tất cả Học phần</option>' + uniqueModules.map(m => `
+    <option value="${esc(m)}" ${m === currentMod ? 'selected' : ''}>${esc(m)}</option>
+  `).join('');
+}
+
+// Cập nhật Datalist cho Modal Designer
+export function updateDatalists() {
+  const dlSubjects = document.getElementById('dl-subjects');
+  const dlModules = document.getElementById('dl-modules');
+
+  if (dlSubjects) {
+    const subs = new Set();
+    (subjectsList || []).forEach(s => subs.add(s.name));
+    unitsState.forEach(u => { if (u.subject) subs.add(u.subject); });
+    dlSubjects.innerHTML = Array.from(subs).map(s => `<option value="${esc(s)}">`).join('');
+  }
+
+  if (dlModules) {
+    const mods = new Set();
+    (modulesList || []).forEach(m => mods.add(m.title));
+    unitsState.forEach(u => { if (u.module) mods.add(u.module); });
+    dlModules.innerHTML = Array.from(mods).map(m => `<option value="${esc(m)}">`).join('');
+  }
+}
+
+function matchSubject(unitSub, targetSub) {
+  if (!targetSub) return true;
+  if (!unitSub) return false;
+  if (unitSub === targetSub) return true;
+  const cleanU = unitSub.toLowerCase().replace(/[^\w\s\u00C0-\u1EF9]/gu, '').trim();
+  const cleanT = targetSub.toLowerCase().replace(/[^\w\s\u00C0-\u1EF9]/gu, '').trim();
+  return cleanU.includes(cleanT) || cleanT.includes(cleanU);
+}
+
+function matchModule(unitMod, targetMod) {
+  if (!targetMod) return true;
+  if (!unitMod) return false;
+  if (unitMod === targetMod) return true;
+  const cleanU = unitMod.toLowerCase().replace(/[^\w\s\u00C0-\u1EF9]/gu, '').trim();
+  const cleanT = targetMod.toLowerCase().replace(/[^\w\s\u00C0-\u1EF9]/gu, '').trim();
+  return cleanU.includes(cleanT) || cleanT.includes(cleanU);
 }
 
 window.onUnitFilterChange = function() {
@@ -146,8 +234,8 @@ export function renderUnitsList() {
   const searchTxt = (document.getElementById('flt-unit-search')?.value || '').toLowerCase().trim();
 
   let list = unitsState.filter(u => {
-    if (selSub && (u.subject || 'Tiếng Anh (English)') !== selSub) return false;
-    if (selMod && (u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)') !== selMod) return false;
+    if (selSub && !matchSubject(u.subject, selSub)) return false;
+    if (selMod && !matchModule(u.module, selMod)) return false;
     if (searchTxt) {
       const matchTitle = (u.title || '').toLowerCase().includes(searchTxt);
       const matchTopic = (u.topic || '').toLowerCase().includes(searchTxt);
@@ -160,7 +248,7 @@ export function renderUnitsList() {
   if (countEl) countEl.textContent = list.length;
 
   if (!list.length) {
-    container.innerHTML = '<div class="empty">📭 Không tìm thấy Unit bài học nào phù hợp. Bấm "+ Tạo Unit Mới" để bắt đầu thiết kế!</div>';
+    container.innerHTML = '<div class="empty" style="text-align:center;padding:30px;color:#94a3b8">📭 Không tìm thấy Unit bài học nào phù hợp với bộ lọc. Bấm "+ Tạo Unit Mới" để thiết kế bài học!</div>';
     return;
   }
 

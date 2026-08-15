@@ -563,8 +563,8 @@ async function loadUnitsData() {
           const defMatch = DEFAULT_UNITS.find(d => d.id === u.id) || DEFAULT_UNITS[0];
           return {
             id: u.id,
-            subject: u.subject || 'Tiếng Anh (English)',
-            module: u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)',
+            subject: u.subject || '🇬🇧 Tiếng Anh',
+            module: u.module || 'English B1 - General & Academic Skills',
             title: u.title,
             topic: u.topic || '',
             level: u.level || 'A2 - B1',
@@ -578,6 +578,13 @@ async function loadUnitsData() {
             languageFocus: safeObj(u.language_focus || u.languageFocus, defMatch?.languageFocus || {})
           };
         });
+
+        // Bổ sung các Units mặc định của Toán, Lý, Hóa, Tin Học nếu chưa có trong DB
+        DEFAULT_UNITS.forEach(defUnit => {
+          if (!allUnits.some(u => u.id === defUnit.id)) {
+            allUnits.push({ ...defUnit });
+          }
+        });
       } else {
         allUnits = DEFAULT_UNITS.filter(u => !u.isHidden);
       }
@@ -590,7 +597,16 @@ async function loadUnitsData() {
   }
 
   if (!allUnits.length) allUnits = DEFAULT_UNITS;
-  currentUnit = allUnits[0];
+
+  // Đọc tham số subject từ URL (ví dụ: learn.html?subject=Toán)
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramSub = urlParams.get('subject');
+  if (paramSub) {
+    const matched = allUnits.find(u => (u.subject || '').toLowerCase().includes(paramSub.toLowerCase()));
+    if (matched) currentSubject = matched.subject;
+  }
+
+  currentUnit = allUnits.find(u => !currentSubject || u.subject === currentSubject) || allUnits[0];
 
   renderCascadingSelectors();
   loadCurrentUnitView();
@@ -603,9 +619,9 @@ function renderCascadingSelectors() {
   if (!subSel || !modSel || !unitSel) return;
 
   // 1. Danh sách Môn học (Subject)
-  const subjects = [...new Set(allUnits.map(u => u.subject || 'Tiếng Anh (English)'))];
+  const subjects = [...new Set(allUnits.map(u => u.subject || '🇬🇧 Tiếng Anh'))];
   if (!currentSubject || !subjects.includes(currentSubject)) {
-    currentSubject = currentUnit?.subject || subjects[0] || 'Tiếng Anh (English)';
+    currentSubject = currentUnit?.subject || subjects[0] || '🇬🇧 Tiếng Anh';
   }
 
   subSel.innerHTML = subjects.map(s => `
@@ -613,8 +629,8 @@ function renderCascadingSelectors() {
   `).join('');
 
   // 2. Danh sách Học phần (Module) theo Môn học đã chọn
-  const unitsInSubject = allUnits.filter(u => (u.subject || 'Tiếng Anh (English)') === currentSubject);
-  const modules = [...new Set(unitsInSubject.map(u => u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)'))];
+  const unitsInSubject = allUnits.filter(u => (u.subject || '🇬🇧 Tiếng Anh') === currentSubject);
+  const modules = [...new Set(unitsInSubject.map(u => u.module || 'Học phần cơ bản'))];
   
   if (!currentModule || !modules.includes(currentModule)) {
     currentModule = (currentUnit?.module && modules.includes(currentUnit.module)) ? currentUnit.module : (modules[0] || '');
@@ -625,7 +641,7 @@ function renderCascadingSelectors() {
   `).join('');
 
   // 3. Danh sách Unit thuộc Học phần đã chọn
-  const unitsInModule = unitsInSubject.filter(u => (u.module || 'Học phần Tiếng Anh cơ bản 1 (Basic English Module 1)') === currentModule);
+  const unitsInModule = unitsInSubject.filter(u => (u.module || 'Học phần cơ bản') === currentModule);
   
   if (!currentUnit || !unitsInModule.some(u => u.id === currentUnit.id)) {
     currentUnit = unitsInModule[0] || unitsInSubject[0] || allUnits[0];
