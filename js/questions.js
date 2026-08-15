@@ -1,6 +1,7 @@
 import { supabase, uploadMediaFile } from './supabase.js';
-import { state, $, esc, KEYS, mediaHTML, audioHTML, renderRich, typesetMath, TYPE_LABELS, splitBlanks, countBlanks } from './common.js';
-import { fillSubcatSelect, updateQFormSubcat } from './categories.js';
+import { state, $, esc, KEYS, mediaHTML, audioHTML, renderRich, typesetMath, TYPE_LABELS, splitBlanks, countBlanks, fillSubcatSelect } from './common.js';
+
+function updateQFormSubcat() { fillSubcatSelect('qf-subcat', $('qf-cat')?.value || '', false); }
 
 let editQId = null;
 let qPage = 1;

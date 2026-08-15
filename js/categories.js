@@ -1,7 +1,5 @@
 import { supabase } from './supabase.js';
-import { state, $, esc, clone, DEFAULT_SUBCATS } from './common.js';
-import { renderQuestions } from './questions.js';
-import { renderExams, populateExamSelect } from './exams.js';
+import { state, $, esc, clone, DEFAULT_SUBCATS, fillSubcatSelect } from './common.js';
 
 async function syncCategoriesToSupabase(){
   try{

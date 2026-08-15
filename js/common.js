@@ -263,3 +263,11 @@ export async function initData(loadResults = false){
   }
 }
 
+export function fillSubcatSelect(selId, cat, addAll=true, allLabel='(Tất cả phần)'){
+  const sel = $(selId);
+  if(!sel) return;
+  const scs = state.SUBCATS[cat] || [];
+  sel.innerHTML = (addAll ? `<option value="">${esc(allLabel)}</option>` : '') +
+    scs.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+}
+

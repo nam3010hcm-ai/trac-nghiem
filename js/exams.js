@@ -1,6 +1,7 @@
 import { supabase } from './supabase.js';
-import { state, $, esc, getPool } from './common.js';
-import { updateEFormSubcat } from './categories.js';
+import { state, $, esc, getPool, fillSubcatSelect } from './common.js';
+
+export function updateEFormSubcat(){ fillSubcatSelect('ef-subcat', $('ef-cat')?.value || '', true, '(Không lọc theo phần)'); }
 export function populateExamSelect(){
   const sel = $('s-exam');
   if(!sel) return;
