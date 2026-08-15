@@ -600,7 +600,6 @@ export function selectContentType(type, btnEl) {
   if (type === 'phrase' || type === 'sentence') switchSkillTab('writing');
   if (type === 'dialogue') switchSkillTab('speaking');
 }
-}
 
 export function selectDifficulty(diff, btnEl) {
   document.querySelectorAll('.difficulty-row .diff-btn').forEach(b => b.classList.remove('active'));

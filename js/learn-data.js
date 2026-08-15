@@ -237,7 +237,18 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
         { left: 'Once in a blue moon', right: 'Rất hiếm khi xảy ra', pairId: 2 },
         { left: 'Piece of cake', right: 'Rất dễ dàng', pairId: 3 },
         { left: 'Under the weather', right: 'Cảm thấy hơi mệt/ốm', pairId: 4 }
-[
+      ],
+      grammarChallenge: [
+        {
+          id: 'gm_1',
+          question: 'If I ___ enough money, I would travel around the world.',
+          options: ['have', 'had', 'will have', 'would have'],
+          answer: 1,
+          explain: 'Câu điều kiện loại 2 (giả định trái với hiện tại): If + S + V2/ed, S + would + V1.'
+        }
+      ]
+    }
+  },
   {
     id: 'unit_2',
     subject: 'Tiếng Anh (English)',
