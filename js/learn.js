@@ -9,10 +9,33 @@ import { LEARN_DATA, DEFAULT_UNITS } from './learn-data.js';
 
 const db = () => window.supabaseClient;
 
-// --- UNITS STATE ---
+// --- UNITS & SKILLS STATE ---
 let allUnits = [];
 let currentUnit = null;
 let currentSkillTab = 'listening';
+let currentSubject = '';
+let currentModule = '';
+let currentLisLesson = null;
+let currentPlaybackSpeed = 1.0;
+let currentReadLesson = null;
+let currentSpkLesson = null;
+let isRecording = false;
+let speechRecognizer = null;
+let currentWrtCategory = 'scramble';
+let currentCardIdx = 0;
+let matchSelectedLeft = null;
+let matchSelectedRight = null;
+let matchedCount = 0;
+
+export function selectUnitTile(unitId) {
+  const chosen = allUnits.find(u => u.id === unitId);
+  if (chosen) {
+    currentUnit = chosen;
+    updateBreadcrumbs();
+    loadCurrentUnitView();
+  }
+}
+window.selectUnitTile = selectUnitTile;
 
 // --- GAMIFICATION STATE ---
 const STORE_KEY = 'quiz_learn_profile_v1';
@@ -486,8 +509,6 @@ function showToast(msg) {
 }
 
 // =========================================================================
-let currentSubject = '';
-let currentModule = '';
 
 function safeArray(val, fallback = []) {
   let res = val;
@@ -684,7 +705,6 @@ export function filterLearningContent() {
   }
 }
 
-window.selectUnitTile = selectUnitTile;
 window.selectContentType = selectContentType;
 window.selectDifficulty = selectDifficulty;
 window.filterLearningContent = filterLearningContent;
@@ -703,8 +723,6 @@ function loadCurrentUnitView() {
 // =========================================================================
 // 1. LISTENING MODULE
 // =========================================================================
-let currentLisLesson = null;
-let currentPlaybackSpeed = 1.0;
 
 function initListening() {
   const list = getUnitSkillList(currentUnit, 'listening');
@@ -930,7 +948,6 @@ window.checkDictation = function(idx, targetSentence) {
 // =========================================================================
 // 2. READING MODULE
 // =========================================================================
-let currentReadLesson = null;
 
 function initReading() {
   const list = getUnitSkillList(currentUnit, 'reading');
@@ -1089,9 +1106,6 @@ window.checkReadMCQ = function(exIdx, chosenIdx, correctIdx) {
 // =========================================================================
 // 3. SPEAKING MODULE
 // =========================================================================
-let currentSpkLesson = null;
-let isRecording = false;
-let speechRecognizer = null;
 
 function initSpeaking() {
   const list = getUnitSkillList(currentUnit, 'speaking');
@@ -1281,7 +1295,6 @@ function calculateSpeakingAccuracy(target, actual) {
 // =========================================================================
 // 4. WRITING MODULE
 // =========================================================================
-let currentWrtCategory = 'scramble';
 
 function initWriting() {
   loadWritingView(currentWrtCategory);
@@ -1452,10 +1465,6 @@ window.checkErrorFix = function(idx, errorWord, correctWord, explain) {
 // =========================================================================
 // 5. LANGUAGE FOCUS MODULE
 // =========================================================================
-let currentCardIdx = 0;
-let matchSelectedLeft = null;
-let matchSelectedRight = null;
-let matchedCount = 0;
 
 function initLanguageFocus() {
   currentCardIdx = 0;
