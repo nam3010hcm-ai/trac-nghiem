@@ -1,15 +1,9 @@
-let createClientFn;
-if (typeof window !== 'undefined' && window.supabase && typeof window.supabase.createClient === 'function') {
-  createClientFn = window.supabase.createClient;
-} else {
-  const mod = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
-  createClientFn = mod.createClient;
-}
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.1";
 
 const SUPABASE_URL = "https://xuioxmjufpfdblecjvuv.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_eKhgTzsFTVwL5mGwZTWWbQ_yogb4Hpc";
 
-export const supabase = createClientFn(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true
