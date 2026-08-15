@@ -160,7 +160,17 @@ function esc(s) {
   }[m]));
 }
 
-// 4. BỘ LỌC TÌM KIẾM KHÓA HỌC REALTIME VÀ THAO TÁC DASHBOARD
+// 4. MODAL VÀ TƯƠNG TÁC PHÂN HỆ ĐĂNG NHẬP K7 EDUHUB
+window.openAuthModal = function() {
+  const modal = document.getElementById('auth-portal-modal');
+  if (modal) modal.style.display = 'flex';
+};
+
+window.closeAuthModal = function() {
+  const modal = document.getElementById('auth-portal-modal');
+  if (modal) modal.style.display = 'none';
+};
+
 function initDashboardInteractions() {
   const courseSearchInput = document.getElementById('course-filter-search');
   if (courseSearchInput) {
@@ -190,7 +200,7 @@ function initDashboardInteractions() {
       if (e.key === 'Enter') {
         const query = globalSearchInput.value.trim();
         if (query) {
-          alert(`Đang tìm kiếm trên K7 EduHub: "${query}"`);
+          window.openAuthModal();
         }
       }
     });

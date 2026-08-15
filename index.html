@@ -55,14 +55,14 @@
       <input type="text" id="global-search-input" placeholder="Tìm khóa học, đề thi..." />
     </div>
 
-    <button class="notif-bell-btn" title="Thông báo mới">
+    <button class="notif-bell-btn" title="Thông báo mới" onclick="window.openAuthModal();">
       🔔
       <span class="notif-badge-dot"></span>
     </button>
 
-    <div class="user-profile-badge" title="Tài khoản cá nhân">
-      <div class="user-avatar-img">K7</div>
-      <span>Tài Khoản LMS</span>
+    <div class="user-profile-badge" title="Bấm để chọn phân hệ đăng nhập" onclick="window.openAuthModal();">
+      <div class="user-avatar-img">🔑</div>
+      <span>Đăng Nhập Phân Hệ</span>
     </div>
   </div>
 </div>
@@ -447,6 +447,32 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH PORTAL SELECTION MODAL -->
+<div id="auth-portal-modal" class="auth-modal-overlay" style="display:none;" onclick="if(event.target===this) window.closeAuthModal();">
+  <div class="auth-modal-card">
+    <button class="auth-modal-close-btn" onclick="window.closeAuthModal();">✕</button>
+    <div style="font-size:36px;margin-bottom:8px;">🔐</div>
+    <h2 style="font-size:19px;font-weight:800;color:#0f172a;margin-bottom:6px;">Chọn Phân Hệ Đăng Nhập K7 EduHub</h2>
+    <p style="font-size:12.5px;color:#64748b;line-height:1.5;">Trang chủ là cổng tổng quan chỉ xem. Vui lòng chọn phân hệ làm việc tương ứng với tài khoản của bạn để đăng nhập:</p>
+
+    <div class="auth-portal-grid">
+      <a href="student.html" class="auth-portal-card">
+        <div class="auth-portal-icon">🎓</div>
+        <div class="auth-portal-title">Cổng Học Viên / Thí Sinh</div>
+        <div class="auth-portal-desc">Vào làm bài thi trắc nghiệm, đếm ngược thời gian, luyện 5 kỹ năng & tích lũy XP.</div>
+        <span class="action-btn-primary" style="width:100%;justify-content:center;font-size:12px;margin-top:auto;">Đăng Nhập Học Viên →</span>
+      </a>
+
+      <a href="teacher.html" class="auth-portal-card">
+        <div class="auth-portal-icon">👩‍🏫</div>
+        <div class="auth-portal-title">Cổng Quản Trị & Giảng Viên</div>
+        <div class="auth-portal-desc">Soạn ngân hàng đề, thiết kế Unit, quản lý ca thi, duyệt học viên và xuất báo cáo.</div>
+        <span class="action-btn-secondary" style="width:100%;justify-content:center;font-size:12px;background:#1e293b;color:#ffffff;border:none;margin-top:auto;">Đăng Nhập Quản Trị →</span>
+      </a>
     </div>
   </div>
 </div>
