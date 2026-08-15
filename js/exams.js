@@ -1,4 +1,4 @@
-import { state, $, esc, getPool, fillSubcatSelect } from './common.js';
+import { state, $, esc, getPool, fillSubcatSelect, canEditItem } from './common.js';
 
 const db = () => window.supabaseClient;
 
@@ -85,6 +85,10 @@ export async function saveExam(){
   try {
     if (editId) {
       const exam = state.exams.find(e => e.id === editId);
+      if(exam && !canEditItem(exam, state.currentUserEmail)){
+        alert("❌ Bạn không có quyền chỉnh sửa đề thi của giáo viên khác!");
+        return;
+      }
       if(exam){
         Object.assign(exam, { name, desc, count, cat, subcat, timeLimit });
       }
@@ -102,7 +106,8 @@ export async function saveExam(){
         subcat,
         time_limit: timeLimit,
         is_hidden: false,
-        q_ids: []
+        q_ids: [],
+        created_by: state.currentUserEmail || 'nam3010hcm@gmail.com'
       };
       const { data, error } = await db().from('exams').insert([payload]).select();
       if(error) throw error;
@@ -116,7 +121,8 @@ export async function saveExam(){
         subcat: created.subcat || '',
         timeLimit: created.time_limit ?? 0,
         isHidden: created.is_hidden ?? false,
-        qIds: created.q_ids || []
+        qIds: created.q_ids || [],
+        created_by: created.created_by || state.currentUserEmail || 'nam3010hcm@gmail.com'
       });
       alert("✅ Tạo đề thi mới thành công!");
     }
@@ -136,6 +142,12 @@ export async function saveExam(){
 }
 
 export async function deleteExam(id) {
+    const exam = state.exams.find(e => e.id === id);
+    if(exam && !canEditItem(exam, state.currentUserEmail)){
+        alert("❌ Bạn không có quyền xóa đề thi của giáo viên khác!");
+        return;
+    }
+
     if (!confirm("⚠️ Bạn có chắc chắn muốn xóa đề thi này không?")) return;
     
     try {
@@ -164,6 +176,11 @@ export async function deleteExam(id) {
 export async function toggleExamVisibility(id){
   const e = state.exams.find(x => x.id === id);
   if(!e) return;
+  if(!canEditItem(e, state.currentUserEmail)){
+    alert("❌ Bạn không có quyền ẩn/hiện đề thi của giáo viên khác!");
+    return;
+  }
+
   e.isHidden = !e.isHidden;
   const { error } = await db().from('exams').update({ is_hidden: e.isHidden }).eq('id', id);
   if(error) console.error("Lỗi cập nhật trạng thái đề thi:", error);
@@ -179,17 +196,24 @@ export function renderExams(){
     const hideClass = e.isHidden ? 'btn-warn' : 'btn-p';
     const hideText = e.isHidden ? '🙈 Đang ẩn' : '👁️ Đang hiện';
     const statusBadge = e.isHidden ? '<span class="badge-status status-hidden">Đã ẩn</span>' : '<span class="badge-status status-active">Đang mở</span>';
+    const canEdit = canEditItem(e, state.currentUserEmail);
+    const authorBadge = e.created_by ? `<span class="cat-badge" style="background:#f1f5f9;color:#475569;margin-left:4px" title="Người tạo: ${esc(e.created_by)}">👤 ${esc(e.created_by.split('@')[0])}</span>` : '';
+
     return `<div class="qitem"><div class="qrow">
       <div>
-        <div style="font-size:14px;font-weight:600">${esc(e.name)} ${statusBadge}</div>
+        <div style="font-size:14px;font-weight:600">${esc(e.name)} ${statusBadge} ${authorBadge}</div>
         <div style="font-size:13px;color:#6b7280;margin-top:2px">${esc(e.desc || '')}</div>
         <div style="font-size:11px;color:#9ca3af;margin-top:4px">${e.count} câu • ${esc(e.subcat || e.cat || 'Tất cả chủ đề')} • Ngân hàng: ${pool} câu${e.timeLimit>0?' • ⏱ '+e.timeLimit+'p':''}</div>
       </div>
       <div style="display:flex;gap:4px;flex-direction:column;align-items:flex-end">
-        <button class="btn btn-sm ${hideClass} e-action" data-action="toggle" data-id="${e.id}">${hideText}</button>
-        <button class="btn btn-sm e-action" data-action="manage-q" data-id="${e.id}" style="color: #10b981; border: 1px solid #a7f3d0; background: #ecfdf5; margin-right: 6px;">📝 Câu hỏi</button>
-        <button class="btn btn-sm e-action" data-action="edit" data-id="${e.id}" style="color: #3b82f6; border: 1px solid #bfdbfe; background: #eff6ff; margin-right: 6px;">✏️ Sửa</button>
-        <button class="btn btn-sm btn-danger e-action" data-action="delete" data-id="${e.id}">× Xóa</button>
+        ${canEdit ? `
+          <button class="btn btn-sm ${hideClass} e-action" data-action="toggle" data-id="${e.id}">${hideText}</button>
+          <button class="btn btn-sm e-action" data-action="manage-q" data-id="${e.id}" style="color: #10b981; border: 1px solid #a7f3d0; background: #ecfdf5; margin-right: 6px;">📝 Câu hỏi</button>
+          <button class="btn btn-sm e-action" data-action="edit" data-id="${e.id}" style="color: #3b82f6; border: 1px solid #bfdbfe; background: #eff6ff; margin-right: 6px;">✏️ Sửa</button>
+          <button class="btn btn-sm btn-danger e-action" data-action="delete" data-id="${e.id}">× Xóa</button>
+        ` : `
+          <span style="font-size:12px;color:#94a3b8;padding:4px 8px;background:#f1f5f9;border-radius:6px;border:1px solid #e2e8f0" title="Chỉ người tạo hoặc Root Admin mới có quyền sửa/xóa">🔒 Chỉ xem</span>
+        `}
       </div>
     </div></div>`;
   }).join('') || '<div class="empty">📭 Chưa có đề thi.</div>';

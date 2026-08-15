@@ -176,7 +176,7 @@ window.MathJax = {
       <div>
         <div style="font-size:18px;font-weight:700">Quản lý hệ thống</div>
         <div class="login-info">
-          Đang đăng nhập: <b id="current-user-email">...</b>
+          Đang đăng nhập: <b id="current-user-email">...</b> <span id="user-role-badge" style="display:inline-block;margin-left:6px;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:700"></span>
         </div>
       </div>
       <button class="btn btn-sm" id="btn-logout" onclick="if(window.doLogout) window.doLogout();">🔒 Đăng xuất</button>
@@ -186,6 +186,7 @@ window.MathJax = {
       <button class="tab-btn active" data-tab="q" onclick="window.switchTTab('q')">📚 Câu hỏi</button>
       <button class="tab-btn" data-tab="e" onclick="window.switchTTab('e')">📋 Đề thi</button>
       <button class="tab-btn" data-tab="unit" onclick="window.switchTTab('unit')">📖 Thiết kế Unit</button>
+      <button class="tab-btn" data-tab="students" id="tab-btn-students" onclick="window.switchTTab('students')">👥 Học viên</button>
       <button class="tab-btn" data-tab="r" onclick="window.switchTTab('r')">📊 Kết quả</button>
       <button class="tab-btn" data-tab="c" onclick="window.switchTTab('c')">🗂️ Chủ đề</button>
       <button class="tab-btn" data-tab="cohort" onclick="window.switchTTab('cohort')">📅 Ca thi</button>
@@ -425,6 +426,51 @@ window.MathJax = {
         💡 <b>Phân hệ Học tập 5 Kỹ năng:</b> Giáo viên có thể thiết kế các bài học theo từng UNIT riêng biệt (Listening, Reading, Speaking, Writing, Language Focus) với các bài tập tương tác, audio và thẻ từ vựng 3D.
       </div>
       <div id="unit-management-list"></div>
+    </div>
+
+    <!-- TAB QUẢN LÝ HỌC VIÊN -->
+    <div id="tc-students" class="tab-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <div class="sec-title" style="margin:0">Quản lý Tài Khoản Học Viên (<span id="student-count-badge">0</span>)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-p" onclick="window.openStudentModal()">+ Thêm Học Viên</button>
+          <button class="btn" onclick="window.openBulkStudentModal()" style="background:#f1f5f9;border:1px solid #cbd5e1;color:#1e293b">📥 Nhập Hàng Loạt (CSV/Excel)</button>
+          <button class="btn" onclick="window.exportStudentsCSV()">⬇ Xuất CSV</button>
+        </div>
+      </div>
+      <div class="info-note">
+        🛡️ <b>Bảo mật & Phòng chống DDoS:</b> Học viên bắt buộc phải đăng nhập bằng Gmail và Mật khẩu do Root Admin cấp để được vào phòng thi. Thông tin Họ tên, Lớp, Niên khóa được khóa cố định theo tài khoản.
+      </div>
+
+      <!-- BỘ LỌC HỌC VIÊN -->
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <input type="text" id="flt-student-search" placeholder="🔍 Tìm kiếm theo Mã SV, Họ tên, Gmail..." style="flex:2;min-width:200px;padding:8px 12px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px" oninput="window.renderStudentsList()">
+        <select id="flt-student-class" style="flex:1;min-width:140px;padding:8px 12px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px" onchange="window.renderStudentsList()">
+          <option value="">(Tất cả Lớp)</option>
+        </select>
+      </div>
+
+      <!-- BẢNG DANH SÁCH HỌC VIÊN -->
+      <div class="table-wrap" style="background:#fff;border-radius:10px;border:1px solid #e2e8f0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:40px">#</th>
+              <th>Mã SV</th>
+              <th>Họ và Tên</th>
+              <th>Lớp</th>
+              <th>Niên Khóa</th>
+              <th>Gmail / Email</th>
+              <th>Mật Khẩu</th>
+              <th>Trạng Thái</th>
+              <th style="text-align:right">Thao Tác</th>
+            </tr>
+          </thead>
+          <tbody id="students-table-body">
+            <tr><td colspan="9" style="text-align:center;padding:20px;color:#94a3b8">Đang tải danh sách học viên...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     
     <div id="tc-r" class="tab-content">
@@ -715,6 +761,87 @@ window.MathJax = {
     </div>
 </div>
 
-<script type="module" src="js/teacher.js?v=3.5"></script>
+<!-- MODAL THÊM / SỬA HỌC VIÊN -->
+<div id="student-modal" class="screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+    <div class="card" style="width:90%; max-width:550px; max-height:90vh; overflow-y:auto; position:relative; padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 2px solid #e2e8f0; padding-bottom:10px;">
+            <h3 style="margin:0; color:#1e293b;" id="stm-title">Thêm Học Viên Mới</h3>
+            <button class="btn btn-sm" onclick="window.closeStudentModal();">✖ Đóng</button>
+        </div>
+
+        <div class="grid2">
+            <div class="fg" style="margin:0;">
+                <label>Mã Học Viên (ID) *</label>
+                <input type="text" id="stm-id" placeholder="VD: SV001, K7-102">
+            </div>
+            <div class="fg" style="margin:0;">
+                <label>Họ và Tên *</label>
+                <input type="text" id="stm-name" placeholder="VD: Nguyễn Văn A">
+            </div>
+        </div>
+
+        <div class="grid2" style="margin-top:12px;">
+            <div class="fg" style="margin:0;">
+                <label>Lớp học *</label>
+                <input type="text" id="stm-class" placeholder="VD: 12A1, K7-CNTT">
+            </div>
+            <div class="fg" style="margin:0;">
+                <label>Niên khóa</label>
+                <input type="text" id="stm-year" placeholder="VD: 2025 - 2026" value="2025 - 2026">
+            </div>
+        </div>
+
+        <div class="grid2" style="margin-top:12px;">
+            <div class="fg" style="margin:0;">
+                <label>Gmail / Email Đăng Nhập *</label>
+                <input type="email" id="stm-email" placeholder="VD: student1@gmail.com">
+            </div>
+            <div class="fg" style="margin:0;">
+                <label>Mật Khẩu Đăng Nhập *</label>
+                <input type="text" id="stm-pass" placeholder="Mật khẩu" value="123456">
+            </div>
+        </div>
+
+        <div style="margin-top:14px; display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="stm-active" checked style="width:18px; height:18px; cursor:pointer;">
+            <label for="stm-active" style="cursor:pointer; font-weight:600; font-size:13px; color:#1e293b;">Kích hoạt tài khoản (Cho phép đăng nhập làm bài)</label>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:20px; border-top:1px solid #e2e8f0; padding-top:14px;">
+            <button class="btn btn-p" id="btn-save-student" style="flex:2;" onclick="window.saveStudent();">💾 Lưu học viên</button>
+            <button class="btn" style="flex:1;" onclick="window.closeStudentModal();">Hủy</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL NHẬP HỌC VIÊN HÀNG LOẠT (BULK IMPORT) -->
+<div id="student-bulk-modal" class="screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+    <div class="card" style="width:92%; max-width:750px; max-height:92vh; overflow-y:auto; position:relative; padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom: 2px solid #e2e8f0; padding-bottom:10px;">
+            <h3 style="margin:0; color:#1e293b;">📥 Nhập Danh Sách Học Viên Hàng Loạt</h3>
+            <button class="btn btn-sm" onclick="window.closeBulkStudentModal();">✖ Đóng</button>
+        </div>
+
+        <div class="info-note" style="margin-bottom:12px; font-size:12.5px;">
+          💡 <b>Hướng dẫn định dạng:</b> Bạn có thể sao chép từ Excel hoặc dán danh sách theo định dạng:<br>
+          <code>Mã SV , Họ và Tên , Lớp , Niên Khóa , Gmail , Mật Khẩu</code><br>
+          <i>(Hỗ trợ phân cách bằng dấu phẩy <code>,</code> hoặc tab từ Excel)</i>
+        </div>
+
+        <div class="fg">
+          <label>Dán nội dung danh sách học viên vào đây:</label>
+          <textarea id="stm-bulk-text" class="designer-textarea" style="width:100%; min-height:180px; font-family:monospace; font-size:13px;" placeholder="SV001, Nguyễn Văn A, 12A1, 2025-2026, sv001@gmail.com, 123456
+SV002, Trần Thị B, 12A1, 2025-2026, sv002@gmail.com, 123456
+SV003, Lê Văn C, 12A2, 2025-2026, sv003@gmail.com, 123456"></textarea>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button class="btn btn-p" id="btn-save-bulk-students" style="flex:2;" onclick="window.saveBulkStudents();">📥 Tiến hành Nạp Danh Sách</button>
+          <button class="btn" style="flex:1;" onclick="window.closeBulkStudentModal();">Hủy</button>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="js/teacher.js?v=4.0"></script>
 </body>
 </html>

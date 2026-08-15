@@ -29,7 +29,22 @@ export const DEFAULT_EXAMS = [
   {id:4,name:"Chuyên đề Toán",desc:"Kiểm tra câu hỏi Toán có LaTeX",count:10,cat:"Toán",subcat:"",timeLimit:0,isHidden:false}
 ];
 
-export const state = { SUBCATS:{}, questions:[], exams:[], results:[], nextQId:100, nextEId:10 };
+export const ROOT_ADMIN_EMAIL = 'nam3010hcm@gmail.com';
+
+export function isRootUser(email) {
+  if (!email) return false;
+  return String(email).trim().toLowerCase() === ROOT_ADMIN_EMAIL.toLowerCase();
+}
+
+export function canEditItem(item, currentUserEmail) {
+  if (!currentUserEmail) return true;
+  if (isRootUser(currentUserEmail)) return true;
+  const creator = item?.created_by || item?.createdBy;
+  if (!creator) return true;
+  return String(creator).trim().toLowerCase() === String(currentUserEmail).trim().toLowerCase();
+}
+
+export const state = { SUBCATS:{}, questions:[], exams:[], results:[], nextQId:100, nextEId:10, currentUserEmail: '' };
 export const $ = id => document.getElementById(id);
 export const clone = obj => JSON.parse(JSON.stringify(obj));
 export const shuffle = a => a.slice().sort(() => Math.random() - .5);

@@ -1,5 +1,4 @@
-import { uploadMediaFile } from './supabase.js';
-import { state, $, esc, KEYS, mediaHTML, audioHTML, renderRich, typesetMath, TYPE_LABELS, splitBlanks, countBlanks, fillSubcatSelect } from './common.js';
+import { state, $, esc, KEYS, mediaHTML, audioHTML, renderRich, typesetMath, TYPE_LABELS, splitBlanks, countBlanks, fillSubcatSelect, canEditItem, isRootUser } from './common.js';
 
 const db = () => window.supabaseClient;
 
@@ -371,6 +370,10 @@ export async function saveQ(){
   try {
     if(editQId){
       const q = state.questions.find(x => x.id === editQId);
+      if(q && !canEditItem(q, state.currentUserEmail)) {
+        alert("❌ Bạn không có quyền chỉnh sửa câu hỏi của giáo viên khác!");
+        return;
+      }
       if(q) {
         delete q.opts; delete q.ans; delete q.blanks; delete q.bank; delete q.pairs;
         Object.assign(q, { cat, subcat, text, image, audio, explain, ...fields }); 
@@ -379,7 +382,7 @@ export async function saveQ(){
       if(error) throw error;
       alert("✅ Đã cập nhật câu hỏi thành công!");
     }else{
-      const payload = { cat, subcat, text, image, audio, explain, ...fields }; 
+      const payload = { cat, subcat, text, image, audio, explain, created_by: state.currentUserEmail || 'nam3010hcm@gmail.com', ...fields }; 
       const { data, error } = await db().from('questions').insert([payload]).select();
       if(error) throw error;
       const created = data?.[0] || { id: state.nextQId++, ...payload };
@@ -404,6 +407,12 @@ export async function saveQ(){
 }
 
 export async function deleteQ(id){
+  const q = state.questions.find(x => Number(x.id) === Number(id));
+  if(q && !canEditItem(q, state.currentUserEmail)) {
+    alert("❌ Bạn không có quyền xóa câu hỏi của giáo viên khác!");
+    return;
+  }
+
   if(!confirm('Bạn có chắc chắn muốn xóa câu hỏi này?')) return;
   try {
     const { error } = await db().from('questions').delete().eq('id', id);
@@ -443,6 +452,8 @@ export function renderQuestions(){
   $('q-list').innerHTML = pageItems.map(q => {
     const type = q.type || 'mcq_single';
     let answerHTML = '';
+    const canEdit = canEditItem(q, state.currentUserEmail);
+    const authorBadge = q.created_by ? `<div class="cat-badge" style="background:#f1f5f9;color:#475569" title="Người tạo: ${esc(q.created_by)}">👤 ${esc(q.created_by.split('@')[0])}</div>` : '';
     
     // Cập nhật giao diện xem đáp án có thẻ HTML
     if(type === 'mcq_single' || type === 'mcq_multi'){
@@ -468,15 +479,20 @@ export function renderQuestions(){
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
             <div class="cat-badge">${esc(q.subcat || q.cat || 'Chưa phân loại')}</div>
             <div class="cat-badge" style="background:#eef2ff;color:#4338ca">${esc(TYPE_LABELS[type] || type)}</div>
+            ${authorBadge}
             ${q.audio ? '<div class="cat-badge" style="background:#fef3c7;color:#92400e">🔊 Nghe</div>' : ''}
           </div>
           <div>${renderRich(q.text)}</div>
           ${mediaHTML(q.image)}
           ${audioHTML(q.audio)}
         </div>
-        <div>
-          <button class="btn btn-sm q-action" data-action="edit" data-id="${q.id}">Sửa</button>
-          <button class="btn btn-sm btn-danger q-action" data-action="delete" data-id="${q.id}">Xóa</button>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${canEdit ? `
+            <button class="btn btn-sm q-action" data-action="edit" data-id="${q.id}">Sửa</button>
+            <button class="btn btn-sm btn-danger q-action" data-action="delete" data-id="${q.id}">Xóa</button>
+          ` : `
+            <span style="font-size:12px;color:#94a3b8;padding:4px 8px;background:#f1f5f9;border-radius:6px;border:1px solid #e2e8f0" title="Chỉ người tạo hoặc Root Admin mới có quyền sửa/xóa">🔒 Chỉ xem</span>
+          `}
         </div>
       </div>
       <div style="margin-top:8px">${answerHTML}</div>

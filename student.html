@@ -38,33 +38,68 @@ window.supabaseClient = (window.supabase && typeof window.supabase.createClient 
 </div>
 
 <div class="main">
-  <div class="screen active" id="sc-home">
-    <div class="card" style="max-width:460px;margin:30px auto">
+  <!-- MÀN HÌNH 1: ĐĂNG NHẬP HỌC VIÊN (ANTI-DDOS) -->
+  <div class="screen active" id="sc-login">
+    <div class="card" style="max-width:440px;margin:40px auto;padding:28px;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.06)">
       <div style="text-align:center;margin-bottom:24px">
-        <div style="font-size:48px;margin-bottom:10px">📝</div>
-        <div style="font-size:22px;font-weight:700">Cổng Thi Trắc Nghiệm</div>
-        <div style="font-size:14px;color:#6b7280;margin-top:4px">Khoa Khoa học cơ bản</div>
+        <div style="font-size:46px;margin-bottom:8px">🎓</div>
+        <div style="font-size:22px;font-weight:800;color:#1e293b">Cổng Thi Trực Tuyến</div>
+        <div style="font-size:13px;color:#64748b;margin-top:4px">Đăng nhập tài khoản Học viên do Quản trị viên cấp</div>
       </div>
 
       <div class="fg">
-          <label>Mã học viên *</label>
-          <input type="text" id="s-id" placeholder="VD: HV01">
+        <label>Gmail / Email Học Viên *</label>
+        <input type="email" id="st-login-email" placeholder="VD: student1@gmail.com" autocomplete="email">
       </div>
-      
+
       <div class="fg">
-          <label>Họ và Tên *</label>
-          <input type="text" id="s-name" placeholder="VD: Nguyễn Văn A">
+        <label>Mật Khẩu *</label>
+        <div style="position:relative">
+          <input type="password" id="st-login-pass" placeholder="Nhập mật khẩu..." autocomplete="current-password">
+          <button type="button" id="btn-toggle-st-pass" onclick="window.toggleStudentPassVisible()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px">👁️</button>
+        </div>
       </div>
-      
-      <!-- THÊM KHỐI CHỌN CA THI VÀO ĐÂY -->
+
+      <div id="st-login-err" style="display:none;padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:14px"></div>
+
+      <button class="btn btn-p btn-full" id="btn-student-login" onclick="window.loginStudent()" style="padding:12px;font-size:15px;font-weight:700">
+        Đăng Nhập Phòng Thi →
+      </button>
+
+      <div style="text-align:center;margin-top:16px;font-size:12px;color:#94a3b8">
+        🛡️ Hệ thống kiểm soát danh tính và phòng chống truy cập trái phép
+      </div>
+    </div>
+  </div>
+
+  <!-- MÀN HÌNH 2: CỔNG CHỌN CA THI ĐÃ XÁC THỰC -->
+  <div class="screen" id="sc-portal">
+    <div class="card" style="max-width:540px;margin:30px auto;padding:26px;border-radius:14px;">
+      <!-- THẺ ĐỊNH DANH HỌC VIÊN ĐÃ XÁC THỰC -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;margin-bottom:20px;">
+        <div style="display:flex;gap:12px;align-items:center">
+          <div style="font-size:36px">🧑‍🎓</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;color:#15803d" id="st-auth-name">Nguyễn Văn A</div>
+            <div style="font-size:12.5px;color:#166534;margin-top:2px">
+              Mã SV: <b id="st-auth-id">...</b> • Lớp: <b id="st-auth-class">...</b> • NK: <span id="st-auth-year">...</span>
+            </div>
+            <div style="font-size:12px;color:#475569;font-family:monospace" id="st-auth-email">...</div>
+          </div>
+        </div>
+        <button class="btn btn-sm" onclick="window.logoutStudent()" style="background:#fff;border:1px solid #cbd5e1;color:#64748b" title="Đăng xuất">
+          🔒 Đăng xuất
+        </button>
+      </div>
+
+      <!-- CHỌN CA THI VÀ ĐỀ THI -->
       <div class="fg">
           <label>Chọn ca thi / lớp học *</label>
-          <select id="s-cohort" style="width: 100%; padding: 10px; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+          <select id="s-cohort" style="width: 100%; padding: 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
               <option value="" disabled selected>-- Đang tải danh sách ca thi... --</option>
           </select>
       </div>
 
-      <!-- Ô NHẬP MÃ TRUY CẬP CA THI -->
       <div class="fg">
           <label>MÃ TRUY CẬP CA THI *</label>
           <input type="text" id="s-cohort-code" placeholder="Nhập mã do giáo viên cung cấp (VD: K6A2B)..." style="text-transform: uppercase;">
@@ -72,14 +107,16 @@ window.supabaseClient = (window.supabase && typeof window.supabase.createClient 
       
       <div class="fg">
         <label>Chọn đề thi *</label>
-        <select id="s-exam" style="width: 100%; padding: 10px; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 14px; background-color: #f8fafc;">
+        <select id="s-exam" style="width: 100%; padding: 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; background-color: #f8fafc;">
             <option value="" disabled selected>-- Nhập đúng mã ca thi để tải đề --</option>
         </select>
       </div>
 
-      <div id="s-exam-desc" style="font-size:12px;color:#6b7280;margin-bottom:13px;min-height:18px"></div>
+      <div id="s-exam-desc" style="font-size:12px;color:#6b7280;margin-bottom:16px;min-height:18px"></div>
 
-      <button class="btn btn-p btn-full" id="btn-start">Bắt đầu làm bài →</button>
+      <button class="btn btn-p btn-full" id="btn-start" style="padding:13px;font-size:15px;font-weight:700">
+        Bắt đầu làm bài thi →
+      </button>
     </div>
   </div>
 

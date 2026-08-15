@@ -6,7 +6,7 @@
  */
 
 import { DEFAULT_UNITS } from './learn-data.js';
-import { $, esc, clone } from './common.js';
+import { state, $, esc, clone, canEditItem, isRootUser } from './common.js';
 
 const db = () => window.supabaseClient;
 
@@ -82,6 +82,8 @@ export function renderUnitsList() {
     const spkCount = (u.speaking || []).length;
     const wrtCount = (u.writing || []).length;
     const fcCount = (u.languageFocus?.flashcards || []).length;
+    const canEdit = canEditItem(u, state.currentUserEmail);
+    const authorBadge = u.created_by ? `<span class="cat-badge" style="background:#f1f5f9;color:#475569" title="Người tạo: ${esc(u.created_by)}">👤 ${esc(u.created_by.split('@')[0])}</span>` : '';
 
     return `
       <div class="qitem" style="border-left: 4px solid ${isHidden ? '#94a3b8' : '#3b82f6'};">
@@ -91,6 +93,7 @@ export function renderUnitsList() {
               <span style="font-size:20px">${u.icon || '📖'}</span>
               <span style="font-size:16px;font-weight:700;color:#1e293b">${esc(u.title)}</span>
               <span class="cat-badge" style="background:#e0f2fe;color:#0369a1">${esc(u.level || 'A2')}</span>
+              ${authorBadge}
               <span class="badge-status ${isHidden ? 'status-hidden' : 'status-active'}">${isHidden ? 'Đã ẩn' : 'Đang mở'}</span>
             </div>
             <div style="font-size:13px;color:#64748b;margin-bottom:8px">${esc(u.description || u.topic || '')}</div>
@@ -103,15 +106,19 @@ export function renderUnitsList() {
             </div>
           </div>
           <div style="display:flex;gap:6px;flex-direction:column;align-items:flex-end">
-            <button class="btn btn-sm" onclick="window.openUnitEditor('${u.id}')" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe">
-              🎛️ Thiết kế 5 Kỹ năng
-            </button>
-            <button class="btn btn-sm ${isHidden ? 'btn-warn' : 'btn-p'}" onclick="window.toggleUnitVisibility('${u.id}')">
-              ${isHidden ? '👁️ Mở Unit' : '🙈 Ẩn Unit'}
-            </button>
-            <button class="btn btn-sm btn-danger" onclick="window.deleteUnit('${u.id}')">
-              🗑️ Xóa
-            </button>
+            ${canEdit ? `
+              <button class="btn btn-sm" onclick="window.openUnitEditor('${u.id}')" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe">
+                🎛️ Thiết kế 5 Kỹ năng
+              </button>
+              <button class="btn btn-sm ${isHidden ? 'btn-warn' : 'btn-p'}" onclick="window.toggleUnitVisibility('${u.id}')">
+                ${isHidden ? '👁️ Mở Unit' : '🙈 Ẩn Unit'}
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="window.deleteUnit('${u.id}')">
+                🗑️ Xóa
+              </button>
+            ` : `
+              <span style="font-size:12px;color:#94a3b8;padding:4px 8px;background:#f1f5f9;border-radius:6px;border:1px solid #e2e8f0" title="Chỉ người tạo hoặc Root Admin mới có quyền sửa/xóa">🔒 Chỉ xem</span>
+            `}
           </div>
         </div>
       </div>
@@ -472,6 +479,14 @@ export async function saveUnit() {
   const unit = window._currentDraftUnit;
   if (!unit) return;
 
+  if (unit.id && unitsState.some(u => u.id === unit.id)) {
+    const existing = unitsState.find(u => u.id === unit.id);
+    if (existing && !canEditItem(existing, state.currentUserEmail)) {
+      alert("❌ Bạn không có quyền chỉnh sửa Unit bài học của giáo viên khác!");
+      return;
+    }
+  }
+
   const title = $('ud-title')?.value.trim();
   if (!title) {
     alert('Vui lòng nhập Tên Unit bài học!');
@@ -504,7 +519,8 @@ export async function saveUnit() {
       speaking: unit.speaking || [],
       writing: unit.writing || [],
       language_focus: unit.languageFocus || {},
-      created_at: Date.now()
+      created_at: Date.now(),
+      created_by: unit.created_by || state.currentUserEmail || 'nam3010hcm@gmail.com'
     };
 
     const { error } = await db().from('learning_units').upsert([payload], { onConflict: 'id' });
@@ -535,6 +551,10 @@ export async function saveUnit() {
 export async function toggleUnitVisibility(unitId) {
   const u = unitsState.find(x => x.id === unitId);
   if (!u) return;
+  if (!canEditItem(u, state.currentUserEmail)) {
+    alert("❌ Bạn không có quyền ẩn/hiện Unit của giáo viên khác!");
+    return;
+  }
 
   u.isHidden = !u.isHidden;
   try {
@@ -548,6 +568,12 @@ export async function toggleUnitVisibility(unitId) {
 
 // 8. XÓA UNIT
 export async function deleteUnit(unitId) {
+  const u = unitsState.find(x => x.id === unitId);
+  if (u && !canEditItem(u, state.currentUserEmail)) {
+    alert("❌ Bạn không có quyền xóa Unit của giáo viên khác!");
+    return;
+  }
+
   if (!confirm("⚠️ Bạn có chắc chắn muốn xóa Unit bài học này?")) return;
   try {
     const { error } = await db().from('learning_units').delete().eq('id', unitId);

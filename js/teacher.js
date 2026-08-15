@@ -3,12 +3,13 @@ import {
   uploadMediaFile
 } from './supabase.js';
 
-import { initData, state, $, esc } from './common.js';
+import { initData, state, $, esc, isRootUser } from './common.js';
 import { populateCategoryDropdowns, updateFltSubcat, updateQFormSubcat, updateEFormSubcat, addParentCategory, deleteParentCategory, addSubCategory, deleteSubCategory, editSubCategory, restoreDefaultCategories, renderCatManagementList } from './categories.js';
 import { openQForm, closeQForm, saveQ, deleteQ, renderQuestions } from './questions.js';
 import { openEForm, closeEForm, saveExam, deleteExam, toggleExamVisibility, renderExams, populateExamSelect } from './exams.js';
 import { renderResults, clearResults, exportCSV } from './results.js';
 import { loadUnits, renderUnitsList, openUnitEditor, closeUnitEditor, switchDesignerSkillTab, saveUnit, deleteUnit, toggleUnitVisibility } from './units.js';
+import { loadStudents, renderStudentsList, openStudentModal, closeStudentModal, saveStudent, toggleStudentStatus, deleteStudent, openBulkStudentModal, closeBulkStudentModal, saveBulkStudents, exportStudentsCSV } from './students-mgr.js';
 
 const db = () => window.supabaseClient;
 
@@ -16,8 +17,25 @@ async function showTeacherPanel(user) {
   $('t-login').style.display = 'none';
   $('t-panel').style.display = 'block';
 
+  state.currentUserEmail = user?.email || 'nam3010hcm@gmail.com';
+
   if ($('current-user-email')) {
-    $('current-user-email').innerText = user?.email || 'Quản trị viên';
+    $('current-user-email').innerText = state.currentUserEmail;
+  }
+
+  const roleBadge = $('user-role-badge');
+  if (roleBadge) {
+    if (isRootUser(state.currentUserEmail)) {
+      roleBadge.style.background = '#fef3c7';
+      roleBadge.style.color = '#92400e';
+      roleBadge.style.border = '1px solid #fde68a';
+      roleBadge.innerHTML = '👑 Root Admin';
+    } else {
+      roleBadge.style.background = '#e0f2fe';
+      roleBadge.style.color = '#0369a1';
+      roleBadge.style.border = '1px solid #bae6fd';
+      roleBadge.innerHTML = '👨‍🏫 Giáo viên';
+    }
   }
 
   initTeacherApp();
@@ -41,6 +59,7 @@ async function showTeacherPanel(user) {
     renderCatManagementList();
     loadCohorts(); 
     loadUnits().then(() => renderUnitsList());
+    loadStudents().then(() => renderStudentsList());
     if (typeof window.populateCohortExams === 'function') {
       window.populateCohortExams(); 
     }
@@ -125,7 +144,7 @@ async function doLogout() {
 }
 
 function switchTTab(t) {
-  ['q', 'e', 'unit', 'r', 'c', 'cohort', 'img'].forEach(x => {
+  ['q', 'e', 'unit', 'students', 'r', 'c', 'cohort', 'img'].forEach(x => {
     const content = $('tc-' + x);
     if(content) {
       content.classList.toggle('active', x === t);
@@ -137,6 +156,7 @@ function switchTTab(t) {
   });
 
   if (t === 'unit') renderUnitsList();
+  if (t === 'students') loadStudents().then(renderStudentsList);
   if (t === 'r') renderResults();
   if (t === 'c') renderCatManagementList();
   if (t === 'img' && typeof window.loadGallery === 'function') window.loadGallery();
@@ -151,6 +171,16 @@ function switchTTab(t) {
 window.switchTTab = switchTTab;
 window._teacherModuleSwitchTab = switchTTab;
 window.doLogout = doLogout;
+window.openStudentModal = openStudentModal;
+window.closeStudentModal = closeStudentModal;
+window.saveStudent = saveStudent;
+window.toggleStudentStatus = toggleStudentStatus;
+window.deleteStudent = deleteStudent;
+window.openBulkStudentModal = openBulkStudentModal;
+window.closeBulkStudentModal = closeBulkStudentModal;
+window.saveBulkStudents = saveBulkStudents;
+window.exportStudentsCSV = exportStudentsCSV;
+window.renderStudentsList = renderStudentsList;
 window.openUnitEditor = openUnitEditor;
 window.closeUnitEditor = closeUnitEditor;
 window.switchDesignerSkillTab = switchDesignerSkillTab;
