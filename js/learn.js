@@ -93,17 +93,80 @@ export function playLevelUpSound() {
   playTone(880, 'triangle', 0.4, 0.3);
 }
 
-// --- WEB SPEECH SYNTHESIS (TTS) ---
-export function speakText(text, rate = 1.0, lang = 'en-US') {
-  if (!window.speechSynthesis) return;
+// --- HIGH-QUALITY NATURAL SPEECH SYNTHESIS ENGINE (TTS) ---
+let cachedVoices = [];
+function initVoices() {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  cachedVoices = window.speechSynthesis.getVoices() || [];
+  if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      cachedVoices = window.speechSynthesis.getVoices() || [];
+    };
+  }
+}
+initVoices();
+
+export function getBestNaturalVoice(gender = 'neutral', lang = 'en') {
+  if (!window.speechSynthesis) return null;
+  if (!cachedVoices.length) cachedVoices = window.speechSynthesis.getVoices() || [];
+  
+  const enVoices = cachedVoices.filter(v => v.lang && v.lang.toLowerCase().startsWith(lang.toLowerCase()));
+  if (!enVoices.length) return cachedVoices[0] || null;
+
+  const femaleKeywords = ['jenny', 'aria', 'michelle', 'sonia', 'female', 'samantha', 'ava', 'serena', 'karen', 'victoria', 'moira', 'zira', 'emma'];
+  const maleKeywords = ['guy', 'christopher', 'ryan', 'eric', 'male', 'daniel', 'oliver', 'tom', 'alex', 'david', 'george', 'mark', 'andrew'];
+
+  // 1. Nếu yêu cầu giọng Nữ (Female)
+  if (gender === 'female') {
+    const fNatural = enVoices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Neural') || v.name.includes('Google') || v.name.includes('Enhanced')) && femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
+    if (fNatural) return fNatural;
+    const fAny = enVoices.find(v => femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
+    if (fAny) return fAny;
+  } 
+  // 2. Nếu yêu cầu giọng Nam (Male)
+  else if (gender === 'male') {
+    const mNatural = enVoices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Neural') || v.name.includes('Google') || v.name.includes('Enhanced')) && maleKeywords.some(k => v.name.toLowerCase().includes(k)));
+    if (mNatural) return mNatural;
+    const mAny = enVoices.find(v => maleKeywords.some(k => v.name.toLowerCase().includes(k)));
+    if (mAny) return mAny;
+  }
+
+  // 3. Fallback: Chọn bất kỳ giọng Natural / Neural / Enhanced / Google nào
+  const premiumVoice = enVoices.find(v => 
+    v.name.includes('Natural') || 
+    v.name.includes('Online') || 
+    v.name.includes('Neural') || 
+    v.name.includes('Google') || 
+    v.name.includes('Enhanced') ||
+    v.name.includes('Samantha') ||
+    v.name.includes('Daniel')
+  );
+
+  return premiumVoice || enVoices[0] || cachedVoices[0] || null;
+}
+
+export function speakText(text, options = {}) {
+  if (!window.speechSynthesis || !text) return;
   window.speechSynthesis.cancel();
+
+  const gender = typeof options === 'string' ? options : (options.gender || 'neutral');
+  const rate = (typeof options === 'object' && options.rate) ? options.rate : 0.92;
+  const pitch = (typeof options === 'object' && options.pitch) ? options.pitch : (gender === 'female' ? 1.04 : gender === 'male' ? 0.94 : 1.0);
+  const lang = (typeof options === 'object' && options.lang) || 'en-US';
+  const onEnd = typeof options === 'object' ? options.onEnd : null;
+
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = lang;
   utter.rate = rate;
+  utter.pitch = pitch;
 
-  const voices = window.speechSynthesis.getVoices();
-  const naturalVoice = voices.find(v => (v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha') || v.name.includes('Daniel') || v.name.includes('Karen'))));
-  if (naturalVoice) utter.voice = naturalVoice;
+  const voice = getBestNaturalVoice(gender, 'en');
+  if (voice) utter.voice = voice;
+
+  if (onEnd) {
+    utter.onend = () => onEnd();
+    utter.onerror = () => onEnd();
+  }
 
   window.speechSynthesis.speak(utter);
 }
@@ -1669,11 +1732,68 @@ function renderActiveRoleplayView() {
 // -------------------------------------------------------------------------
 // 3.3 ĐIỀU PHỐI PHÁT VIDEO / LỜI THOẠI & CHUYỂN LƯỢT TỰ ĐỘNG
 // -------------------------------------------------------------------------
+let activeMediaRecorder = null;
+let activeAudioStream = null;
+let recordedAudioChunks = [];
+let currentUserAudioElement = null;
+let advanceTimerTimeout = null;
+
+export function stopUserAudioPlayback() {
+  if (currentUserAudioElement) {
+    try {
+      currentUserAudioElement.pause();
+      currentUserAudioElement.currentTime = 0;
+    } catch (e) {}
+    currentUserAudioElement = null;
+  }
+  document.querySelectorAll('.voice-playback-btn').forEach(btn => {
+    btn.classList.remove('playing');
+    btn.innerHTML = '🎧 Nghe lại giọng của bạn';
+  });
+}
+
+window.playUserRecordedAudio = function(customUrl = null) {
+  const audioUrl = customUrl || rpScores[currentRpTurnIdx]?.userAudioUrl;
+  if (!audioUrl) {
+    alert('Chưa có bản ghi âm. Vui lòng bấm Mic đọc câu để hệ thống thu âm giọng của bạn!');
+    return;
+  }
+
+  const playBtn = document.getElementById('btn-play-user-audio');
+
+  if (currentUserAudioElement && !currentUserAudioElement.paused) {
+    stopUserAudioPlayback();
+    return;
+  }
+
+  stopUserAudioPlayback();
+  currentUserAudioElement = new Audio(audioUrl);
+  if (playBtn) {
+    playBtn.classList.add('playing');
+    playBtn.innerHTML = '⏸️ Đang phát giọng bạn...';
+  }
+
+  currentUserAudioElement.onended = () => {
+    stopUserAudioPlayback();
+  };
+  currentUserAudioElement.onerror = () => {
+    stopUserAudioPlayback();
+  };
+
+  currentUserAudioElement.play().catch(e => {
+    console.warn("Audio play error:", e);
+    stopUserAudioPlayback();
+  });
+};
+
 function playCurrentRpTurn() {
   if (!currentRpLesson) return;
   const dialogue = currentRpLesson.dialogue || [];
   const currentLine = dialogue[currentRpTurnIdx];
   if (!currentLine) return;
+
+  if (advanceTimerTimeout) clearTimeout(advanceTimerTimeout);
+  stopUserAudioPlayback();
 
   const isUserTurn = currentRpRole === 'ALL' || (currentLine.speaker === currentRpRole);
   const videoElem = document.getElementById('rp-video-player');
@@ -1693,7 +1813,7 @@ function playCurrentRpTurn() {
     }
     if (refreshedAvatarStage) refreshedAvatarStage.style.display = 'block';
   } else {
-    // LƯỢT CỦA MÁY / ĐỐI TÁC: Phát video hoặc TTS
+    // LƯỢT CỦA MÁY / ĐỐI TÁC: Phát video hoặc TTS tự nhiên
     if (currentLine.videoUrl && refreshedVideoElem) {
       refreshedVideoElem.style.display = 'block';
       if (refreshedAvatarStage) refreshedAvatarStage.style.display = 'none';
@@ -1720,7 +1840,7 @@ function playCurrentRpTurn() {
         }, 700);
       };
     } else {
-      // Không có video URL: Dùng Web Speech Synthesis TTS
+      // Không có video URL: Dùng Natural Speech Synthesis TTS
       if (refreshedVideoElem) refreshedVideoElem.style.display = 'none';
       if (refreshedAvatarStage) refreshedAvatarStage.style.display = 'block';
       speakLineWithTTS(currentLine.text, () => {
@@ -1733,25 +1853,31 @@ function playCurrentRpTurn() {
 }
 
 function speakLineWithTTS(text, onEndCallback = null) {
-  if (!window.speechSynthesis) {
-    if (onEndCallback) onEndCallback();
+  if (!currentRpLesson) {
+    speakText(text, { onEnd: onEndCallback });
     return;
   }
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'en-US';
-  utter.rate = rpPlaybackSpeed * 0.95;
-
-  const voices = window.speechSynthesis.getVoices();
-  const naturalVoice = voices.find(v => (v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Natural'))));
-  if (naturalVoice) utter.voice = naturalVoice;
-
-  if (onEndCallback) {
-    utter.onend = () => onEndCallback();
-    utter.onerror = () => onEndCallback();
+  const currentLine = currentRpLesson.dialogue?.[currentRpTurnIdx];
+  const charA = currentRpLesson.characterA || {};
+  const charB = currentRpLesson.characterB || {};
+  const spkChar = currentLine?.speaker === 'A' ? charA : charB;
+  
+  // Nhận diện giới tính nhân vật để chọn giọng tự nhiên tương ứng
+  let gender = 'neutral';
+  const nameStr = ((spkChar.name || '') + ' ' + (spkChar.roleTitle || '')).toLowerCase();
+  if (nameStr.includes('emma') || nameStr.includes('sarah') || nameStr.includes('elena') || (spkChar.avatar && spkChar.avatar.includes('👩')) || nameStr.includes('lễ tân') || nameStr.includes('receptionist')) {
+    gender = 'female';
+  } else if (nameStr.includes('david') || nameStr.includes('alex') || nameStr.includes('harrison') || (spkChar.avatar && (spkChar.avatar.includes('🧑') || spkChar.avatar.includes('👨'))) || nameStr.includes('mr')) {
+    gender = 'male';
+  } else {
+    gender = currentLine?.speaker === 'A' ? 'female' : 'male';
   }
 
-  window.speechSynthesis.speak(utter);
+  speakText(text, {
+    gender,
+    rate: rpPlaybackSpeed * 0.92,
+    onEnd: onEndCallback
+  });
 }
 
 window.speakCurrentLineTTS = function() {
@@ -1775,6 +1901,7 @@ window.jumpToRoleplayTurn = function(idx) {
 
 window.advanceRoleplayTurnManual = function() {
   if (!currentRpLesson) return;
+  if (advanceTimerTimeout) clearTimeout(advanceTimerTimeout);
   const dialogue = currentRpLesson.dialogue || [];
   if (currentRpTurnIdx + 1 >= dialogue.length) {
     showRoleplayCompletionSummary();
@@ -1784,8 +1911,31 @@ window.advanceRoleplayTurnManual = function() {
   }
 };
 
+window.cancelAutoAdvance = function() {
+  if (advanceTimerTimeout) {
+    clearTimeout(advanceTimerTimeout);
+    advanceTimerTimeout = null;
+  }
+  const statusLabel = document.getElementById('rp-mic-status-label');
+  if (statusLabel) {
+    statusLabel.innerHTML = '⏸️ <b>Đã dừng chuyển câu. Bạn có thể nghe lại giọng hoặc bấm "Đọc lại" để luyện tiếp!</b>';
+  }
+};
+
+window.retryCurrentRoleplayTurn = function() {
+  if (advanceTimerTimeout) clearTimeout(advanceTimerTimeout);
+  stopUserAudioPlayback();
+  if (rpScores[currentRpTurnIdx]) {
+    delete rpScores[currentRpTurnIdx];
+  }
+  renderActiveRoleplayView();
+  setTimeout(() => {
+    window.toggleRoleplayRecording();
+  }, 250);
+};
+
 // -------------------------------------------------------------------------
-// 3.4 NHẬN DIỆN GIỌNG NÓI & SO KHỚP CHẤM ĐIỂM TỪNG TỪ (SPEECH DIFF ENGINE)
+// 3.4 THU ÂM HỌC VIÊN (MEDIARECORDER) + CHẤM ĐIỂM AI (SPEECH DIFF ENGINE)
 // -------------------------------------------------------------------------
 window.toggleRoleplayRecording = function() {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1797,14 +1947,24 @@ window.toggleRoleplayRecording = function() {
   const currentLine = currentRpLesson?.dialogue?.[currentRpTurnIdx];
   if (!currentLine) return;
 
+  if (advanceTimerTimeout) clearTimeout(advanceTimerTimeout);
+  stopUserAudioPlayback();
+
   const micBtn = document.getElementById('rp-mic-btn');
   const statusLabel = document.getElementById('rp-mic-status-label');
   const diffBox = document.getElementById('rp-diff-box');
   const diffContent = document.getElementById('rp-diff-content');
   const scoreVal = document.getElementById('rp-turn-score-val');
+  const playbackCard = document.getElementById('rp-user-playback-card');
 
+  // NẾU ĐANG THU ÂM -> DỪNG THU ÂM
   if (isRpRecording) {
-    if (rpSpeechRecognizer) rpSpeechRecognizer.stop();
+    if (rpSpeechRecognizer) {
+      try { rpSpeechRecognizer.stop(); } catch(e){}
+    }
+    if (activeMediaRecorder && activeMediaRecorder.state === 'recording') {
+      try { activeMediaRecorder.stop(); } catch(e){}
+    }
     isRpRecording = false;
     if (micBtn) {
       micBtn.classList.remove('recording');
@@ -1814,191 +1974,145 @@ window.toggleRoleplayRecording = function() {
     return;
   }
 
-  rpSpeechRecognizer = new SpeechRec();
-  rpSpeechRecognizer.lang = 'en-US';
-  rpSpeechRecognizer.interimResults = false;
-  rpSpeechRecognizer.maxAlternatives = 1;
+  // BẮT ĐẦU THU ÂM BẰNG MEDIARECORDER (LƯU AUDIO THẬT CỦA HỌC VIÊN)
+  navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
+    .then(stream => {
+      activeAudioStream = stream;
+      recordedAudioChunks = [];
 
-  rpSpeechRecognizer.onstart = () => {
-    isRpRecording = true;
-    if (micBtn) {
-      micBtn.classList.add('recording');
-      micBtn.textContent = '🔴';
-    }
-    if (statusLabel) statusLabel.textContent = 'Đang lắng nghe giọng bạn nói... (Hãy đọc to câu tiếng Anh)';
-  };
+      let mimeType = 'audio/webm';
+      if (typeof MediaRecorder !== 'undefined') {
+        if (!MediaRecorder.isTypeSupported('audio/webm')) {
+          if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+          else if (MediaRecorder.isTypeSupported('audio/ogg')) mimeType = 'audio/ogg';
+          else mimeType = '';
+        }
+        activeMediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+        
+        activeMediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) recordedAudioChunks.push(e.data);
+        };
 
-  rpSpeechRecognizer.onresult = (event) => {
-    const transcript = event.results[0][0].transcript || '';
-    const target = currentLine.text;
+        activeMediaRecorder.onstop = () => {
+          if (recordedAudioChunks.length > 0) {
+            const blobType = mimeType || 'audio/webm';
+            const audioBlob = new Blob(recordedAudioChunks, { type: blobType });
+            const userAudioUrl = URL.createObjectURL(audioBlob);
+            if (currentRpLesson) {
+              if (!rpScores[currentRpTurnIdx]) rpScores[currentRpTurnIdx] = {};
+              rpScores[currentRpTurnIdx].userAudioUrl = userAudioUrl;
+            }
+            // Hiển thị khung nghe lại giọng đọc của học viên
+            renderUserRoleplayPlaybackControls(userAudioUrl);
+          }
+          if (activeAudioStream) {
+            activeAudioStream.getTracks().forEach(t => t.stop());
+            activeAudioStream = null;
+          }
+        };
 
-    // Tính điểm và sinh HTML highlight từng từ đúng/sai
-    const { score, diffHtml } = computeWordDiffAndScore(target, transcript);
+        activeMediaRecorder.start(100);
+      }
 
-    rpScores[currentRpTurnIdx] = { score, transcript, diffHtml };
-
-    if (diffBox) diffBox.style.display = 'block';
-    if (diffContent) diffContent.innerHTML = diffHtml;
-
-    if (scoreVal) {
-      const color = score >= 80 ? '#16a34a' : score >= 60 ? '#f59e0b' : '#dc2626';
-      scoreVal.innerHTML = `Độ chính xác: <span style="color:${color};font-weight:800;font-size:18px">${score}/100</span>`;
-    }
-
-    if (score >= 75) {
-      playSuccessSound();
-      addXP(25, 'Phát âm chuẩn vai diễn');
-      if (statusLabel) statusLabel.innerHTML = '🎉 <b style="color:#16a34a">Tuyệt vời! Tự động chuyển câu tiếp theo...</b>';
-      
-      setTimeout(() => {
-        window.advanceRoleplayTurnManual();
-      }, 1600);
-    } else {
-      playWrongSound();
-      if (statusLabel) statusLabel.innerHTML = '⚠️ <b style="color:#dc2626">Cần cải thiện. Bạn có thể bấm Mic nói lại hoặc nghe mẫu!</b>';
-    }
-  };
-
-  rpSpeechRecognizer.onerror = (event) => {
-    console.error("Lỗi nhận diện:", event.error);
-    isRpRecording = false;
-    if (micBtn) {
-      micBtn.classList.remove('recording');
-      micBtn.textContent = '🎙️';
-    }
-    if (statusLabel) statusLabel.textContent = '⚠️ Không nhận diện được âm thanh. Vui lòng bấm Mic và thử lại!';
-  };
-
-  rpSpeechRecognizer.onend = () => {
-    isRpRecording = false;
-    if (micBtn) {
-      micBtn.classList.remove('recording');
-      micBtn.textContent = '🎙️';
-    }
-  };
-
-  rpSpeechRecognizer.start();
+      // ĐỒNG THỜI CHẠY SPEECH RECOGNITION ĐỂ SO KHỚP TỪNG TỪ & CHẤM ĐIỂM
+      startRoleplaySpeechRecognition(currentLine, micBtn, statusLabel, diffBox, diffContent, scoreVal);
+    })
+    .catch(err => {
+      console.warn("Không thể mở micro qua getUserMedia, tiếp tục với SpeechRecognition thuần:", err);
+      startRoleplaySpeechRecognition(currentLine, micBtn, statusLabel, diffBox, diffContent, scoreVal);
+    });
 };
 
-function computeWordDiffAndScore(targetText, actualText) {
-  const clean = str => str.toLowerCase().replace(/[^\w\s']/gi, '').trim();
-  const targetWords = clean(targetText).split(/\s+/).filter(Boolean);
-  const actualWords = clean(actualText).split(/\s+/).filter(Boolean);
 
-  let matchCount = 0;
-  const originalWords = targetText.split(/\s+/);
-
-  const diffHtml = originalWords.map((origWord, idx) => {
-    const norm = clean(origWord);
-    if (actualWords.includes(norm)) {
-      matchCount++;
-      return `<span class="diff-word-correct" title="Phát âm đúng">${origWord}</span>`;
-    } else {
-      return `<span class="diff-word-wrong" title="Chưa nhận diện được">${origWord}</span>`;
-    }
-  }).join(' ');
-
-  const score = targetWords.length ? Math.min(100, Math.round((matchCount / targetWords.length) * 100)) : 100;
-  return { score, diffHtml };
-}
 
 // -------------------------------------------------------------------------
-// 3.5 BẢNG TỔNG KẾT & CHÚC MỪNG HOÀN THÀNH VAI DIỄN (SUMMARY MODAL)
+// 3.6 THU ÂM & NGHE LẠI PHÁT ÂM CÂU ĐƠN LẺ (PHRASES)
 // -------------------------------------------------------------------------
-function showRoleplayCompletionSummary() {
-  const workspace = document.getElementById('spk-workspace');
-  if (!workspace || !currentRpLesson) return;
+const phraseAudioMap = {};
 
-  const lesson = currentRpLesson;
-  const dialogue = lesson.dialogue || [];
-  const charA = lesson.characterA || { name: 'Nhân vật A', avatar: '👩‍💼' };
-  const charB = lesson.characterB || { name: 'Nhân vật B', avatar: '🧑‍💼' };
-
-  // Tính điểm trung bình các câu học viên đã nói
-  let userLines = 0;
-  let totalScore = 0;
-  dialogue.forEach((d, idx) => {
-    if (currentRpRole === 'ALL' || d.speaker === currentRpRole) {
-      userLines++;
-      const s = rpScores[idx]?.score || 0;
-      totalScore += s;
-    }
+window.playPhraseRecordedAudio = function(idx) {
+  const audioUrl = phraseAudioMap[idx];
+  if (!audioUrl) {
+    alert('Chưa có bản ghi âm cho câu này. Hãy bấm Mic để đọc!');
+    return;
+  }
+  stopUserAudioPlayback();
+  const playBtn = document.getElementById(`btn-phrase-play-${idx}`);
+  currentUserAudioElement = new Audio(audioUrl);
+  if (playBtn) {
+    playBtn.classList.add('playing');
+    playBtn.innerHTML = '⏸️ Đang phát...';
+  }
+  currentUserAudioElement.onended = () => stopUserAudioPlayback();
+  currentUserAudioElement.onerror = () => stopUserAudioPlayback();
+  currentUserAudioElement.play().catch(e => {
+    console.warn("Play error:", e);
+    stopUserAudioPlayback();
   });
-
-  const avgScore = userLines > 0 ? Math.round(totalScore / userLines) : 85;
-  const myRoleName = currentRpRole === 'A' ? charA.name : currentRpRole === 'B' ? charB.name : 'Cả 2 vai';
-  const myRoleAvatar = currentRpRole === 'A' ? charA.avatar : currentRpRole === 'B' ? charB.avatar : '👥';
-  const nextRole = currentRpRole === 'A' ? 'B' : 'A';
-  const nextRoleName = nextRole === 'A' ? charA.name : charB.name;
-  const nextRoleAvatar = nextRole === 'A' ? charA.avatar : charB.avatar;
-
-  // Thưởng XP hoàn thành
-  addXP(50, 'Hoàn thành trọn vẹn hội thoại Video Roleplay');
-  playSuccessSound();
-  triggerConfetti();
-
-  workspace.innerHTML = `
-    <div class="video-rp-container">
-      <div class="roleplay-summary-card">
-        <div style="font-size:56px;margin-bottom:12px">🏆</div>
-        <h2 style="font-size:24px;font-weight:800;color:#0f172a;margin-bottom:6px">Chúc Mừng Bạn Đã Hoàn Thành Vai Diễn!</h2>
-        <div style="font-size:14px;color:#64748b;margin-bottom:20px">
-          Bạn vừa hoàn thành xuất sắc vai <b>${myRoleAvatar} ${myRoleName}</b> trong bài hội thoại: <b>${lesson.title}</b>
-        </div>
-
-        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;margin-bottom:24px">
-          <div style="background:#eff6ff;padding:14px;border-radius:12px;border:1px solid #bfdbfe">
-            <div style="font-size:11.5px;color:#1e40af;font-weight:800;text-transform:uppercase">Độ chuẩn xác</div>
-            <div style="font-size:24px;font-weight:800;color:#1d4ed8;margin-top:2px">${avgScore}%</div>
-          </div>
-          <div style="background:#f0fdf4;padding:14px;border-radius:12px;border:1px solid #bbf7d0">
-            <div style="font-size:11.5px;color:#15803d;font-weight:800;text-transform:uppercase">Số câu đã nói</div>
-            <div style="font-size:24px;font-weight:800;color:#16a34a;margin-top:2px">${userLines} câu</div>
-          </div>
-          <div style="background:#fefce8;padding:14px;border-radius:12px;border:1px solid #fef08a">
-            <div style="font-size:11.5px;color:#854d0e;font-weight:800;text-transform:uppercase">Thưởng XP</div>
-            <div style="font-size:24px;font-weight:800;color:#ca8a04;margin-top:2px">+50 XP</div>
-          </div>
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <button class="btn btn-p btn-full" onclick="window.startRoleplayAsRole('${nextRole}')" style="padding:13px;font-size:15px;font-weight:800;background:#2563eb">
-            🎭 Đổi sang đóng vai ${nextRoleAvatar} ${nextRoleName} (Luyện vai còn lại) →
-          </button>
-          <div style="display:flex;gap:10px">
-            <button class="btn btn-full" onclick="window.startRoleplayAsRole('${currentRpRole}')" style="padding:10px;font-size:13.5px;background:#f8fafc;border:1px solid #cbd5e1">
-              🔄 Luyện lại vai này
-            </button>
-            <button class="btn btn-full" onclick="window.openRoleSelectionScreen()" style="padding:10px;font-size:13.5px;background:#f8fafc;border:1px solid #cbd5e1">
-              📋 Chọn bài học khác
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-window.speakPronunciation = function(text) { speakText(text, 0.9, 'en-US'); };
+};
 
 window.togglePronunciationRecording = function(idx, targetText) {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRec) {
-    alert('Trình duyệt của bạn chưa hỗ trợ Web Speech Recognition. Vui lòng thử trên Google Chrome hoặc Microsoft Edge!');
+    alert('Trình duyệt chưa hỗ trợ Web Speech Recognition. Vui lòng dùng Chrome hoặc Edge!');
     return;
   }
+
+  stopUserAudioPlayback();
 
   const btn = document.getElementById(`btn-spk-rec-${idx}`);
   const scoreEl = document.getElementById(`spk-score-${idx}`);
   const resultEl = document.getElementById(`spk-result-${idx}`);
 
   if (isRecording) {
-    if (speechRecognizer) speechRecognizer.stop();
+    if (speechRecognizer) {
+      try { speechRecognizer.stop(); } catch(e){}
+    }
+    if (activeMediaRecorder && activeMediaRecorder.state === 'recording') {
+      try { activeMediaRecorder.stop(); } catch(e){}
+    }
     isRecording = false;
     if (btn) btn.textContent = '🎙️ Bấm để nói';
     return;
   }
 
+  // Bắt đầu thu âm audio thật của học viên
+  navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
+    .then(stream => {
+      activeAudioStream = stream;
+      recordedAudioChunks = [];
+      let mimeType = 'audio/webm';
+      if (typeof MediaRecorder !== 'undefined') {
+        if (!MediaRecorder.isTypeSupported('audio/webm')) {
+          if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+          else mimeType = '';
+        }
+        activeMediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+        activeMediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) recordedAudioChunks.push(e.data);
+        };
+        activeMediaRecorder.onstop = () => {
+          if (recordedAudioChunks.length > 0) {
+            const blob = new Blob(recordedAudioChunks, { type: mimeType || 'audio/webm' });
+            phraseAudioMap[idx] = URL.createObjectURL(blob);
+            renderPhrasePlaybackBtn(idx);
+          }
+          if (activeAudioStream) {
+            activeAudioStream.getTracks().forEach(t => t.stop());
+            activeAudioStream = null;
+          }
+        };
+        activeMediaRecorder.start(100);
+      }
+      startPhraseRecognition(idx, targetText, btn, scoreEl, resultEl);
+    })
+    .catch(() => {
+      startPhraseRecognition(idx, targetText, btn, scoreEl, resultEl);
+    });
+};
+
+function startPhraseRecognition(idx, targetText, btn, scoreEl, resultEl) {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   speechRecognizer = new SpeechRec();
   speechRecognizer.lang = 'en-US';
   speechRecognizer.interimResults = false;
@@ -2013,16 +2127,23 @@ window.togglePronunciationRecording = function(idx, targetText) {
   };
 
   speechRecognizer.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    const score = calculateSpeakingAccuracy(targetText, transcript);
+    const transcript = event.results[0][0].transcript || '';
+    if (activeMediaRecorder && activeMediaRecorder.state === 'recording') {
+      try { activeMediaRecorder.stop(); } catch(e){}
+    }
+
+    const { score, diffHtml } = computeWordDiffAndScore(targetText, transcript);
+
     if (scoreEl) {
       const color = score >= 80 ? '#16a34a' : score >= 60 ? '#f59e0b' : '#dc2626';
-      scoreEl.innerHTML = `Điểm phát âm: <span style="color:${color}">${score}/100</span>`;
+      scoreEl.innerHTML = `Điểm phát âm: <span style="color:${color};font-weight:800;font-size:16px">${score}/100</span>`;
     }
 
     if (resultEl) {
       resultEl.style.display = 'block';
-      resultEl.innerHTML = `🗣️ <b>Bạn vừa nói:</b> "${transcript}"`;
+      resultEl.innerHTML = `
+        <div style="margin-top:6px">🗣️ <b>Chi tiết từ phát âm:</b> ${diffHtml}</div>
+      `;
     }
 
     if (score >= 75) {
@@ -2035,30 +2156,40 @@ window.togglePronunciationRecording = function(idx, targetText) {
 
   speechRecognizer.onerror = (event) => {
     console.error("Lỗi nhận diện giọng nói:", event.error);
+    if (activeMediaRecorder && activeMediaRecorder.state === 'recording') {
+      try { activeMediaRecorder.stop(); } catch(e){}
+    }
     if (scoreEl) scoreEl.textContent = '⚠️ Chưa nhận diện được giọng nói!';
   };
 
   speechRecognizer.onend = () => {
     isRecording = false;
+    if (activeMediaRecorder && activeMediaRecorder.state === 'recording') {
+      try { activeMediaRecorder.stop(); } catch(e){}
+    }
     if (btn) {
-      btn.textContent = '🎙️ Thử lại lần nữa';
+      btn.textContent = '🔄 Đọc lại lần nữa';
       btn.classList.remove('recording');
     }
   };
 
   speechRecognizer.start();
-};
+}
 
-function calculateSpeakingAccuracy(target, actual) {
-  const cleanT = target.toLowerCase().replace(/[^\w\s]/gi, '').split(/\s+/);
-  const cleanA = actual.toLowerCase().replace(/[^\w\s]/gi, '').split(/\s+/);
-  
-  let match = 0;
-  cleanT.forEach(w => {
-    if (cleanA.includes(w)) match++;
-  });
-
-  return Math.min(100, Math.round((match / cleanT.length) * 100));
+function renderPhrasePlaybackBtn(idx) {
+  let playBtn = document.getElementById(`btn-phrase-play-${idx}`);
+  if (!playBtn) {
+    const container = document.getElementById(`btn-spk-rec-${idx}`)?.parentElement;
+    if (!container) return;
+    playBtn = document.createElement('button');
+    playBtn.id = `btn-phrase-play-${idx}`;
+    playBtn.className = 'voice-playback-btn';
+    playBtn.style.padding = '6px 12px';
+    playBtn.style.fontSize = '12px';
+    playBtn.onclick = () => window.playPhraseRecordedAudio(idx);
+    container.appendChild(playBtn);
+  }
+  playBtn.innerHTML = '🎧 Nghe lại giọng của bạn';
 }
 
 // =========================================================================
