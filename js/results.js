@@ -34,17 +34,23 @@ export function renderResults(){
   // 1. Tải danh sách Ca thi vào ô Dropdown lọc (nếu chưa tải)
   const cohortSel = $('flt-r-cohort');
   if (cohortSel && cohortSel.getAttribute('data-loaded') !== 'true') {
-      const uniqueCohorts = [...new Set(state.results.map(r => r.cohort).filter(Boolean))];
+      const uniqueCohorts = [...new Set(state.results.map(r => r.cohort).filter(c => c && c !== 'Ôn Thi & Luyện Tập' && c !== 'Thi tự do'))];
       cohortSel.innerHTML = '<option value="">(Tất cả Ca thi)</option>' + 
           uniqueCohorts.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
       cohortSel.setAttribute('data-loaded', 'true');
   }
 
   // 2. Lấy giá trị bộ lọc
+  const fMode = $('flt-r-mode')?.value || '';
   const fCohort = $('flt-r-cohort')?.value || '';
 
   // 3. Tiến hành lọc mảng kết quả
   let arr = state.results;
+  if (fMode === 'official') {
+    arr = arr.filter(r => r.cohort && r.cohort !== 'Ôn Thi & Luyện Tập' && r.cohort !== 'Thi tự do');
+  } else if (fMode === 'practice') {
+    arr = arr.filter(r => !r.cohort || r.cohort === 'Ôn Thi & Luyện Tập' || r.cohort === 'Thi tự do');
+  }
   if (fCohort) arr = arr.filter(r => r.cohort === fCohort);
 
   // Cập nhật số lượng hiển thị trên tiêu đề

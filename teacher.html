@@ -175,7 +175,7 @@ window.globalLogout = async function() {
   };
 
   window.switchTTab = function(tabName) {
-    var tabs = ['dash', 'curriculum', 'q', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
+    var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
     if (tabs.indexOf(tabName) === -1) tabName = 'dash';
 
     try {
@@ -211,6 +211,14 @@ window.globalLogout = async function() {
       window.renderCurriculumTree();
     }
 
+    if (tabName === 'practice' && typeof window.renderPracticeExams === 'function') {
+      window.renderPracticeExams();
+    }
+
+    if (tabName === 'e' && typeof window.renderExams === 'function') {
+      window.renderExams();
+    }
+
     if (tabName === 'teachers' && typeof window.loadTeachers === 'function') {
       window.loadTeachers().then(function() {
         if (typeof window.renderTeachersList === 'function') window.renderTeachersList();
@@ -224,7 +232,7 @@ window.globalLogout = async function() {
 
   window.addEventListener('hashchange', function() {
     var h = (window.location.hash || '').replace('#', '').trim();
-    var tabs = ['dash', 'curriculum', 'q', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
+    var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
     if (tabs.indexOf(h) !== -1) {
       window.switchTTab(h);
     }
@@ -280,7 +288,14 @@ window.globalLogout = async function() {
           <span>📚</span> <span>Ngân hàng câu hỏi</span>
         </a>
 
-        <!-- 4. THI & ĐÁNH GIÁ -->
+        <!-- 4. QUẢN LÝ ÔN THI & LUYỆN TẬP -->
+        <div class="sidebar-section-title">💡 QUẢN LÝ ÔN THI</div>
+        <a class="sidebar-item" data-tab="practice" onclick="window.switchTTab('practice')">
+          <span>💡</span> <span>Đề Ôn Thi & Luyện Tập</span>
+          <span class="item-badge" style="background:#eff6ff;color:#2563eb;">Tự do</span>
+        </a>
+
+        <!-- 5. QUẢN LÝ THI CHÍNH THỨC -->
         <div class="sidebar-section-title">📝 THI & ĐÁNH GIÁ</div>
         <a class="sidebar-item" data-tab="e" onclick="window.switchTTab('e')">
           <span>📝</span> <span>Ma trận & Đề thi</span>
@@ -289,7 +304,7 @@ window.globalLogout = async function() {
           <span>📅</span> <span>Kỳ thi & Ca thi</span>
         </a>
         <a class="sidebar-item" data-tab="r" onclick="window.switchTTab('r')">
-          <span>🏆</span> <span>Kết quả & Phân tích</span>
+          <span>🏆</span> <span>Kết quả & Bảng điểm</span>
         </a>
 
         <!-- 5. QUẢN LÝ NGƯỜI DÙNG -->
@@ -745,10 +760,57 @@ window.globalLogout = async function() {
       <div id="q-list"></div>
     </div>
 
+    <!-- 3.1. PHÂN HỆ QUẢN LÝ ĐỀ ÔN THI & LUYỆN TẬP TỰ DO -->
+    <div id="tc-practice" class="tab-content" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div class="sec-title" style="margin:0">💡 Quản lý Đề Ôn Thi & Luyện Tập (<span id="practice-exam-count">0</span>)</div>
+          <div style="font-size:12.5px;color:#64748b;margin-top:2px;">Các đề mở cho học viên tự do ôn luyện theo Môn học / Chủ đề (Được xem đáp án & giải thích chi tiết).</div>
+        </div>
+        <button class="btn btn-p" onclick="if(window.openEForm) window.openEForm();" style="background:linear-gradient(135deg, #2563eb, #1d4ed8);">
+          + Tạo Đề Ôn Thi Mới
+        </button>
+      </div>
+
+      <!-- BỘ LỌC ĐỀ ÔN THI -->
+      <div class="card" style="padding:14px 18px;margin-bottom:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:#f8fafc;">
+        <div style="flex:1;min-width:200px;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:4px;">Lọc theo Môn học / Chủ đề</label>
+          <select id="flt-practice-cat" onchange="if(window.renderPracticeExams) window.renderPracticeExams();" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#fff;">
+            <option value="">(Tất cả Môn học / Chủ đề)</option>
+          </select>
+        </div>
+        <div style="flex:1.5;min-width:240px;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:4px;">Tìm kiếm tên đề ôn thi</label>
+          <input type="text" id="flt-practice-search" placeholder="Nhập từ khóa tìm kiếm đề..." oninput="if(window.renderPracticeExams) window.renderPracticeExams();" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;">
+        </div>
+      </div>
+
+      <div id="practice-e-list"></div>
+    </div>
+
+    <!-- 4. PHÂN HỆ MA TRẬN & ĐỀ THI CHÍNH THỨC -->
     <div id="tc-e" class="tab-content">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div class="sec-title" style="margin:0">Danh sách đề thi</div>
-        <button class="btn btn-p" id="btn-open-eform" onclick="if(window.openEForm) window.openEForm();">+ Tạo đề thi</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div class="sec-title" style="margin:0">📝 Ma Trận & Đề Thi Chính Thức (<span id="e-count">0</span>)</div>
+          <div style="font-size:12.5px;color:#64748b;margin-top:2px;">Quản lý ma trận đề thi chuẩn hóa, gán vào các Ca thi / Kỳ thi chính thức (Thi 1 lần, bảo mật).</div>
+        </div>
+        <button class="btn btn-p" id="btn-open-eform" onclick="if(window.openEForm) window.openEForm();">+ Tạo Đề Thi Chính Thức</button>
+      </div>
+
+      <!-- BỘ LỌC ĐỀ THI CHÍNH THỨC -->
+      <div class="card" style="padding:14px 18px;margin-bottom:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:#f8fafc;">
+        <div style="flex:1;min-width:200px;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:4px;">Lọc theo Môn học / Chủ đề</label>
+          <select id="flt-e-cat" onchange="if(window.renderExams) window.renderExams();" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;background:#fff;">
+            <option value="">(Tất cả Môn học / Chủ đề)</option>
+          </select>
+        </div>
+        <div style="flex:1.5;min-width:240px;">
+          <label style="font-size:12px;font-weight:700;color:#475569;display:block;margin-bottom:4px;">Tìm kiếm tên đề thi</label>
+          <input type="text" id="flt-e-search" placeholder="Nhập từ khóa tìm kiếm đề..." oninput="if(window.renderExams) window.renderExams();" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;">
+        </div>
       </div>
 
       <div id="eform" style="display:none" class="card">
@@ -1005,10 +1067,16 @@ window.globalLogout = async function() {
 
       <!-- 2. DANH SÁCH KẾT QUẢ CÁC BÀI THI -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-        <div class="sec-title" style="margin:0">Kết quả làm bài thi (<span id="r-count">0</span>)</div>
-        <div style="display:flex;gap:8px; align-items:center;">
+        <div class="sec-title" style="margin:0">Kết quả & Bảng điểm (<span id="r-count">0</span>)</div>
+        <div style="display:flex;gap:8px; align-items:center; flex-wrap:wrap;">
+          <!-- BỘ LỌC PHÂN LOẠI CHẾ ĐỘ THI -->
+          <select id="flt-r-mode" onchange="if(window.renderResults) window.renderResults();" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: white; outline: none; cursor: pointer; font-weight:600;">
+            <option value="">(Tất cả phân loại)</option>
+            <option value="official">📝 Thi Chính Thức (Theo Ca thi)</option>
+            <option value="practice">💡 Ôn Luyện Tự Do</option>
+          </select>
           <!-- BỘ LỌC CA THI -->
-          <select id="flt-r-cohort" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; background: white; outline: none; cursor: pointer;">
+          <select id="flt-r-cohort" onchange="if(window.renderResults) window.renderResults();" style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: white; outline: none; cursor: pointer;">
             <option value="">(Tất cả Ca thi)</option>
           </select>
           <button class="btn" id="btn-export" onclick="if(window.exportCSV) window.exportCSV();">⬇ Xuất CSV</button>

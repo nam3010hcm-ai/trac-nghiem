@@ -6,7 +6,7 @@ import {
 import { initData, state, $, esc, isRootUser } from './common.js';
 import { populateCategoryDropdowns, updateFltSubcat, updateQFormSubcat, updateEFormSubcat, addParentCategory, deleteParentCategory, addSubCategory, deleteSubCategory, editSubCategory, restoreDefaultCategories, renderCatManagementList } from './categories.js';
 import { openQForm, closeQForm, saveQ, deleteQ, renderQuestions } from './questions.js';
-import { openEForm, closeEForm, saveExam, deleteExam, toggleExamVisibility, renderExams, populateExamSelect } from './exams.js';
+import { openEForm, closeEForm, saveExam, deleteExam, toggleExamVisibility, renderExams, renderPracticeExams, populateExamSelect } from './exams.js';
 import { renderResults, clearResults, exportCSV } from './results.js';
 import { loadUnits, renderUnitsList, openUnitEditor, closeUnitEditor, switchDesignerSkillTab, saveUnit, deleteUnit, toggleUnitVisibility } from './units.js';
 import { loadStudents, renderStudentsList, openStudentModal, closeStudentModal, saveStudent, toggleStudentStatus, deleteStudent, openBulkStudentModal, closeBulkStudentModal, saveBulkStudents, exportStudentsCSV } from './students-mgr.js';
@@ -173,7 +173,7 @@ async function doLogout() {
 }
 
 function switchTTab(t) {
-  const tabs = ['dash', 'curriculum', 'q', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
+  const tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
   if (!tabs.includes(t)) t = 'dash';
 
   try {
@@ -196,6 +196,8 @@ function switchTTab(t) {
 
   if (t === 'curriculum' && typeof window.renderCurriculumTree === 'function') window.renderCurriculumTree();
   if (t === 'unit') renderUnitsList();
+  if (t === 'practice') renderPracticeExams();
+  if (t === 'e') renderExams();
   if (t === 'teachers') loadTeachers().then(renderTeachersList);
   if (t === 'students') loadStudents().then(renderStudentsList);
   if (t === 'r') {

@@ -188,10 +188,83 @@ export async function toggleExamVisibility(id){
   populateExamSelect();
 }
 
+export function renderPracticeExams(){
+  const list = $('practice-e-list');
+  if(!list) return;
+
+  const catSel = $('flt-practice-cat');
+  if (catSel && catSel.getAttribute('data-loaded') !== 'true') {
+    const cats = Object.keys(state.SUBCATS || {});
+    catSel.innerHTML = '<option value="">(Tất cả Môn học / Chủ đề)</option>' +
+      cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    catSel.setAttribute('data-loaded', 'true');
+  }
+
+  const fCat = $('flt-practice-cat')?.value || '';
+  const fSearch = ($('flt-practice-search')?.value || '').trim().toLowerCase();
+
+  let arr = state.exams || [];
+  if (fCat) arr = arr.filter(e => e.cat === fCat);
+  if (fSearch) arr = arr.filter(e => (e.name || '').toLowerCase().includes(fSearch) || (e.desc || '').toLowerCase().includes(fSearch));
+
+  if ($('practice-exam-count')) $('practice-exam-count').textContent = arr.length;
+
+  list.innerHTML = arr.map(e => {
+    const pool = getPool(e).length;
+    const hideClass = e.isHidden ? 'btn-warn' : 'btn-p';
+    const hideText = e.isHidden ? '🙈 Đang ẩn' : '👁️ Đang mở ôn thi';
+    const statusBadge = e.isHidden ? '<span class="badge-status status-hidden">Đã ẩn</span>' : '<span class="badge-status status-active">Đang mở ôn thi</span>';
+    const canEdit = canEditItem(e, state.currentUserEmail);
+    const authorBadge = e.created_by ? `<span class="cat-badge" style="background:#f1f5f9;color:#475569;margin-left:4px" title="Người tạo: ${esc(e.created_by)}">👤 ${esc(e.created_by.split('@')[0])}</span>` : '';
+
+    return `<div class="qitem" style="border-left:4px solid #2563eb;"><div class="qrow">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#0f172a">
+          💡 ${esc(e.name)} ${statusBadge} ${authorBadge}
+        </div>
+        <div style="font-size:13px;color:#64748b;margin-top:3px">${esc(e.desc || 'Đề ôn luyện kiến thức')}</div>
+        <div style="font-size:11.5px;color:#0284c7;margin-top:5px;font-weight:600">
+          📚 ${esc(e.cat || 'Chung')}${e.subcat ? ` • ${esc(e.subcat)}` : ''} • Quy mô: <b>${e.count} câu</b> (Ngân hàng: ${pool} câu) • ${e.timeLimit > 0 ? `⏱ ${e.timeLimit} phút` : '⏱ Không giới hạn thời gian'}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-direction:column;align-items:flex-end">
+        ${canEdit ? `
+          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+            <button class="btn btn-sm ${hideClass} e-action" data-action="toggle" data-id="${e.id}">${hideText}</button>
+            <button class="btn btn-sm e-action" data-action="manage-q" data-id="${e.id}" style="color: #0284c7; border: 1px solid #bae6fd; background: #f0f9ff;">📝 Chọn câu hỏi</button>
+            <button class="btn btn-sm e-action" data-action="edit" data-id="${e.id}" style="color: #3b82f6; border: 1px solid #bfdbfe; background: #eff6ff;">✏️ Sửa</button>
+            <button class="btn btn-sm btn-danger e-action" data-action="delete" data-id="${e.id}">× Xóa</button>
+          </div>
+        ` : `
+          <span style="font-size:12px;color:#94a3b8;padding:4px 8px;background:#f1f5f9;border-radius:6px;border:1px solid #e2e8f0" title="Chỉ người tạo hoặc Root Admin mới có quyền sửa/xóa">🔒 Chỉ xem</span>
+        `}
+      </div>
+    </div></div>`;
+  }).join('') || '<div class="empty">📭 Chưa có đề ôn thi nào phù hợp.</div>';
+}
+
 export function renderExams(){
   const list = $('e-list');
   if(!list) return;
-  list.innerHTML = state.exams.map(e => {
+
+  const catSel = $('flt-e-cat');
+  if (catSel && catSel.getAttribute('data-loaded') !== 'true') {
+    const cats = Object.keys(state.SUBCATS || {});
+    catSel.innerHTML = '<option value="">(Tất cả Môn học / Chủ đề)</option>' +
+      cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    catSel.setAttribute('data-loaded', 'true');
+  }
+
+  const fCat = $('flt-e-cat')?.value || '';
+  const fSearch = ($('flt-e-search')?.value || '').trim().toLowerCase();
+
+  let arr = state.exams || [];
+  if (fCat) arr = arr.filter(e => e.cat === fCat);
+  if (fSearch) arr = arr.filter(e => (e.name || '').toLowerCase().includes(fSearch) || (e.desc || '').toLowerCase().includes(fSearch));
+
+  if ($('e-count')) $('e-count').textContent = arr.length;
+
+  list.innerHTML = arr.map(e => {
     const pool = getPool(e).length;
     const hideClass = e.isHidden ? 'btn-warn' : 'btn-p';
     const hideText = e.isHidden ? '🙈 Đang ẩn' : '👁️ Đang hiện';
@@ -207,10 +280,12 @@ export function renderExams(){
       </div>
       <div style="display:flex;gap:4px;flex-direction:column;align-items:flex-end">
         ${canEdit ? `
-          <button class="btn btn-sm ${hideClass} e-action" data-action="toggle" data-id="${e.id}">${hideText}</button>
-          <button class="btn btn-sm e-action" data-action="manage-q" data-id="${e.id}" style="color: #10b981; border: 1px solid #a7f3d0; background: #ecfdf5; margin-right: 6px;">📝 Câu hỏi</button>
-          <button class="btn btn-sm e-action" data-action="edit" data-id="${e.id}" style="color: #3b82f6; border: 1px solid #bfdbfe; background: #eff6ff; margin-right: 6px;">✏️ Sửa</button>
-          <button class="btn btn-sm btn-danger e-action" data-action="delete" data-id="${e.id}">× Xóa</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+            <button class="btn btn-sm ${hideClass} e-action" data-action="toggle" data-id="${e.id}">${hideText}</button>
+            <button class="btn btn-sm e-action" data-action="manage-q" data-id="${e.id}" style="color: #10b981; border: 1px solid #a7f3d0; background: #ecfdf5;">📝 Câu hỏi</button>
+            <button class="btn btn-sm e-action" data-action="edit" data-id="${e.id}" style="color: #3b82f6; border: 1px solid #bfdbfe; background: #eff6ff;">✏️ Sửa</button>
+            <button class="btn btn-sm btn-danger e-action" data-action="delete" data-id="${e.id}">× Xóa</button>
+          </div>
         ` : `
           <span style="font-size:12px;color:#94a3b8;padding:4px 8px;background:#f1f5f9;border-radius:6px;border:1px solid #e2e8f0" title="Chỉ người tạo hoặc Root Admin mới có quyền sửa/xóa">🔒 Chỉ xem</span>
         `}
@@ -218,3 +293,6 @@ export function renderExams(){
     </div></div>`;
   }).join('') || '<div class="empty">📭 Chưa có đề thi.</div>';
 }
+
+window.renderPracticeExams = renderPracticeExams;
+window.renderExams = renderExams;
