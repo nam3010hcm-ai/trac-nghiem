@@ -358,6 +358,37 @@ function formatDateTime(dtStr) {
   } catch(e) { return dtStr; }
 }
 
+export async function saveAssignmentItem(data) {
+  if (data && data.title) {
+    const newAsg = {
+      id: data.id || ('asg_' + Date.now()),
+      title: data.title,
+      classId: data.classId || 'cls_10a1',
+      className: data.className || 'Lớp 10A1',
+      contentType: data.contentType || 'exam',
+      contentId: 'ex_giau_ky_1',
+      startAt: new Date().toISOString().slice(0,16),
+      dueAt: new Date(Date.now() + 14 * 86400000).toISOString().slice(0,16),
+      durationMinutes: 45,
+      maxAttempts: 1,
+      isShuffleQuestions: true,
+      isShuffleOptions: true,
+      showAnswersMode: 'after_due',
+      status: 'active',
+      submittedCount: 0,
+      totalStudents: 35
+    };
+    const idx = assignmentsList.findIndex(a => a.id === newAsg.id);
+    if (idx >= 0) assignmentsList[idx] = newAsg;
+    else assignmentsList.unshift(newAsg);
+    saveAssignmentsToLocal();
+    renderAssignmentsList();
+    showToast('success', 'Giao Nhiệm Vụ', `Đã giao nhiệm vụ "${newAsg.title}"`);
+  } else {
+    saveAssignmentFromModal();
+  }
+}
+
 function esc(str) {
   if (!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -365,5 +396,6 @@ function esc(str) {
 
 window.openAssignmentModal = openAssignmentModal;
 window.saveAssignmentFromModal = saveAssignmentFromModal;
+window.saveAssignmentItem = saveAssignmentItem;
 window.deleteAssignmentItem = deleteAssignmentItem;
 window.previewAssignment = previewAssignment;

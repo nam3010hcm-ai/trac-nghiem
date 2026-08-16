@@ -239,6 +239,29 @@ export function deleteClassItem(id) {
   showToast('info', 'Đã Xóa Lớp', `Đã xóa lớp "${cls.name}" khỏi danh sách.`);
 }
 
+export async function saveClassItem(classData) {
+  if (classData && classData.name) {
+    const newClass = {
+      id: classData.id || ('cls_' + Date.now()),
+      name: classData.name,
+      school: classData.school || 'Trường THPT Chuyên EduCore',
+      grade: classData.grade || 10,
+      academicYear: classData.academicYear || '2025-2026',
+      inviteCode: classData.inviteCode || Math.random().toString(36).substring(2, 8).toUpperCase(),
+      status: classData.status || 'active',
+      studentCount: classData.studentCount || 0
+    };
+    const idx = classesList.findIndex(c => c.id === newClass.id);
+    if (idx >= 0) classesList[idx] = newClass;
+    else classesList.unshift(newClass);
+    saveClassesToLocal();
+    renderClassesList();
+    showToast('success', 'Tạo Lớp Học', `Đã tạo lớp ${newClass.name}`);
+  } else {
+    saveClassFromModal();
+  }
+}
+
 function esc(str) {
   if (!str) return '';
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -246,4 +269,5 @@ function esc(str) {
 
 window.openClassModal = openClassModal;
 window.saveClassFromModal = saveClassFromModal;
+window.saveClassItem = saveClassItem;
 window.deleteClassItem = deleteClassItem;
