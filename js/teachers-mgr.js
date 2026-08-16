@@ -5,7 +5,7 @@
  * =========================================================================
  */
 
-import { $, esc, isRootUser } from './common.js';
+import { $, esc, isRootUser, ROOT_ADMIN_EMAIL } from './common.js';
 
 const db = () => window.supabaseClient;
 
@@ -18,16 +18,24 @@ export let teachersList = [
 
 let editingTeacherId = null;
 
-// 1. NẠP DANH SÁCH GIẢNG VIÊN
+// 1. NẠP DANH SÁCH GIẢNG VIÊN TỪ SUPABASE
 export async function loadTeachers() {
   try {
     if (!db()) return;
-    const { data, error } = await db().from('teachers').select('*').order('created_at', { ascending: false });
-    if (!error && data && data.length > 0) {
+    let { data, error } = await db().from('teachers').select('*').order('created_at', { ascending: false });
+    if (error) {
+      // Fallback query if created_at column doesn't exist
+      const res = await db().from('teachers').select('*');
+      data = res.data;
+      error = res.error;
+    }
+    if (error) {
+      console.warn("Lỗi truy vấn bảng teachers trên Supabase:", error);
+    } else if (data) {
       teachersList = data;
     }
   } catch (err) {
-    console.warn("Dùng danh sách giảng viên mặc định:", err);
+    console.warn("Lỗi khi loadTeachers từ Supabase:", err);
   }
 }
 
@@ -44,7 +52,7 @@ export function renderTeachersList() {
 
   let filtered = teachersList.filter(t => {
     return !q || (t.id || '').toLowerCase().includes(q) ||
-                 (t.name || '').toLowerCase().includes(q) ||
+                 (t.name || t.full_name || '').toLowerCase().includes(q) ||
                  (t.email || '').toLowerCase().includes(q) ||
                  (t.department || '').toLowerCase().includes(q);
   });
@@ -52,7 +60,7 @@ export function renderTeachersList() {
   if (filtered.length === 0) {
     container.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align:center;padding:32px;color:#94a3b8;">
+        <td colspan="7" style="text-align:center;padding:32px;color:#94a3b8;">
           Không tìm thấy tài khoản Giảng viên / Người dạy nào khớp với từ khóa.
         </td>
       </tr>
@@ -63,6 +71,7 @@ export function renderTeachersList() {
   container.innerHTML = filtered.map(t => {
     const isActive = t.is_active !== false;
     const isRoot = isRootUser(t.email);
+    const teacherName = t.name || t.full_name || t.email;
 
     // Tính toán tài nguyên do giảng viên này tạo ra
     const questionsCount = (window.state?.questions || []).filter(q => (q.created_by || q.createdBy || '').toLowerCase() === (t.email || '').toLowerCase()).length;
@@ -80,8 +89,8 @@ export function renderTeachersList() {
               ${isRoot ? '👑' : '👨‍🏫'}
             </div>
             <div>
-              <div style="font-weight:700;color:#0f172a;">${esc(t.name)}</div>
-              <div style="font-size:11.5px;color:#64748b;">Mã GV: ${esc(t.id)}</div>
+              <div style="font-weight:700;color:#0f172a;">${esc(teacherName)}</div>
+              <div style="font-size:11.5px;color:#64748b;">Mã GV: ${esc(t.id || 'GV')}</div>
             </div>
           </div>
         </td>
@@ -132,9 +141,9 @@ export function openTeacherModal(id = null) {
     if (!t) return;
     if (title) title.textContent = '✏️ Cập Nhật Tài Khoản Giảng Viên';
     if ($('t-mod-email')) { $('t-mod-email').value = t.email || ''; $('t-mod-email').disabled = true; }
-    if ($('t-mod-name')) $('t-mod-name').value = t.name || '';
+    if ($('t-mod-name')) $('t-mod-name').value = t.name || t.full_name || '';
     if ($('t-mod-dept')) $('t-mod-dept').value = t.department || '';
-    if ($('t-mod-pass')) $('t-mod-pass').value = '';
+    if ($('t-mod-pass')) $('t-mod-pass').value = t.password || '';
   } else {
     if (title) title.textContent = '➕ Thêm Tài Khoản Giảng Viên Mới';
     if ($('t-mod-email')) { $('t-mod-email').value = ''; $('t-mod-email').disabled = false; }
@@ -152,9 +161,9 @@ export function closeTeacherModal() {
   editingTeacherId = null;
 }
 
-// 4. LƯU TÀI KHOẢN GIẢNG VIÊN
+// 4. LƯU TÀI KHOẢN GIẢNG VIÊN LÊN SUPABASE
 export async function saveTeacher() {
-  const email = ($('t-mod-email')?.value || '').trim();
+  const email = ($('t-mod-email')?.value || '').trim().toLowerCase();
   const name = ($('t-mod-name')?.value || '').trim();
   const dept = ($('t-mod-dept')?.value || '').trim();
   const pass = ($('t-mod-pass')?.value || '').trim();
@@ -169,24 +178,51 @@ export async function saveTeacher() {
     if (t) {
       t.name = name;
       t.department = dept || 'Khoa Ngoại Ngữ';
+      if (pass) t.password = pass;
+    }
+
+    try {
+      if (db()) {
+        const updatePayload = {
+          name: name,
+          department: dept || 'Khoa Ngoại Ngữ'
+        };
+        if (pass) updatePayload.password = pass;
+        const { error } = await db().from('teachers').update(updatePayload).eq('id', editingTeacherId);
+        if (error) console.warn("Lỗi cập nhật giảng viên Supabase:", error);
+      }
+    } catch(e) {
+      console.warn("Lỗi sync Supabase:", e);
     }
     alert("✅ Đã cập nhật thông tin Giảng viên!");
   } else {
-    const exists = teachersList.some(t => t.email.toLowerCase() === email.toLowerCase());
+    const exists = teachersList.some(t => (t.email || '').toLowerCase() === email.toLowerCase());
     if (exists) {
       alert("❌ Email giảng viên này đã tồn tại trên hệ thống!");
       return;
     }
 
+    const newId = 'T' + String(Date.now()).slice(-4);
     const newTeacher = {
-      id: 'T' + String(teachersList.length + 1).padStart(3, '0'),
-      email,
-      name,
+      id: newId,
+      email: email,
+      name: name,
       department: dept || 'Khoa Ngoại Ngữ',
-      role: 'Giảng viên',
+      role: isRootUser(email) ? 'Root Admin' : 'Giảng viên',
+      password: pass || '123456',
       is_active: true,
-      created_at: new Date().toISOString().split('T')[0]
+      created_at: new Date().toISOString(),
+      created_by: window.state?.currentUserEmail || ROOT_ADMIN_EMAIL
     };
+
+    try {
+      if (db()) {
+        const { error } = await db().from('teachers').insert([newTeacher]);
+        if (error) console.warn("Lỗi thêm giảng viên vào Supabase:", error);
+      }
+    } catch(e) {
+      console.warn("Lỗi sync Supabase:", e);
+    }
 
     teachersList.unshift(newTeacher);
     alert("✅ Đã thêm tài khoản Giảng viên mới thành công!");
@@ -196,20 +232,39 @@ export async function saveTeacher() {
   renderTeachersList();
 }
 
-// 5. MỞ / KHÓA TÀI KHOẢN GIẢNG VIÊN
-export function toggleTeacherStatus(id) {
+// 5. MỞ / KHÓA TÀI KHOẢN GIẢNG VIÊN TRÊN SUPABASE
+export async function toggleTeacherStatus(id) {
   const t = teachersList.find(item => item.id === id);
   if (!t) return;
-  t.is_active = !t.is_active;
-  alert(`Đã ${t.is_active ? 'mở khóa' : 'khóa'} tài khoản giảng viên ${t.name}!`);
+  const nextStatus = !(t.is_active !== false);
+  t.is_active = nextStatus;
+
+  try {
+    if (db()) {
+      const { error } = await db().from('teachers').update({ is_active: nextStatus }).eq('id', id);
+      if (error) console.warn("Lỗi toggle status Supabase:", error);
+    }
+  } catch (e) {
+    console.warn("Lỗi toggle status:", e);
+  }
+
+  alert(`Đã ${nextStatus ? 'mở khóa' : 'khóa'} tài khoản giảng viên ${t.name || t.email}!`);
   renderTeachersList();
 }
 
-// 6. XÓA GIẢNG VIÊN
-export function deleteTeacher(id) {
+// 6. XÓA GIẢNG VIÊN TRÊN SUPABASE
+export async function deleteTeacher(id) {
   const t = teachersList.find(item => item.id === id);
   if (!t) return;
-  if (confirm(`Bạn có chắc chắn muốn xóa tài khoản giảng viên "${t.name}" không?`)) {
+  if (confirm(`Bạn có chắc chắn muốn xóa tài khoản giảng viên "${t.name || t.email}" không?`)) {
+    try {
+      if (db()) {
+        const { error } = await db().from('teachers').delete().eq('id', id);
+        if (error) console.warn("Lỗi xóa giảng viên Supabase:", error);
+      }
+    } catch(e) {
+      console.warn("Lỗi xóa giảng viên:", e);
+    }
     teachersList = teachersList.filter(item => item.id !== id);
     alert("Đã xóa tài khoản giảng viên!");
     renderTeachersList();
@@ -224,3 +279,4 @@ window.closeTeacherModal = closeTeacherModal;
 window.saveTeacher = saveTeacher;
 window.toggleTeacherStatus = toggleTeacherStatus;
 window.deleteTeacher = deleteTeacher;
+

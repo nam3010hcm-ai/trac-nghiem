@@ -10,6 +10,7 @@ import { openEForm, closeEForm, saveExam, deleteExam, toggleExamVisibility, rend
 import { renderResults, clearResults, exportCSV } from './results.js';
 import { loadUnits, renderUnitsList, openUnitEditor, closeUnitEditor, switchDesignerSkillTab, saveUnit, deleteUnit, toggleUnitVisibility } from './units.js';
 import { loadStudents, renderStudentsList, openStudentModal, closeStudentModal, saveStudent, toggleStudentStatus, deleteStudent, openBulkStudentModal, closeBulkStudentModal, saveBulkStudents, exportStudentsCSV } from './students-mgr.js';
+import { loadTeachers, renderTeachersList, openTeacherModal, closeTeacherModal, saveTeacher, toggleTeacherStatus, deleteTeacher } from './teachers-mgr.js';
 import { renderCurriculumTree, openSubjectModal, closeSubjectModal, saveSubject, loadCurriculumFromSupabase } from './curriculum.js';
 import { calculateAndRenderTop10, loadAuthLogs, renderAuthLogsTable, openStudentReportModal, closeStudentReportModal, recordAuthEvent } from './auth-logs.js';
 
@@ -75,6 +76,7 @@ async function showTeacherPanel(user) {
       renderStudentsList();
       updateDashboardKPICounts();
     });
+    loadTeachers().then(() => renderTeachersList());
     if (typeof window.populateCohortExams === 'function') {
       window.populateCohortExams(); 
     }
@@ -220,6 +222,13 @@ window.closeBulkStudentModal = closeBulkStudentModal;
 window.saveBulkStudents = saveBulkStudents;
 window.exportStudentsCSV = exportStudentsCSV;
 window.renderStudentsList = renderStudentsList;
+window.loadTeachers = loadTeachers;
+window.renderTeachersList = renderTeachersList;
+window.openTeacherModal = openTeacherModal;
+window.closeTeacherModal = closeTeacherModal;
+window.saveTeacher = saveTeacher;
+window.toggleTeacherStatus = toggleTeacherStatus;
+window.deleteTeacher = deleteTeacher;
 window.openUnitEditor = openUnitEditor;
 window.closeUnitEditor = closeUnitEditor;
 window.switchDesignerSkillTab = switchDesignerSkillTab;

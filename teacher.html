@@ -202,6 +202,12 @@ window.globalLogout = async function() {
       window.renderCurriculumTree();
     }
 
+    if (tabName === 'teachers' && typeof window.loadTeachers === 'function') {
+      window.loadTeachers().then(function() {
+        if (typeof window.renderTeachersList === 'function') window.renderTeachersList();
+      });
+    }
+
     if (typeof window._teacherModuleSwitchTab === 'function') {
       window._teacherModuleSwitchTab(tabName);
     }
@@ -875,7 +881,7 @@ window.globalLogout = async function() {
       <div class="card" style="padding:16px;margin-bottom:16px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;">
         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
           <input type="text" id="flt-teacher-search" placeholder="🔍 Tìm theo Tên, Email, Khoa..." style="padding:8px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;flex:1;min-width:220px;" oninput="window.renderTeachersList();">
-          <span style="font-size:12.5px;font-weight:700;color:#64748b;">Tổng số: <b id="teacher-count-badge" style="color:#2563eb">4</b> Giảng viên</span>
+          <span style="font-size:12.5px;font-weight:700;color:#64748b;">Tổng số: <b id="teacher-count-badge" style="color:#2563eb">0</b> Giảng viên</span>
         </div>
       </div>
 
@@ -886,13 +892,14 @@ window.globalLogout = async function() {
               <th>Giảng Viên</th>
               <th>Email Đăng Nhập</th>
               <th>Khoa / Bộ Môn</th>
-              <th>Phân Quyền</th>
+              <th>Tài Nguyên Phụ Trách</th>
+              <th>Nhật Ký Hoạt Động</th>
               <th>Trạng Thái</th>
               <th>Thao Tác</th>
             </tr>
           </thead>
           <tbody id="teachers-table-body">
-            <tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8">Đang tải danh sách giảng viên...</td></tr>
+            <tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8">Đang tải danh sách giảng viên...</td></tr>
           </tbody>
         </table>
       </div>
