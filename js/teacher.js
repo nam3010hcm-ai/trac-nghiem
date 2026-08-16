@@ -3,6 +3,7 @@ import {
   uploadMediaFile
 } from './supabase.js';
 
+import { showToast } from './ui-components.js';
 import { initData, state, $, esc, isRootUser } from './common.js';
 import { populateCategoryDropdowns, updateFltSubcat, updateQFormSubcat, updateEFormSubcat, addParentCategory, deleteParentCategory, addSubCategory, deleteSubCategory, editSubCategory, restoreDefaultCategories, renderCatManagementList } from './categories.js';
 import { openQForm, closeQForm, saveQ, deleteQ, renderQuestions } from './questions.js';
@@ -13,6 +14,32 @@ import { loadStudents, renderStudentsList, openStudentModal, closeStudentModal, 
 import { loadTeachers, renderTeachersList, openTeacherModal, closeTeacherModal, saveTeacher, toggleTeacherStatus, deleteTeacher } from './teachers-mgr.js';
 import { renderCurriculumTree, openSubjectModal, closeSubjectModal, saveSubject, loadCurriculumFromSupabase } from './curriculum.js';
 import { calculateAndRenderTop10, loadAuthLogs, renderAuthLogsTable, openStudentReportModal, closeStudentReportModal, recordAuthEvent } from './auth-logs.js';
+
+import { loadClasses, renderClassesList, saveClassItem } from './classes-mgr.js';
+import { loadAssignments, renderAssignmentsList, saveAssignmentItem } from './assignments-mgr.js';
+import { loadPendingSubmissions, renderGradingQueueTable } from './grading-center.js';
+import { loadAnalyticsData, renderAnalyticsDashboard } from './lms-analytics.js';
+import { loadClassPosts, renderClassStream } from './class-stream.js';
+
+window.loadClasses = loadClasses;
+window.renderClassesList = renderClassesList;
+window.saveClassItem = saveClassItem;
+
+window.loadAssignments = loadAssignments;
+window.renderAssignmentsList = renderAssignmentsList;
+window.saveAssignmentItem = saveAssignmentItem;
+
+window.loadPendingSubmissions = loadPendingSubmissions;
+window.renderGradingQueueTable = renderGradingQueueTable;
+
+window.loadAnalyticsData = loadAnalyticsData;
+window.renderAnalyticsDashboard = renderAnalyticsDashboard;
+
+window.loadClassPosts = loadClassPosts;
+window.renderClassStream = renderClassStream;
+
+
+
 
 const db = () => window.supabaseClient;
 
@@ -77,10 +104,14 @@ async function showTeacherPanel(user) {
       updateDashboardKPICounts();
     });
     loadTeachers().then(() => renderTeachersList());
+    loadClasses().then(() => renderClassesList());
+    loadAssignments().then(() => renderAssignmentsList());
+    loadPendingSubmissions().then(() => renderGradingQueueTable());
     if (typeof window.populateCohortExams === 'function') {
       window.populateCohortExams(); 
     }
     updateDashboardKPICounts();
+    showToast('success', 'EduCore Command Center', 'Hệ thống Quản trị sẵn sàng!');
   } catch(e) {
     console.error("Lỗi khi hiển thị giao diện quản trị:", e);
   }

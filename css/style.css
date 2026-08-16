@@ -1933,3 +1933,240 @@ body:has(#t-panel[style*="display: flex"]) > .main {
   border-color: #fecaca !important;
   color: #dc2626 !important;
 }
+
+/* ==========================================================================
+   EDUCORE DESIGN SYSTEM EXTENSIONS — TOASTS, SKELETONS, BADGES & SIDEBAR
+   ========================================================================== */
+
+/* Toast Container & Notification Toast Cards */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: 400px;
+  width: calc(100vw - 48px);
+}
+
+.educore-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md, 12px);
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  font-size: 14px;
+  line-height: 1.5;
+  animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: all 0.25s ease;
+}
+
+.educore-toast.toast-exit {
+  animation: toastSlideOut 0.25s ease forwards;
+}
+
+.educore-toast-icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.educore-toast-content {
+  flex: 1;
+}
+
+.educore-toast-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 2px;
+  color: #0f172a;
+}
+
+.educore-toast-message {
+  color: #475569;
+  font-size: 13px;
+}
+
+.educore-toast-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+.educore-toast-close:hover { color: #0f172a; }
+
+.educore-toast.toast-success { border-left: 4px solid #10b981; }
+.educore-toast.toast-error { border-left: 4px solid #f43f5e; }
+.educore-toast.toast-warning { border-left: 4px solid #f59e0b; }
+.educore-toast.toast-info { border-left: 4px solid #3b82f6; }
+
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes toastSlideOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-10px) scale(0.95); }
+}
+
+/* Skeleton Shimmer Loaders */
+.skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+@keyframes shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.skeleton-text { height: 14px; width: 100%; margin-bottom: 8px; }
+.skeleton-title { height: 22px; width: 60%; margin-bottom: 12px; }
+.skeleton-avatar { width: 44px; height: 44px; border-radius: 50%; }
+.skeleton-card {
+  padding: 20px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 16px;
+}
+
+/* LMS Status Badges */
+.badge-lms {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.badge-lms-success { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+.badge-lms-warning { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+.badge-lms-danger { background: #ffe4e6; color: #be123c; border: 1px solid #fecdd3; }
+.badge-lms-info { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.badge-lms-neutral { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+/* Enhanced Modern Sidebar for Command Center */
+.lms-sidebar-container {
+  display: flex;
+  min-height: calc(100vh - 66px);
+}
+
+.lms-sidebar {
+  width: 260px;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  box-shadow: 4px 0 20px rgba(15, 23, 42, 0.03);
+  z-index: 90;
+}
+
+.lms-sidebar.collapsed {
+  width: 76px;
+}
+
+.lms-sidebar.collapsed .sidebar-item-label,
+.lms-sidebar.collapsed .sidebar-group-title,
+.lms-sidebar.collapsed .user-info-text {
+  display: none;
+}
+
+.lms-sidebar-content {
+  flex: 1;
+  padding: 16px 12px;
+  overflow-y: auto;
+}
+
+.lms-sidebar-group {
+  margin-bottom: 20px;
+}
+
+.sidebar-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  padding: 8px 12px 6px;
+}
+
+.lms-sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md, 12px);
+  color: #475569;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 4px;
+  text-decoration: none;
+}
+
+.lms-sidebar-nav-item:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.lms-sidebar-nav-item.active {
+  background: var(--primary-gradient);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.lms-sidebar-nav-item.active .nav-icon {
+  transform: scale(1.1);
+}
+
+.lms-sidebar-nav-item .nav-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.lms-sidebar-toggle-btn {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  margin: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.lms-sidebar-toggle-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+

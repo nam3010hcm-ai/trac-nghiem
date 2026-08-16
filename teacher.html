@@ -176,7 +176,7 @@ window.globalLogout = async function() {
   };
 
   window.switchTTab = function(tabName) {
-    var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
+    var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics'];
     if (tabs.indexOf(tabName) === -1) tabName = 'dash';
 
     try {
@@ -208,6 +208,26 @@ window.globalLogout = async function() {
       });
     });
 
+    if (tabName === 'classes' && typeof window.loadClasses === 'function') {
+      window.loadClasses().then(function() { if (typeof window.renderClassesList === 'function') window.renderClassesList(); });
+    }
+
+    if (tabName === 'assignments' && typeof window.loadAssignments === 'function') {
+      window.loadAssignments().then(function() { if (typeof window.renderAssignmentsList === 'function') window.renderAssignmentsList(); });
+    }
+
+    if (tabName === 'grading' && typeof window.loadPendingSubmissions === 'function') {
+      window.loadPendingSubmissions().then(function() { if (typeof window.renderGradingQueueTable === 'function') window.renderGradingQueueTable(); });
+    }
+
+    if (tabName === 'stream' && typeof window.loadClassPosts === 'function') {
+      window.loadClassPosts().then(function() { if (typeof window.renderClassStream === 'function') window.renderClassStream(); });
+    }
+
+    if (tabName === 'analytics' && typeof window.loadAnalyticsData === 'function') {
+      window.loadAnalyticsData().then(function() { if (typeof window.renderAnalyticsDashboard === 'function') window.renderAnalyticsDashboard(); });
+    }
+
     if (tabName === 'curriculum' && typeof window.renderCurriculumTree === 'function') {
       window.renderCurriculumTree();
     }
@@ -233,7 +253,7 @@ window.globalLogout = async function() {
 
   window.addEventListener('hashchange', function() {
     var h = (window.location.hash || '').replace('#', '').trim();
-    var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
+    var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics'];
     if (tabs.indexOf(h) !== -1) {
       window.switchTTab(h);
     }
@@ -317,7 +337,26 @@ window.globalLogout = async function() {
           <span>🎓</span> <span>Quản lý Người Học (Students)</span>
         </a>
 
-        <!-- 6. MEDIA LIBRARY -->
+        <!-- 6. LMS OPERATIONS -->
+        <div class="sidebar-section-title">🏫 LMS & NHIỆM VỤ</div>
+        <a class="sidebar-item" data-tab="classes" onclick="window.switchTTab('classes')">
+          <span>🏫</span> <span>Quản lý Lớp & Trường</span>
+        </a>
+        <a class="sidebar-item" data-tab="assignments" onclick="window.switchTTab('assignments')">
+          <span>📋</span> <span>Nhiệm Vụ Học Tập</span>
+        </a>
+        <a class="sidebar-item" data-tab="grading" onclick="window.switchTTab('grading')">
+          <span>✍️</span> <span>Trung Tâm Chấm Bài</span>
+          <span class="item-badge" id="pending-grading-count" style="background:#ef4444;color:#fff;display:none">0</span>
+        </a>
+        <a class="sidebar-item" data-tab="stream" onclick="window.switchTTab('stream')">
+          <span>💬</span> <span>Bảng Tin & Thảo Luận Lớp</span>
+        </a>
+        <a class="sidebar-item" data-tab="analytics" onclick="window.switchTTab('analytics')">
+          <span>📊</span> <span>Báo Cáo Analytics Nâng Cao</span>
+        </a>
+
+        <!-- 7. MEDIA LIBRARY -->
         <div class="sidebar-section-title">🖼️ TÀI NGUYÊN</div>
         <a class="sidebar-item" data-tab="img" onclick="window.switchTTab('img')">
           <span>🎵</span> <span>Media Library (Audio & Ảnh)</span>
@@ -1594,9 +1633,110 @@ SV002, Trần Thị B, 12A1, 2025-2026, sv002@gmail.com, 123456
 SV003, Lê Văn C, 12A2, 2025-2026, sv003@gmail.com, 123456"></textarea>
         </div>
 
-        <div style="display:flex; gap:10px; margin-top:16px;">
-          <button class="btn btn-p" id="btn-save-bulk-students" style="flex:2;" onclick="window.saveBulkStudents();">📥 Tiến hành Nạp Danh Sách</button>
-          <button class="btn" style="flex:1;" onclick="window.closeBulkStudentModal();">Hủy</button>
+        <!-- 6. QUẢN LÝ LỚP & TRƯỜNG -->
+        <div id="tc-classes" class="tab-content" style="display:none">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+              <div>
+                <h2 style="font-size:18px;font-weight:700">🏫 Quản Lý Trường & Lớp Học</h2>
+                <div style="font-size:13px;color:#64748b">Cấu trúc lớp học, niên khóa, mã tham gia & sĩ số học sinh</div>
+              </div>
+              <button class="btn btn-p" onclick="const n=prompt('Nhập tên lớp học mới:','Lớp 10A2'); if(n) window.saveClassItem({name:n});">+ Tạo Lớp Học Mới</button>
+            </div>
+            <table class="table" style="width:100%">
+              <thead>
+                <tr>
+                  <th>Tên Lớp / Cơ Sở</th>
+                  <th>Khối</th>
+                  <th>Niên Khóa</th>
+                  <th>Mã Mời</th>
+                  <th>Sĩ Số</th>
+                  <th>Trạng Thái</th>
+                  <th>Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="classes-table-tbody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 7. QUẢN LÝ NHIỆM VỤ HỌC TẬP -->
+        <div id="tc-assignments" class="tab-content" style="display:none">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+              <div>
+                <h2 style="font-size:18px;font-weight:700">📋 Giao Nhiệm Vụ & Bài Tập</h2>
+                <div style="font-size:13px;color:#64748b">Cấu hình bài tập, kiểm tra, hạn nộp & quyền đảo đề / xem đáp án</div>
+              </div>
+              <button class="btn btn-p" onclick="const t=prompt('Nhập tiêu đề nhiệm vụ mới:','Bài Tập Về Nhà Unit 1'); if(t) window.saveAssignmentItem({title:t});">+ Giao Nhiệm Vụ Mới</button>
+            </div>
+            <table class="table" style="width:100%">
+              <thead>
+                <tr>
+                  <th>Nhiệm Vụ / Loại Bài</th>
+                  <th>Lớp Nhận Bài</th>
+                  <th>Thời Gian / Lần Làm</th>
+                  <th>Lịch Trình Hạn Nộp</th>
+                  <th>Tiến Độ Nộp</th>
+                  <th>Trạng Thái</th>
+                  <th>Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="assignments-table-tbody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 8. TRUNG TÂM CHẤM BÀI -->
+        <div id="tc-grading" class="tab-content" style="display:none">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+              <div>
+                <h2 style="font-size:18px;font-weight:700">✍️ Trung Tâm Chấm Bài & Phản Hồi</h2>
+                <div style="font-size:13px;color:#64748b">Danh sách bài nộp tự luận & ghi âm phát âm đang chờ giáo viên chấm chữa</div>
+              </div>
+            </div>
+            <table class="table" style="width:100%">
+              <thead>
+                <tr>
+                  <th>Học Sinh</th>
+                  <th>Nhiệm Vụ / Dạng Bài</th>
+                  <th>Thời Gian Nộp</th>
+                  <th>Điểm / Trạng Thái</th>
+                  <th>Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="grading-queue-tbody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 9. BẢNG TIN & THẢO LUẬN LỚP HỌC -->
+        <div id="tc-stream" class="tab-content" style="display:none">
+          <div style="margin-bottom:16px">
+            <h2 style="font-size:18px;font-weight:700">💬 Bảng Tin Lớp Học & Tương Tác 2 Chiều</h2>
+            <div style="font-size:13px;color:#64748b">Dòng thời gian thông báo, thảo luận và câu hỏi từ giáo viên & học sinh</div>
+          </div>
+          <div id="class-stream-container">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- 10. BÁO CÁO ANALYTICS NÂNG CAO -->
+        <div id="tc-analytics" class="tab-content" style="display:none">
+          <div style="margin-bottom:16px">
+            <h2 style="font-size:18px;font-weight:700">📊 Báo Cáo Analytics & Chẩn Đoán Học Tập</h2>
+            <div style="font-size:13px;color:#64748b">Phân tích tỷ lệ hoạt động cả trường, phổ điểm và ma trận câu hỏi sai nhiều</div>
+          </div>
+          <div id="analytics-view-container">
+            <!-- Rendered dynamically -->
+          </div>
         </div>
       </div>
     </main>
@@ -1634,6 +1774,26 @@ SV003, Lê Văn C, 12A2, 2025-2026, sv003@gmail.com, 123456"></textarea>
       <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('dash');">
         <span class="cmd-item-icon">🏠</span>
         <div>Trung Tâm Điều Hành (Dashboard)</div>
+      </div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('classes');">
+        <span class="cmd-item-icon">🏫</span>
+        <div>Quản Lý Lớp & Trường Học</div>
+      </div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('assignments');">
+        <span class="cmd-item-icon">📋</span>
+        <div>Giao Nhiệm Vụ & Bài Tập</div>
+      </div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('grading');">
+        <span class="cmd-item-icon">✍️</span>
+        <div>Trung Tâm Chấm Bài & Phản Hồi</div>
+      </div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('stream');">
+        <span class="cmd-item-icon">💬</span>
+        <div>Bảng Tin & Thảo Luận Lớp Học</div>
+      </div>
+      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('analytics');">
+        <span class="cmd-item-icon">📊</span>
+        <div>Báo Cáo Analytics & Chẩn Đoán Học Tập</div>
       </div>
       <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('q');">
         <span class="cmd-item-icon">📚</span>

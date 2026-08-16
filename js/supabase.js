@@ -90,3 +90,22 @@ function fileToBase64(file) {
   });
 }
 
+/**
+ * Executes a Supabase query with unified error handling
+ * @param {Function} queryFn 
+ * @param {string} fallbackMsg 
+ */
+export async function executeSafeQuery(queryFn, fallbackMsg = 'Có lỗi kết nối cơ sở dữ liệu!') {
+  try {
+    const { data, error } = await queryFn(window.supabaseClient);
+    if (error) {
+      console.error('[Supabase Query Error]:', error);
+      throw error;
+    }
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: err.message || fallbackMsg };
+  }
+}
+
+

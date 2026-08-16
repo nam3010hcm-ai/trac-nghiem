@@ -142,39 +142,67 @@ export function renderStudentPortal(student) {
   switchExamMode('practice');
 }
 
-export function switchExamMode(mode = 'practice') {
+export function switchExamMode(mode = 'assigned') {
+  const btnAssigned = $('tab-mode-assigned');
   const btnPractice = $('tab-mode-practice');
   const btnOfficial = $('tab-mode-official');
+
+  const panelAssigned = $('panel-mode-assigned');
   const panelPractice = $('panel-mode-practice');
   const panelOfficial = $('panel-mode-official');
 
-  if (mode === 'practice') {
-    if (btnPractice) {
-      btnPractice.style.background = '#2563eb';
-      btnPractice.style.color = '#ffffff';
-      btnPractice.classList.add('active');
-    }
-    if (btnOfficial) {
-      btnOfficial.style.background = 'transparent';
-      btnOfficial.style.color = '#475569';
-      btnOfficial.classList.remove('active');
-    }
+  [btnAssigned, btnPractice, btnOfficial].forEach(b => {
+    if (b) { b.style.background = 'transparent'; b.style.color = '#475569'; b.classList.remove('active'); }
+  });
+  [panelAssigned, panelPractice, panelOfficial].forEach(p => {
+    if (p) p.style.display = 'none';
+  });
+
+  if (mode === 'assigned') {
+    if (btnAssigned) { btnAssigned.style.background = '#6366f1'; btnAssigned.style.color = '#ffffff'; btnAssigned.classList.add('active'); }
+    if (panelAssigned) panelAssigned.style.display = 'block';
+    renderStudentAssignedTasks();
+  } else if (mode === 'practice') {
+    if (btnPractice) { btnPractice.style.background = '#6366f1'; btnPractice.style.color = '#ffffff'; btnPractice.classList.add('active'); }
     if (panelPractice) panelPractice.style.display = 'block';
-    if (panelOfficial) panelOfficial.style.display = 'none';
   } else {
-    if (btnOfficial) {
-      btnOfficial.style.background = '#dc2626';
-      btnOfficial.style.color = '#ffffff';
-      btnOfficial.classList.add('active');
-    }
-    if (btnPractice) {
-      btnPractice.style.background = 'transparent';
-      btnPractice.style.color = '#475569';
-      btnPractice.classList.remove('active');
-    }
+    if (btnOfficial) { btnOfficial.style.background = '#dc2626'; btnOfficial.style.color = '#ffffff'; btnOfficial.classList.add('active'); }
     if (panelOfficial) panelOfficial.style.display = 'block';
-    if (panelPractice) panelPractice.style.display = 'none';
   }
+}
+
+export function renderStudentAssignedTasks() {
+  const container = document.getElementById('student-assigned-tasks-list');
+  if (!container) return;
+
+  const savedAsg = localStorage.getItem('educore_assignments_data');
+  let tasks = [];
+  if (savedAsg) {
+    try { tasks = JSON.parse(savedAsg); } catch(e){}
+  }
+  if (!tasks || tasks.length === 0) {
+    tasks = [
+      { id: 'asg_1', title: '📝 Kiểm tra Giữa Kỳ 1 — Anh Văn 10', contentType: 'exam', dueAt: '2026-08-25 23:59', durationMinutes: 45, maxAttempts: 1 },
+      { id: 'asg_2', title: '🎬 Video Roleplay: Hotel Check-in & Inquiry (A & B)', contentType: 'video_roleplay', dueAt: '2026-08-30 23:59', durationMinutes: 0, maxAttempts: 0 }
+    ];
+  }
+
+  container.innerHTML = tasks.map(t => `
+    <div class="card" style="margin-bottom:12px;padding:16px;border:1px solid #e2e8f0;border-radius:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <strong style="font-size:15px;color:#0f172a;display:block;margin-bottom:4px">${esc(t.title)}</strong>
+        <div style="font-size:12px;color:#64748b">
+          ⏱️ Thời gian: <b>${t.durationMinutes ? t.durationMinutes + ' phút' : 'Vô hạn'}</b> • 
+          ⏰ Hạn nộp: <b style="color:#dc2626">${t.dueAt ? t.dueAt.replace('T',' ') : 'Không có'}</b>
+        </div>
+      </div>
+      <div>
+        ${t.contentType === 'video_roleplay' 
+          ? `<a href="learn.html" class="btn btn-sm btn-p">🎬 Vào Luyện Roleplay</a>` 
+          : `<button class="btn btn-sm btn-p" onclick="window.switchExamMode('practice')">✍️ Làm Bài Thi</button>`}
+      </div>
+    </div>
+  `).join('');
 }
 
 export function populatePracticeCategories() {

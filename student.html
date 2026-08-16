@@ -127,17 +127,30 @@ window.globalLogout = async function() {
     <!-- MAIN PORTAL CARD: ÔN THI & THI CHÍNH THỨC -->
     <div class="card" style="max-width:760px;margin:0 auto 30px;padding:30px 28px;border-radius:18px;">
       <!-- MODE SWITCHER TABS -->
-      <div style="display:flex;gap:8px;margin-bottom:26px;background:#f1f5f9;padding:6px;border-radius:14px;">
-        <button type="button" id="tab-mode-practice" class="mode-tab-btn" onclick="window.switchExamMode('practice')" style="flex:1;padding:12px 16px;border:none;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;background:#6366f1;color:#ffffff;box-shadow:0 4px 12px rgba(99,102,241,0.3);transition:all 0.2s;">
-          💡 Ôn Thi (Xem Đáp Án & Giải Thích)
+      <div style="display:flex;gap:8px;margin-bottom:26px;background:#f1f5f9;padding:6px;border-radius:14px;flex-wrap:wrap">
+        <button type="button" id="tab-mode-assigned" class="mode-tab-btn" onclick="window.switchExamMode('assigned')" style="flex:1;padding:12px 16px;border:none;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;background:#6366f1;color:#ffffff;box-shadow:0 4px 12px rgba(99,102,241,0.3);transition:all 0.2s;">
+          📋 Nhiệm Vụ Của Tôi
+        </button>
+        <button type="button" id="tab-mode-practice" class="mode-tab-btn" onclick="window.switchExamMode('practice')" style="flex:1;padding:12px 16px;border:none;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;background:transparent;color:#475569;transition:all 0.2s;">
+          💡 Ôn Thi Tự Do
         </button>
         <button type="button" id="tab-mode-official" class="mode-tab-btn" onclick="window.switchExamMode('official')" style="flex:1;padding:12px 16px;border:none;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;background:transparent;color:#475569;transition:all 0.2s;">
-          📝 Thi Chính Thức (Thi 1 Lần)
+          📝 Thi Chính Thức
         </button>
       </div>
 
+      <!-- PANEL 0: NHIỆM VỤ CỦA TÔI -->
+      <div id="panel-mode-assigned">
+        <div style="padding:14px 18px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;color:#15803d;font-size:13.5px;margin-bottom:22px;line-height:1.6;">
+          📋 <b>Danh sách Nhiệm vụ do Giáo viên giao:</b> Các bài tập, kiểm tra và bài học Video Roleplay dành cho bạn.
+        </div>
+        <div id="student-assigned-tasks-list">
+          <div style="padding:20px;text-align:center;color:#64748b">Đang tải danh sách nhiệm vụ...</div>
+        </div>
+      </div>
+
       <!-- PANEL 1: ÔN THI & LUYỆN TẬP TỰ DO -->
-      <div id="panel-mode-practice">
+      <div id="panel-mode-practice" style="display:none;">
         <div style="padding:14px 18px;background:#eeeffe;border:1px solid #c7d2fe;border-radius:12px;color:#4338ca;font-size:13.5px;margin-bottom:22px;line-height:1.6;">
           💡 <b>Chế độ Ôn thi:</b> Tự do làm bài và làm lại không giới hạn. Sau khi nộp bài, bạn sẽ được xem <b>đáp án đúng</b> kèm <b>lời giải thích chi tiết</b> cho từng câu.
         </div>
