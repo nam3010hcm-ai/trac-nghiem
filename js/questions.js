@@ -455,19 +455,23 @@ export function renderQuestions(){
     const canEdit = canEditItem(q, state.currentUserEmail);
     const authorBadge = q.created_by ? `<div class="cat-badge" style="background:#f1f5f9;color:#475569" title="Người tạo: ${esc(q.created_by)}">👤 ${esc(q.created_by.split('@')[0])}</div>` : '';
     
-    // Cập nhật giao diện xem đáp án có thẻ HTML
+    // Cập nhật giao diện xem đáp án có thẻ HTML (Đáp án đúng màu đỏ đậm)
     if(type === 'mcq_single' || type === 'mcq_multi'){
       const correctSet = type === 'mcq_multi' ? (q.ans || []) : [q.ans];
-      answerHTML = `<div style="display:flex; flex-direction:column; gap:6px;">` + (q.opts || []).map((o,i) => `
-        <div class="abadge ${correctSet.includes(i)?'ok':''}" style="display:flex; gap:8px; padding:8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; align-items:center;">
-            <b style="min-width:20px; color:#1e293b;">${KEYS[i]}.</b>
-            <div style="overflow-x:auto; width:100%;">${renderRich(o)}</div>
-        </div>`).join('') + `</div>`;
+      answerHTML = `<div style="display:flex; flex-direction:column; gap:6px;">` + (q.opts || []).map((o,i) => {
+        const isOk = correctSet.includes(i);
+        return `
+        <div class="abadge ${isOk ? 'ok' : ''}" style="display:flex; gap:8px; padding:8px 10px; background:${isOk ? '#fef2f2' : '#f8fafc'}; border:1.5px solid ${isOk ? '#f87171' : '#e2e8f0'}; border-radius:6px; align-items:center; color:${isOk ? '#b91c1c' : '#334155'}; font-weight:${isOk ? '700' : '500'};">
+            <b style="min-width:20px; color:${isOk ? '#b91c1c' : '#1e293b'};">${KEYS[i]}.</b>
+            <div style="overflow-x:auto; width:100%; color:${isOk ? '#b91c1c' : '#334155'};">${renderRich(o)}</div>
+            ${isOk ? '<span style="font-size:11px; background:#fee2e2; color:#b91c1c; padding:2px 8px; border-radius:4px; font-weight:800; white-space:nowrap; margin-left:auto;">✓ Đáp án đúng</span>' : ''}
+        </div>`;
+      }).join('') + `</div>`;
     }else if(type === 'fill_blank' || type === 'drag_drop'){
-      answerHTML = (q.blanks || []).map((b,i) => `<span class="abadge ok">#${i+1}: ${renderRich(b)}</span>`).join('');
+      answerHTML = (q.blanks || []).map((b,i) => `<span class="abadge ok" style="background:#fef2f2; color:#b91c1c; border:1px solid #fca5a5; font-weight:700;">#${i+1}: ${renderRich(b)}</span>`).join('');
       if(q.bank?.length) answerHTML += `<div style="margin-top:4px;font-size:11px;color:#6b7280">Ngân hàng từ: ${esc(q.bank.join(', '))}</div>`;
     }else if(type === 'matching'){
-      answerHTML = (q.pairs || []).map(p => `<span class="abadge ok">${esc(p.left)} → ${esc(p.right)}</span>`).join('');
+      answerHTML = (q.pairs || []).map(p => `<span class="abadge ok" style="background:#fef2f2; color:#b91c1c; border:1px solid #fca5a5; font-weight:700;">${esc(p.left)} → ${esc(p.right)}</span>`).join('');
     }
 
     const explainHTML = q.explain ? `<div style="margin-top:6px; font-size:12px; color:#475569; background:#f8fafc; padding:6px 10px; border-radius:4px; border-left:3px solid #059669;">💡 <b>Giải thích:</b> ${renderRich(q.explain)}</div>` : '';

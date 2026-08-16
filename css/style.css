@@ -780,8 +780,9 @@ textarea {
 }
 
 .abadge.ok {
-  background: #dcfce7;
-  color: #15803d;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-weight: 700;
 }
 
 .cat-badge {
