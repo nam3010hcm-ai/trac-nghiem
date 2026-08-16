@@ -1626,12 +1626,12 @@ window.globalLogout = async function() {
           <i>(Hỗ trợ phân cách bằng dấu phẩy <code>,</code> hoặc tab từ Excel)</i>
         </div>
 
-        <div class="fg">
-          <label>Dán nội dung danh sách học viên vào đây:</label>
-          <textarea id="stm-bulk-text" class="designer-textarea" style="width:100%; min-height:180px; font-family:monospace; font-size:13px;" placeholder="SV001, Nguyễn Văn A, 12A1, 2025-2026, sv001@gmail.com, 123456
-SV002, Trần Thị B, 12A1, 2025-2026, sv002@gmail.com, 123456
-SV003, Lê Văn C, 12A2, 2025-2026, sv003@gmail.com, 123456"></textarea>
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button class="btn btn-p" id="btn-save-bulk-students" style="flex:2;" onclick="window.saveBulkStudents();">📥 Tiến hành Nạp Danh Sách</button>
+          <button class="btn" style="flex:1;" onclick="window.closeBulkStudentModal();">Hủy</button>
         </div>
+      </div>
+    </div>
 
         <!-- 6. QUẢN LÝ LỚP & TRƯỜNG -->
         <div id="tc-classes" class="tab-content" style="display:none">
