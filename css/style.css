@@ -1886,3 +1886,50 @@ input:focus, select:focus, textarea:focus {
   .hero-quick-actions { width: 100%; }
   .action-btn-primary, .action-btn-secondary { flex: 1; justify-content: center; }
 }
+
+/* Teacher workspace: make the administration shell continuous with the
+   top navigation and use the same bright surface as the rest of the LMS. */
+body:has(#t-panel[style*="display: flex"]) > .main {
+  display: none;
+}
+
+.admin-layout-wrapper {
+  background: #ffffff;
+  min-height: calc(100vh - 66px);
+}
+
+.admin-sidebar,
+.admin-sidebar-footer {
+  background: #ffffff;
+  color: #17233b;
+  border-color: #e3eaf5;
+}
+
+.admin-sidebar {
+  box-shadow: 8px 0 24px rgba(30, 64, 175, 0.045);
+}
+
+.admin-sidebar-header,
+.admin-sidebar-footer {
+  border-color: #e3eaf5;
+}
+
+.admin-sidebar-logo,
+.user-profile-name { color: #1e3a8a; }
+.admin-sidebar-logo span,
+.user-profile-role { color: #64748b; }
+.sidebar-section-title { color: #64748b; }
+.sidebar-item { color: #475569; }
+.sidebar-item:hover { background: #eff6ff; color: #1d4ed8; }
+.sidebar-item.active {
+  background: var(--primary-gradient);
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+}
+.sidebar-item .item-badge { background: #dbeafe; color: #1d4ed8; }
+
+#btn-logout {
+  background: #fff5f5 !important;
+  border-color: #fecaca !important;
+  color: #dc2626 !important;
+}
