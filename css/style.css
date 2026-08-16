@@ -1699,3 +1699,179 @@ textarea {
   .header { flex-direction: column; gap: 12px; padding: 12px 18px; }
   .header-actions { width: 100%; justify-content: space-between; }
 }
+
+/* ======================================================================
+   BRIGHT CAMPUS REFRESH
+   A calmer, daylight-first visual layer shared by Dashboard, Học tập,
+   Cổng thi and Quản trị.  Kept here (rather than inline) so every portal
+   receives the same visual language without changing its behaviour.
+   ====================================================================== */
+:root {
+  --header-bg: #ffffff;
+  --header-glass: rgba(255, 255, 255, 0.92);
+  --header-gold: #dbeafe;
+  --header-gold-glow: rgba(37, 99, 235, 0.12);
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-gradient: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  --primary-light: #eff6ff;
+  --primary-border: #bfdbfe;
+  --bg-page: #f7f9fd;
+  --surface-subtle: #f1f5fb;
+  --border-card: #e4eaf3;
+  --border-subtle: #edf1f7;
+  --text-main: #17233b;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+  --shadow-sm: 0 2px 8px rgba(30, 64, 175, 0.045);
+  --shadow-md: 0 10px 28px rgba(30, 64, 175, 0.06);
+  --shadow-lg: 0 20px 48px rgba(30, 64, 175, 0.11);
+  --radius-md: 14px;
+  --radius-lg: 22px;
+}
+
+body {
+  background:
+    radial-gradient(circle at 85% -15%, rgba(191, 219, 254, 0.55), transparent 30rem),
+    radial-gradient(circle at -10% 52%, rgba(224, 231, 255, 0.45), transparent 28rem),
+    var(--bg-page);
+}
+
+.header {
+  background: var(--header-glass);
+  border-bottom: 1px solid #e3eaf5;
+  box-shadow: 0 4px 18px rgba(30, 64, 175, 0.06);
+}
+
+.logo-title { color: #1e3a8a; }
+.logo-subtitle { color: #64748b; }
+.logo-flag {
+  background: linear-gradient(135deg, #2563eb, #6366f1);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.22);
+}
+
+.nav {
+  background: #f3f6fb;
+  border-color: #e6edf7;
+}
+
+.nav-btn { color: #52627a; }
+.nav-btn:hover { color: #1d4ed8; background: #eaf2ff; }
+.nav-btn.active {
+  color: #1d4ed8;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.12);
+}
+
+.global-search-bar,
+.notif-bell-btn,
+.user-profile-badge {
+  background: #f8faff;
+  border-color: #e2eaf5;
+  color: #334155;
+}
+
+.global-search-bar input { color: #17233b; }
+.global-search-bar input::placeholder { color: #94a3b8; }
+.global-search-bar:focus-within {
+  background: #ffffff;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.notif-bell-btn:hover,
+.user-profile-badge:hover {
+  background: #eef5ff;
+  border-color: #bfdbfe;
+}
+
+.notif-badge-dot { border-color: #f8faff; }
+.user-avatar-img { box-shadow: 0 3px 9px rgba(37, 99, 235, 0.18); }
+.header-logout-btn { color: #dc2626; background: #fff5f5; border-color: #fecaca; }
+
+.lms-hero-banner {
+  background:
+    radial-gradient(circle at 90% 20%, rgba(167, 243, 208, 0.8), transparent 16rem),
+    linear-gradient(120deg, #eaf3ff 0%, #f5f7ff 52%, #effcf8 100%);
+  border-color: #d6e7fb;
+  box-shadow: 0 14px 32px rgba(37, 99, 235, 0.09);
+}
+
+.lms-hero-banner::after {
+  width: 340px;
+  height: 340px;
+  right: -9%;
+  top: -70%;
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.22), rgba(255, 255, 255, 0) 70%);
+}
+
+.hero-tag {
+  color: #1d4ed8;
+  background: rgba(255, 255, 255, 0.72);
+  border-color: #bfdbfe;
+}
+
+.hero-title { color: #172554; }
+.hero-subtitle { color: #52627a; }
+.action-btn-primary { box-shadow: 0 6px 16px rgba(37, 99, 235, 0.22); }
+.action-btn-primary:hover { box-shadow: 0 10px 22px rgba(37, 99, 235, 0.3); }
+.action-btn-secondary {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: #cbdcf3;
+  color: #1e3a8a;
+}
+.action-btn-secondary:hover { background: #ffffff; border-color: #93c5fd; color: #1d4ed8; }
+
+.card,
+.kpi-card,
+.subject-perf-card,
+.analytics-card,
+.courses-table-card,
+.quick-nav-card,
+.upcoming-card,
+.recent-activity-card {
+  border-color: var(--border-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.kpi-card:hover { border-color: #bfdbfe; box-shadow: var(--shadow-md); }
+.kpi-icon-wrap { border-radius: 13px; }
+.kpi-val { color: #17233b; }
+.subject-perf-track,
+.course-progress-bar { background: #eaf0f8; }
+.lms-table th { background: #f6f8fc; }
+.lms-table tr:hover td { background: #f7faff; }
+
+.auth-modal-overlay { background: rgba(23, 35, 59, 0.38); backdrop-filter: blur(6px); }
+.auth-modal-card {
+  border: 1px solid #e2eaf5;
+  box-shadow: 0 24px 64px rgba(23, 35, 59, 0.22);
+}
+
+input, select, textarea {
+  border-color: #d9e3f0;
+  background: #ffffff;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+@media (max-width: 1100px) {
+  .header { padding: 10px 18px; gap: 12px; flex-wrap: wrap; }
+  .nav { order: 3; width: 100%; overflow-x: auto; }
+  .header-actions { margin-left: auto; }
+  .global-search-bar { width: 190px; }
+}
+
+@media (max-width: 600px) {
+  .header { padding: 10px 14px; }
+  .logo-subtitle, .global-search-bar, .user-profile-badge > span, .header-logout-btn { display: none; }
+  .nav-btn { padding: 8px 12px; font-size: 12px; }
+  .main { padding: 20px 14px 44px; }
+  .lms-hero-banner { padding: 24px 22px; }
+  .hero-title { font-size: 24px; }
+  .hero-quick-actions { width: 100%; }
+  .action-btn-primary, .action-btn-secondary { flex: 1; justify-content: center; }
+}
