@@ -132,14 +132,157 @@ export async function loginStudent() {
 
 export function renderStudentPortal(student) {
   if ($('st-auth-welcome')) $('st-auth-welcome').textContent = `Xin chào, ${student.full_name || student.id} 👋`;
-  if ($('st-auth-name')) $('st-auth-name').textContent = student.full_name || 'Học viên';
   if ($('st-auth-id')) $('st-auth-id').textContent = student.id || '';
   if ($('st-auth-class')) $('st-auth-class').textContent = student.class_name || '';
-  if ($('st-auth-year')) $('st-auth-year').textContent = student.academic_year || '';
-  if ($('st-auth-email')) $('st-auth-email').textContent = student.email || '';
 
   showScreen('sc-portal');
+  populatePracticeCategories();
+  populatePracticeExamSelect();
   loadActiveCohorts();
+  switchExamMode('practice');
+}
+
+export function switchExamMode(mode = 'practice') {
+  const btnPractice = $('tab-mode-practice');
+  const btnOfficial = $('tab-mode-official');
+  const panelPractice = $('panel-mode-practice');
+  const panelOfficial = $('panel-mode-official');
+
+  if (mode === 'practice') {
+    if (btnPractice) {
+      btnPractice.style.background = '#2563eb';
+      btnPractice.style.color = '#ffffff';
+      btnPractice.classList.add('active');
+    }
+    if (btnOfficial) {
+      btnOfficial.style.background = 'transparent';
+      btnOfficial.style.color = '#475569';
+      btnOfficial.classList.remove('active');
+    }
+    if (panelPractice) panelPractice.style.display = 'block';
+    if (panelOfficial) panelOfficial.style.display = 'none';
+  } else {
+    if (btnOfficial) {
+      btnOfficial.style.background = '#dc2626';
+      btnOfficial.style.color = '#ffffff';
+      btnOfficial.classList.add('active');
+    }
+    if (btnPractice) {
+      btnPractice.style.background = 'transparent';
+      btnPractice.style.color = '#475569';
+      btnPractice.classList.remove('active');
+    }
+    if (panelOfficial) panelOfficial.style.display = 'block';
+    if (panelPractice) panelPractice.style.display = 'none';
+  }
+}
+
+export function populatePracticeCategories() {
+  const catSelect = $('s-practice-cat');
+  if (!catSelect) return;
+  const cats = Object.keys(state.SUBCATS || {});
+  catSelect.innerHTML = '<option value="">(Tất cả Môn học / Chủ đề)</option>' +
+    cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+}
+
+export function populatePracticeExamSelect() {
+  const catSelect = $('s-practice-cat');
+  const examSelect = $('s-practice-exam');
+  if (!examSelect) return;
+
+  const currentCat = catSelect ? catSelect.value : '';
+  let exams = (state.exams || []).filter(e => !e.isHidden);
+  if (currentCat) {
+    exams = exams.filter(e => e.cat === currentCat);
+  }
+
+  if (exams.length === 0) {
+    examSelect.innerHTML = '<option value="" disabled selected>-- Không có đề ôn tập nào --</option>';
+  } else {
+    examSelect.innerHTML = '<option value="" disabled selected>-- Chọn đề thi ôn tập --</option>' +
+      exams.map(e => `<option value="${e.id}">${esc(e.name)} (${e.count || 10} câu${e.timeLimit ? ` • ${e.timeLimit} phút` : ''})</option>`).join('');
+  }
+  updatePracticeExamDesc();
+}
+
+export function updatePracticeExamDesc() {
+  const examSelect = $('s-practice-exam');
+  const descEl = $('s-practice-exam-desc');
+  if (!descEl) return;
+  const eid = parseInt(examSelect?.value);
+  const exam = (state.exams || []).find(e => e.id === eid);
+  if (exam) {
+    descEl.textContent = `📖 ${exam.desc || 'Đề ôn luyện kiến thức'} • Số câu: ${exam.count || 10}${exam.timeLimit ? ` • Thời gian: ${exam.timeLimit} phút` : ' • Không giới hạn thời gian'}`;
+  } else {
+    descEl.textContent = '';
+  }
+}
+
+export async function startPracticeExam() {
+  const currentStudent = getAuthenticatedStudent();
+  if (!currentStudent) {
+    alert("Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại!");
+    logoutStudent();
+    return;
+  }
+
+  const eid = parseInt($('s-practice-exam')?.value);
+  if (!eid) {
+    alert("⚠️ Vui lòng chọn một đề thi để bắt đầu ôn tập!");
+    return;
+  }
+
+  const exam = (state.exams || []).find(e => e.id === eid);
+  if (!exam) {
+    alert("Không tìm thấy đề thi đã chọn!");
+    return;
+  }
+
+  const pool = getPool(exam);
+  let qs = (exam.qIds && exam.qIds.length > 0) ? pool : shuffle(pool).sort((a, b) => (a.subcat || '').localeCompare(b.subcat || ''));
+  qs = qs.slice(0, Math.min(exam.count, pool.length));
+  if (!qs.length) {
+    alert("Đề thi này hiện chưa có câu hỏi nào!");
+    return;
+  }
+
+  // Gom nhóm câu hỏi theo Part
+  let parts = [];
+  let currentPart = null;
+  qs.forEach((q, i) => {
+    q.globalIdx = i;
+    const pName = q.subcat || 'General Part';
+    if (!currentPart || currentPart.name !== pName) {
+      currentPart = { name: pName, questions: [] };
+      parts.push(currentPart);
+    }
+    currentPart.questions.push(q);
+  });
+
+  qState = {
+    exam,
+    student: {
+      name: currentStudent.full_name || currentStudent.id,
+      id: currentStudent.id,
+      class_name: currentStudent.class_name || '',
+      academic_year: currentStudent.academic_year || '',
+      email: currentStudent.email || '',
+      cohort: 'Ôn Thi & Luyện Tập'
+    },
+    qs,
+    parts,
+    partIdx: 0,
+    answers: [],
+    startTime: Date.now(),
+    timer: null,
+    mode: 'practice'
+  };
+
+  persist();
+  startTimer();
+  showStudentBadge();
+  showScreen('sc-quiz');
+  renderPart();
 }
 
 export function logoutStudent() {
@@ -170,10 +313,15 @@ function checkStudentAuth() {
 window.loginStudent = loginStudent;
 window.logoutStudent = logoutStudent;
 window.toggleStudentPassVisible = toggleStudentPassVisible;
+window.switchExamMode = switchExamMode;
+window.populatePracticeCategories = populatePracticeCategories;
+window.populatePracticeExamSelect = populatePracticeExamSelect;
+window.updatePracticeExamDesc = updatePracticeExamDesc;
+window.startPracticeExam = startPracticeExam;
 
 function showStudentBadge(){
   const s = qState.student;
-  $('q-student').textContent = `${s.id || ''} - ${s.name || ''} (${s.class_name || ''}) • Ca thi: ${s.cohort || ''} • ${qState.exam?.name || ''}`;
+  $('q-student').textContent = `${s.id || ''} - ${s.name || ''} (${s.class_name || ''}) • ${qState.mode === 'practice' ? '💡 Ôn thi' : `Ca thi: ${s.cohort || ''}`} • ${qState.exam?.name || ''}`;
 }
 
 async function loadActiveCohorts() {
@@ -233,21 +381,19 @@ async function startExam(){
           alert('❌ Đề thi này không được phép làm trong Ca thi này!'); return;
       }
       
-      if (cohort.mode === 'exam') {
-          $('btn-start').disabled = true; $('btn-start').textContent = 'Đang kiểm tra lịch sử...';
-          try {
-              const { data: results, error } = await db().from('results').select('id').eq('cohort', cohortName).eq('sid', studentId);
-              if (results && results.length > 0) {
-                  alert('❌ Bạn đã thi Ca này rồi. Thi Thật chỉ cho phép 1 lần duy nhất!');
-                  $('btn-start').disabled = false; $('btn-start').textContent = 'Bắt đầu làm bài thi →';
-                  return;
-              }
-          } catch (error) {
-              alert('⚠️ Lỗi máy chủ!'); $('btn-start').disabled = false; $('btn-start').textContent = 'Bắt đầu làm bài thi →';
+      // Thi chính thức -> kiểm tra học viên đã làm bài ca này chưa
+      $('btn-start').disabled = true; $('btn-start').textContent = 'Đang kiểm tra lịch sử...';
+      try {
+          const { data: results, error } = await db().from('results').select('id').eq('cohort', cohortName).eq('sid', studentId);
+          if (results && results.length > 0) {
+              alert('❌ Bạn đã thi Ca này rồi. Bài thi chính thức chỉ cho phép làm 1 lần duy nhất!');
+              $('btn-start').disabled = false; $('btn-start').textContent = 'Bắt đầu làm bài thi →';
               return;
           }
-          $('btn-start').disabled = false; $('btn-start').textContent = 'Bắt đầu làm bài thi →';
+      } catch (error) {
+          console.warn("Lỗi kiểm tra lịch sử thi:", error);
       }
+      $('btn-start').disabled = false; $('btn-start').textContent = 'Bắt đầu làm bài thi →';
   }
 
   const eid = parseInt($('s-exam').value);
@@ -276,7 +422,7 @@ async function startExam(){
       exam, 
       student: { name, id: studentId, class_name: className, academic_year: academicYear, email, cohort: cohortName }, 
       qs, parts, partIdx: 0, answers: [], startTime: Date.now(), timer: null,
-      mode: cohort?.mode === 'exam' ? 'exam' : 'practice'
+      mode: 'exam'
   };
   
   persist(); startTimer(); showStudentBadge(); showScreen('sc-quiz'); renderPart();
@@ -577,7 +723,7 @@ async function finishExam() {
     <div style="font-size: 15px; font-weight: 500; line-height: 1.6; color: #334155; margin-top: 8px;">
         Mã HV: <b style="color: #0f172a;">${student.id}</b> • Lớp: <b>${student.class_name || ''}</b><br>
         Họ tên: <b style="color: #0f172a;">${student.name}</b><br>
-        Ca thi: <b style="color: #0f172a;">${student.cohort}</b>
+        Phân loại: <b style="color: ${qState.mode === 'exam' ? '#dc2626' : '#2563eb'};">${qState.mode === 'exam' ? `Ca thi: ${student.cohort || 'Thi chính thức'}` : 'Ôn Thi & Luyện Tập'}</b>
     </div>`;
   $('r-score').textContent = score; 
   
@@ -587,19 +733,42 @@ async function finishExam() {
   $('r-cor').textContent = cor; $('r-wrg').textContent = totalObjQs - cor;
   $('r-time').textContent = (elapsed>=60 ? Math.floor(elapsed/60)+'p ' : '') + (elapsed%60) + 's';
   $('r-pct').textContent = pct + '%';
-  $('r-msg').textContent = "Bài làm đã được nộp thành công!";
-  
-  $('btn-retake').style.display = (qState.mode === 'exam') ? 'none' : 'block';
-  $('r-review').innerHTML = qs.map((q,i)=>{
-    const ua = answers[i];
-    let expHtml = q.explain ? `<div style="margin-top:6px; font-size:13px; color:#475569; background:#f8fafc; padding:8px; border-radius:6px; border-left:3px solid #3b82f6;">💡 <b>Giải thích:</b> ${renderRich(q.explain)}</div>` : '';
 
-    return `<div class="ri"><b>Câu ${i+1}: ${renderRich(q.text)}</b>
-      <div>Bạn chọn/Viết: ${q.type==='essay' ? `<pre style="white-space:pre-wrap; background:#f1f5f9; padding:10px;">${esc(ua)}</pre>` : formatAnswer(q, ua, false)}</div>
-      ${expHtml}
-    </div>`;
-  }).join('');
-  showScreen('sc-result'); typesetMath($('sc-result'));
+  const reviewCard = $('r-review-card');
+  if (qState.mode === 'exam') {
+    $('r-msg').innerHTML = "<span style='color:#dc2626;font-weight:700;'>🛡️ Bài thi chính thức đã nộp thành công!</span><br><span style='font-size:12.5px;color:#64748b;font-weight:normal;'>Điểm số đã được ghi nhận vào hệ thống. Theo quy định phòng thi, đáp án chi tiết không được hiển thị.</span>";
+    $('btn-retake').style.display = 'none';
+    if (reviewCard) reviewCard.style.display = 'none';
+    $('r-review').innerHTML = '';
+  } else {
+    $('r-msg').innerHTML = "<span style='color:#16a34a;font-weight:700;'>🎉 Hoàn thành bài ôn thi!</span><br><span style='font-size:12.5px;color:#64748b;font-weight:normal;'>Bạn có thể xem lại chi tiết đáp án đúng và lời giải thích cho từng câu hỏi bên dưới.</span>";
+    $('btn-retake').style.display = 'block';
+    if (reviewCard) reviewCard.style.display = 'block';
+
+    $('r-review').innerHTML = qs.map((q, i) => {
+      const ua = answers[i];
+      const correct = isCorrect(q, ua);
+      let expHtml = q.explain ? `<div style="margin-top:8px; font-size:13px; color:#1e40af; background:#eff6ff; padding:10px 12px; border-radius:8px; border-left:3px solid #3b82f6;">💡 <b>Giải thích chi tiết:</b><br>${renderRich(q.explain)}</div>` : '';
+      let correctAnsHtml = `<div style="font-size:13px; color:#15803d; margin-top:4px;"><b>Đáp án đúng:</b> ${formatAnswer(q, undefined, true)}</div>`;
+
+      return `
+        <div class="ri" style="padding:14px 16px; margin-bottom:14px; border-radius:10px; border-left:4px solid ${correct ? '#16a34a' : '#ef4444'}; background:${correct ? '#f0fdf4' : '#fef2f2'}; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; text-align:left;">
+          <div style="font-size:14.5px; font-weight:700; color:#0f172a; margin-bottom:8px;">
+            Câu ${i+1}: ${renderRich(q.text)}
+          </div>
+          <div style="font-size:13px; color:#334155; margin-bottom:4px;">
+            Bạn đã chọn: <b style="color:${correct ? '#16a34a' : '#dc2626'}">${q.type==='essay' ? `<pre style="white-space:pre-wrap; background:#fff; padding:8px; border:1px solid #e2e8f0; border-radius:6px; margin-top:4px;">${esc(ua || '(Chưa viết bài luận)')}</pre>` : formatAnswer(q, ua, false)}</b>
+            <span style="font-weight:700; color:${correct ? '#16a34a' : '#dc2626'}; margin-left:6px;">${correct ? '✅ (Chính xác)' : '❌ (Chưa đúng)'}</span>
+          </div>
+          ${!correct ? correctAnsHtml : ''}
+          ${expHtml}
+        </div>
+      `;
+    }).join('');
+  }
+
+  showScreen('sc-result');
+  typesetMath($('sc-result'));
 }
 
 async function initStudentApp() {

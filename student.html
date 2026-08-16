@@ -58,7 +58,7 @@ window.globalLogout = async function() {
   <div class="nav">
     <a class="nav-btn" href="index.html">🏠 Dashboard</a>
     <a class="nav-btn" href="learn.html">📖 Luyện Kỹ Năng</a>
-    <a class="nav-btn active" href="student.html">🎓 Cổng Thi & Học Tập</a>
+    <a class="nav-btn active" href="student.html">🎓 Cổng Thi</a>
     <a class="nav-btn" href="teacher.html">👩‍🏫 Quản Trị LMS</a>
   </div>
 
@@ -99,7 +99,7 @@ window.globalLogout = async function() {
       <div id="st-login-err" style="display:none;padding:11px 14px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:16px"></div>
 
       <button class="btn btn-p btn-full" id="btn-student-login" onclick="window.loginStudent()" style="padding:13px;font-size:15px;font-weight:700">
-        Đăng Nhập Phòng Thi & Học Tập →
+        Đăng Nhập Cổng Thi →
       </button>
 
       <div style="text-align:center;margin-top:18px;font-size:12px;color:#94a3b8;line-height:1.5">
@@ -108,158 +108,92 @@ window.globalLogout = async function() {
     </div>
   </div>
 
-  <!-- MÀN HÌNH 2: DASHBOARD HỌC VIÊN "MY LEARNING" & CỔNG CHỌN CA THI -->
+  <!-- MÀN HÌNH 2: CỔNG THI & ÔN TẬP HỌC VIÊN -->
   <div class="screen" id="sc-portal">
-    <!-- MY LEARNING HEADER BANNER -->
-    <div class="my-learning-header">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+    <!-- STUDENT PROFILE BAR -->
+    <div class="card" style="max-width:720px;margin:20px auto 16px;padding:18px 24px;border-radius:16px;background:#ffffff;border:1.5px solid #e0f2fe;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:44px;height:44px;border-radius:50%;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-size:22px;">🎓</div>
         <div>
-          <div style="font-size:22px;font-weight:800;" id="st-auth-welcome">Xin chào, Nam 👋</div>
-          <div style="font-size:13.5px;color:#94a3b8;margin-top:4px;">EduCore – Một nền tảng • Nhiều môn học • Một hành trình học tập.</div>
+          <div style="font-size:17px;font-weight:800;color:#0f172a;" id="st-auth-welcome">Xin chào, Học viên 👋</div>
+          <div style="font-size:12.5px;color:#64748b;margin-top:2px;">Mã HV: <b id="st-auth-id" style="color:#0284c7;"></b> • Lớp: <b id="st-auth-class" style="color:#0f172a;"></b></div>
         </div>
-        <button class="btn btn-sm" onclick="window.logoutStudent()" style="background:#ef4444;border:none;color:#ffffff;font-weight:700;">
-          🔒 Đăng xuất
+      </div>
+      <button class="btn btn-sm" onclick="window.logoutStudent()" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-weight:700;padding:7px 16px;border-radius:8px;">
+        🔒 Đăng xuất
+      </button>
+    </div>
+
+    <!-- MAIN PORTAL CARD: ÔN THI & THI CHÍNH THỨC -->
+    <div class="card" style="max-width:720px;margin:0 auto 30px;padding:28px 26px;border-radius:18px;box-shadow:0 8px 30px rgba(14,165,233,0.08);border:1.5px solid #e0f2fe;background:#ffffff;">
+      <!-- MODE SWITCHER TABS -->
+      <div style="display:flex;gap:8px;margin-bottom:24px;background:#f1f5f9;padding:5px;border-radius:12px;">
+        <button type="button" id="tab-mode-practice" class="mode-tab-btn" onclick="window.switchExamMode('practice')" style="flex:1;padding:12px 14px;border:none;border-radius:8px;font-weight:800;font-size:14px;cursor:pointer;background:#2563eb;color:#ffffff;transition:all 0.2s;">
+          💡 Ôn Thi (Xem Đáp Án & Giải Thích)
+        </button>
+        <button type="button" id="tab-mode-official" class="mode-tab-btn" onclick="window.switchExamMode('official')" style="flex:1;padding:12px 14px;border:none;border-radius:8px;font-weight:800;font-size:14px;cursor:pointer;background:transparent;color:#475569;transition:all 0.2s;">
+          📝 Thi Chính Thức (Thi 1 Lần)
         </button>
       </div>
-    </div>
 
-    <!-- MAIN MY LEARNING GRID (2 COLUMNS) -->
-    <div class="my-learning-grid">
-      <!-- LEFT COLUMN: RESUME LEARNING & MY SUBJECTS -->
-      <div>
-        <!-- TIẾP TỤC HỌC (RESUME LEARNING) -->
-        <div class="card" style="padding:20px;border-radius:16px;border:1.5px solid #bae6fd;background:#f0f9ff;margin-bottom:20px;">
-          <div style="font-size:12px;font-weight:800;color:#0284c7;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;">▶️ TIẾP TỤC HỌC BÀI DANG DỞ</div>
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-            <div>
-              <div style="font-size:16px;font-weight:800;color:#0369a1;">🇬🇧 Tiếng Anh – Unit 5: Science & Technology</div>
-              <div style="font-size:12.5px;color:#0284c7;margin-top:4px;">Đang ở bài: Listening & AI Speaking Practice</div>
-            </div>
-            <a href="learn.html" class="action-btn-primary" style="text-decoration:none;">[ Tiếp tục học → ]</a>
-          </div>
-          <div style="margin-top:14px;">
-            <div style="display:flex;justify-content:space-between;font-size:12px;color:#0369a1;font-weight:700;margin-bottom:4px;">
-              <span>Tiến độ hoàn thành</span>
-              <span>72%</span>
-            </div>
-            <div class="pbar" style="height:8px;background:#e0f2fe;">
-              <div class="pfill" style="width:72%;background:#0284c7;"></div>
-            </div>
-          </div>
+      <!-- PANEL 1: ÔN THI & LUYỆN TẬP TỰ DO -->
+      <div id="panel-mode-practice">
+        <div style="padding:12px 16px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;color:#1e40af;font-size:13px;margin-bottom:20px;line-height:1.5;">
+          💡 <b>Chế độ Ôn thi:</b> Tự do làm bài và làm lại không giới hạn. Sau khi nộp bài, bạn sẽ được xem <b>đáp án đúng</b> kèm <b>lời giải thích chi tiết</b> cho từng câu.
         </div>
 
-        <!-- MÔN HỌC CỦA TÔI (MY SUBJECTS) -->
-        <div class="card" style="padding:20px;border-radius:16px;margin-bottom:20px;">
-          <div style="font-size:15px;font-weight:800;color:#0f172a;margin-bottom:16px;">📚 Môn Học Của Tôi</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;">
-              <div style="font-weight:800;font-size:14px;color:#0f172a;">🇬🇧 Tiếng Anh</div>
-              <div style="font-size:12px;color:#64748b;margin:4px 0 10px;">Progress: <b>72%</b> (12 Units)</div>
-              <div class="pbar" style="height:6px;"><div class="pfill" style="width:72%;background:#0284c7;"></div></div>
-            </div>
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;">
-              <div style="font-weight:800;font-size:14px;color:#0f172a;">➗ Toán Học</div>
-              <div style="font-size:12px;color:#64748b;margin:4px 0 10px;">Progress: <b>84%</b> (8 Chương)</div>
-              <div class="pbar" style="height:6px;"><div class="pfill" style="width:84%;background:#16a34a;"></div></div>
-            </div>
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;">
-              <div style="font-weight:800;font-size:14px;color:#0f172a;">⚛️ Vật Lý</div>
-              <div style="font-size:12px;color:#64748b;margin:4px 0 10px;">Progress: <b>65%</b> (10 Chương)</div>
-              <div class="pbar" style="height:6px;"><div class="pfill" style="width:65%;background:#d97706;"></div></div>
-            </div>
-            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;">
-              <div style="font-weight:800;font-size:14px;color:#0f172a;">🧪 Hóa Học</div>
-              <div style="font-size:12px;color:#64748b;margin:4px 0 10px;">Progress: <b>58%</b> (9 Chương)</div>
-              <div class="pbar" style="height:6px;"><div class="pfill" style="width:58%;background:#9333ea;"></div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RIGHT COLUMN: TO-DO DEADLINES & STREAK BADGES -->
-      <div>
-        <!-- STREAK & ACHIEVEMENTS -->
-        <div class="streak-badge-card">
-          <div style="font-size:32px;">🔥</div>
-          <div>
-            <div style="font-weight:800;font-size:15px;color:#9a3412;">7 Ngày Liên Tiếp!</div>
-            <div style="font-size:12px;color:#c2410c;">Học tập chăm chỉ mỗi ngày để nhân 2 XP.</div>
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
-          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px;text-align:center;">
-            <div style="font-size:18px;font-weight:800;color:#166534;">🏆 24</div>
-            <div style="font-size:11.5px;color:#15803d;">Bài đã xong</div>
-          </div>
-          <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:12px;text-align:center;">
-            <div style="font-size:18px;font-weight:800;color:#92400e;">⭐ 8.4</div>
-            <div style="font-size:11.5px;color:#b45309;">Điểm trung bình</div>
-          </div>
-        </div>
-
-        <!-- VIỆC CẦN LÀM (TO-DO DEADLINES) -->
-        <div class="card" style="padding:18px;border-radius:16px;">
-          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:12px;">📌 Việc Cần Làm</div>
-
-          <div class="todo-item-card">
-            <div class="todo-dot" style="background:#ef4444;"></div>
-            <div>
-              <div style="font-size:12.5px;font-weight:700;color:#0f172a;">⚛️ Vật Lý – Bài kiểm tra chương 3</div>
-              <div style="font-size:11px;color:#ef4444;margin-top:2px;">⏰ Hạn nộp: 23:59 Hôm nay</div>
-            </div>
-          </div>
-
-          <div class="todo-item-card">
-            <div class="todo-dot" style="background:#f59e0b;"></div>
-            <div>
-              <div style="font-size:12.5px;font-weight:700;color:#0f172a;">🇬🇧 English – Listening & Speaking Unit 5</div>
-              <div style="font-size:11px;color:#d97706;margin-top:2px;">⏰ Hạn nộp: Ngày mai</div>
-            </div>
-          </div>
-
-          <div class="todo-item-card">
-            <div class="todo-dot" style="background:#10b981;"></div>
-            <div>
-              <div style="font-size:12.5px;font-weight:700;color:#0f172a;">➗ Toán Học – Bài tập hàm số bậc hai</div>
-              <div style="font-size:11px;color:#16a34a;margin-top:2px;">⏰ Hạn nộp: Cuối tuần</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CỔNG VÀO THI TRẮC NGHIỆM VỚI MÃ PHÒNG THI -->
-    <div class="card" style="max-width:680px;margin:24px auto 0;padding:24px;border-radius:18px;box-shadow:0 8px 30px rgba(14,165,233,0.08);border:1.5px solid #e0f2fe">
-      <div style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-        <span>📝</span> Tham Gia Phòng Thi Trắc Nghiệm Tự Động
-      </div>
-
-      <!-- CHỌN CA THI VÀ ĐỀ THI -->
-      <div class="fg">
-          <label>Chọn ca thi / lớp học *</label>
-          <select id="s-cohort">
-              <option value="" disabled selected>-- Đang tải danh sách ca thi... --</option>
+        <div class="fg" style="margin-bottom:14px;">
+          <label style="font-size:13px;font-weight:700;color:#334155;">Chọn Môn học / Chủ đề</label>
+          <select id="s-practice-cat" onchange="window.populatePracticeExamSelect()" style="width:100%;padding:10px 14px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13.5px;">
+            <option value="">(Tất cả môn học / chủ đề)</option>
           </select>
+        </div>
+
+        <div class="fg" style="margin-bottom:14px;">
+          <label style="font-size:13px;font-weight:700;color:#334155;">Chọn Đề thi ôn tập *</label>
+          <select id="s-practice-exam" onchange="window.updatePracticeExamDesc()" style="width:100%;padding:10px 14px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13.5px;background:#f8fafc;">
+            <option value="" disabled selected>-- Chọn đề thi ôn tập --</option>
+          </select>
+        </div>
+
+        <div id="s-practice-exam-desc" style="font-size:12.5px;color:#0284c7;margin-bottom:20px;min-height:18px;font-weight:600;"></div>
+
+        <button class="btn btn-p btn-full" id="btn-start-practice" onclick="window.startPracticeExam()" style="padding:14px;font-size:15.5px;font-weight:800;background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:10px;">
+          🚀 Bắt Đầu Ôn Thi →
+        </button>
       </div>
 
-      <div class="fg">
-          <label>MÃ TRUY CẬP CA THI *</label>
-          <input type="text" id="s-cohort-code" placeholder="Nhập mã do giáo viên cung cấp (VD: K6A2B)..." style="text-transform: uppercase; font-weight:700; letter-spacing:1px;">
-      </div>
-      
-      <div class="fg">
-        <label>Chọn đề thi *</label>
-        <select id="s-exam" style="background-color: #f8fafc;">
+      <!-- PANEL 2: THI CHÍNH THỨC -->
+      <div id="panel-mode-official" style="display:none;">
+        <div style="padding:12px 16px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;color:#991b1b;font-size:13px;margin-bottom:20px;line-height:1.5;">
+          🛡️ <b>Chế độ Thi chính thức:</b> Yêu cầu Mã ca thi do giáo viên cung cấp. Mỗi học viên chỉ được làm bài <b>1 lần duy nhất</b>, thời gian được tính tự động, sau khi nộp bài <b>chỉ xem điểm số và không hiển thị đáp án</b>.
+        </div>
+
+        <div class="fg" style="margin-bottom:14px;">
+          <label style="font-size:13px;font-weight:700;color:#334155;">Chọn ca thi / lớp học *</label>
+          <select id="s-cohort" style="width:100%;padding:10px 14px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13.5px;">
+            <option value="" disabled selected>-- Đang tải danh sách ca thi... --</option>
+          </select>
+        </div>
+
+        <div class="fg" style="margin-bottom:14px;">
+          <label style="font-size:13px;font-weight:700;color:#334155;">MÃ TRUY CẬP CA THI *</label>
+          <input type="text" id="s-cohort-code" placeholder="Nhập mã do giáo viên cung cấp (VD: K6A2B)..." style="width:100%;padding:10px 14px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13.5px;text-transform:uppercase;font-weight:700;letter-spacing:1px;">
+        </div>
+
+        <div class="fg" style="margin-bottom:14px;">
+          <label style="font-size:13px;font-weight:700;color:#334155;">Chọn đề thi *</label>
+          <select id="s-exam" style="width:100%;padding:10px 14px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13.5px;background:#f8fafc;">
             <option value="" disabled selected>-- Nhập đúng mã ca thi để tải đề --</option>
-        </select>
+          </select>
+        </div>
+
+        <div id="s-exam-desc" style="font-size:12.5px;color:#dc2626;margin-bottom:20px;min-height:18px;font-weight:600;"></div>
+
+        <button class="btn btn-p btn-full" id="btn-start" onclick="window.startExam()" style="padding:14px;font-size:15.5px;font-weight:800;background:linear-gradient(135deg,#dc2626,#b91c1c);border-radius:10px;">
+          ✍️ Bắt Đầu Làm Bài Thi →
+        </button>
       </div>
-
-      <div id="s-exam-desc" style="font-size:12.5px;color:#64748b;margin-bottom:18px;min-height:18px"></div>
-
-      <button class="btn btn-p btn-full" id="btn-start" style="padding:14px;font-size:15.5px;font-weight:800">
-        Bắt đầu làm bài thi →
-      </button>
     </div>
   </div>
 
@@ -312,8 +246,8 @@ window.globalLogout = async function() {
     </div>
 
     <!-- KHUNG XEM LẠI BÀI LÀM VÀ GIẢI THÍCH -->
-    <div class="card" style="margin-top:24px">
-      <div style="font-size:16px;font-weight:800;margin-bottom:16px;color:#0f172a">📝 Xem lại chi tiết bài làm</div>
+    <div class="card" id="r-review-card" style="margin-top:24px">
+      <div style="font-size:16px;font-weight:800;margin-bottom:16px;color:#0f172a">📝 Xem lại chi tiết bài làm & Lời giải</div>
       <div id="r-review"></div>
     </div>
   </div>
