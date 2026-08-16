@@ -176,6 +176,15 @@ window.globalLogout = async function() {
 
   window.switchTTab = function(tabName) {
     var tabs = ['dash', 'curriculum', 'q', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
+    if (tabs.indexOf(tabName) === -1) tabName = 'dash';
+
+    try {
+      localStorage.setItem('active_teacher_tab', tabName);
+      if (window.location.hash !== '#' + tabName) {
+        history.replaceState(null, '', '#' + tabName);
+      }
+    } catch(e) {}
+
     tabs.forEach(function(x) {
       var content = document.getElementById('tc-' + x);
       if (content) {
@@ -212,6 +221,14 @@ window.globalLogout = async function() {
       window._teacherModuleSwitchTab(tabName);
     }
   };
+
+  window.addEventListener('hashchange', function() {
+    var h = (window.location.hash || '').replace('#', '').trim();
+    var tabs = ['dash', 'curriculum', 'q', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
+    if (tabs.indexOf(h) !== -1) {
+      window.switchTTab(h);
+    }
+  });
 
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {

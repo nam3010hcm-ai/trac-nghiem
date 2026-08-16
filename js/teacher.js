@@ -43,12 +43,12 @@ async function showTeacherPanel(user) {
 
   await initData();
 
-  if (isRootUser(state.currentUserEmail)) {
-    const defaultTab = 'dash';
-    switchTTab(defaultTab);
-  } else {
-    switchTTab('dash');
-  }
+  const validTabs = ['dash', 'curriculum', 'q', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
+  const hashTab = (window.location.hash || '').replace('#', '').trim();
+  let savedTab = null;
+  try { savedTab = localStorage.getItem('active_teacher_tab'); } catch(e){}
+  const targetTab = validTabs.includes(hashTab) ? hashTab : (validTabs.includes(savedTab) ? savedTab : 'dash');
+  switchTTab(targetTab);
 
   initTeacherApp();
 
@@ -174,6 +174,15 @@ async function doLogout() {
 
 function switchTTab(t) {
   const tabs = ['dash', 'curriculum', 'q', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
+  if (!tabs.includes(t)) t = 'dash';
+
+  try {
+    localStorage.setItem('active_teacher_tab', t);
+    if (window.location.hash !== '#' + t) {
+      history.replaceState(null, '', '#' + t);
+    }
+  } catch(e) {}
+
   tabs.forEach(x => {
     const content = $('tc-' + x);
     if(content) {
