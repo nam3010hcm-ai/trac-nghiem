@@ -9,14 +9,17 @@ import { $, esc, isRootUser, ROOT_ADMIN_EMAIL } from './common.js';
 
 const db = () => window.supabaseClient;
 
-export let teachersList = [
-  { id: 'T001', name: 'Dr. Chen', email: 'chen.lms@k7.edu.vn', department: 'Khoa Ngoại Ngữ', role: 'Giảng viên', is_active: true, created_at: '2026-01-15' },
-  { id: 'T002', name: 'Dr. Ramirez', email: 'ramirez.ai@k7.edu.vn', department: 'Trí Tuệ Nhân Tạo', role: 'Giảng viên', is_active: true, created_at: '2026-02-01' },
-  { id: 'T003', name: 'Mr. Davis', email: 'davis.web@k7.edu.vn', department: 'Lập Trình Web', role: 'Giảng viên', is_active: true, created_at: '2026-02-10' },
-  { id: 'T004', name: 'Thầy Nam (Root Admin)', email: 'nam3010hcm@gmail.com', department: 'Quản Trị Hệ Thống', role: 'Root Admin', is_active: true, created_at: '2026-01-01' }
-];
+export let teachersList = [];
 
 let editingTeacherId = null;
+
+function generateNextTeacherId() {
+  const nums = (teachersList || [])
+    .map(t => parseInt(String(t.id || '').replace(/\D/g, ''), 10))
+    .filter(n => !isNaN(n));
+  const max = nums.length > 0 ? Math.max(...nums) : 0;
+  return 'T' + String(max + 1).padStart(3, '0');
+}
 
 // 1. NẠP DANH SÁCH GIẢNG VIÊN TỪ SUPABASE
 export async function loadTeachers() {
@@ -24,7 +27,7 @@ export async function loadTeachers() {
     if (!db()) return;
     let { data, error } = await db().from('teachers').select('*').order('created_at', { ascending: false });
     if (error) {
-      // Fallback query if created_at column doesn't exist
+      // Fallback query if created_at column doesn't exist or order fails
       const res = await db().from('teachers').select('*');
       data = res.data;
       error = res.error;
@@ -32,7 +35,11 @@ export async function loadTeachers() {
     if (error) {
       console.warn("Lỗi truy vấn bảng teachers trên Supabase:", error);
     } else if (data) {
-      teachersList = data;
+      teachersList = data.map(t => ({
+        ...t,
+        name: t.teacher_name || t.name || t.full_name || t.email
+      }));
+      renderTeachersList();
     }
   } catch (err) {
     console.warn("Lỗi khi loadTeachers từ Supabase:", err);
@@ -51,10 +58,11 @@ export function renderTeachersList() {
   const q = (searchInput?.value || '').trim().toLowerCase();
 
   let filtered = teachersList.filter(t => {
-    return !q || (t.id || '').toLowerCase().includes(q) ||
-                 (t.name || t.full_name || '').toLowerCase().includes(q) ||
-                 (t.email || '').toLowerCase().includes(q) ||
-                 (t.department || '').toLowerCase().includes(q);
+    const tName = (t.teacher_name || t.name || t.full_name || '').toLowerCase();
+    const tEmail = (t.email || '').toLowerCase();
+    const tDept = (t.department || '').toLowerCase();
+    const tId = (t.id || '').toLowerCase();
+    return !q || tId.includes(q) || tName.includes(q) || tEmail.includes(q) || tDept.includes(q);
   });
 
   if (filtered.length === 0) {
@@ -71,7 +79,7 @@ export function renderTeachersList() {
   container.innerHTML = filtered.map(t => {
     const isActive = t.is_active !== false;
     const isRoot = isRootUser(t.email);
-    const teacherName = t.name || t.full_name || t.email;
+    const teacherName = t.teacher_name || t.name || t.full_name || t.email;
 
     // Tính toán tài nguyên do giảng viên này tạo ra
     const questionsCount = (window.state?.questions || []).filter(q => (q.created_by || q.createdBy || '').toLowerCase() === (t.email || '').toLowerCase()).length;
@@ -141,9 +149,9 @@ export function openTeacherModal(id = null) {
     if (!t) return;
     if (title) title.textContent = '✏️ Cập Nhật Tài Khoản Giảng Viên';
     if ($('t-mod-email')) { $('t-mod-email').value = t.email || ''; $('t-mod-email').disabled = true; }
-    if ($('t-mod-name')) $('t-mod-name').value = t.name || t.full_name || '';
+    if ($('t-mod-name')) $('t-mod-name').value = t.teacher_name || t.name || t.full_name || '';
     if ($('t-mod-dept')) $('t-mod-dept').value = t.department || '';
-    if ($('t-mod-pass')) $('t-mod-pass').value = t.password || '';
+    if ($('t-mod-pass')) $('t-mod-pass').value = '';
   } else {
     if (title) title.textContent = '➕ Thêm Tài Khoản Giảng Viên Mới';
     if ($('t-mod-email')) { $('t-mod-email').value = ''; $('t-mod-email').disabled = false; }
@@ -166,7 +174,6 @@ export async function saveTeacher() {
   const email = ($('t-mod-email')?.value || '').trim().toLowerCase();
   const name = ($('t-mod-name')?.value || '').trim();
   const dept = ($('t-mod-dept')?.value || '').trim();
-  const pass = ($('t-mod-pass')?.value || '').trim();
 
   if (!email || !name) {
     alert("❌ Vui lòng nhập đầy đủ Email và Họ tên giảng viên!");
@@ -174,27 +181,33 @@ export async function saveTeacher() {
   }
 
   if (editingTeacherId) {
-    const t = teachersList.find(item => item.id === editingTeacherId);
-    if (t) {
-      t.name = name;
-      t.department = dept || 'Khoa Ngoại Ngữ';
-      if (pass) t.password = pass;
-    }
+    const updatePayload = {
+      teacher_name: name,
+      department: dept || 'Khoa Ngoại Ngữ'
+    };
 
     try {
       if (db()) {
-        const updatePayload = {
-          name: name,
-          department: dept || 'Khoa Ngoại Ngữ'
-        };
-        if (pass) updatePayload.password = pass;
         const { error } = await db().from('teachers').update(updatePayload).eq('id', editingTeacherId);
-        if (error) console.warn("Lỗi cập nhật giảng viên Supabase:", error);
+        if (error) {
+          console.error("Lỗi cập nhật giảng viên Supabase:", error);
+          alert("❌ Lỗi cập nhật lên Supabase: " + (error.message || ''));
+          return;
+        }
       }
     } catch(e) {
-      console.warn("Lỗi sync Supabase:", e);
+      console.error("Lỗi sync Supabase:", e);
+      alert("❌ Lỗi kết nối Supabase: " + e.message);
+      return;
     }
-    alert("✅ Đã cập nhật thông tin Giảng viên!");
+
+    const t = teachersList.find(item => item.id === editingTeacherId);
+    if (t) {
+      t.teacher_name = name;
+      t.name = name;
+      t.department = dept || 'Khoa Ngoại Ngữ';
+    }
+    alert("✅ Đã cập nhật thông tin Giảng viên thành công!");
   } else {
     const exists = teachersList.some(t => (t.email || '').toLowerCase() === email.toLowerCase());
     if (exists) {
@@ -202,30 +215,38 @@ export async function saveTeacher() {
       return;
     }
 
-    const newId = 'T' + String(Date.now()).slice(-4);
+    const newId = generateNextTeacherId();
     const newTeacher = {
       id: newId,
       email: email,
-      name: name,
+      teacher_name: name,
       department: dept || 'Khoa Ngoại Ngữ',
-      role: isRootUser(email) ? 'Root Admin' : 'Giảng viên',
-      password: pass || '123456',
+      role: isRootUser(email) ? 'admin' : 'teacher',
       is_active: true,
-      created_at: new Date().toISOString(),
-      created_by: window.state?.currentUserEmail || ROOT_ADMIN_EMAIL
+      created_at: new Date().toISOString()
     };
 
     try {
       if (db()) {
-        const { error } = await db().from('teachers').insert([newTeacher]);
-        if (error) console.warn("Lỗi thêm giảng viên vào Supabase:", error);
+        const { data, error } = await db().from('teachers').insert([newTeacher]).select();
+        if (error) {
+          console.error("Lỗi thêm giảng viên vào Supabase:", error);
+          alert("❌ Lỗi lưu giảng viên vào Supabase: " + (error.message || ''));
+          return;
+        }
+        if (data && data.length > 0) {
+          newTeacher.created_at = data[0].created_at || newTeacher.created_at;
+        }
       }
     } catch(e) {
-      console.warn("Lỗi sync Supabase:", e);
+      console.error("Lỗi sync Supabase:", e);
+      alert("❌ Lỗi kết nối Supabase: " + e.message);
+      return;
     }
 
+    newTeacher.name = name;
     teachersList.unshift(newTeacher);
-    alert("✅ Đã thêm tài khoản Giảng viên mới thành công!");
+    alert("✅ Đã thêm tài khoản Giảng viên mới vào Supabase thành công!");
   }
 
   closeTeacherModal();
@@ -237,37 +258,45 @@ export async function toggleTeacherStatus(id) {
   const t = teachersList.find(item => item.id === id);
   if (!t) return;
   const nextStatus = !(t.is_active !== false);
-  t.is_active = nextStatus;
 
   try {
     if (db()) {
       const { error } = await db().from('teachers').update({ is_active: nextStatus }).eq('id', id);
-      if (error) console.warn("Lỗi toggle status Supabase:", error);
+      if (error) {
+        alert("❌ Lỗi cập nhật trạng thái trên Supabase: " + error.message);
+        return;
+      }
     }
+    t.is_active = nextStatus;
+    alert(`Đã ${nextStatus ? 'mở khóa' : 'khóa'} tài khoản giảng viên ${t.teacher_name || t.name || t.email}!`);
+    renderTeachersList();
   } catch (e) {
-    console.warn("Lỗi toggle status:", e);
+    console.error("Lỗi toggle status:", e);
+    alert("❌ Lỗi: " + e.message);
   }
-
-  alert(`Đã ${nextStatus ? 'mở khóa' : 'khóa'} tài khoản giảng viên ${t.name || t.email}!`);
-  renderTeachersList();
 }
 
 // 6. XÓA GIẢNG VIÊN TRÊN SUPABASE
 export async function deleteTeacher(id) {
   const t = teachersList.find(item => item.id === id);
   if (!t) return;
-  if (confirm(`Bạn có chắc chắn muốn xóa tài khoản giảng viên "${t.name || t.email}" không?`)) {
-    try {
-      if (db()) {
-        const { error } = await db().from('teachers').delete().eq('id', id);
-        if (error) console.warn("Lỗi xóa giảng viên Supabase:", error);
+  const teacherDisplayName = t.teacher_name || t.name || t.email;
+  if (!confirm(`Bạn có chắc chắn muốn xóa tài khoản giảng viên "${teacherDisplayName}" không?`)) return;
+
+  try {
+    if (db()) {
+      const { error } = await db().from('teachers').delete().eq('id', id);
+      if (error) {
+        alert("❌ Lỗi xóa giảng viên trên Supabase: " + error.message);
+        return;
       }
-    } catch(e) {
-      console.warn("Lỗi xóa giảng viên:", e);
     }
     teachersList = teachersList.filter(item => item.id !== id);
-    alert("Đã xóa tài khoản giảng viên!");
+    alert("✅ Đã xóa tài khoản giảng viên khỏi Supabase thành công!");
     renderTeachersList();
+  } catch (e) {
+    console.error("Lỗi xóa giảng viên:", e);
+    alert("❌ Lỗi: " + e.message);
   }
 }
 
@@ -279,4 +308,5 @@ window.closeTeacherModal = closeTeacherModal;
 window.saveTeacher = saveTeacher;
 window.toggleTeacherStatus = toggleTeacherStatus;
 window.deleteTeacher = deleteTeacher;
+
 
