@@ -15,28 +15,40 @@ import { loadTeachers, renderTeachersList, openTeacherModal, closeTeacherModal, 
 import { renderCurriculumTree, openSubjectModal, closeSubjectModal, saveSubject, loadCurriculumFromSupabase } from './curriculum.js';
 import { calculateAndRenderTop10, loadAuthLogs, renderAuthLogsTable, openStudentReportModal, closeStudentReportModal, recordAuthEvent } from './auth-logs.js';
 
-import { loadClasses, renderClassesList, saveClassItem } from './classes-mgr.js';
-import { loadAssignments, renderAssignmentsList, saveAssignmentItem } from './assignments-mgr.js';
-import { loadPendingSubmissions, renderGradingQueueTable } from './grading-center.js';
+import { loadClasses, renderClassesList, saveClassItem, openClassModal, saveClassFromModal, deleteClassItem } from './classes-mgr.js';
+import { loadAssignments, renderAssignmentsList, saveAssignmentItem, openAssignmentModal, saveAssignmentFromModal, deleteAssignmentItem, previewAssignment } from './assignments-mgr.js';
+import { loadPendingSubmissions, renderGradingQueueTable, openGradeModal, saveGradeResult } from './grading-center.js';
 import { loadAnalyticsData, renderAnalyticsDashboard } from './lms-analytics.js';
-import { loadClassPosts, renderClassStream } from './class-stream.js';
+import { loadClassPosts, renderClassStream, submitStreamPost, submitPostComment } from './class-stream.js';
 
 window.loadClasses = loadClasses;
 window.renderClassesList = renderClassesList;
 window.saveClassItem = saveClassItem;
+window.openClassModal = openClassModal;
+window.saveClassFromModal = saveClassFromModal;
+window.deleteClassItem = deleteClassItem;
 
 window.loadAssignments = loadAssignments;
 window.renderAssignmentsList = renderAssignmentsList;
 window.saveAssignmentItem = saveAssignmentItem;
+window.openAssignmentModal = openAssignmentModal;
+window.saveAssignmentFromModal = saveAssignmentFromModal;
+window.deleteAssignmentItem = deleteAssignmentItem;
+window.previewAssignment = previewAssignment;
 
 window.loadPendingSubmissions = loadPendingSubmissions;
 window.renderGradingQueueTable = renderGradingQueueTable;
+window.openGradeModal = openGradeModal;
+window.saveGradeResult = saveGradeResult;
 
 window.loadAnalyticsData = loadAnalyticsData;
 window.renderAnalyticsDashboard = renderAnalyticsDashboard;
 
 window.loadClassPosts = loadClassPosts;
 window.renderClassStream = renderClassStream;
+window.submitStreamPost = submitStreamPost;
+window.submitPostComment = submitPostComment;
+
 
 
 

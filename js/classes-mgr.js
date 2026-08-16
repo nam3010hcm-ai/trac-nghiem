@@ -1,12 +1,11 @@
 // ============================================================================
 // EDUCORE LMS — SCHOOL & CLASS MANAGEMENT MODULE (classes-mgr.js)
-// Class Lifecycle, Academic Years, Invite Codes & Student Enrollment
+// Complete CRUD: Class Lifecycle, Academic Years, Invite Codes & Student Enrollment
 // ============================================================================
 
-import { showToast, renderLMSBadge, renderSkeletonTableRows } from './ui-components.js';
+import { showToast, renderLMSBadge } from './ui-components.js';
 
 export let classesList = [];
-export let activeClassId = null;
 
 // Default demo classes if database is empty
 export const DEFAULT_CLASSES = [
@@ -32,7 +31,6 @@ export async function loadClasses() {
     console.warn('[Classes] Supabase fetch warning, using local state:', err);
   }
 
-  // Fallback to localStorage or defaults
   const saved = localStorage.getItem('educore_classes_data');
   if (saved) {
     try { classesList = JSON.parse(saved); } catch(e) { classesList = DEFAULT_CLASSES; }
@@ -83,7 +81,7 @@ export function renderClassesList() {
       <td>${cls.status === 'archived' ? renderLMSBadge('neutral', 'Lưu trữ') : renderLMSBadge('success', 'Hoạt động')}</td>
       <td>
         <div style="display:flex;gap:6px">
-          <button class="btn btn-sm btn-ghost" onclick="window.editClassModal('${cls.id}')" title="Chỉnh sửa lớp">✏️ Sửa</button>
+          <button class="btn btn-sm btn-ghost" onclick="window.openClassModal('${cls.id}')" title="Chỉnh sửa lớp">✏️ Sửa</button>
           <button class="btn btn-sm btn-ghost" style="color:#dc2626" onclick="window.deleteClassItem('${cls.id}')" title="Xóa lớp">🗑️ Xóa</button>
         </div>
       </td>
@@ -92,69 +90,153 @@ export function renderClassesList() {
 }
 
 /**
- * Add or Save Class Item
+ * Open Modal Dialog for Create/Edit Class
  */
-export async function saveClassItem(classData) {
-  if (!classData.name) {
-    showToast('error', 'Thiếu Thông Tin', 'Vui lòng nhập tên lớp học!');
-    return false;
+export function openClassModal(classId = null) {
+  const cls = classesList.find(c => c.id === classId) || {
+    id: '',
+    name: '',
+    school: 'Trường THPT Chuyên EduCore',
+    grade: 10,
+    academicYear: '2025-2026',
+    inviteCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+    status: 'active'
+  };
+
+  let modal = document.getElementById('class-crud-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'class-crud-modal';
+    modal.className = 'modal-backdrop';
+    document.body.appendChild(modal);
   }
+
+  modal.innerHTML = `
+    <div class="modal-card" style="max-width:520px;padding:24px;background:#ffffff;border-radius:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid #e2e8f0;padding-bottom:12px">
+        <h3 style="margin:0;color:#0f172a;font-size:18px">${cls.id ? '✏️ Chỉnh Sửa Thông Tin Lớp Học' : '🏫 Tạo Lớp Học Mới'}</h3>
+        <button onclick="document.getElementById('class-crud-modal').style.display='none'" class="btn-close" style="background:none;border:none;font-size:20px;cursor:pointer">&times;</button>
+      </div>
+
+      <input type="hidden" id="cls-input-id" value="${cls.id || ''}">
+
+      <div class="fg" style="margin-bottom:12px">
+        <label style="font-weight:700;font-size:13px;display:block;margin-bottom:4px">Tên Lớp Học *</label>
+        <input type="text" id="cls-input-name" placeholder="VD: Lớp 10A2 - Anh Văn Nâng Cao" value="${esc(cls.name)}" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px">
+      </div>
+
+      <div class="fg" style="margin-bottom:12px">
+        <label style="font-weight:700;font-size:13px;display:block;margin-bottom:4px">Trường / Cơ Sở Giáo Dục</label>
+        <input type="text" id="cls-input-school" placeholder="Tên trường..." value="${esc(cls.school)}" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="fg">
+          <label style="font-weight:700;font-size:13px;display:block;margin-bottom:4px">Khối Lớp *</label>
+          <select id="cls-input-grade" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px">
+            <option value="10" ${cls.grade == 10 ? 'selected' : ''}>Khối 10</option>
+            <option value="11" ${cls.grade == 11 ? 'selected' : ''}>Khối 11</option>
+            <option value="12" ${cls.grade == 12 ? 'selected' : ''}>Khối 12</option>
+          </select>
+        </div>
+
+        <div class="fg">
+          <label style="font-weight:700;font-size:13px;display:block;margin-bottom:4px">Niên Khóa *</label>
+          <select id="cls-input-year" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px">
+            <option value="2025-2026" ${cls.academicYear == '2025-2026' ? 'selected' : ''}>2025 - 2026</option>
+            <option value="2026-2027" ${cls.academicYear == '2026-2027' ? 'selected' : ''}>2026 - 2027</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div class="fg">
+          <label style="font-weight:700;font-size:13px;display:block;margin-bottom:4px">Mã Mời Học Sinh</label>
+          <input type="text" id="cls-input-code" value="${esc(cls.inviteCode)}" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-weight:700;text-transform:uppercase">
+        </div>
+
+        <div class="fg">
+          <label style="font-weight:700;font-size:13px;display:block;margin-bottom:4px">Trạng Thái</label>
+          <select id="cls-input-status" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px">
+            <option value="active" ${cls.status === 'active' ? 'selected' : ''}>🟢 Hoạt động</option>
+            <option value="archived" ${cls.status === 'archived' ? 'selected' : ''}>⚪ Lưu trữ</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px">
+        <button class="btn btn-secondary" onclick="document.getElementById('class-crud-modal').style.display='none'">Hủy</button>
+        <button class="btn btn-p" onclick="window.saveClassFromModal()">💾 Lưu Lớp Học</button>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+}
+
+/**
+ * Save Class from Modal Inputs
+ */
+export async function saveClassFromModal() {
+  const id = document.getElementById('cls-input-id')?.value;
+  const name = document.getElementById('cls-input-name')?.value?.trim();
+  const school = document.getElementById('cls-input-school')?.value?.trim() || 'Trường THPT Chuyên EduCore';
+  const grade = parseInt(document.getElementById('cls-input-grade')?.value) || 10;
+  const academicYear = document.getElementById('cls-input-year')?.value || '2025-2026';
+  const inviteCode = (document.getElementById('cls-input-code')?.value?.trim() || Math.random().toString(36).substring(2, 8)).toUpperCase();
+  const status = document.getElementById('cls-input-status')?.value || 'active';
+
+  if (!name) {
+    showToast('error', 'Lỗi Nhập Liệu', 'Vui lòng nhập tên lớp học!');
+    return;
+  }
+
+  const classData = {
+    id: id || ('cls_' + Date.now()),
+    name,
+    school,
+    grade,
+    academicYear,
+    inviteCode,
+    status,
+    studentCount: id ? (classesList.find(c => c.id === id)?.studentCount || 30) : 0
+  };
 
   const existingIdx = classesList.findIndex(c => c.id === classData.id);
   if (existingIdx >= 0) {
-    classesList[existingIdx] = { ...classesList[existingIdx], ...classData };
-    showToast('success', 'Cập Nhật Lớp', `Đã cập nhật thông tin lớp ${classData.name}`);
+    classesList[existingIdx] = classData;
+    showToast('success', 'Cập Nhật Thành Công', `Đã cập nhật thông tin lớp ${classData.name}`);
   } else {
-    const newClass = {
-      id: 'cls_' + Date.now(),
-      inviteCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-      studentCount: 0,
-      status: 'active',
-      ...classData
-    };
-    classesList.unshift(newClass);
-    showToast('success', 'Tạo Lớp Thành Công', `Đã tạo lớp ${newClass.name} với Mã mời: ${newClass.inviteCode}`);
+    classesList.unshift(classData);
+    showToast('success', 'Tạo Lớp Thành Công', `Đã tạo lớp ${classData.name} với Mã mời: ${classData.inviteCode}`);
   }
 
   saveClassesToLocal();
   renderClassesList();
-  populateClassSelectDropdowns();
 
-  // Try sync with Supabase if available
+  const modal = document.getElementById('class-crud-modal');
+  if (modal) modal.style.display = 'none';
+
+  // Sync to Supabase
   try {
     const client = window.supabaseClient;
-    if (client) {
-      await client.from('classes').upsert(classData);
-    }
+    if (client) await client.from('classes').upsert(classData);
   } catch(e){}
-
-  return true;
 }
 
 /**
  * Delete Class Item
  */
 export function deleteClassItem(id) {
-  if (!confirm('Bạn có chắc chắn muốn xóa lớp học này? Dữ liệu nhiệm vụ liên quan sẽ bị lưu trữ.')) return;
+  const cls = classesList.find(c => c.id === id);
+  if (!cls) return;
+
+  if (!confirm(`Bạn có chắc chắn muốn xóa lớp "${cls.name}"? Dữ liệu nhiệm vụ sẽ được chuyển sang lưu trữ.`)) return;
 
   classesList = classesList.filter(c => c.id !== id);
   saveClassesToLocal();
   renderClassesList();
-  populateClassSelectDropdowns();
-  showToast('info', 'Xóa Lớp', 'Đã xóa lớp khỏi danh sách.');
-}
-
-/**
- * Populate Class Select dropdowns across LMS forms
- */
-export function populateClassSelectDropdowns() {
-  const selects = document.querySelectorAll('.class-select-dropdown');
-  selects.forEach(select => {
-    const currentVal = select.value;
-    select.innerHTML = '<option value="">-- Chọn Lớp Học --</option>' + 
-      classesList.map(c => `<option value="${c.id}">${esc(c.name)} (${c.inviteCode})</option>`).join('');
-    if (currentVal) select.value = currentVal;
-  });
+  showToast('info', 'Đã Xóa Lớp', `Đã xóa lớp "${cls.name}" khỏi danh sách.`);
 }
 
 function esc(str) {
@@ -162,14 +244,6 @@ function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-window.editClassModal = function(id) {
-  const cls = classesList.find(c => c.id === id);
-  if (!cls) return;
-  const name = prompt('Sửa tên lớp học:', cls.name);
-  if (name && name.trim()) {
-    saveClassItem({ ...cls, name: name.trim() });
-  }
-};
-
+window.openClassModal = openClassModal;
+window.saveClassFromModal = saveClassFromModal;
 window.deleteClassItem = deleteClassItem;
-window.showToast = showToast;

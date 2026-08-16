@@ -1641,7 +1641,7 @@ window.globalLogout = async function() {
                 <h2 style="font-size:18px;font-weight:700">🏫 Quản Lý Trường & Lớp Học</h2>
                 <div style="font-size:13px;color:#64748b">Cấu trúc lớp học, niên khóa, mã tham gia & sĩ số học sinh</div>
               </div>
-              <button class="btn btn-p" onclick="const n=prompt('Nhập tên lớp học mới:','Lớp 10A2'); if(n) window.saveClassItem({name:n});">+ Tạo Lớp Học Mới</button>
+              <button class="btn btn-p" onclick="window.openClassModal()">+ Tạo Lớp Học Mới</button>
             </div>
             <table class="table" style="width:100%">
               <thead>
@@ -1670,7 +1670,7 @@ window.globalLogout = async function() {
                 <h2 style="font-size:18px;font-weight:700">📋 Giao Nhiệm Vụ & Bài Tập</h2>
                 <div style="font-size:13px;color:#64748b">Cấu hình bài tập, kiểm tra, hạn nộp & quyền đảo đề / xem đáp án</div>
               </div>
-              <button class="btn btn-p" onclick="const t=prompt('Nhập tiêu đề nhiệm vụ mới:','Bài Tập Về Nhà Unit 1'); if(t) window.saveAssignmentItem({title:t});">+ Giao Nhiệm Vụ Mới</button>
+              <button class="btn btn-p" onclick="window.openAssignmentModal()">+ Giao Nhiệm Vụ Mới</button>
             </div>
             <table class="table" style="width:100%">
               <thead>
