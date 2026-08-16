@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>EduCore - Nền Tảng Quản Lý Học Tập & Đánh Giá Số Đa Môn Học</title>
+<title>EduCore Enterprise LMS — Nền Tảng Học Tập & Đánh Giá Số</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css"/>
 <link rel="stylesheet" href="css/learn.css"/>
 
@@ -124,7 +124,6 @@ window.initHeaderAuthState = function() {
       logoutBtn.style.display = 'none';
     }
 
-    // Tự động bật Modal Đăng Nhập khi mới truy cập index lần đầu mà chưa đăng nhập
     setTimeout(function() {
       if (window.openAuthModal) window.openAuthModal();
     }, 150);
@@ -138,13 +137,13 @@ document.addEventListener('DOMContentLoaded', function() {
 </head>
 
 <body>
-<!-- EDUCORE BRANDED APP HEADER -->
+<!-- EDUCORE OBSIDIAN GLASS APP HEADER -->
 <div class="header">
   <a href="index.html" class="logo">
-    <div class="logo-flag" style="font-size:26px;">⚡</div>
+    <div class="logo-flag">⚡</div>
     <div class="logo-text-wrap">
-      <div class="logo-title" style="font-size:18px;font-weight:800;letter-spacing:-0.4px;">EduCore</div>
-      <div class="logo-subtitle" style="font-size:11px;color:#93c5fd;">Learn • Practice • Assess • Improve</div>
+      <div class="logo-title">EduCore</div>
+      <div class="logo-subtitle">Enterprise • LMS Hub</div>
     </div>
   </a>
 
@@ -157,16 +156,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
   <div class="header-actions">
     <div class="global-search-bar">
-      <span style="font-size:13px;color:#94a3b8;">🔍</span>
+      <span style="font-size:14px;color:#94a3b8;">🔍</span>
       <input type="text" id="global-search-input" placeholder="Tìm môn học, đề thi, unit..." />
     </div>
 
-    <button class="notif-bell-btn" title="Thông báo mới" onclick="window.openAuthModal();">
+    <button class="notif-bell-btn" title="Thông báo mới" onclick="if(window.openAuthModal) window.openAuthModal();">
       🔔
       <span class="notif-badge-dot"></span>
     </button>
 
-    <div class="user-profile-badge" id="user-header-badge" title="Bấm để chọn phân hệ đăng nhập" onclick="window.openAuthModal();">
+    <div class="user-profile-badge" id="user-header-badge" title="Bấm để chọn phân hệ đăng nhập" onclick="if(window.openAuthModal) window.openAuthModal();">
       <div class="user-avatar-img">🔑</div>
       <span>Đăng Nhập Phân Hệ</span>
     </div>
@@ -177,15 +176,15 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
-<div class="main" style="max-width:1200px;">
-  <!-- HERO WELCOME BANNER -->
+<div class="main">
+  <!-- HERO WELCOME BANNER (HUASHU GLASSMORPHISM) -->
   <div class="lms-hero-banner">
     <div>
       <div class="hero-tag">
-        <span>⚡</span> EDUCORE LMS
+        <span>⚡</span> EDUCORE ENTERPRISE LMS
       </div>
       <h1 class="hero-title">Chào mừng đến với EduCore 👋</h1>
-      <p class="hero-subtitle">Một nền tảng – Nhiều môn học – Một hành trình học tập thông minh.</p>
+      <p class="hero-subtitle">Một nền tảng – Nhiều môn học – Một hành trình học tập thông minh & sang trọng.</p>
     </div>
     <div class="hero-quick-actions">
       <a href="teacher.html" class="action-btn-primary" onclick="return window.checkTeacherAuth(event);">+ Tạo Đề Thi Mới</a>
@@ -198,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="kpi-card">
       <div class="kpi-header">
         <span class="kpi-title">Tổng Học Viên</span>
-        <div class="kpi-icon-wrap" style="background:#e0f2fe;color:#0284c7;">👥</div>
+        <div class="kpi-icon-wrap" style="background:#eeeffe;color:#6366f1;">👥</div>
       </div>
       <div class="kpi-val">1,245</div>
       <div class="kpi-footer">
@@ -222,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="kpi-card">
       <div class="kpi-header">
         <span class="kpi-title">Tổng Đề Thi</span>
-        <div class="kpi-icon-wrap" style="background:#fef3c7;color:#b45309;">📝</div>
+        <div class="kpi-icon-wrap" style="background:#fffbeb;color:#b45309;">📝</div>
       </div>
       <div class="kpi-val">186</div>
       <div class="kpi-footer">
@@ -244,20 +243,20 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </div>
 
-  <!-- BÁO CÁO KẾT QUẢ THEO MÔN HỌC (EDUCORE SUBJECT PERFORMANCE) -->
+  <!-- BÁO CÁO KẾT QUẢ THEO MÔN HỌC -->
   <div class="subject-perf-card">
-    <div style="font-size:15px;font-weight:800;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#0f172a;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
       <span>📊 Kết Quả Đánh Giá Theo Môn Học</span>
-      <span style="font-size:11.5px;color:#2563eb;background:#eff6ff;padding:3px 10px;border-radius:9999px;font-weight:700;">EduCore Analytics</span>
+      <span style="font-size:12px;color:#6366f1;background:#eeeffe;padding:4px 12px;border-radius:9999px;font-weight:700;">EduCore Analytics</span>
     </div>
 
     <div class="subject-perf-item">
       <div class="subject-perf-header">
         <span>🇬🇧 Tiếng Anh</span>
-        <span style="color:#0284c7;">91% Đạt</span>
+        <span style="color:#6366f1;">91% Đạt</span>
       </div>
       <div class="subject-perf-track">
-        <div class="subject-perf-fill" style="width: 91%; background: #0284c7;"></div>
+        <div class="subject-perf-fill" style="width: 91%; background: linear-gradient(90deg, #6366f1, #4f46e5);"></div>
       </div>
     </div>
 
@@ -267,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <span style="color:#16a34a;">84% Đạt</span>
       </div>
       <div class="subject-perf-track">
-        <div class="subject-perf-fill" style="width: 84%; background: #16a34a;"></div>
+        <div class="subject-perf-fill" style="width: 84%; background: linear-gradient(90deg, #10b981, #059669);"></div>
       </div>
     </div>
 
@@ -277,17 +276,17 @@ document.addEventListener('DOMContentLoaded', function() {
         <span style="color:#d97706;">79% Đạt</span>
       </div>
       <div class="subject-perf-track">
-        <div class="subject-perf-fill" style="width: 79%; background: #d97706;"></div>
+        <div class="subject-perf-fill" style="width: 79%; background: linear-gradient(90deg, #f59e0b, #d97706);"></div>
       </div>
     </div>
 
     <div class="subject-perf-item">
       <div class="subject-perf-header">
         <span>🧪 Hóa Học</span>
-        <span style="color:#9333ea;">86% Đạt</span>
+        <span style="color:#8b5cf6;">86% Đạt</span>
       </div>
       <div class="subject-perf-track">
-        <div class="subject-perf-fill" style="width: 86%; background: #9333ea;"></div>
+        <div class="subject-perf-fill" style="width: 86%; background: linear-gradient(90deg, #8b5cf6, #7c3aed);"></div>
       </div>
     </div>
   </div>
@@ -313,8 +312,8 @@ document.addEventListener('DOMContentLoaded', function() {
           <svg viewBox="0 0 700 160" style="width:100%;height:100%;">
             <defs>
               <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#2563eb" stop-opacity="0.35"/>
-                <stop offset="100%" stop-color="#2563eb" stop-opacity="0.0"/>
+                <stop offset="0%" stop-color="#6366f1" stop-opacity="0.4"/>
+                <stop offset="100%" stop-color="#6366f1" stop-opacity="0.0"/>
               </linearGradient>
             </defs>
             <!-- Grid Lines -->
@@ -325,25 +324,25 @@ document.addEventListener('DOMContentLoaded', function() {
             <!-- Area Fill -->
             <path d="M 20 120 Q 90 90, 140 105 T 260 70 T 380 95 T 500 35 T 620 60 T 680 40 L 680 145 L 20 145 Z" fill="url(#chartGrad)"/>
             <!-- Line Path -->
-            <path d="M 20 120 Q 90 90, 140 105 T 260 70 T 380 95 T 500 35 T 620 60 T 680 40" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
+            <path d="M 20 120 Q 90 90, 140 105 T 260 70 T 380 95 T 500 35 T 620 60 T 680 40" fill="none" stroke="#6366f1" stroke-width="3.5" stroke-linecap="round"/>
             
             <!-- Data Points -->
-            <circle cx="140" cy="105" r="4" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
-            <circle cx="260" cy="70" r="4" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
-            <circle cx="380" cy="95" r="4" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
-            <circle cx="500" cy="35" r="6" fill="#2563eb" stroke="#ffffff" stroke-width="2.5"/>
-            <circle cx="620" cy="60" r="4" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
+            <circle cx="140" cy="105" r="4.5" fill="#ffffff" stroke="#6366f1" stroke-width="3"/>
+            <circle cx="260" cy="70" r="4.5" fill="#ffffff" stroke="#6366f1" stroke-width="3"/>
+            <circle cx="380" cy="95" r="4.5" fill="#ffffff" stroke="#6366f1" stroke-width="3"/>
+            <circle cx="500" cy="35" r="7" fill="#6366f1" stroke="#ffffff" stroke-width="3"/>
+            <circle cx="620" cy="60" r="4.5" fill="#ffffff" stroke="#6366f1" stroke-width="3"/>
 
             <!-- Tooltip Badge on Peak -->
-            <rect x="460" y="5" width="80" height="22" rx="6" fill="#0f172a"/>
-            <text x="500" y="20" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">850 Học viên</text>
+            <rect x="455" y="2" width="90" height="24" rx="8" fill="#090d16"/>
+            <text x="500" y="18" text-anchor="middle" fill="#ffffff" font-size="11.5" font-weight="700">850 Học viên</text>
 
             <!-- X-Axis Labels -->
             <text x="20" y="158" font-size="11" font-weight="600" fill="#94a3b8">Thứ 2</text>
             <text x="130" y="158" font-size="11" font-weight="600" fill="#94a3b8">Thứ 3</text>
             <text x="250" y="158" font-size="11" font-weight="600" fill="#94a3b8">Thứ 4</text>
             <text x="370" y="158" font-size="11" font-weight="600" fill="#94a3b8">Thứ 5</text>
-            <text x="490" y="158" font-size="11" font-weight="700" fill="#2563eb">Thứ 6</text>
+            <text x="490" y="158" font-size="11" font-weight="700" fill="#6366f1">Thứ 6</text>
             <text x="610" y="158" font-size="11" font-weight="600" fill="#94a3b8">Thứ 7</text>
             <text x="670" y="158" font-size="11" font-weight="600" fill="#94a3b8">Chủ Nhật</text>
           </svg>
@@ -353,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <!-- TOP COURSES CATALOG TABLE CARD -->
       <div class="courses-table-card">
         <div class="table-toolbar">
-          <div style="font-size:16px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px;">
+          <div style="font-family:var(--font-display);font-size:17px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px;">
             <span>🎓</span> Danh Sách Khóa Học Nổi Bật
           </div>
           <input type="text" id="course-filter-search" class="table-search-input" placeholder="Lọc theo tên khóa học..." />
@@ -384,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="course-progress-bar">
                       <div class="course-progress-fill" style="width:85%;"></div>
                     </div>
-                    <span style="font-size:11.5px;font-weight:700;color:#2563eb;">85%</span>
+                    <span style="font-size:11.5px;font-weight:700;color:#6366f1;">85%</span>
                   </div>
                 </td>
                 <td><span class="status-badge status-active">● Active</span></td>
@@ -402,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="course-progress-bar">
                       <div class="course-progress-fill" style="width:70%;"></div>
                     </div>
-                    <span style="font-size:11.5px;font-weight:700;color:#2563eb;">70%</span>
+                    <span style="font-size:11.5px;font-weight:700;color:#6366f1;">70%</span>
                   </div>
                 </td>
                 <td><span class="status-badge status-active">● Active</span></td>
@@ -420,7 +419,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="course-progress-bar">
                       <div class="course-progress-fill" style="width:92%;"></div>
                     </div>
-                    <span style="font-size:11.5px;font-weight:700;color:#2563eb;">92%</span>
+                    <span style="font-size:11.5px;font-weight:700;color:#6366f1;">92%</span>
                   </div>
                 </td>
                 <td><span class="status-badge status-active">● Active</span></td>
@@ -438,7 +437,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="course-progress-bar">
                       <div class="course-progress-fill" style="width:65%;"></div>
                     </div>
-                    <span style="font-size:11.5px;font-weight:700;color:#2563eb;">65%</span>
+                    <span style="font-size:11.5px;font-weight:700;color:#6366f1;">65%</span>
                   </div>
                 </td>
                 <td><span class="status-badge status-active">● Active</span></td>
@@ -456,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="course-progress-bar">
                       <div class="course-progress-fill" style="width:40%;"></div>
                     </div>
-                    <span style="font-size:11.5px;font-weight:700;color:#2563eb;">40%</span>
+                    <span style="font-size:11.5px;font-weight:700;color:#6366f1;">40%</span>
                   </div>
                 </td>
                 <td><span class="status-badge status-pending">● Đang thi</span></td>
@@ -468,9 +467,9 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
 
       <!-- BẢNG VINH DANH HỌC TẬP TUẦN -->
-      <div class="leaderboards-container" style="margin-top:0;padding-top:0;border-top:none;">
+      <div class="leaderboards-container">
         <div class="leaderboards-header">
-          <div style="display:inline-flex;align-items:center;gap:8px;font-size:20px;font-weight:800;color:#0f172a">
+          <div style="font-family:var(--font-display);display:inline-flex;align-items:center;gap:10px;font-size:22px;font-weight:800;color:#0f172a">
             <span>🏆</span> BẢNG VINH DANH HỌC TẬP K7 EDUHUB
           </div>
           <div style="font-size:13px;color:#64748b;margin-top:4px;font-weight:500" id="leaderboard-date-label">
@@ -481,11 +480,11 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="leaderboards-grid">
           <!-- CỘT 1: TOP 10 XP -->
           <div class="lb-card">
-            <div class="lb-card-header" style="background:#fffbeb;border-top:3px solid #f59e0b">
-              <div style="font-weight:800;font-size:14px;color:#92400e;display:flex;align-items:center;gap:6px">
+            <div class="lb-card-header" style="background:#fffbeb;border-top:3.5px solid #f59e0b">
+              <div style="font-weight:800;font-size:14px;color:#92400e;display:flex;align-items:center;gap:8px">
                 <span>🌟</span> TOP 10 ĐIỂM HỌC TẬP (XP)
               </div>
-              <span style="font-size:11px;font-weight:700;color:#b45309;background:#fef3c7;padding:3px 9px;border-radius:9999px">Tuần này</span>
+              <span style="font-size:11.5px;font-weight:700;color:#b45309;background:#fef3c7;padding:3px 10px;border-radius:9999px">Tuần này</span>
             </div>
             <div class="lb-card-body" id="top-xp-list">
               <div style="text-align:center;padding:24px;color:#94a3b8;font-size:13px">Đang tải bảng vinh danh điểm số...</div>
@@ -494,11 +493,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
           <!-- CỘT 2: TOP 10 THỜI GIAN -->
           <div class="lb-card">
-            <div class="lb-card-header" style="background:#f0f9ff;border-top:3px solid #0284c7">
-              <div style="font-weight:800;font-size:14px;color:#075985;display:flex;align-items:center;gap:6px">
+            <div class="lb-card-header" style="background:#f0f9ff;border-top:3.5px solid #0284c7">
+              <div style="font-weight:800;font-size:14px;color:#075985;display:flex;align-items:center;gap:8px">
                 <span>⏱️</span> TOP 10 THỜI GIAN HỌC TẬP
               </div>
-              <span style="font-size:11px;font-weight:700;color:#0369a1;background:#e0f2fe;padding:3px 9px;border-radius:9999px">Tuần này</span>
+              <span style="font-size:11.5px;font-weight:700;color:#0369a1;background:#e0f2fe;padding:3px 10px;border-radius:9999px">Tuần này</span>
             </div>
             <div class="lb-card-body" id="top-time-list">
               <div style="text-align:center;padding:24px;color:#94a3b8;font-size:13px">Đang tải bảng vinh danh thời gian...</div>
@@ -511,33 +510,33 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- RIGHT SIDEBAR COLUMN -->
     <div>
       <!-- 3 PORTAL CARDS -->
-      <div class="side-widget-card" style="padding:16px;">
-        <div class="widget-title" style="margin-bottom:12px;">
+      <div class="side-widget-card">
+        <div class="widget-title">
           <span>🚀 Cổng Điều Hướng</span>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <a href="learn.html" onclick="return window.checkSkillAuth(event);" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#f0f9ff;border:1px solid #bae6fd;transition:all 0.15s ease;">
-            <div style="font-size:24px;">📖</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <a href="learn.html" onclick="return window.checkSkillAuth(event);" style="text-decoration:none;display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;background:#f0f9ff;border:1px solid #bae6fd;transition:all 0.2s ease;">
+            <div style="font-size:26px;">📖</div>
             <div>
-              <div style="font-size:13.5px;font-weight:800;color:#0369a1;">Học Tập Đa Môn</div>
-              <div style="font-size:11.5px;color:#0284c7;">Tiếng Anh • Toán • Lý • Hóa • Tin</div>
+              <div style="font-size:14px;font-weight:800;color:#0369a1;">Học Tập Đa Môn</div>
+              <div style="font-size:12px;color:#0284c7;">Tiếng Anh • Toán • Lý • Hóa • Tin</div>
             </div>
           </a>
 
-          <a href="student.html" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#ecfdf5;border:1px solid #a7f3d0;transition:all 0.15s ease;">
-            <div style="font-size:24px;">🎓</div>
+          <a href="student.html" style="text-decoration:none;display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;background:#ecfdf5;border:1px solid #a7f3d0;transition:all 0.2s ease;">
+            <div style="font-size:26px;">🎓</div>
             <div>
-              <div style="font-size:13.5px;font-weight:800;color:#047857;">Cổng Thi Trắc Nghiệm</div>
-              <div style="font-size:11.5px;color:#059669;">Anti-DDoS • Đếm ngược</div>
+              <div style="font-size:14px;font-weight:800;color:#047857;">Cổng Thi Trắc Nghiệm</div>
+              <div style="font-size:12px;color:#059669;">Anti-DDoS • Đếm ngược</div>
             </div>
           </a>
 
-          <a href="teacher.html" onclick="return window.checkTeacherAuth(event);" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#fffbeb;border:1px solid #fde68a;transition:all 0.15s ease;">
-            <div style="font-size:24px;">👩‍🏫</div>
+          <a href="teacher.html" onclick="return window.checkTeacherAuth(event);" style="text-decoration:none;display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;background:#fffbeb;border:1px solid #fde68a;transition:all 0.2s ease;">
+            <div style="font-size:26px;">👩‍🏫</div>
             <div>
-              <div style="font-size:13.5px;font-weight:800;color:#b45309;">Quản Trị Giảng Viên</div>
-              <div style="font-size:11.5px;color:#d97706;">Ngân hàng đề • Quản lý SV</div>
+              <div style="font-size:14px;font-weight:800;color:#b45309;">Quản Trị Giảng Viên</div>
+              <div style="font-size:12px;color:#d97706;">Ngân hàng đề • Quản lý SV</div>
             </div>
           </a>
         </div>
@@ -547,7 +546,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="side-widget-card">
         <div class="widget-title">
           <span>⏰ Hạn Nộp Sắp Tới</span>
-          <span style="font-size:11.5px;color:#2563eb;cursor:pointer;">Xem tất cả</span>
+          <span style="font-size:12px;color:#6366f1;cursor:pointer;font-weight:700;">Xem tất cả</span>
         </div>
 
         <div class="deadline-item">
@@ -613,23 +612,23 @@ document.addEventListener('DOMContentLoaded', function() {
 <div id="auth-portal-modal" class="auth-modal-overlay" style="display:none;" onclick="if(event.target===this) window.closeAuthModal();">
   <div class="auth-modal-card">
     <button class="auth-modal-close-btn" onclick="window.closeAuthModal();">✕</button>
-    <div style="font-size:36px;margin-bottom:8px;">🔐</div>
-    <h2 style="font-size:19px;font-weight:800;color:#0f172a;margin-bottom:6px;">Chọn Phân Hệ Đăng Nhập EduCore</h2>
-    <p style="font-size:12.5px;color:#64748b;line-height:1.5;">Trang chủ là cổng tổng quan chỉ xem. Vui lòng chọn phân hệ làm việc tương ứng với tài khoản của bạn để đăng nhập:</p>
+    <div style="font-size:40px;margin-bottom:12px;">🔐</div>
+    <h2 style="font-family:var(--font-display);font-size:22px;font-weight:800;color:#0f172a;margin-bottom:8px;">Chọn Phân Hệ Đăng Nhập EduCore</h2>
+    <p style="font-size:13px;color:#64748b;line-height:1.6;">Trang chủ là cổng tổng quan chỉ xem. Vui lòng chọn phân hệ làm việc tương ứng với tài khoản của bạn để đăng nhập:</p>
 
     <div class="auth-portal-grid">
       <a href="student.html" class="auth-portal-card">
         <div class="auth-portal-icon">🎓</div>
         <div class="auth-portal-title">Cổng Học Viên / Thí Sinh</div>
         <div class="auth-portal-desc">Vào làm bài thi trắc nghiệm, đếm ngược thời gian, luyện 5 kỹ năng & tích lũy XP.</div>
-        <span class="action-btn-primary" style="width:100%;justify-content:center;font-size:12px;margin-top:auto;">Đăng Nhập Học Viên →</span>
+        <span class="action-btn-primary" style="width:100%;justify-content:center;font-size:13px;margin-top:auto;">Đăng Nhập Học Viên →</span>
       </a>
 
       <a href="teacher.html" class="auth-portal-card">
         <div class="auth-portal-icon">👩‍🏫</div>
         <div class="auth-portal-title">Cổng Quản Trị & Giảng Viên</div>
         <div class="auth-portal-desc">Soạn ngân hàng đề, thiết kế Unit, quản lý ca thi, duyệt học viên và xuất báo cáo.</div>
-        <span class="action-btn-secondary" style="width:100%;justify-content:center;font-size:12px;background:#1e293b;color:#ffffff;border:none;margin-top:auto;">Đăng Nhập Quản Trị →</span>
+        <span class="action-btn-secondary" style="width:100%;justify-content:center;font-size:13px;background:#090d16;color:#ffffff;border:none;margin-top:auto;">Đăng Nhập Quản Trị →</span>
       </a>
     </div>
   </div>
@@ -638,4 +637,3 @@ document.addEventListener('DOMContentLoaded', function() {
 <script type="module" src="js/index.js?v=6.0"></script>
 </body>
 </html>
-

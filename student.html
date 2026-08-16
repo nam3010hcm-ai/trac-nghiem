@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>EduCore - Cổng Học Viên & Thi Trắc Nghiệm Trực Tuyến</title>
+<title>EduCore — Cổng Học Viên & Thi Trắc Nghiệm Trực Tuyến</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css"/>
 
 <!-- MathJax: hiển thị công thức LaTeX trong câu hỏi và đáp án -->
@@ -45,13 +45,13 @@ window.globalLogout = async function() {
 </head>
 
 <body>
-<!-- EDUCORE BRANDED APP HEADER -->
+<!-- EDUCORE OBSIDIAN GLASS APP HEADER -->
 <div class="header">
   <a href="index.html" class="logo">
-    <div class="logo-flag" style="font-size:26px;">⚡</div>
+    <div class="logo-flag">⚡</div>
     <div class="logo-text-wrap">
-      <div class="logo-title" style="font-size:18px;font-weight:800;letter-spacing:-0.4px;">EduCore</div>
-      <div class="logo-subtitle" style="font-size:11px;color:#93c5fd;">Learn • Practice • Assess • Improve</div>
+      <div class="logo-title">EduCore</div>
+      <div class="logo-subtitle">Enterprise • LMS Hub</div>
     </div>
   </a>
 
@@ -76,11 +76,11 @@ window.globalLogout = async function() {
 <div class="main">
   <!-- MÀN HÌNH 1: ĐĂNG NHẬP HỌC VIÊN (ANTI-DDOS) -->
   <div class="screen active" id="sc-login">
-    <div class="card" style="max-width:440px;margin:40px auto;padding:32px 28px;border-radius:18px;box-shadow:0 8px 30px rgba(14,165,233,0.08);border:1.5px solid #e0f2fe">
-      <div style="text-align:center;margin-bottom:26px">
+    <div class="card" style="max-width:440px;margin:40px auto;padding:36px 32px;border-radius:18px;box-shadow:var(--shadow-lg);">
+      <div style="text-align:center;margin-bottom:28px">
         <div style="font-size:48px;margin-bottom:10px">🎓</div>
-        <div style="font-size:23px;font-weight:800;color:#0f172a;letter-spacing:-0.4px">Cổng Học Viên EduCore</div>
-        <div style="font-size:13.5px;color:#64748b;margin-top:4px">Đăng nhập tài khoản Học viên do Quản trị viên cấp</div>
+        <div style="font-family:var(--font-display);font-size:24px;font-weight:800;color:#0f172a;letter-spacing:-0.4px">Cổng Học Viên EduCore</div>
+        <div style="font-size:13.5px;color:#64748b;margin-top:6px;line-height:1.5">Đăng nhập tài khoản Học viên do Quản trị viên cấp</div>
       </div>
 
       <div class="fg">
@@ -96,7 +96,7 @@ window.globalLogout = async function() {
         </div>
       </div>
 
-      <div id="st-login-err" style="display:none;padding:11px 14px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:16px"></div>
+      <div id="st-login-err" style="display:none;padding:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:16px"></div>
 
       <button class="btn btn-p btn-full" id="btn-student-login" onclick="window.loginStudent()" style="padding:13px;font-size:15px;font-weight:700">
         Đăng Nhập Cổng Thi →
@@ -111,86 +111,86 @@ window.globalLogout = async function() {
   <!-- MÀN HÌNH 2: CỔNG THI & ÔN TẬP HỌC VIÊN -->
   <div class="screen" id="sc-portal">
     <!-- STUDENT PROFILE BAR -->
-    <div class="card" style="max-width:720px;margin:20px auto 16px;padding:18px 24px;border-radius:16px;background:#ffffff;border:1.5px solid #e0f2fe;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div style="width:44px;height:44px;border-radius:50%;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-size:22px;">🎓</div>
+    <div class="card" style="max-width:760px;margin:20px auto 20px;padding:20px 26px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:#eeeffe;color:#4338ca;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 4px 12px rgba(99,102,241,0.2);">🎓</div>
         <div>
-          <div style="font-size:17px;font-weight:800;color:#0f172a;" id="st-auth-welcome">Xin chào, Học viên 👋</div>
-          <div style="font-size:12.5px;color:#64748b;margin-top:2px;">Mã HV: <b id="st-auth-id" style="color:#0284c7;"></b> • Lớp: <b id="st-auth-class" style="color:#0f172a;"></b></div>
+          <div style="font-family:var(--font-display);font-size:18px;font-weight:800;color:#0f172a;" id="st-auth-welcome">Xin chào, Học viên 👋</div>
+          <div style="font-size:13px;color:#64748b;margin-top:2px;">Mã HV: <b id="st-auth-id" style="color:#6366f1;"></b> • Lớp: <b id="st-auth-class" style="color:#0f172a;"></b></div>
         </div>
       </div>
-      <button class="btn btn-sm" onclick="window.logoutStudent()" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-weight:700;padding:7px 16px;border-radius:8px;">
+      <button class="btn btn-sm" onclick="window.logoutStudent()" style="background:#fff1f2;border:1px solid #fecdd3;color:#dc2626;font-weight:700;padding:8px 18px;border-radius:10px;">
         🔒 Đăng xuất
       </button>
     </div>
 
     <!-- MAIN PORTAL CARD: ÔN THI & THI CHÍNH THỨC -->
-    <div class="card" style="max-width:720px;margin:0 auto 30px;padding:28px 26px;border-radius:18px;box-shadow:0 8px 30px rgba(14,165,233,0.08);border:1.5px solid #e0f2fe;background:#ffffff;">
+    <div class="card" style="max-width:760px;margin:0 auto 30px;padding:30px 28px;border-radius:18px;">
       <!-- MODE SWITCHER TABS -->
-      <div style="display:flex;gap:8px;margin-bottom:24px;background:#f1f5f9;padding:5px;border-radius:12px;">
-        <button type="button" id="tab-mode-practice" class="mode-tab-btn" onclick="window.switchExamMode('practice')" style="flex:1;padding:12px 14px;border:none;border-radius:8px;font-weight:800;font-size:14px;cursor:pointer;background:#2563eb;color:#ffffff;transition:all 0.2s;">
+      <div style="display:flex;gap:8px;margin-bottom:26px;background:#f1f5f9;padding:6px;border-radius:14px;">
+        <button type="button" id="tab-mode-practice" class="mode-tab-btn" onclick="window.switchExamMode('practice')" style="flex:1;padding:12px 16px;border:none;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;background:#6366f1;color:#ffffff;box-shadow:0 4px 12px rgba(99,102,241,0.3);transition:all 0.2s;">
           💡 Ôn Thi (Xem Đáp Án & Giải Thích)
         </button>
-        <button type="button" id="tab-mode-official" class="mode-tab-btn" onclick="window.switchExamMode('official')" style="flex:1;padding:12px 14px;border:none;border-radius:8px;font-weight:800;font-size:14px;cursor:pointer;background:transparent;color:#475569;transition:all 0.2s;">
+        <button type="button" id="tab-mode-official" class="mode-tab-btn" onclick="window.switchExamMode('official')" style="flex:1;padding:12px 16px;border:none;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;background:transparent;color:#475569;transition:all 0.2s;">
           📝 Thi Chính Thức (Thi 1 Lần)
         </button>
       </div>
 
       <!-- PANEL 1: ÔN THI & LUYỆN TẬP TỰ DO -->
       <div id="panel-mode-practice">
-        <div style="padding:12px 16px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;color:#1e40af;font-size:13px;margin-bottom:20px;line-height:1.5;">
+        <div style="padding:14px 18px;background:#eeeffe;border:1px solid #c7d2fe;border-radius:12px;color:#4338ca;font-size:13.5px;margin-bottom:22px;line-height:1.6;">
           💡 <b>Chế độ Ôn thi:</b> Tự do làm bài và làm lại không giới hạn. Sau khi nộp bài, bạn sẽ được xem <b>đáp án đúng</b> kèm <b>lời giải thích chi tiết</b> cho từng câu.
         </div>
 
-        <div class="fg" style="margin-bottom:14px;">
-          <label style="font-size:13px;font-weight:700;color:#334155;">Chọn Môn học / Chủ đề</label>
-          <select id="s-practice-cat" onchange="window.populatePracticeExamSelect()" style="width:100%;padding:10px 14px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13.5px;">
+        <div class="fg" style="margin-bottom:16px;">
+          <label>Chọn Môn học / Chủ đề</label>
+          <select id="s-practice-cat" onchange="window.populatePracticeExamSelect()">
             <option value="">(Tất cả môn học / chủ đề)</option>
           </select>
         </div>
 
-        <div class="fg" style="margin-bottom:14px;">
-          <label style="font-size:13px;font-weight:700;color:#334155;">Chọn Đề thi ôn tập *</label>
-          <select id="s-practice-exam" onchange="window.updatePracticeExamDesc()" style="width:100%;padding:10px 14px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13.5px;background:#f8fafc;">
+        <div class="fg" style="margin-bottom:16px;">
+          <label>Chọn Đề thi ôn tập *</label>
+          <select id="s-practice-exam" onchange="window.updatePracticeExamDesc()">
             <option value="" disabled selected>-- Chọn đề thi ôn tập --</option>
           </select>
         </div>
 
-        <div id="s-practice-exam-desc" style="font-size:12.5px;color:#0284c7;margin-bottom:20px;min-height:18px;font-weight:600;"></div>
+        <div id="s-practice-exam-desc" style="font-size:13px;color:#0284c7;margin-bottom:22px;min-height:20px;font-weight:600;"></div>
 
-        <button class="btn btn-p btn-full" id="btn-start-practice" onclick="window.startPracticeExam()" style="padding:14px;font-size:15.5px;font-weight:800;background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:10px;">
+        <button class="btn btn-p btn-full" id="btn-start-practice" onclick="window.startPracticeExam()" style="padding:14px;font-size:15.5px;font-weight:800;">
           🚀 Bắt Đầu Ôn Thi →
         </button>
       </div>
 
       <!-- PANEL 2: THI CHÍNH THỨC -->
       <div id="panel-mode-official" style="display:none;">
-        <div style="padding:12px 16px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;color:#991b1b;font-size:13px;margin-bottom:20px;line-height:1.5;">
+        <div style="padding:14px 18px;background:#fff1f2;border:1px solid #fecdd3;border-radius:12px;color:#991b1b;font-size:13.5px;margin-bottom:22px;line-height:1.6;">
           🛡️ <b>Chế độ Thi chính thức:</b> Yêu cầu Mã ca thi do giáo viên cung cấp. Mỗi học viên chỉ được làm bài <b>1 lần duy nhất</b>, thời gian được tính tự động, sau khi nộp bài <b>chỉ xem điểm số và không hiển thị đáp án</b>.
         </div>
 
-        <div class="fg" style="margin-bottom:14px;">
-          <label style="font-size:13px;font-weight:700;color:#334155;">Chọn ca thi / lớp học *</label>
-          <select id="s-cohort" style="width:100%;padding:10px 14px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13.5px;">
+        <div class="fg" style="margin-bottom:16px;">
+          <label>Chọn ca thi / lớp học *</label>
+          <select id="s-cohort">
             <option value="" disabled selected>-- Đang tải danh sách ca thi... --</option>
           </select>
         </div>
 
-        <div class="fg" style="margin-bottom:14px;">
-          <label style="font-size:13px;font-weight:700;color:#334155;">MÃ TRUY CẬP CA THI *</label>
-          <input type="text" id="s-cohort-code" placeholder="Nhập mã do giáo viên cung cấp (VD: K6A2B)..." style="width:100%;padding:10px 14px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13.5px;text-transform:uppercase;font-weight:700;letter-spacing:1px;">
+        <div class="fg" style="margin-bottom:16px;">
+          <label>MÃ TRUY CẬP CA THI *</label>
+          <input type="text" id="s-cohort-code" placeholder="Nhập mã do giáo viên cung cấp (VD: K6A2B)..." style="text-transform:uppercase;font-weight:800;letter-spacing:1.5px;">
         </div>
 
-        <div class="fg" style="margin-bottom:14px;">
-          <label style="font-size:13px;font-weight:700;color:#334155;">Chọn đề thi *</label>
-          <select id="s-exam" style="width:100%;padding:10px 14px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13.5px;background:#f8fafc;">
+        <div class="fg" style="margin-bottom:16px;">
+          <label>Chọn đề thi *</label>
+          <select id="s-exam">
             <option value="" disabled selected>-- Nhập đúng mã ca thi để tải đề --</option>
           </select>
         </div>
 
-        <div id="s-exam-desc" style="font-size:12.5px;color:#dc2626;margin-bottom:20px;min-height:18px;font-weight:600;"></div>
+        <div id="s-exam-desc" style="font-size:13px;color:#dc2626;margin-bottom:22px;min-height:20px;font-weight:600;"></div>
 
-        <button class="btn btn-p btn-full" id="btn-start" onclick="window.startExam()" style="padding:14px;font-size:15.5px;font-weight:800;background:linear-gradient(135deg,#dc2626,#b91c1c);border-radius:10px;">
+        <button class="btn btn-p btn-full" id="btn-start" onclick="window.startExam()" style="padding:14px;font-size:15.5px;font-weight:800;background:linear-gradient(135deg,#dc2626,#b91c1c);border-radius:12px;box-shadow:0 4px 14px rgba(220,38,38,0.35);">
           ✍️ Bắt Đầu Làm Bài Thi →
         </button>
       </div>
@@ -199,55 +199,55 @@ window.globalLogout = async function() {
 
   <!-- MÀN HÌNH 3: PHÒNG THI LÀM BÀI -->
   <div class="screen" id="sc-quiz">
-    <div style="font-size:14.5px;color:#0f172a;font-weight:700;margin-bottom:8px" id="q-student"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div style="font-size:16px;color:#0284c7;font-weight:800; text-transform: uppercase;" id="q-progress">Part 1</div>
+    <div style="font-family:var(--font-display);font-size:15px;color:#0f172a;font-weight:800;margin-bottom:10px" id="q-student"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-family:var(--font-display);font-size:17px;color:#6366f1;font-weight:800; text-transform: uppercase;" id="q-progress">Part 1</div>
       <div class="timer-badge" id="q-timer">⏱ 00:00</div>
     </div>
 
-    <div class="pbar" style="margin-bottom: 25px;">
+    <div class="pbar" style="margin-bottom: 28px;">
       <div class="pfill" id="q-pbar" style="width:10%"></div>
     </div>
 
     <!-- KHUNG CHỨA TOÀN BỘ CÂU HỎI TRONG 1 PART -->
     <div id="part-container"></div>
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:30px; padding-top:20px; border-top:2px solid #e2e8f0;">
-      <button class="btn" id="btn-prev" style="display:none; padding:10px 20px;">← Part trước</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:32px; padding-top:22px; border-top:1px solid var(--border-card);">
+      <button class="btn" id="btn-prev" style="display:none; padding:11px 22px;">← Part trước</button>
       <div style="flex:1"></div>
-      <button class="btn btn-p" id="btn-next" style="padding:10px 24px; font-weight:700;">Part tiếp theo →</button>
-      <button class="btn btn-p" id="btn-finish" style="display:none; padding:10px 24px; font-weight:700; background:linear-gradient(135deg, #10b981 0%, #059669 100%);">Nộp bài thi ✓</button>
+      <button class="btn btn-p" id="btn-next" style="padding:11px 26px; font-weight:700;">Part tiếp theo →</button>
+      <button class="btn btn-p" id="btn-finish" style="display:none; padding:11px 26px; font-weight:700; background:linear-gradient(135deg, #10b981 0%, #059669 100%);">Nộp bài thi ✓</button>
     </div>
   </div>
 
   <!-- MÀN HÌNH 4: KẾT QUẢ THI -->
   <div class="screen" id="sc-result">
-    <div class="card" style="max-width:560px;margin:30px auto;text-align:center;padding:32px">
-      <div style="font-size:48px;margin-bottom:12px">🎉</div>
-      <div style="font-size:22px;font-weight:800;color:#0f172a;margin-bottom:4px">Kết Quả Bài Thi</div>
-      <div style="font-size:13.5px;color:#64748b;margin-bottom:20px" id="r-name"></div>
+    <div class="card" style="max-width:580px;margin:30px auto;text-align:center;padding:36px">
+      <div style="font-size:52px;margin-bottom:14px">🎉</div>
+      <div style="font-family:var(--font-display);font-size:24px;font-weight:800;color:#0f172a;margin-bottom:6px">Kết Quả Bài Thi</div>
+      <div style="font-size:14px;color:#64748b;margin-bottom:22px" id="r-name"></div>
 
       <div class="score-circle">
         <div class="score-num" id="r-score">0</div>
         <div class="score-lbl">điểm</div>
       </div>
 
-      <div style="font-size:14px;color:#0369a1;font-weight:700;margin-bottom:18px" id="r-msg"></div>
+      <div style="font-size:14.5px;color:#4338ca;font-weight:700;margin-bottom:20px" id="r-msg"></div>
 
       <div class="stats">
         <div class="stat"><div class="stat-n" id="r-cor" style="color:#10b981">0</div><div class="stat-l">Số câu đúng</div></div>
         <div class="stat"><div class="stat-n" id="r-wrg" style="color:#ef4444">0</div><div class="stat-l">Số câu sai</div></div>
-        <div class="stat"><div class="stat-n" id="r-pct" style="color:#0284c7">0%</div><div class="stat-l">Tỷ lệ chính xác</div></div>
+        <div class="stat"><div class="stat-n" id="r-pct" style="color:#6366f1">0%</div><div class="stat-l">Tỷ lệ chính xác</div></div>
         <div class="stat"><div class="stat-n" id="r-time" style="color:#64748b">0s</div><div class="stat-l">Thời gian làm bài</div></div>
       </div>
 
-      <button class="btn btn-p btn-full" id="btn-retake" style="margin-bottom:10px;display:none">🔄 Làm lại bài thi</button>
-      <button class="btn btn-full" id="btn-home" style="background:#f8fafc;border:1.5px solid #cbd5e1">🏠 Về cổng chọn đề thi</button>
+      <button class="btn btn-p btn-full" id="btn-retake" style="margin-bottom:12px;display:none">🔄 Làm lại bài thi</button>
+      <button class="btn btn-full" id="btn-home" style="background:#f8fafc;border:1px solid #cbd5e1">🏠 Về cổng chọn đề thi</button>
     </div>
 
     <!-- KHUNG XEM LẠI BÀI LÀM VÀ GIẢI THÍCH -->
     <div class="card" id="r-review-card" style="margin-top:24px">
-      <div style="font-size:16px;font-weight:800;margin-bottom:16px;color:#0f172a">📝 Xem lại chi tiết bài làm & Lời giải</div>
+      <div style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:18px;color:#0f172a">📝 Xem lại chi tiết bài làm & Lời giải</div>
       <div id="r-review"></div>
     </div>
   </div>

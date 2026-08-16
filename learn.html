@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>EduCore - Học Tập Đa Môn & Luyện Kỹ Năng Tương Tác</title>
+<title>EduCore — Học Tập Đa Môn & Luyện Kỹ Năng Tương Tác</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css"/>
 <link rel="stylesheet" href="css/learn.css"/>
 
@@ -47,13 +47,13 @@ window.globalLogout = async function() {
 </head>
 
 <body class="learn-body">
-<!-- HEADER EDUCORE -->
+<!-- EDUCORE OBSIDIAN GLASS APP HEADER -->
 <div class="header">
   <a href="index.html" class="logo">
-    <div class="logo-flag" style="font-size:26px;">⚡</div>
+    <div class="logo-flag">⚡</div>
     <div class="logo-text-wrap">
-      <div class="logo-title" style="font-size:18px;font-weight:800;letter-spacing:-0.4px;">EduCore</div>
-      <div class="logo-subtitle" style="font-size:11px;color:#93c5fd;">Learn • Practice • Assess • Improve</div>
+      <div class="logo-title">EduCore</div>
+      <div class="logo-subtitle">Enterprise • LMS Hub</div>
     </div>
   </a>
 
@@ -79,11 +79,11 @@ window.globalLogout = async function() {
 <!-- 1. MÀN HÌNH ĐĂNG NHẬP HỌC VIÊN (KHI CHƯA ĐĂNG NHẬP) -->
 <!-- ============================================================== -->
 <div id="learn-login-screen" style="padding:40px 16px;">
-  <div class="card" style="max-width:440px;margin:30px auto;padding:32px 28px;border-radius:14px;box-shadow:0 6px 24px rgba(20,42,83,0.08);border:1.5px solid #cbd5e1">
-    <div style="text-align:center;margin-bottom:24px">
-      <div style="font-size:46px;margin-bottom:8px">📖</div>
-      <div style="font-size:22px;font-weight:800;color:#0f172a">Học Tập & Luyện Kỹ Năng Đa Môn</div>
-      <div style="font-size:13px;color:#64748b;margin-top:4px">Đăng nhập tài khoản để học Tiếng Anh, Toán, Vật Lý, Hóa Học, Tin Học & tích lũy XP</div>
+  <div class="card" style="max-width:440px;margin:30px auto;padding:36px 32px;border-radius:18px;box-shadow:var(--shadow-lg);">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:48px;margin-bottom:10px">📖</div>
+      <div style="font-family:var(--font-display);font-size:24px;font-weight:800;color:#0f172a">Học Tập & Luyện Kỹ Năng Đa Môn</div>
+      <div style="font-size:13.5px;color:#64748b;margin-top:6px;line-height:1.5">Đăng nhập tài khoản để học Tiếng Anh, Toán, Vật Lý, Hóa Học, Tin Học & tích lũy XP</div>
     </div>
 
     <div class="fg">
@@ -95,17 +95,17 @@ window.globalLogout = async function() {
       <label>Mật Khẩu *</label>
       <div style="position:relative">
         <input type="password" id="learn-auth-pass" placeholder="Nhập mật khẩu..." autocomplete="current-password">
-        <button type="button" onclick="window.toggleLearnPassVisible()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px">👁️</button>
+        <button type="button" onclick="window.toggleLearnPassVisible()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px">👁️</button>
       </div>
     </div>
 
-    <div id="learn-login-err" style="display:none;padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:14px"></div>
+    <div id="learn-login-err" style="display:none;padding:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;color:#dc2626;font-size:13px;font-weight:600;margin-bottom:16px"></div>
 
-    <button class="btn btn-p btn-full" id="btn-learn-login" onclick="window.loginLearnStudent()" style="padding:12px;font-size:15px;font-weight:700">
+    <button class="btn btn-p btn-full" id="btn-learn-login" onclick="window.loginLearnStudent()" style="padding:13px;font-size:15px;font-weight:700">
       Đăng Nhập Bắt Đầu Học →
     </button>
 
-    <div style="text-align:center;margin-top:16px;font-size:12px;color:#94a3b8">
+    <div style="text-align:center;margin-top:18px;font-size:12px;color:#94a3b8">
       🛡️ Hệ thống tự động ghi nhận thời gian học & điểm số vào Bảng Vinh Danh Tuần
     </div>
   </div>
@@ -118,16 +118,16 @@ window.globalLogout = async function() {
   <!-- THANH GAMIFICATION & TIẾN ĐỘ HỌC TẬP -->
   <div class="gamify-header">
     <div class="gamify-wrap">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="font-size:32px">🧑‍🎓</div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="font-size:36px">🧑‍🎓</div>
         <div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:15px;font-weight:800;color:#0f172a" id="learn-user-name">Học viên</span>
-            <span class="cat-badge" style="background:#eff6ff;color:#1e40af;margin:0" id="learn-user-class">Lớp: ...</span>
-            <button type="button" class="btn btn-sm" onclick="window.logoutLearnStudent()" style="font-size:11px;padding:2px 8px;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1" title="Đăng nhập tài khoản chính thức để lưu điểm">🔑 Đăng nhập / Đổi tài khoản</button>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#0f172a" id="learn-user-name">Học viên</span>
+            <span class="cat-badge" style="background:#eeeffe;color:#4338ca;margin:0" id="learn-user-class">Lớp: ...</span>
+            <button type="button" class="btn btn-sm" onclick="window.logoutLearnStudent()" style="font-size:11.5px;padding:3px 10px;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1" title="Đăng nhập tài khoản chính thức để lưu điểm">🔑 Đổi tài khoản</button>
           </div>
-          <div style="font-size:11.5px;color:#64748b;margin-top:2px">
-            Thời gian học tuần này: <b id="learn-weekly-time" style="color:#1e40af">0 phút</b>
+          <div style="font-size:12px;color:#64748b;margin-top:2px">
+            Thời gian học tuần này: <b id="learn-weekly-time" style="color:#6366f1">0 phút</b>
           </div>
         </div>
       </div>
@@ -140,7 +140,7 @@ window.globalLogout = async function() {
         </div>
 
         <div class="xp-progress-box">
-          <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:#a16207">
+          <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:#a16207">
             <span>Kinh nghiệm</span>
             <span><span id="user-xp-val">0</span> XP</span>
           </div>
@@ -156,7 +156,7 @@ window.globalLogout = async function() {
         </div>
 
         <!-- ĐĂNG XUẤT -->
-        <button class="btn btn-sm" onclick="window.logoutLearnStudent()" style="background:#fff;border:1px solid #cbd5e1;color:#64748b;padding:6px 12px" title="Đăng xuất tài khoản">
+        <button class="btn btn-sm" onclick="window.logoutLearnStudent()" style="background:#fff;border:1px solid #cbd5e1;color:#64748b;padding:7px 14px" title="Đăng xuất tài khoản">
           🔒 Đăng xuất
         </button>
       </div>
@@ -164,22 +164,22 @@ window.globalLogout = async function() {
   </div>
 
   <!-- NỘI DUNG CHÍNH -->
-  <div class="learn-container">
+  <div class="main" style="max-width:1240px;padding-top:20px;">
     <!-- THANH CHỌN PHÂN CẤP: MÔN HỌC -> HỌC PHẦN -> UNIT -->
-    <div class="card" style="margin: 20px 0 14px; padding: 16px 20px; background: #ffffff; border-radius: 12px; border: 1.5px solid #cbd5e1; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+    <div class="card" style="margin: 0 0 20px; padding: 20px 24px;">
       <!-- BREADCRUMB -->
-      <div id="learn-breadcrumbs" style="font-size:12px; color:#1e40af; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+      <div id="learn-breadcrumbs" style="font-size:12.5px; color:#6366f1; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
         <span>📚 Môn học:</span> <span id="bc-subject" style="color:#0f172a">Tiếng Anh</span>
         <span>❯</span>
         <span>📦 Học phần:</span> <span id="bc-module" style="color:#0f172a">Basic English Module 1</span>
         <span>❯</span>
-        <span>📖 Bài học:</span> <span id="bc-unit" style="color:#2563eb">Unit 1: Everyday Life & Travel</span>
+        <span>📖 Bài học:</span> <span id="bc-unit" style="color:#4338ca">Unit 1: Everyday Life & Travel</span>
       </div>
 
       <!-- 3-TIER SELECTORS -->
-      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+      <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center;">
         <!-- 1. MÔN HỌC -->
-        <div style="flex:1; min-width:200px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:6px 12px;">
+        <div style="flex:1; min-width:200px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:8px 14px;">
           <label style="display:block; font-size:10.5px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.5px;">1. MÔN HỌC (SUBJECT)</label>
           <select id="learn-subject-select" style="width:100%; font-weight:700; font-size:14px; color:#0f172a; border:none; background:transparent; cursor:pointer; outline:none;" onchange="window.onLearnSubjectChange()">
             <option value="">Đang tải môn học...</option>
@@ -187,7 +187,7 @@ window.globalLogout = async function() {
         </div>
 
         <!-- 2. HỌC PHẦN -->
-        <div style="flex:1.5; min-width:260px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:6px 12px;">
+        <div style="flex:1.5; min-width:260px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:8px 14px;">
           <label style="display:block; font-size:10.5px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.5px;">2. HỌC PHẦN (MODULE / COURSE)</label>
           <select id="learn-module-select" style="width:100%; font-weight:700; font-size:14px; color:#0f172a; border:none; background:transparent; cursor:pointer; outline:none;" onchange="window.onLearnModuleChange()">
             <option value="">Đang tải học phần...</option>
@@ -195,73 +195,73 @@ window.globalLogout = async function() {
         </div>
 
         <!-- 3. UNIT BÀI HỌC -->
-        <div style="flex:1.5; min-width:260px; background:#eff6ff; border:1.5px solid #93c5fd; border-radius:8px; padding:6px 12px;">
-          <label style="display:block; font-size:10.5px; font-weight:800; color:#1d4ed8; text-transform:uppercase; letter-spacing:0.5px;" id="lbl-unit-select">3. UNIT BÀI HỌC (5 KỸ NĂNG)</label>
-          <select id="learn-unit-select" style="width:100%; font-weight:800; font-size:14px; color:#1e40af; border:none; background:transparent; cursor:pointer; outline:none;" onchange="window.onLearnUnitChange()">
+        <div style="flex:1.5; min-width:260px; background:#eeeffe; border:1.5px solid #c7d2fe; border-radius:10px; padding:8px 14px;">
+          <label style="display:block; font-size:10.5px; font-weight:800; color:#4338ca; text-transform:uppercase; letter-spacing:0.5px;" id="lbl-unit-select">3. UNIT BÀI HỌC (5 KỸ NĂNG)</label>
+          <select id="learn-unit-select" style="width:100%; font-weight:800; font-size:14px; color:#4338ca; border:none; background:transparent; cursor:pointer; outline:none;" onchange="window.onLearnUnitChange()">
             <option value="">Đang tải Unit...</option>
           </select>
         </div>
       </div>
 
       <!-- UNIT DESCRIPTION -->
-      <div id="current-unit-desc" style="font-size:12.5px; color:#64748b; margin-top:10px; padding-top:8px; border-top:1px dashed #e2e8f0;"></div>
+      <div id="current-unit-desc" style="font-size:13px; color:#64748b; margin-top:12px; padding-top:10px; border-top:1px dashed #e2e8f0;"></div>
     </div>
 
     <!-- THANH CHỌN KỸ NĂNG / HẠNG MỤC BÀI HỌC -->
-    <div class="skill-nav-row" id="learn-skill-nav-row">
-      <button class="skill-tab-btn active" data-skill="listening" onclick="window.switchSkillTab('listening')">
-        <span class="tab-icon">🎧</span>
+    <div class="subject-nav-bar" id="learn-skill-nav-row">
+      <button class="subject-tab active" data-skill="listening" onclick="window.switchSkillTab('listening')">
+        <span>🎧</span>
         <span>1. LISTENING</span>
       </button>
-      <button class="skill-tab-btn" data-skill="reading" onclick="window.switchSkillTab('reading')">
-        <span class="tab-icon">📖</span>
+      <button class="subject-tab" data-skill="reading" onclick="window.switchSkillTab('reading')">
+        <span>📖</span>
         <span>2. READING</span>
       </button>
-      <button class="skill-tab-btn" data-skill="speaking" onclick="window.switchSkillTab('speaking')">
-        <span class="tab-icon">🗣️</span>
+      <button class="subject-tab" data-skill="speaking" onclick="window.switchSkillTab('speaking')">
+        <span>🗣️</span>
         <span>3. SPEAKING</span>
       </button>
-      <button class="skill-tab-btn" data-skill="writing" onclick="window.switchSkillTab('writing')">
-        <span class="tab-icon">✍️</span>
+      <button class="subject-tab" data-skill="writing" onclick="window.switchSkillTab('writing')">
+        <span>✍️</span>
         <span>4. WRITING</span>
       </button>
-      <button class="skill-tab-btn" data-skill="languageFocus" onclick="window.switchSkillTab('languageFocus')">
-        <span class="tab-icon">🔍</span>
+      <button class="subject-tab" data-skill="languageFocus" onclick="window.switchSkillTab('languageFocus')">
+        <span>🔍</span>
         <span>5. LANGUAGE FOCUS</span>
       </button>
     </div>
 
     <!-- 1. PHÂN HỆ LISTENING -->
-    <div class="skill-content-panel active" id="skill-panel-listening">
+    <div class="tab-content active" id="skill-panel-listening">
       <div class="card">
-        <div style="margin-bottom:12px;font-weight:800;font-size:15px;color:#0f172a">🎧 Chọn Bài Luyện Nghe Trong Unit:</div>
+        <div style="font-family:var(--font-display);margin-bottom:14px;font-weight:800;font-size:16px;color:#0f172a">🎧 Chọn Bài Luyện Nghe Trong Unit:</div>
         <div class="lesson-selector-grid" id="lis-lesson-list"></div>
         <div class="exercise-workspace" id="lis-workspace"></div>
       </div>
     </div>
 
     <!-- 2. PHÂN HỆ READING -->
-    <div class="skill-content-panel" id="skill-panel-reading">
+    <div class="tab-content" id="skill-panel-reading">
       <div class="card">
-        <div style="margin-bottom:12px;font-weight:800;font-size:15px;color:#0f172a">📖 Chọn Bài Đọc Hiểu Trong Unit:</div>
+        <div style="font-family:var(--font-display);margin-bottom:14px;font-weight:800;font-size:16px;color:#0f172a">📖 Chọn Bài Đọc Hiểu Trong Unit:</div>
         <div class="lesson-selector-grid" id="read-lesson-list"></div>
         <div class="exercise-workspace" id="read-workspace"></div>
       </div>
     </div>
 
     <!-- 3. PHÂN HỆ SPEAKING -->
-    <div class="skill-content-panel" id="skill-panel-speaking">
+    <div class="tab-content" id="skill-panel-speaking">
       <div class="card">
-        <div style="margin-bottom:12px;font-weight:800;font-size:15px;color:#0f172a">🗣️ Chọn Bài Luyện Nói & Phát Âm Trong Unit:</div>
+        <div style="font-family:var(--font-display);margin-bottom:14px;font-weight:800;font-size:16px;color:#0f172a">🗣️ Chọn Bài Luyện Nói & Phát Âm Trong Unit:</div>
         <div class="lesson-selector-grid" id="spk-lesson-list"></div>
         <div class="exercise-workspace" id="spk-workspace"></div>
       </div>
     </div>
 
     <!-- 4. PHÂN HỆ WRITING -->
-    <div class="skill-content-panel" id="skill-panel-writing">
+    <div class="tab-content" id="skill-panel-writing">
       <div class="card">
-        <div style="display:flex;gap:10px;margin-bottom:16px">
+        <div style="display:flex;gap:12px;margin-bottom:18px">
           <button class="btn btn-p" onclick="window.selectWritingTab('scramble')">🧩 Xếp Từ Thành Câu</button>
           <button class="btn" onclick="window.selectWritingTab('error_fix')">🔍 Tìm & Sửa Lỗi Sai</button>
         </div>
@@ -270,9 +270,9 @@ window.globalLogout = async function() {
     </div>
 
     <!-- 5. PHÂN HỆ LANGUAGE FOCUS -->
-    <div class="skill-content-panel" id="skill-panel-languageFocus">
+    <div class="tab-content" id="skill-panel-languageFocus">
       <div class="card">
-        <div style="margin-bottom:12px;font-weight:800;font-size:15px;color:#0f172a">🔍 Thẻ Từ Vựng Flashcard 3D & Ghép Cụm Từ:</div>
+        <div style="font-family:var(--font-display);margin-bottom:14px;font-weight:800;font-size:16px;color:#0f172a">🔍 Thẻ Từ Vựng Flashcard 3D & Ghép Cụm Từ:</div>
         <div class="exercise-workspace" id="lang-workspace"></div>
       </div>
     </div>
