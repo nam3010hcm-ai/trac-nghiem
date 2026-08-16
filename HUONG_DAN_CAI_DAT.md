@@ -1,50 +1,103 @@
-# Gói nâng cấp trac-nghiem-frontend v2
+# Hướng Dẫn Hệ Thống EduCore: Tính Năng Video Roleplay 2 Nhân Vật A & B
 
-## Cách cài
+## 1. Giới thiệu Tính Năng Video Roleplay Phát Âm Tiếng Anh
+Hệ thống cho phép tạo các bài học hội thoại giao tiếp mô phỏng phát âm tiếng Anh giữa 2 nhân vật (Nhân vật A và Nhân vật B):
+- **Phía Học Viên (`learn.html`)**:
+  - Chọn đóng vai **Nhân vật A** hoặc **Nhân vật B** (hoặc luyện cả 2 vai).
+  - Tự động phát video và giọng đọc của đối tác (máy) khi đến lượt đối tác.
+  - Khi đến lượt học viên: Video chuyển sang trạng thái chờ, hiển thị câu cần đọc + phiên âm IPA + nghĩa tiếng Việt + mẹo phát âm.
+  - Học viên bấm 🎙️ để phát âm -> Hệ thống nhận diện giọng nói (Web Speech API), so khớp từng từ (tô màu xanh lá nếu đúng, đỏ/vàng nếu sai), tính % chuẩn xác (0-100%).
+  - Đạt điểm >= 75%: Tặng +25 XP, âm thanh chúc mừng, tự động chuyển lượt thoại tiếp theo sau 1.6 giây.
+  - Sau khi hoàn thành: Bảng tổng kết % chuẩn xác, thưởng +50 XP, pháo hoa ăn mừng và nút "Đổi vai (Luyện vai còn lại)" tức thì.
 
-1. Copy các file trong thư mục `js/` của gói này và ghi đè vào repo:
-   - `js/firebase.js`
-   - `js/common.js`
-   - `js/questions.js`
-   - `js/student.js`
+- **Phía Quản Trị / Giáo Viên (`teacher.html`)**:
+  - Vào **Quản Lý Unit Bài Học** -> Mở **Thiết Kế Unit** -> Chọn Tab **🗣️ 3. Speaking**.
+  - Chọn chế độ: **🎬 1. Hội thoại Video 2 Nhân Vật (A & B)**.
+  - Cấu hình thông tin Nhân vật A (Tên, Avatar, Chức danh, Mã màu) và Nhân vật B.
+  - Thêm danh sách các lượt thoại (A nói hoặc B nói), nhập câu tiếng Anh, IPA, nghĩa tiếng Việt, mẹo phát âm, dán link Video URL hoặc bấm nút **Upload** tải video trực tiếp từ máy lên Supabase Storage (`audio-bank` / `video-bank`).
+  - Có nút **🔊 Nghe thử (TTS)** để kiểm tra giọng đọc câu thoại ngay trong bảng soạn thảo.
 
-2. Mở `student.html` và `teacher.html`, thêm MathJax trước thẻ script module cuối trang:
+---
 
-```html
-<script>
-  window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
-</script>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+## 2. Cấu Trúc Bảng `learning_units` Trên Supabase (PostgreSQL)
+
+```sql
+CREATE TABLE IF NOT EXISTS public.learning_units (
+  id TEXT PRIMARY KEY,
+  subject TEXT NOT NULL DEFAULT '🇬🇧 Tiếng Anh',
+  module TEXT NOT NULL DEFAULT 'English B1 - General & Academic Skills',
+  title TEXT NOT NULL,
+  topic TEXT DEFAULT '',
+  level TEXT DEFAULT 'A2 - B1',
+  icon TEXT DEFAULT '📖',
+  description TEXT DEFAULT '',
+  is_hidden BOOLEAN DEFAULT FALSE,
+  listening JSONB DEFAULT '[]'::jsonb,
+  reading JSONB DEFAULT '[]'::jsonb,
+  speaking JSONB DEFAULT '[]'::jsonb,
+  writing JSONB DEFAULT '[]'::jsonb,
+  language_focus JSONB DEFAULT '{}'::jsonb,
+  created_by TEXT,
+  created_at BIGINT
+);
+
+-- Cho phép đọc/ghi công khai hoặc theo quyền (RLS):
+ALTER TABLE public.learning_units ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read learning_units" ON public.learning_units FOR SELECT USING (true);
+CREATE POLICY "Public upsert learning_units" ON public.learning_units FOR ALL USING (true);
 ```
 
-3. Mở `css/style.css`, copy toàn bộ nội dung trong `css/style-v2-additions.css` và dán xuống cuối file.
+---
 
-4. Commit lên GitHub:
+## 3. Cấu Trúc JSON Của Bài Học Video Roleplay
+Trong cột `speaking` của bảng `learning_units`:
 
-```bash
-git add .
-git commit -m "Upgrade quiz app v2: latex image pagination import"
-git push
+```json
+[
+  {
+    "id": "spk_video_1",
+    "type": "video_roleplay",
+    "title": "🎬 Video Roleplay: Hotel Check-in & Inquiry",
+    "topic": "Travel & Hospitality",
+    "level": "A2 - B1",
+    "description": "Mô phỏng hội thoại video tương tác giữa Lễ tân khách sạn (Emma) và Du khách (David).",
+    "characterA": {
+      "id": "A",
+      "name": "Emma (Lễ tân khách sạn)",
+      "avatar": "👩‍💼",
+      "roleTitle": "Hotel Receptionist",
+      "color": "#2563eb"
+    },
+    "characterB": {
+      "id": "B",
+      "name": "David (Du khách check-in)",
+      "avatar": "🧑‍🦱",
+      "roleTitle": "Guest / Traveler",
+      "color": "#059669"
+    },
+    "dialogue": [
+      {
+        "id": "dlg_1",
+        "speaker": "A",
+        "speakerName": "Emma (Lễ tân)",
+        "text": "Good morning! Welcome to Grand Palace Hotel. How may I help you today?",
+        "ipa": "/ɡʊd ˈmɔː.nɪŋ! ˈwel.kəm tuː ɡrænd ˈpæl.ɪs həʊˈtel. haʊ meɪ aɪ help juː təˈdeɪ?/",
+        "meaning": "Chào buổi sáng! Chào mừng quý khách đến khách sạn Grand Palace. Tôi có thể giúp gì cho quý khách?",
+        "tip": "Nhấn trọng âm ở 'morning', 'welcome', 'hotel'. Nối âm 'help-you'.",
+        "videoUrl": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+      },
+      {
+        "id": "dlg_2",
+        "speaker": "B",
+        "speakerName": "David (Du khách)",
+        "text": "Hi! I have a reservation under the name David Miller for two nights.",
+        "ipa": "/haɪ! aɪ hæv ə ˌrez.əˈveɪ.ʃən ˈʌn.dər ðə neɪm ˈdeɪ.vɪd ˈmɪl.ər fɔːr tuː naɪts/",
+        "meaning": "Chào bạn! Tôi có đặt phòng trước dưới tên David Miller cho hai đêm.",
+        "tip": "Phát âm chuẩn âm đuôi /ts/ trong 'nights' và trọng âm chính trong /ˌrez.əˈveɪ.ʃən/.",
+        "videoUrl": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
+      }
+    ]
+  }
+]
 ```
 
-## Tính năng đã thêm
-
-- Sửa hàm escape HTML an toàn hơn.
-- Hiển thị LaTeX ở câu hỏi và đáp án.
-- Hiển thị ảnh minh họa câu hỏi bằng URL hoặc Base64.
-- Tìm kiếm câu hỏi trong ngân hàng.
-- Phân trang câu hỏi: 10, 20, 50, 100 câu/trang.
-- Import câu hỏi từ Excel/CSV.
-- Tải file mẫu CSV.
-- Tự lưu bài làm vào `localStorage`, học viên F5 có thể tiếp tục.
-- Bổ sung đề Toán mặc định nếu chưa có.
-
-## Cấu trúc file import
-
-Các cột nên đặt tên:
-
-| cat | subcat | text | image | A | B | C | D | ans |
-|---|---|---|---|---|---|---|---|---|
-| Toán | Toán/Phần 1 - Số học | Tính $2^5+3^2$ |  | $32$ | $41$ | $25$ | $64$ | B |
-
-Cột `ans` dùng A, B, C, D hoặc 0, 1, 2, 3.

@@ -25,7 +25,7 @@ export async function getCurrentUser() {
   return user;
 }
 
-// --- HELPER: UPLOAD FILE LÊN SUPABASE STORAGE CÓ TỰ ĐỘNG DỰ PHÒNG BASE64 ---
+// --- HELPER: UPLOAD FILE LÊN SUPABASE STORAGE CÓ TỰ ĐỘNG DỰ PHÒNG ---
 export async function uploadMediaFile(file, bucket = 'audio-bank', onProgress = null) {
   if (!file) throw new Error("Không tìm thấy file để tải lên!");
   
@@ -41,10 +41,23 @@ export async function uploadMediaFile(file, bucket = 'audio-bank', onProgress = 
     });
 
     if (error) {
-      console.warn(`[Storage Upload Warning] Bucket '${bucket}' gặp lỗi RLS:`, error.message);
+      console.warn(`[Storage Upload Warning] Bucket '${bucket}' gặp lỗi:`, error.message);
       
-      // Tự động dự phòng sang Base64 Data URL nếu là file ảnh
-      if (file.type && file.type.startsWith('image/')) {
+      // Thử tải lên bucket dự phòng 'audio-bank' nếu ban đầu dùng 'video-bank'
+      if (bucket !== 'audio-bank') {
+        const retryRes = await window.supabaseClient.storage.from('audio-bank').upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+        if (!retryRes.error) {
+          const { data: urlData } = window.supabaseClient.storage.from('audio-bank').getPublicUrl(filePath);
+          if (typeof onProgress === 'function') onProgress(100);
+          return urlData.publicUrl;
+        }
+      }
+
+      // Tự động dự phòng sang Base64 Data URL nếu là file ảnh hoặc video nhỏ
+      if (file.type && (file.type.startsWith('image/') || file.size < 8 * 1024 * 1024)) {
         if (typeof onProgress === 'function') onProgress(60);
         const base64Url = await fileToBase64(file);
         if (typeof onProgress === 'function') onProgress(100);
@@ -58,14 +71,13 @@ export async function uploadMediaFile(file, bucket = 'audio-bank', onProgress = 
     if (typeof onProgress === 'function') onProgress(100);
     return urlData.publicUrl;
   } catch (err) {
-    // Nếu gặp lỗi RLS hoặc chưa tạo bucket mà là ảnh, chuyển sang Base64
-    if (file.type && file.type.startsWith('image/')) {
+    if (file.type && (file.type.startsWith('image/') || file.size < 8 * 1024 * 1024)) {
       if (typeof onProgress === 'function') onProgress(60);
       const base64Url = await fileToBase64(file);
       if (typeof onProgress === 'function') onProgress(100);
       return base64Url;
     }
-    throw new Error(`Lỗi tải file lên máy chủ (${err.message}). Vui lòng kiểm tra quyền RLS Storage hoặc chạy lệnh SQL cho phép tải file.`);
+    throw new Error(`Lỗi tải file lên máy chủ (${err.message}). Vui lòng kiểm tra quyền Storage RLS hoặc dán trực tiếp đường dẫn video/audio URL.`);
   }
 }
 
@@ -77,3 +89,4 @@ function fileToBase64(file) {
     reader.readAsDataURL(file);
   });
 }
+

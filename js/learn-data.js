@@ -128,8 +128,161 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
     ],
     speaking: [
       {
+        id: 'spk_video_1',
+        type: 'video_roleplay',
+        title: '🎬 Video Roleplay: Hotel Check-in & Inquiry',
+        topic: 'Travel & Hospitality Simulation',
+        level: 'A2 - B1',
+        description: 'Mô phỏng hội thoại video tương tác giữa Lễ tân khách sạn (Emma) và Du khách (David). Bạn có thể chọn đóng vai Nhân vật A hoặc Nhân vật B để luyện phát âm.',
+        characterA: {
+          id: 'A',
+          name: 'Emma (Lễ tân khách sạn)',
+          avatar: '👩‍💼',
+          roleTitle: 'Hotel Receptionist',
+          color: '#2563eb',
+          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+        },
+        characterB: {
+          id: 'B',
+          name: 'David (Du khách check-in)',
+          avatar: '🧑‍🦱',
+          roleTitle: 'Guest / Traveler',
+          color: '#059669',
+          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+        },
+        dialogue: [
+          {
+            id: 'dlg_1',
+            speaker: 'A',
+            speakerName: 'Emma (Lễ tân)',
+            text: 'Good morning! Welcome to Grand Palace Hotel. How may I help you today?',
+            ipa: '/ɡʊd ˈmɔː.nɪŋ! ˈwel.kəm tuː ɡrænd ˈpæl.ɪs həʊˈtel. haʊ meɪ aɪ help juː təˈdeɪ?/',
+            meaning: 'Chào buổi sáng! Chào mừng quý khách đến khách sạn Grand Palace. Tôi có thể giúp gì cho quý khách?',
+            tip: 'Nhấn trọng âm rõ ràng ở "morning", "welcome", "Palace Hotel". Nối âm nhẹ giữa "help" và "you".',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          },
+          {
+            id: 'dlg_2',
+            speaker: 'B',
+            speakerName: 'David (Du khách)',
+            text: 'Hi! I have a reservation under the name David Miller for two nights.',
+            ipa: '/haɪ! aɪ hæv ə ˌrez.əˈveɪ.ʃən ˈʌn.dər ðə neɪm ˈdeɪ.vɪd ˈmɪl.ər fɔːr tuː naɪts/',
+            meaning: 'Chào bạn! Tôi có đặt phòng trước dưới tên David Miller cho hai đêm.',
+            tip: 'Phát âm chuẩn âm đuôi /ts/ trong "nights" và trọng âm chính trong /ˌrez.əˈveɪ.ʃən/.',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+          },
+          {
+            id: 'dlg_3',
+            speaker: 'A',
+            speakerName: 'Emma (Lễ tân)',
+            text: 'Thank you, Mr. Miller. Could you please show me your passport and credit card for verification?',
+            ipa: '/θæŋk juː, ˈmɪs.tər ˈmɪl.ər. kʊd juː pliːz ʃəʊ miː jɔːr ˈpɑːs.pɔːt ænd ˈkred.ɪt kɑːd fɔːr ˌver.ɪ.fɪˈkeɪ.ʃən?/',
+            meaning: 'Cảm ơn ông Miller. Ông có thể vui lòng xuất trình hộ chiếu và thẻ tín dụng để xác nhận được không ạ?',
+            tip: 'Lên giọng ở cuối câu hỏi Yes/No "...for verification?". Chú ý âm /θ/ trong "Thank you".',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          },
+          {
+            id: 'dlg_4',
+            speaker: 'B',
+            speakerName: 'David (Du khách)',
+            text: 'Sure, here is my passport and card. Does the booking include complimentary breakfast?',
+            ipa: '/ʃɔːr, hɪər ɪz maɪ ˈpɑːs.pɔːt ænd kɑːd. dʌz ðə ˈbʊk.ɪŋ ɪnˈkluːd ˌkɒm.plɪˈmen.tər.i ˈbrek.fəst?/',
+            meaning: 'Chắc chắn rồi, đây là hộ chiếu và thẻ của tôi. Việc đặt phòng có bao gồm bữa sáng miễn phí không?',
+            tip: 'Cụm "complimentary breakfast" mang nghĩa bữa sáng miễn phí kèm theo. Nhấn trọng âm /ˌkɒm.plɪˈmen.tər.i/.',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+          },
+          {
+            id: 'dlg_5',
+            speaker: 'A',
+            speakerName: 'Emma (Lễ tân)',
+            text: 'Yes, breakfast is served on the second floor from six thirty to ten AM. Here is your room key.',
+            ipa: '/jes, ˈbrek.fəst ɪz sɜːvd ɒn ðə ˈsek.ənd flɔːr frɒm sɪks ˈθɜː.ti tuː ten eɪ ˈem. hɪər ɪz jɔːr ruːm kiː/',
+            meaning: 'Dạ có, bữa sáng được phục vụ tại tầng 2 từ 6:30 đến 10:00 sáng. Đây là chìa khóa phòng của quý khách.',
+            tip: 'Phát âm rõ âm /z/ trong "is served", số thứ tự "second floor" và giờ "six thirty".',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          },
+          {
+            id: 'dlg_6',
+            speaker: 'B',
+            speakerName: 'David (Du khách)',
+            text: 'That sounds wonderful! Thank you so much for your assistance.',
+            ipa: '/ðæt saʊndz ˈwʌn.də.fəl! θæŋk juː səʊ mʌtʃ fɔːr jɔːr əˈsɪs.təns/',
+            meaning: 'Nghe tuyệt quá! Cảm ơn bạn rất nhiều vì sự hỗ trợ nhiệt tình.',
+            tip: 'Ngữ điệu hào hứng, thân thiện. Âm cuối /s/ trong "sounds" và "assistance".',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+          }
+        ]
+      },
+      {
+        id: 'spk_video_2',
+        type: 'video_roleplay',
+        title: '🎬 Video Roleplay: Coffee Shop Ordering',
+        topic: 'Daily Communication Simulation',
+        level: 'A2 - B1',
+        description: 'Luyện hội thoại tương tác gọi đồ uống tại tiệm cafe giữa Barista (Alex) và Khách hàng (Sarah).',
+        characterA: {
+          id: 'A',
+          name: 'Alex (Senior Barista)',
+          avatar: '☕',
+          roleTitle: 'Barista & Server',
+          color: '#d97706',
+          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+        },
+        characterB: {
+          id: 'B',
+          name: 'Sarah (Khách hàng quen)',
+          avatar: '👩‍🎓',
+          roleTitle: 'Customer / Coffee Lover',
+          color: '#7c3aed',
+          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+        },
+        dialogue: [
+          {
+            id: 'c_dlg_1',
+            speaker: 'A',
+            speakerName: 'Alex (Barista)',
+            text: 'Hi there! Welcome to Sun Cafe. What can I brew for you today?',
+            ipa: '/haɪ ðeər! ˈwel.kəm tuː sʌn kæˈfeɪ. wɒt kæn aɪ bruː fɔːr juː təˈdeɪ?/',
+            meaning: 'Xin chào! Chào mừng đến với Sun Cafe. Hôm nay tôi có thể pha chế món gì cho bạn?',
+            tip: 'Ngữ điệu vui vẻ, chào đón khách hàng.',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          },
+          {
+            id: 'c_dlg_2',
+            speaker: 'B',
+            speakerName: 'Sarah (Khách hàng)',
+            text: 'Hello! I would love an iced caramel macchiato with oat milk, please.',
+            ipa: '/həˈləʊ! aɪ wʊd lʌv ən aɪst ˈkær.ə.məl ˌmæk.iˈɑː.təʊ wɪð əʊt mɪlk, pliːz/',
+            meaning: 'Xin chào! Cho tôi một ly caramel macchiato đá với sữa yến mạch nhé.',
+            tip: 'Phát âm từ /ˌmæk.iˈɑː.təʊ/ chuẩn xác, nhấn trọng âm 3.',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+          },
+          {
+            id: 'c_dlg_3',
+            speaker: 'A',
+            speakerName: 'Alex (Barista)',
+            text: 'Excellent choice! Would you like a regular or large cup, and any pastry to go with it?',
+            ipa: '/ˈek.səl.ənt tʃɔɪs! wʊd juː laɪk ə ˈreɡ.jə.lər ɔːr lɑːdʒ kʌp, ænd ˈen.i ˈpeɪ.stri tuː ɡəʊ wɪð ɪt?/',
+            meaning: 'Lựa chọn tuyệt vời! Bạn muốn cỡ vừa hay cỡ lớn, và có muốn dùng kèm bánh ngọt không?',
+            tip: 'Nối âm "go with it".',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          },
+          {
+            id: 'c_dlg_4',
+            speaker: 'B',
+            speakerName: 'Sarah (Khách hàng)',
+            text: 'A large cup, please. And I will also take one blueberry muffin.',
+            ipa: '/ə lɑːdʒ kʌp pliːz. ænd aɪ wɪl ˈɔːl.səʊ teɪk wʌn ˈbluːˌber.i ˈmʌf.ɪn/',
+            meaning: 'Cho tôi cỡ lớn nhé. Và tôi cũng lấy thêm một chiếc bánh muffin việt quất.',
+            tip: 'Nhấn trọng âm đầu trong "blueberry muffin".',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+          }
+        ]
+      },
+      {
         id: 'spk_1',
-        title: 'Everyday Fluency & Idioms',
+        type: 'phrases',
+        title: '🗣️ Luyện Phát Âm Câu Đơn: Everyday Idioms',
         topic: 'Daily Conversation',
         level: 'All Levels',
         phrases: [
@@ -144,29 +297,6 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
             ipa: '/kʊd juː pliːz ɡɪv miː ə hænd wɪð ðɪs ˈsuːt.keɪs/',
             meaning: 'Bạn có thể giúp tôi một tay với chiếc vali này được không?',
             tip: 'Cụm "give me a hand" nghĩa là giúp đỡ. Giữ ngữ điệu lên giọng nhẹ ở cuối câu hỏi Yes/No.'
-          }
-        ]
-      },
-      {
-        id: 'spk_2',
-        title: 'Interactive Coffee Shop Roleplay',
-        topic: 'Roleplay Simulation',
-        level: 'A2 - B1',
-        dialogue: [
-          {
-            role: 'Barista (Máy)',
-            avatar: '☕',
-            text: 'Hello! Welcome to Sun Cafe. What can I get started for you today?',
-            ipa: '',
-            isUser: false
-          },
-          {
-            role: 'You (Học viên nói)',
-            avatar: '🧑‍🎓',
-            targetText: 'Hi! I would like an iced caramel latte with oat milk, please.',
-            ipa: '/haɪ aɪ wʊd laɪk ən aɪst ˈkær.ə.mel ˈlɑː.teɪ wɪð əʊt mɪlk pliːz/',
-            meaning: 'Chào bạn! Cho tôi một ly latte caramel đá với sữa yến mạch nhé.',
-            isUser: true
           }
         ]
       }
@@ -327,8 +457,75 @@ Unfortunately, rising ocean temperatures due to climate change have triggered se
     ],
     speaking: [
       {
+        id: 'spk_v_interview',
+        type: 'video_roleplay',
+        title: '🎬 Video Roleplay: Tech Job Interview Simulation',
+        topic: 'Professional Career & Interviews',
+        level: 'B1 - B2',
+        description: 'Mô phỏng phỏng vấn xin việc giữa Nhà tuyển dụng (Mr. Harrison) và Ứng viên (Elena). Chọn đóng vai A hoặc B để nâng cao kỹ năng giao tiếp chuyên nghiệp.',
+        characterA: {
+          id: 'A',
+          name: 'Mr. Harrison (Interviewer)',
+          avatar: '👔',
+          roleTitle: 'Senior HR Director',
+          color: '#1e293b',
+          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+        },
+        characterB: {
+          id: 'B',
+          name: 'Elena (Software Engineer)',
+          avatar: '👩‍💻',
+          roleTitle: 'Job Candidate',
+          color: '#0284c7',
+          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+        },
+        dialogue: [
+          {
+            id: 'int_1',
+            speaker: 'A',
+            speakerName: 'Mr. Harrison (HR)',
+            text: 'Good afternoon, Elena! Thank you for joining us today. Could you tell me a little about yourself?',
+            ipa: '/ɡʊd ˌɑːf.təˈnuːn, ɪˈleɪ.nə! θæŋk juː fɔːr ˈdʒɔɪ.nɪŋ ʌs təˈdeɪ. kʊd juː tel miː ə ˈlɪt.əl əˈbaʊt jɔːˈself?/',
+            meaning: 'Chào buổi chiều, Elena! Cảm ơn bạn đã tham gia buổi phỏng vấn hôm nay. Bạn có thể giới thiệu đôi nét về bản thân không?',
+            tip: 'Giọng điệu lịch thiệp, chuyên nghiệp. Nhấn trọng âm /ˌɑːf.təˈnuːn/.',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          },
+          {
+            id: 'int_2',
+            speaker: 'B',
+            speakerName: 'Elena (Ứng viên)',
+            text: 'Thank you! I have three years of experience building modern web applications with a focus on user experience.',
+            ipa: '/θæŋk juː! aɪ hæv θriː jɪəz ɒv ɪkˈspɪə.ri.əns ˈbɪl.dɪŋ ˈmɒd.ən web ˌæp.lɪˈkeɪ.ʃənz wɪð ə ˈfəʊ.kəs ɒn ˈjuː.zər ɪkˈspɪə.ri.əns/',
+            meaning: 'Cảm ơn ông! Tôi có ba năm kinh nghiệm xây dựng các ứng dụng web hiện đại và luôn chú trọng trải nghiệm người dùng.',
+            tip: 'Phát âm chuẩn /ɪkˈspɪə.ri.əns/ và cụm "user experience".',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+          },
+          {
+            id: 'int_3',
+            speaker: 'A',
+            speakerName: 'Mr. Harrison (HR)',
+            text: 'That sounds impressive. How do you usually handle tight deadlines and challenging bugs in your team?',
+            ipa: '/ðæt saʊndz ɪmˈpres.ɪv. haʊ duː juː ˈjuː.ʒu.ə.li ˈhæn.dəl taɪt ˈded.laɪnz ænd ˈtʃæl.ɪn.dʒɪŋ bʌɡz ɪn jɔːr tiːm?/',
+            meaning: 'Thật ấn tượng. Bạn thường xử lý các hạn chót gấp và những lỗi phần mềm phức tạp trong nhóm như thế nào?',
+            tip: 'Nhấn mạnh các từ khóa "impressive", "tight deadlines", "challenging bugs".',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          },
+          {
+            id: 'int_4',
+            speaker: 'B',
+            speakerName: 'Elena (Ứng viên)',
+            text: 'I prioritize critical tasks, maintain clear communication with my teammates, and use systematic debugging techniques.',
+            ipa: '/aɪ praɪˈɒr.ɪ.taɪz ˈkrɪt.ɪ.kəl tɑːsks, meɪnˈteɪn klɪər kəˌmjuː.nɪˈkeɪ.ʃən wɪð maɪ ˈtiːm.meɪts, ænd juːz ˌsɪs.təˈmæt.ɪk ˌdiːˈbʌɡ.ɪŋ tekˈniːks/',
+            meaning: 'Tôi ưu tiên các nhiệm vụ quan trọng, duy trì trao đổi rõ ràng với đồng đội và áp dụng các kỹ thuật gỡ lỗi bài bản.',
+            tip: 'Phát âm rõ ràng các âm tiết: /praɪˈɒr.ɪ.taɪz/, /ˌsɪs.təˈmæt.ɪk/, /tekˈniːks/.',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+          }
+        ]
+      },
+      {
         id: 'spk_2',
-        title: 'Career Aspirations & Interview Pitch',
+        type: 'phrases',
+        title: '🗣️ Luyện Phát Âm: Career Aspirations Pitch',
         topic: 'Professional Communication',
         level: 'B1',
         phrases: [

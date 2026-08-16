@@ -98,22 +98,33 @@ export async function loadUnits() {
       }));
       await safeUpsertUnit(inserts);
     } else {
-      unitsState = data.map(u => ({
-        id: u.id,
-        subject: normalizeSubjectName(u.subject),
-        module: normalizeModuleName(u.module),
-        title: u.title,
-        topic: u.topic || '',
-        level: u.level || 'A2 - B1',
-        icon: u.icon || '📖',
-        description: u.description || '',
-        isHidden: u.is_hidden ?? false,
-        listening: u.listening || [],
-        reading: u.reading || [],
-        speaking: u.speaking || [],
-        writing: u.writing || [],
-        languageFocus: u.language_focus || u.languageFocus || {}
-      }));
+      unitsState = data.map(u => {
+        const defUnit = DEFAULT_UNITS.find(d => d.id === u.id);
+        let spk = u.speaking || [];
+        if (!spk.length && defUnit?.speaking) {
+          spk = clone(defUnit.speaking);
+        } else if (defUnit?.speaking && !spk.some(s => s.type === 'video_roleplay')) {
+          const defRps = defUnit.speaking.filter(s => s.type === 'video_roleplay');
+          if (defRps.length) spk = [...clone(defRps), ...spk];
+        }
+
+        return {
+          id: u.id,
+          subject: normalizeSubjectName(u.subject),
+          module: normalizeModuleName(u.module),
+          title: u.title,
+          topic: u.topic || '',
+          level: u.level || 'A2 - B1',
+          icon: u.icon || '📖',
+          description: u.description || '',
+          isHidden: u.is_hidden ?? false,
+          listening: (u.listening && u.listening.length) ? u.listening : (defUnit?.listening || []),
+          reading: (u.reading && u.reading.length) ? u.reading : (defUnit?.reading || []),
+          speaking: spk,
+          writing: (u.writing && u.writing.length) ? u.writing : (defUnit?.writing || []),
+          languageFocus: u.language_focus || u.languageFocus || defUnit?.languageFocus || {}
+        };
+      });
 
       // Bổ sung các unit mẫu mặc định nếu chưa có
       DEFAULT_UNITS.forEach(defUnit => {
@@ -625,31 +636,161 @@ export function switchDesignerSkillTab(skill) {
     `;
   } else if (skill === 'speaking') {
     const spk = (unit.speaking && unit.speaking[0]) || { phrases: [] };
-    const p1 = spk.phrases?.[0] || { text: 'Practice makes perfect.', ipa: '', meaning: 'Rèn luyện tạo nên sự hoàn hảo', image: '' };
+    const isVideoRp = spk.type === 'video_roleplay' || (spk.characterA && spk.characterB) || (spk.dialogue && spk.dialogue.length > 0);
+    const p1 = spk.phrases?.[0] || { text: 'Practice makes perfect.', ipa: '', meaning: 'Rèn luyện tạo nên sự hoàn hảo', image: '', tip: '' };
+    
+    const charA = spk.characterA || { name: 'Emma (Lễ tân)', avatar: '👩‍💼', roleTitle: 'Hotel Receptionist', color: '#2563eb' };
+    const charB = spk.characterB || { name: 'David (Du khách)', avatar: '🧑‍🦱', roleTitle: 'Guest / Traveler', color: '#059669' };
+    const turns = (spk.dialogue && spk.dialogue.length) ? spk.dialogue : [
+      { id: 'dlg_1', speaker: 'A', speakerName: charA.name, text: 'Good morning! Welcome to Grand Palace Hotel. How may I help you today?', ipa: '/ɡʊd ˈmɔː.nɪŋ! ˈwel.kəm tuː ɡrænd ˈpæl.ɪs həʊˈtel. haʊ meɪ aɪ help juː təˈdeɪ?/', meaning: 'Chào buổi sáng! Chào mừng quý khách đến khách sạn. Tôi có thể giúp gì cho quý khách?', tip: 'Nối âm help-you, nhấn trọng âm welcome, hotel.', videoUrl: '' },
+      { id: 'dlg_2', speaker: 'B', speakerName: charB.name, text: 'Hi! I have a reservation under the name David Miller for two nights.', ipa: '/haɪ! aɪ hæv ə ˌrez.əˈveɪ.ʃən ˈʌn.dər ðə neɪm ˈdeɪ.vɪd ˈmɪl.ər fɔːr tuː naɪts/', meaning: 'Chào bạn! Tôi có đặt phòng dưới tên David Miller trong hai đêm.', tip: 'Âm cuối nights và reservation.', videoUrl: '' }
+    ];
+
     contentWrap.innerHTML = `
-      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
-        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:#1e293b">🗣️ Câu Luyện Nói & Chấm Điểm Phát Âm (Micro AI)</div>
-        <div class="fg">
-          <label>Câu mẫu tiếng Anh *</label>
-          <input type="text" id="ud-spk-text" style="font-size:15px;font-weight:600" value="${esc(p1.text || '')}">
+      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:12px">
+        <!-- BỘ CHỌN CHẾ ĐỘ PHÁT ÂM -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid #e2e8f0;padding-bottom:12px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#0f172a">🗣️ Thiết Kế Kỹ Năng Speaking</div>
+            <div style="font-size:12px;color:#64748b">Chọn định dạng bài học: Luyện Video Roleplay 2 nhân vật A-B hoặc Luyện câu đơn lẻ</div>
+          </div>
+
+          <div style="display:flex;gap:6px">
+            <button type="button" class="btn btn-sm ${isVideoRp ? 'btn-p' : ''}" id="btn-mode-spk-rp" onclick="window.switchDesignerSpeakingMode('video_roleplay')" style="font-size:12px;font-weight:700">
+              🎬 1. Hội thoại Video 2 Nhân Vật (A & B)
+            </button>
+            <button type="button" class="btn btn-sm ${!isVideoRp ? 'btn-p' : ''}" id="btn-mode-spk-phrase" onclick="window.switchDesignerSpeakingMode('phrases')" style="font-size:12px;font-weight:700">
+              🗣️ 2. Luyện câu phát âm đơn
+            </button>
+          </div>
         </div>
-        <div class="grid2">
-          <div class="fg" style="margin:0">
-            <label>Phiên âm IPA</label>
-            <input type="text" id="ud-spk-ipa" value="${esc(p1.ipa || '')}">
+
+        <input type="hidden" id="ud-spk-type" value="${isVideoRp ? 'video_roleplay' : 'phrases'}">
+
+        <!-- ============================================================== -->
+        <!-- FORM 1: HỘI THOẠI VIDEO 2 NHÂN VẬT A & B (ROLEPLAY STUDIO) -->
+        <!-- ============================================================== -->
+        <div id="ud-spk-roleplay-section" style="${isVideoRp ? '' : 'display:none'}">
+          <!-- 1. CẤU HÌNH 2 NHÂN VẬT -->
+          <div style="font-weight:800;font-size:13.5px;color:#1e40af;margin-bottom:10px">
+            🎭 1. CẤU HÌNH THÔNG TIN 2 NHÂN VẬT ĐỐI THOẠI:
           </div>
-          <div class="fg" style="margin:0">
-            <label>Nghĩa tiếng Việt</label>
-            <input type="text" id="ud-spk-meaning" value="${esc(p1.meaning || '')}">
+          <div class="grid2" style="margin-bottom:16px">
+            <!-- NHÂN VẬT A -->
+            <div style="background:#eff6ff;padding:14px;border-radius:10px;border:1.5px solid #bfdbfe">
+              <div style="font-weight:800;font-size:13px;color:#1d4ed8;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+                <span>👩‍💼</span> <span>NHÂN VẬT A (NGƯỜI BẮT ĐẦU / CHỦ ĐỘNG)</span>
+              </div>
+              <div class="grid2" style="margin:0 0 8px 0">
+                <div class="fg" style="margin:0"><label style="font-size:11px;color:#1e40af">Tên nhân vật A *</label><input type="text" id="ud-charA-name" value="${esc(charA.name || 'Emma (Lễ tân)')}"></div>
+                <div class="fg" style="margin:0"><label style="font-size:11px;color:#1e40af">Avatar / Emoji</label><input type="text" id="ud-charA-avatar" value="${esc(charA.avatar || '👩‍💼')}"></div>
+              </div>
+              <div class="grid2" style="margin:0">
+                <div class="fg" style="margin:0"><label style="font-size:11px;color:#1e40af">Chức danh / Vai trò</label><input type="text" id="ud-charA-title" value="${esc(charA.roleTitle || 'Hotel Receptionist')}"></div>
+                <div class="fg" style="margin:0"><label style="font-size:11px;color:#1e40af">Mã màu đại diện</label><input type="color" id="ud-charA-color" value="${charA.color || '#2563eb'}" style="height:38px;padding:2px"></div>
+              </div>
+            </div>
+
+            <!-- NHÂN VẬT B -->
+            <div style="background:#f0fdf4;padding:14px;border-radius:10px;border:1.5px solid #bbf7d0">
+              <div style="font-weight:800;font-size:13px;color:#15803d;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+                <span>🧑‍💼</span> <span>NHÂN VẬT B (NGƯỜI PHẢN HỒI)</span>
+              </div>
+              <div class="grid2" style="margin:0 0 8px 0">
+                <div class="fg" style="margin:0"><label style="font-size:11px;color:#15803d">Tên nhân vật B *</label><input type="text" id="ud-charB-name" value="${esc(charB.name || 'David (Du khách)')}"></div>
+                <div class="fg" style="margin:0"><label style="font-size:11px;color:#15803d">Avatar / Emoji</label><input type="text" id="ud-charB-avatar" value="${esc(charB.avatar || '🧑‍🦱')}"></div>
+              </div>
+              <div class="grid2" style="margin:0">
+                <div class="fg" style="margin:0"><label style="font-size:11px;color:#15803d">Chức danh / Vai trò</label><input type="text" id="ud-charB-title" value="${esc(charB.roleTitle || 'Guest / Traveler')}"></div>
+                <div class="fg" style="margin:0"><label style="font-size:11px;color:#15803d">Mã màu đại diện</label><input type="color" id="ud-charB-color" value="${charB.color || '#059669'}" style="height:38px;padding:2px"></div>
+              </div>
+            </div>
           </div>
+
+          <!-- 2. DANH SÁCH LƯỢT THOẠI (DIALOGUE TURNS) -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div style="font-weight:800;font-size:13.5px;color:#0f172a">
+              📋 2. KỊCH BẢN CÁC CÂU THOẠI (A ⇄ B):
+            </div>
+            <button type="button" class="btn btn-sm btn-p" onclick="window.addRoleplayDesignerTurn()" style="font-size:12px;font-weight:700">
+              ➕ Thêm Lượt Thoại Mới
+            </button>
+          </div>
+
+          <div id="ud-rp-turns-container" style="display:flex;flex-direction:column;gap:12px">
+            ${turns.map((t, idx) => `
+              <div class="card rp-turn-card" id="rp-turn-card-${idx}" style="margin:0;padding:14px;background:#ffffff;border:1.5px solid ${t.speaker === 'A' ? '#bfdbfe' : '#bbf7d0'};border-radius:10px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px dashed #cbd5e1;padding-bottom:6px">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-weight:800;font-size:12.5px;color:#0f172a">Lượt ${idx + 1}:</span>
+                    <select class="rp-turn-speaker" id="rp-turn-spk-${idx}" style="font-weight:800;font-size:12.5px;padding:3px 8px;border-radius:6px;border:1px solid #cbd5e1;background:${t.speaker === 'A' ? '#eff6ff' : '#f0fdf4'}">
+                      <option value="A" ${t.speaker === 'A' ? 'selected' : ''}>👩‍💼 Nhân vật A nói</option>
+                      <option value="B" ${t.speaker === 'B' ? 'selected' : ''}>🧑‍💼 Nhân vật B nói</option>
+                    </select>
+                  </div>
+                  <div style="display:flex;gap:6px">
+                    <button type="button" class="btn btn-sm" onclick="window.testRoleplayDesignerTTS(${idx})" style="background:#fff;font-size:11px;padding:2px 8px" title="Nghe thử giọng đọc câu này">🔊 Nghe thử (TTS)</button>
+                    <button type="button" class="btn btn-sm" onclick="window.deleteRoleplayDesignerTurn(${idx})" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-size:11px;padding:2px 8px">🗑️ Xóa</button>
+                  </div>
+                </div>
+
+                <div class="fg" style="margin-bottom:8px">
+                  <label style="font-size:11.5px;font-weight:700">Câu tiếng Anh chuẩn *</label>
+                  <input type="text" id="rp-turn-text-${idx}" class="rp-turn-text" style="font-size:14px;font-weight:600" value="${esc(t.text || '')}" placeholder="VD: Good morning! How may I help you?">
+                </div>
+
+                <div class="grid2" style="margin-bottom:8px">
+                  <div class="fg" style="margin:0"><label style="font-size:11px">Phiên âm IPA</label><input type="text" id="rp-turn-ipa-${idx}" class="rp-turn-ipa" value="${esc(t.ipa || '')}" placeholder="VD: /ɡʊd ˈmɔː.nɪŋ!/"></div>
+                  <div class="fg" style="margin:0"><label style="font-size:11px">Nghĩa tiếng Việt *</label><input type="text" id="rp-turn-meaning-${idx}" class="rp-turn-meaning" value="${esc(t.meaning || '')}" placeholder="VD: Chào buổi sáng! Tôi có thể giúp gì?"></div>
+                </div>
+
+                <div class="grid2" style="margin:0">
+                  <div class="fg" style="margin:0"><label style="font-size:11px">Mẹo phát âm / Trọng âm</label><input type="text" id="rp-turn-tip-${idx}" class="rp-turn-tip" value="${esc(t.tip || '')}" placeholder="VD: Nối âm, nhấn trọng âm..."></div>
+                  <div class="fg" style="margin:0">
+                    <label style="font-size:11px">🎬 Video Clip URL (MP4 / WebM / Supabase Storage)</label>
+                    <div style="display:flex;gap:6px">
+                      <input type="text" id="rp-turn-video-${idx}" class="rp-turn-video" value="${esc(t.videoUrl || '')}" placeholder="VD: https://... hoặc tải video lên">
+                      <input type="file" id="rp-turn-file-${idx}" accept="video/mp4,video/webm,video/*" style="display:none" onchange="window.handleUploadRoleplayVideo(${idx}, this)">
+                      <button type="button" class="btn btn-sm btn-p" onclick="document.getElementById('rp-turn-file-${idx}').click()" style="white-space:nowrap;font-size:11px">📂 Upload</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <button type="button" class="btn btn-sm btn-p" onclick="window.addRoleplayDesignerTurn()" style="margin-top:12px;width:100%;padding:10px;font-weight:700">
+            ➕ Thêm Lượt Thoại Mới Vào Kịch Bản
+          </button>
         </div>
-        <div class="fg" style="margin-top:10px">
-          <label>🖼️ Hình ảnh minh họa câu nói (Tùy chọn)</label>
-          <div style="display:flex;gap:8px;">
-            <input type="text" id="ud-spk-image" placeholder="VD: https://... hoặc chọn từ thư viện" value="${esc(p1.image || '')}">
-            <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('ud-spk-image', 'ud-spk-img-preview')" style="white-space:nowrap;">📂 Thư viện ảnh</button>
+
+        <!-- ============================================================== -->
+        <!-- FORM 2: LUYỆN CÂU ĐƠN LẺ TRUYỀN THỐNG (SINGLE PHRASE) -->
+        <!-- ============================================================== -->
+        <div id="ud-spk-phrase-section" style="${!isVideoRp ? '' : 'display:none'}">
+          <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:#1e293b">🗣️ Luyện Phát Âm Câu Đơn Lẻ (Single Phrase Micro AI)</div>
+          <div class="fg">
+            <label>Câu mẫu tiếng Anh *</label>
+            <input type="text" id="ud-spk-text" style="font-size:15px;font-weight:600" value="${esc(p1.text || '')}">
           </div>
-          <div id="ud-spk-img-preview" style="margin-top:6px">${p1.image ? `<img src="${p1.image}" style="max-height:140px;border-radius:6px;border:1px solid #cbd5e1">` : ''}</div>
+          <div class="grid2">
+            <div class="fg" style="margin:0">
+              <label>Phiên âm IPA</label>
+              <input type="text" id="ud-spk-ipa" value="${esc(p1.ipa || '')}">
+            </div>
+            <div class="fg" style="margin:0">
+              <label>Nghĩa tiếng Việt</label>
+              <input type="text" id="ud-spk-meaning" value="${esc(p1.meaning || '')}">
+            </div>
+          </div>
+          <div class="fg" style="margin-top:10px">
+            <label>🖼️ Hình ảnh minh họa câu nói (Tùy chọn)</label>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="ud-spk-image" placeholder="VD: https://... hoặc chọn từ thư viện" value="${esc(p1.image || '')}">
+              <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('ud-spk-image', 'ud-spk-img-preview')" style="white-space:nowrap;">📂 Thư viện ảnh</button>
+            </div>
+            <div id="ud-spk-img-preview" style="margin-top:6px">${p1.image ? `<img src="${p1.image}" style="max-height:140px;border-radius:6px;border:1px solid #cbd5e1">` : ''}</div>
+          </div>
         </div>
       </div>
     `;
@@ -711,6 +852,117 @@ export function switchDesignerSkillTab(skill) {
   autoFitAllDesignerTextareas();
 }
 
+// -------------------------------------------------------------------------
+// HELPER METHODS CHO DESIGNER SPEAKING (ROLEPLAY TURNS & VIDEO UPLOAD)
+// -------------------------------------------------------------------------
+window.switchDesignerSpeakingMode = function(mode) {
+  const isRp = mode === 'video_roleplay';
+  const typeInp = document.getElementById('ud-spk-type');
+  if (typeInp) typeInp.value = mode;
+
+  const btnRp = document.getElementById('btn-mode-spk-rp');
+  const btnPhrase = document.getElementById('btn-mode-spk-phrase');
+  const secRp = document.getElementById('ud-spk-roleplay-section');
+  const secPhrase = document.getElementById('ud-spk-phrase-section');
+
+  if (btnRp) btnRp.className = `btn btn-sm ${isRp ? 'btn-p' : ''}`;
+  if (btnPhrase) btnPhrase.className = `btn btn-sm ${!isRp ? 'btn-p' : ''}`;
+  if (secRp) secRp.style.display = isRp ? 'block' : 'none';
+  if (secPhrase) secPhrase.style.display = !isRp ? 'block' : 'none';
+};
+
+window.addRoleplayDesignerTurn = function() {
+  const container = document.getElementById('ud-rp-turns-container');
+  if (!container) return;
+
+  const idx = container.children.length;
+  const nextSpeaker = idx % 2 === 0 ? 'A' : 'B';
+  const newTurnEl = document.createElement('div');
+  newTurnEl.className = 'card rp-turn-card';
+  newTurnEl.id = `rp-turn-card-${idx}`;
+  newTurnEl.style.cssText = `margin:0;padding:14px;background:#ffffff;border:1.5px solid ${nextSpeaker === 'A' ? '#bfdbfe' : '#bbf7d0'};border-radius:10px`;
+
+  newTurnEl.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px dashed #cbd5e1;padding-bottom:6px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-weight:800;font-size:12.5px;color:#0f172a">Lượt ${idx + 1}:</span>
+        <select class="rp-turn-speaker" id="rp-turn-spk-${idx}" style="font-weight:800;font-size:12.5px;padding:3px 8px;border-radius:6px;border:1px solid #cbd5e1;background:${nextSpeaker === 'A' ? '#eff6ff' : '#f0fdf4'}">
+          <option value="A" ${nextSpeaker === 'A' ? 'selected' : ''}>👩‍💼 Nhân vật A nói</option>
+          <option value="B" ${nextSpeaker === 'B' ? 'selected' : ''}>🧑‍💼 Nhân vật B nói</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button type="button" class="btn btn-sm" onclick="window.testRoleplayDesignerTTS(${idx})" style="background:#fff;font-size:11px;padding:2px 8px">🔊 Nghe thử (TTS)</button>
+        <button type="button" class="btn btn-sm" onclick="window.deleteRoleplayDesignerTurn(${idx})" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-size:11px;padding:2px 8px">🗑️ Xóa</button>
+      </div>
+    </div>
+
+    <div class="fg" style="margin-bottom:8px">
+      <label style="font-size:11.5px;font-weight:700">Câu tiếng Anh chuẩn *</label>
+      <input type="text" id="rp-turn-text-${idx}" class="rp-turn-text" style="font-size:14px;font-weight:600" placeholder="VD: Could you please show me your passport?">
+    </div>
+
+    <div class="grid2" style="margin-bottom:8px">
+      <div class="fg" style="margin:0"><label style="font-size:11px">Phiên âm IPA</label><input type="text" id="rp-turn-ipa-${idx}" class="rp-turn-ipa" placeholder="VD: /kʊd juː pliːz ʃəʊ miː.../"></div>
+      <div class="fg" style="margin:0"><label style="font-size:11px">Nghĩa tiếng Việt *</label><input type="text" id="rp-turn-meaning-${idx}" class="rp-turn-meaning" placeholder="VD: Bạn có thể cho tôi xem hộ chiếu?"></div>
+    </div>
+
+    <div class="grid2" style="margin:0">
+      <div class="fg" style="margin:0"><label style="font-size:11px">Mẹo phát âm / Trọng âm</label><input type="text" id="rp-turn-tip-${idx}" class="rp-turn-tip" placeholder="VD: Lên giọng cuối câu..."></div>
+      <div class="fg" style="margin:0">
+        <label style="font-size:11px">🎬 Video Clip URL (MP4 / WebM / Supabase Storage)</label>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="rp-turn-video-${idx}" class="rp-turn-video" placeholder="VD: https://... hoặc tải video lên">
+          <input type="file" id="rp-turn-file-${idx}" accept="video/mp4,video/webm,video/*" style="display:none" onchange="window.handleUploadRoleplayVideo(${idx}, this)">
+          <button type="button" class="btn btn-sm btn-p" onclick="document.getElementById('rp-turn-file-${idx}').click()" style="white-space:nowrap;font-size:11px">📂 Upload</button>
+        </div>
+      </div>
+    </div>
+  `;
+  container.appendChild(newTurnEl);
+};
+
+window.deleteRoleplayDesignerTurn = function(idx) {
+  const card = document.getElementById(`rp-turn-card-${idx}`);
+  if (card && confirm("Bạn có chắc chắn muốn xóa lượt thoại này?")) {
+    card.remove();
+  }
+};
+
+window.testRoleplayDesignerTTS = function(idx) {
+  const textInp = document.getElementById(`rp-turn-text-${idx}`);
+  const text = textInp?.value.trim();
+  if (!text) {
+    alert("Vui lòng nhập câu tiếng Anh trước khi nghe thử!");
+    return;
+  }
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'en-US';
+  utter.rate = 0.95;
+  window.speechSynthesis.speak(utter);
+};
+
+window.handleUploadRoleplayVideo = async function(idx, inputEl) {
+  const file = inputEl.files?.[0];
+  if (!file) return;
+
+  const videoInp = document.getElementById(`rp-turn-video-${idx}`);
+  if (!videoInp) return;
+
+  try {
+    videoInp.value = "⏳ Đang tải video lên máy chủ...";
+    const downloadURL = await uploadMediaFile(file, 'audio-bank'); // bucket video/audio
+    videoInp.value = downloadURL;
+    alert("✅ Đã tải video lên thành công!");
+  } catch (err) {
+    console.error("Lỗi upload video:", err);
+    videoInp.value = "";
+    alert("❌ Lỗi tải video: " + (err.message || "Vui lòng kiểm tra dung lượng hoặc dán trực tiếp đường dẫn video online."));
+  }
+};
+
 // 5. LƯU THAY ĐỔI CỦA SKILL ĐANG SỬA VÀO DRAFT
 function syncCurrentDesignerSkillToDraft() {
   if (!window._currentDraftUnit) return;
@@ -755,15 +1007,66 @@ function syncCurrentDesignerSkillToDraft() {
       try { unit.reading[0].vocabulary = JSON.parse(vocabRaw); } catch(e){}
     }
   } else if (currentDesignerSkill === 'speaking') {
-    const text = $('ud-spk-text')?.value.trim();
-    const ipa = $('ud-spk-ipa')?.value.trim();
-    const meaning = $('ud-spk-meaning')?.value.trim();
-    const image = $('ud-spk-image')?.value.trim();
-
+    const mode = $('ud-spk-type')?.value || 'video_roleplay';
     if (!unit.speaking) unit.speaking = [];
-    if (!unit.speaking[0]) unit.speaking[0] = { id: 'spk_1', phrases: [] };
-    if (text) {
-      unit.speaking[0].phrases = [{ text, ipa: ipa || '', meaning: meaning || '', image: image || '', tip: 'Luyện phát âm chuẩn âm cuối.' }];
+
+    if (mode === 'video_roleplay') {
+      const charAName = $('ud-charA-name')?.value.trim() || 'Emma (Lễ tân)';
+      const charAAvatar = $('ud-charA-avatar')?.value.trim() || '👩‍💼';
+      const charATitle = $('ud-charA-title')?.value.trim() || 'Hotel Receptionist';
+      const charAColor = $('ud-charA-color')?.value || '#2563eb';
+
+      const charBName = $('ud-charB-name')?.value.trim() || 'David (Du khách)';
+      const charBAvatar = $('ud-charB-avatar')?.value.trim() || '🧑‍🦱';
+      const charBTitle = $('ud-charB-title')?.value.trim() || 'Guest / Traveler';
+      const charBColor = $('ud-charB-color')?.value || '#059669';
+
+      const turnCards = document.querySelectorAll('.rp-turn-card');
+      const turns = [];
+      turnCards.forEach((card, i) => {
+        const spk = card.querySelector('.rp-turn-speaker')?.value || 'A';
+        const txt = card.querySelector('.rp-turn-text')?.value.trim();
+        const ipa = card.querySelector('.rp-turn-ipa')?.value.trim() || '';
+        const meaning = card.querySelector('.rp-turn-meaning')?.value.trim() || '';
+        const tip = card.querySelector('.rp-turn-tip')?.value.trim() || '';
+        const video = card.querySelector('.rp-turn-video')?.value.trim() || '';
+
+        if (txt) {
+          turns.push({
+            id: `dlg_${i + 1}`,
+            speaker: spk,
+            speakerName: spk === 'A' ? charAName : charBName,
+            text: txt,
+            ipa: ipa,
+            meaning: meaning,
+            tip: tip,
+            videoUrl: video
+          });
+        }
+      });
+
+      unit.speaking[0] = {
+        id: unit.speaking[0]?.id || 'spk_v_1',
+        type: 'video_roleplay',
+        title: `🎬 Video Roleplay: ${unit.title || 'Hội thoại A & B'}`,
+        topic: unit.topic || 'Giao tiếp',
+        level: unit.level || 'A2 - B1',
+        description: `Mô phỏng hội thoại video tương tác giữa ${charAName} và ${charBName}. Học viên tự do chọn vai A hoặc B để luyện phát âm.`,
+        characterA: { id: 'A', name: charAName, avatar: charAAvatar, roleTitle: charATitle, color: charAColor },
+        characterB: { id: 'B', name: charBName, avatar: charBAvatar, roleTitle: charBTitle, color: charBColor },
+        dialogue: turns
+      };
+    } else {
+      const text = $('ud-spk-text')?.value.trim();
+      const ipa = $('ud-spk-ipa')?.value.trim();
+      const meaning = $('ud-spk-meaning')?.value.trim();
+      const image = $('ud-spk-image')?.value.trim();
+
+      if (!unit.speaking[0]) unit.speaking[0] = { id: 'spk_1', phrases: [] };
+      unit.speaking[0].type = 'phrases';
+      if (text) {
+        unit.speaking[0].phrases = [{ text, ipa: ipa || '', meaning: meaning || '', image: image || '', tip: 'Luyện phát âm chuẩn âm cuối.' }];
+      }
     }
   } else if (currentDesignerSkill === 'writing') {
     const sentence = $('ud-wrt-sentence')?.value.trim();

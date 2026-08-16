@@ -61,7 +61,7 @@ window.checkSkillAuth = function(event) {
   const teacherUser = localStorage.getItem('teacher_user');
   if (!studentUser && !teacherUser) {
     if (event) event.preventDefault();
-    alert("🔒 Chức năng 'Luyện 5 Kỹ Năng' yêu cầu đăng nhập tài khoản Học Viên hoặc Giảng Viên!\n\nVui lòng đăng nhập để bắt đầu học tập.");
+    alert("🔒 Phân hệ 'Học Tập' yêu cầu đăng nhập tài khoản Học Viên hoặc Giảng Viên!\n\nVui lòng đăng nhập để bắt đầu học tập.");
     if (window.openAuthModal) {
       window.openAuthModal();
     } else {
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   <div class="nav">
     <a class="nav-btn active" href="index.html">🏠 Dashboard</a>
-    <a class="nav-btn" href="learn.html" onclick="return window.checkSkillAuth(event);">📖 Luyện Kỹ Năng</a>
+    <a class="nav-btn" href="learn.html" onclick="return window.checkSkillAuth(event);">📖 Học Tập</a>
     <a class="nav-btn" href="student.html">🎓 Cổng Thi</a>
     <a class="nav-btn" href="teacher.html" onclick="return window.checkTeacherAuth(event);">👩‍🏫 Quản Trị LMS</a>
   </div>
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
     <div class="hero-quick-actions">
       <a href="teacher.html" class="action-btn-primary" onclick="return window.checkTeacherAuth(event);">+ Tạo Đề Thi Mới</a>
-      <a href="learn.html" class="action-btn-secondary" onclick="return window.checkSkillAuth(event);">📖 Luyện 5 Kỹ Năng</a>
+      <a href="learn.html" class="action-btn-secondary" onclick="return window.checkSkillAuth(event);">📖 Học Tập Đa Môn</a>
     </div>
   </div>
 
@@ -520,8 +520,8 @@ document.addEventListener('DOMContentLoaded', function() {
           <a href="learn.html" onclick="return window.checkSkillAuth(event);" style="text-decoration:none;display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:#f0f9ff;border:1px solid #bae6fd;transition:all 0.15s ease;">
             <div style="font-size:24px;">📖</div>
             <div>
-              <div style="font-size:13.5px;font-weight:800;color:#0369a1;">Luyện 5 Kỹ Năng</div>
-              <div style="font-size:11.5px;color:#0284c7;">Reading • AI Speaking • XP</div>
+              <div style="font-size:13.5px;font-weight:800;color:#0369a1;">Học Tập Đa Môn</div>
+              <div style="font-size:11.5px;color:#0284c7;">Tiếng Anh • Toán • Lý • Hóa • Tin</div>
             </div>
           </a>
 
