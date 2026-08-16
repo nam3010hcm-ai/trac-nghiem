@@ -70,7 +70,7 @@ async function showTeacherPanel(user) {
 
   await initData();
 
-  const validTabs = ['dash', 'curriculum', 'q', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
+  const validTabs = ['dash', 'curriculum', 'q', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics'];
   const hashTab = (window.location.hash || '').replace('#', '').trim();
   let savedTab = null;
   try { savedTab = localStorage.getItem('active_teacher_tab'); } catch(e){}
@@ -204,7 +204,7 @@ async function doLogout() {
 }
 
 function switchTTab(t) {
-  const tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img'];
+  const tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics'];
   if (!tabs.includes(t)) t = 'dash';
 
   try {
@@ -224,6 +224,12 @@ function switchTTab(t) {
     const sidebarItems = document.querySelectorAll(`[data-tab="${x}"]`);
     sidebarItems.forEach(item => item.classList.toggle('active', x === t));
   });
+
+  if (t === 'classes') loadClasses().then(renderClassesList);
+  if (t === 'assignments') loadAssignments().then(renderAssignmentsList);
+  if (t === 'grading') loadPendingSubmissions().then(renderGradingQueueTable);
+  if (t === 'stream') loadClassPosts().then(renderClassStream);
+  if (t === 'analytics') loadAnalyticsData().then(renderAnalyticsDashboard);
 
   if (t === 'curriculum' && typeof window.renderCurriculumTree === 'function') window.renderCurriculumTree();
   if (t === 'unit') renderUnitsList();
