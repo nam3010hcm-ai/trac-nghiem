@@ -1,0 +1,20 @@
+{
+  "name": "crud-feature-testing-trac-nghiem",
+  "version": "1.0.0",
+  "description": "Cấu trúc: - index.html - student.html - teacher.html - css/style.css - js/supabase.js - js/common.js - js/categories.js - js/questions.js - js/exams.js - js/results.js - js/student.js - js/teacher.js",
+  "main": "index.js",
+  "scripts": {
+    "start:static": "http-server -p 4173 .",
+    "test:e2e": "npx playwright test"
+  ,
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "http-server": "^14.1.1"
+  }
+}
