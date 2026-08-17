@@ -2045,7 +2045,8 @@ function startRoleplaySpeechRecognition(currentLine, micBtn, statusLabel, diffBo
   const recognizer = new SpeechRec();
   rpSpeechRecognizer = recognizer;
   recognizer.lang = 'en-US';
-  recognizer.interimResults = false;
+  recognizer.continuous = true;
+  recognizer.interimResults = true;
   recognizer.maxAlternatives = 1;
   isRpRecording = true;
 
@@ -2067,7 +2068,13 @@ function startRoleplaySpeechRecognition(currentLine, micBtn, statusLabel, diffBo
   };
 
   recognizer.onresult = (event) => {
-    const transcript = (event.results && event.results[0] && event.results[0][0]?.transcript) || '';
+    const transcript = Array.from(event.results)
+      .map(result => result[0]?.transcript || '')
+      .join(' ')
+      .trim();
+
+    if (!transcript) return;
+
     const { score, diffHtml } = computeWordDiffAndScore(currentLine?.text || '', transcript);
 
     if (diffBox) diffBox.style.display = 'block';
@@ -2089,16 +2096,18 @@ function startRoleplaySpeechRecognition(currentLine, micBtn, statusLabel, diffBo
     }
 
     if (statusLabel) {
-      statusLabel.textContent = transcript ? `Đã nhận diện: “${transcript}”` : 'Đã nghe xong. Bấm Mic để nói lại';
+      statusLabel.textContent = transcript ? `Đang nghe / đã nhận diện: “${transcript}”` : 'Đã nghe xong. Bấm Mic để nói lại';
       statusLabel.style.color = score >= 80 ? '#15803d' : '#7c2d12';
     }
 
-    if (transcript) {
-      if (score >= 75) {
-        playSuccessSound();
-        addXP(20, 'Phát âm roleplay tốt');
-      } else {
-        playWrongSound();
+    if (event.results[event.results.length - 1]?.isFinal) {
+      if (transcript) {
+        if (score >= 75) {
+          playSuccessSound();
+          addXP(20, 'Phát âm roleplay tốt');
+        } else {
+          playWrongSound();
+        }
       }
     }
   };
@@ -2317,7 +2326,8 @@ function startPhraseRecognition(idx, targetText, btn, scoreEl, resultEl) {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   speechRecognizer = new SpeechRec();
   speechRecognizer.lang = 'en-US';
-  speechRecognizer.interimResults = false;
+  speechRecognizer.continuous = true;
+  speechRecognizer.interimResults = true;
   speechRecognizer.maxAlternatives = 1;
 
   speechRecognizer.onstart = () => {
@@ -2329,10 +2339,12 @@ function startPhraseRecognition(idx, targetText, btn, scoreEl, resultEl) {
   };
 
   speechRecognizer.onresult = (event) => {
-    const transcript = event.results[0][0].transcript || '';
-    if (activeMediaRecorder && activeMediaRecorder.state === 'recording') {
-      try { activeMediaRecorder.stop(); } catch(e){}
-    }
+    const transcript = Array.from(event.results)
+      .map(result => result[0]?.transcript || '')
+      .join(' ')
+      .trim();
+
+    if (!transcript) return;
 
     const { score, diffHtml } = computeWordDiffAndScore(targetText, transcript);
 
@@ -2348,11 +2360,13 @@ function startPhraseRecognition(idx, targetText, btn, scoreEl, resultEl) {
       `;
     }
 
-    if (score >= 75) {
-      playSuccessSound();
-      addXP(20, 'Phát âm chuẩn xác');
-    } else {
-      playWrongSound();
+    if (event.results[event.results.length - 1]?.isFinal) {
+      if (score >= 75) {
+        playSuccessSound();
+        addXP(20, 'Phát âm chuẩn xác');
+      } else {
+        playWrongSound();
+      }
     }
   };
 
