@@ -1623,7 +1623,47 @@ function renderActiveRoleplayView() {
 
       <!-- KHUNG TRÌNH DIỄN VIDEO & THU ÂM -->
       <div class="video-rp-stage">
-        <!-- CỘT TRÁI: VIDEO PLAYER & BẢNG ĐIỀU KHIỂN NÓI -->
+        <!-- KỊCH BẢN HỘI THOẠI ĐẶT TRÊN -->
+        <div class="card" style="margin:0;padding:16px;background:#f8fafc;border:1.5px solid #cbd5e1;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0">
+            <span style="font-weight:800;font-size:13.5px;color:#0f172a">📋 Kịch bản hội thoại:</span>
+            <span style="font-size:11.5px;color:#64748b">Bấm câu bất kỳ để luyện</span>
+          </div>
+
+          <div class="dialogue-timeline">
+            ${dialogue.map((d, idx) => {
+              const isCurrent = idx === currentRpTurnIdx;
+              const spkChar = d.speaker === 'A' ? charA : charB;
+              const isUserLine = currentRpRole === 'ALL' || (d.speaker === currentRpRole);
+              const scored = rpScores[idx];
+              const isCompleted = scored && scored.score >= 75;
+
+              return `
+                <div class="timeline-line-item ${isCurrent ? 'active' : ''} ${isCompleted ? 'completed' : ''}" onclick="window.jumpToRoleplayTurn(${idx})">
+                  <div class="timeline-avatar">${spkChar.avatar || '👤'}</div>
+                  <div class="timeline-content">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+                      <span class="timeline-speaker-name" style="color:${spkChar.color || '#2563eb'}">
+                        ${d.speakerName || spkChar.name} ${isUserLine ? '• (Bạn nói)' : ''}
+                      </span>
+                      ${scored ? `
+                        <span class="timeline-status-badge" style="background:${scored.score >= 75 ? '#dcfce7;color:#15803d' : '#fee2e2;color:#b91c1c'}">
+                          ${scored.score}%
+                        </span>
+                      ` : isCurrent ? `
+                        <span class="timeline-status-badge" style="background:#dbeafe;color:#1d4ed8">▶ Đang phát</span>
+                      ` : ''}
+                    </div>
+                    <div class="timeline-text">${d.text}</div>
+                    ${d.meaning ? `<div style="font-size:11.5px;color:#64748b;margin-top:2px"><i>${d.meaning}</i></div>` : ''}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- PHẦN SPEAKING Ở DƯỚI -->
         <div style="display:flex;flex-direction:column;gap:14px">
           <!-- KHUNG VIDEO TƯƠNG TÁC -->
           <div class="video-player-frame" id="rp-video-container">
@@ -1740,46 +1780,6 @@ function renderActiveRoleplayView() {
                 </div>
               </div>
             `}
-          </div>
-        </div>
-
-        <!-- CỘT PHẢI: TOÀN BỘ KỊCH BẢN HỘI THOẠI & TIẾN TRÌNH -->
-        <div class="card" style="margin:0;padding:16px;background:#f8fafc;border:1.5px solid #cbd5e1;display:flex;flex-direction:column">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #e2e8f0">
-            <span style="font-weight:800;font-size:13.5px;color:#0f172a">📋 Kịch bản hội thoại:</span>
-            <span style="font-size:11.5px;color:#64748b">Bấm câu bất kỳ để luyện</span>
-          </div>
-
-          <div class="dialogue-timeline">
-            ${dialogue.map((d, idx) => {
-              const isCurrent = idx === currentRpTurnIdx;
-              const spkChar = d.speaker === 'A' ? charA : charB;
-              const isUserLine = currentRpRole === 'ALL' || (d.speaker === currentRpRole);
-              const scored = rpScores[idx];
-              const isCompleted = scored && scored.score >= 75;
-
-              return `
-                <div class="timeline-line-item ${isCurrent ? 'active' : ''} ${isCompleted ? 'completed' : ''}" onclick="window.jumpToRoleplayTurn(${idx})">
-                  <div class="timeline-avatar">${spkChar.avatar || '👤'}</div>
-                  <div class="timeline-content">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
-                      <span class="timeline-speaker-name" style="color:${spkChar.color || '#2563eb'}">
-                        ${d.speakerName || spkChar.name} ${isUserLine ? '• (Bạn nói)' : ''}
-                      </span>
-                      ${scored ? `
-                        <span class="timeline-status-badge" style="background:${scored.score >= 75 ? '#dcfce7;color:#15803d' : '#fee2e2;color:#b91c1c'}">
-                          ${scored.score}%
-                        </span>
-                      ` : isCurrent ? `
-                        <span class="timeline-status-badge" style="background:#dbeafe;color:#1d4ed8">▶ Đang phát</span>
-                      ` : ''}
-                    </div>
-                    <div class="timeline-text">${d.text}</div>
-                    ${d.meaning ? `<div style="font-size:11.5px;color:#64748b;margin-top:2px"><i>${d.meaning}</i></div>` : ''}
-                  </div>
-                </div>
-              `;
-            }).join('')}
           </div>
         </div>
       </div>

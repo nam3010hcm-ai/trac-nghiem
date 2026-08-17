@@ -2,7 +2,7 @@
   {
     "test": "teacher_management",
     "url": "http://localhost:4173/teacher.html",
-    "timestamp": "2026-08-17T03:07:06.582Z",
+    "timestamp": "2026-08-17T03:49:31.602Z",
     "requests": [
       {
         "method": "GET",
@@ -28,13 +28,13 @@
       {
         "method": "POST",
         "url": "https://xuioxmjufpfdblecjvuv.supabase.co/rest/v1/teachers?columns=%22id%22%2C%22email%22%2C%22teacher_name%22%2C%22department%22%2C%22role%22%2C%22is_active%22%2C%22created_at%22&select=*",
-        "postData": "[{\"id\":\"T002\",\"email\":\"alice@example.com\",\"teacher_name\":\"Alice\",\"department\":\"Khoa Testing\",\"role\":\"teacher\",\"is_active\":true,\"created_at\":\"2026-08-17T03:07:06.572Z\"}]"
+        "postData": "[{\"id\":\"T002\",\"email\":\"alice@example.com\",\"teacher_name\":\"Alice\",\"department\":\"Khoa Testing\",\"role\":\"teacher\",\"is_active\":true,\"created_at\":\"2026-08-17T03:49:31.591Z\"}]"
       },
       {
         "intercepted": true,
         "method": "POST",
         "url": "https://xuioxmjufpfdblecjvuv.supabase.co/rest/v1/teachers?columns=%22id%22%2C%22email%22%2C%22teacher_name%22%2C%22department%22%2C%22role%22%2C%22is_active%22%2C%22created_at%22&select=*",
-        "postData": "[{\"id\":\"T002\",\"email\":\"alice@example.com\",\"teacher_name\":\"Alice\",\"department\":\"Khoa Testing\",\"role\":\"teacher\",\"is_active\":true,\"created_at\":\"2026-08-17T03:07:06.572Z\"}]"
+        "postData": "[{\"id\":\"T002\",\"email\":\"alice@example.com\",\"teacher_name\":\"Alice\",\"department\":\"Khoa Testing\",\"role\":\"teacher\",\"is_active\":true,\"created_at\":\"2026-08-17T03:49:31.591Z\"}]"
       },
       {
         "method": "POST",

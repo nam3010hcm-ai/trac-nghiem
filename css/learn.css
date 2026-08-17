@@ -415,6 +415,395 @@ body.learn-body {
   opacity: 0.75;
 }
 
+.video-rp-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.video-rp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 46%, #3b82f6 100%);
+  border: 1px solid rgba(147, 197, 253, 0.38);
+  border-radius: 22px;
+  box-shadow: 0 18px 40px rgba(30, 64, 175, 0.22), inset 0 1px 0 rgba(255,255,255,0.18);
+}
+
+.video-rp-stage {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.video-rp-stage > .card {
+  order: 1;
+}
+
+.video-rp-stage > div:last-child {
+  order: 2;
+}
+
+.video-player-frame {
+  position: relative;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  border-radius: 20px;
+  min-height: 300px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: inset 0 2px 12px rgba(15, 23, 42, 0.25);
+}
+
+.video-turn-indicator {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.video-speaker-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#rp-turn-status-text {
+  background: rgba(15, 23, 42, 0.6);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.video-avatar-stage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  text-align: center;
+  background: radial-gradient(circle at top, rgba(96, 165, 250, 0.28), rgba(15, 23, 42, 0.92));
+}
+
+.video-subtitle-overlay {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.video-subtitle-text {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.5;
+  color: #f8fafc;
+  margin-top: 8px;
+  text-shadow: 0 1px 0 rgba(15,23,42,0.4);
+}
+
+.video-subtitle-ipa,
+.video-subtitle-meaning {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #e2e8f0;
+}
+
+.video-tip-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  background: #fff7ed;
+  color: #9a4d00;
+  border: 1px solid #fed7aa;
+  padding: 8px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.user-speak-box {
+  background: linear-gradient(135deg, rgba(239,246,255,0.96), rgba(248,250,252,0.96));
+  border: 1.5px solid rgba(147, 197, 253, 0.7);
+  border-radius: 22px;
+  padding: 18px 16px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 16px 28px rgba(59,130,246,0.08);
+}
+
+.user-speak-box.active-turn {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.12), 0 18px 26px rgba(59,130,246,0.12);
+}
+
+.mic-rec-btn {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  border: none;
+  background: radial-gradient(circle at 30% 30%, #fca5a5, #ef4444 30%, #b91c1c 100%);
+  color: #fff;
+  font-size: 32px;
+  cursor: pointer;
+  box-shadow: 0 0 0 8px rgba(239,68,68,0.12), 0 18px 28px rgba(239,68,68,0.28), inset 0 -8px 12px rgba(0,0,0,0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.mic-rec-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  filter: brightness(1.04);
+}
+
+.mic-rec-btn.recording {
+  animation: pulseMic 1.2s infinite;
+  box-shadow: 0 0 0 10px rgba(239,68,68,0.16), 0 0 32px rgba(239,68,68,0.4), 0 18px 32px rgba(239,68,68,0.28);
+}
+
+.dialogue-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.timeline-line-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.9));
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.03);
+}
+
+.timeline-line-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(96, 165, 250, 0.5);
+  box-shadow: 0 12px 20px rgba(15, 23, 42, 0.06);
+}
+
+.timeline-line-item.active {
+  border-color: #60a5fa;
+  background: linear-gradient(135deg, #eff6ff, #f8fbff);
+  box-shadow: 0 12px 22px rgba(59,130,246,0.12);
+}
+
+.timeline-line-item.completed {
+  border-color: rgba(34,197,94,0.5);
+  background: linear-gradient(135deg, #f0fdf4, #f8fffb);
+}
+
+.timeline-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.timeline-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.timeline-speaker-name {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.timeline-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.timeline-text {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.video-rp-header .video-rp-badge {
+  background: linear-gradient(135deg, #dbeafe, #e0f2fe);
+  color: #1d4ed8;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  padding: 6px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.video-rp-header > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.video-rp-header > div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.video-subtitle-overlay {
+  background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(15,23,42,0.12));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 18px;
+  padding: 14px 16px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255,255,255,0.45);
+}
+
+.user-speak-box .btn,
+.user-speak-box .voice-playback-btn {
+  min-height: 36px;
+}
+
+.user-speak-box .speech-diff-box {
+  background: linear-gradient(180deg, #fff7ed, #fffdf8);
+  border-radius: 14px;
+  border: 1px solid #fed7aa;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+#rp-turn-score-val {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.8);
+  border: 1px solid #e2e8f0;
+}
+
+#rp-mic-status-label {
+  min-height: 20px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .video-rp-header {
+    padding: 14px 14px;
+  }
+
+  .video-rp-header > div:first-child,
+  .video-rp-header > div:last-child {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .video-player-frame,
+  .video-avatar-stage {
+    min-height: 240px;
+  }
+
+  .video-subtitle-text {
+    font-size: 17px;
+  }
+
+  .timeline-line-item {
+    padding: 10px 10px;
+  }
+
+  .timeline-text {
+    font-size: 13px;
+  }
+
+  .user-speak-box {
+    padding: 14px 12px;
+  }
+
+  .mic-rec-btn {
+    width: 72px;
+    height: 72px;
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .video-rp-header {
+    gap: 10px;
+  }
+
+  .video-rp-header .video-rp-badge {
+    width: 100%;
+    text-align: center;
+  }
+
+  .video-turn-indicator {
+    gap: 6px;
+  }
+
+  .video-speaker-tag,
+  #rp-turn-status-text {
+    font-size: 11px;
+    padding: 5px 8px;
+  }
+
+  .mic-rec-btn {
+    width: 68px;
+    height: 68px;
+    font-size: 26px;
+  }
+
+  #rp-turn-score-val {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .user-speak-box > div[style*="display:flex;align-items:center;justify-content:space-between"] {
+    justify-content: center !important;
+  }
+
+  .dialogue-timeline {
+    max-height: 280px;
+  }
+}
+
 @keyframes pulseMic {
   0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
   70% { box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
