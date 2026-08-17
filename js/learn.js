@@ -808,6 +808,18 @@ export function updateSubjectUI(subject) {
         </button>
       `;
     }
+    const bindSkillTabClicks = () => {
+      document.querySelectorAll('.skill-tab-btn, .subject-tab').forEach(btn => {
+        if (btn.dataset.boundSkillTab === 'true') return;
+        btn.dataset.boundSkillTab = 'true';
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const skill = btn.dataset.skill || btn.getAttribute('data-skill');
+          if (skill) switchSkillTab(skill);
+        });
+      });
+    };
+    bindSkillTabClicks();
   }
 }
 
@@ -2610,6 +2622,7 @@ export function switchSkillTab(skill) {
     const btnSkill = btn.dataset.skill || btn.getAttribute('data-skill');
     const isTarget = btnSkill === skill;
     btn.classList.toggle('active', isTarget);
+    btn.setAttribute('aria-pressed', String(isTarget));
   });
 
   const panels = document.querySelectorAll('.tab-content, .skill-content-panel');
@@ -2633,13 +2646,19 @@ export function switchSkillTab(skill) {
 window.switchSkillTab = switchSkillTab;
 
 async function initLearnApp() {
-  document.querySelectorAll('.skill-tab-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const skill = btn.dataset.skill || btn.getAttribute('data-skill');
-      if (skill) switchSkillTab(skill);
+  const bindSkillTabClicks = () => {
+    document.querySelectorAll('.skill-tab-btn, .subject-tab').forEach(btn => {
+      if (btn.dataset.boundSkillTab === 'true') return;
+      btn.dataset.boundSkillTab = 'true';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const skill = btn.dataset.skill || btn.getAttribute('data-skill');
+        if (skill) switchSkillTab(skill);
+      });
     });
-  });
+  };
+
+  bindSkillTabClicks();
 
   const student = getAuthenticatedStudent();
   if (student && student.id) {
