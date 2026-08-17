@@ -2605,20 +2605,20 @@ export function switchSkillTab(skill) {
   if (!skill) return;
   currentSkillTab = skill;
 
-  // 1. Cập nhật trạng thái Active trên 5 nút Tab
-  document.querySelectorAll('.skill-tab-btn').forEach(btn => {
-    const isTarget = btn.dataset.skill === skill;
+  const navButtons = document.querySelectorAll('.skill-tab-btn, .subject-tab');
+  navButtons.forEach(btn => {
+    const btnSkill = btn.dataset.skill || btn.getAttribute('data-skill');
+    const isTarget = btnSkill === skill;
     btn.classList.toggle('active', isTarget);
   });
 
-  // 2. Ẩn/Hiện chính xác Panel nội dung tương ứng
-  document.querySelectorAll('.skill-content-panel').forEach(panel => {
+  const panels = document.querySelectorAll('.tab-content, .skill-content-panel');
+  panels.forEach(panel => {
     const isTarget = panel.id === `skill-panel-${skill}`;
     panel.classList.toggle('active', isTarget);
     panel.style.display = isTarget ? 'block' : 'none';
   });
 
-  // 3. Khởi tạo dữ liệu bài tập tương ứng một cách an toàn
   try {
     if (skill === 'listening') initListening();
     else if (skill === 'reading') initReading();
