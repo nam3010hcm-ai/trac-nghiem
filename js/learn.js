@@ -1344,6 +1344,7 @@ let isRpRecording = false;
 let rpSpeechRecognizer = null;
 let rpPlaybackSpeed = 1.0;
 let rpAutoPlay = true;
+let forceTurnPlayback = false;
 
 function initSpeaking() {
   const list = getUnitSkillList(currentUnit, 'speaking');
@@ -1693,39 +1694,6 @@ function renderActiveRoleplayView() {
             </div>
           </div>
 
-          <!-- KHUNG PHỤ ĐỀ KARAOKE & PHIÊN ÂM IPA & DỊCH NGHĨA -->
-          <div class="video-subtitle-overlay" id="rp-subtitle-box">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <div style="font-size:12px;font-weight:800;color:${activeChar.color || '#2563eb'};text-transform:uppercase;letter-spacing:0.5px">
-                ${activeChar.avatar || '👤'} ${currentLine?.speakerName || activeChar.name} ${isUserTurn ? '(LƯỢT CỦA BẠN)' : '(ĐỐI TÁC)'}
-              </div>
-              <button class="btn btn-sm" onclick="window.speakCurrentLineTTS()" style="background:#ffffff;border:1px solid #cbd5e1;font-size:11.5px;padding:3px 10px">
-                🔊 Nghe mẫu
-              </button>
-            </div>
-
-            <div class="video-subtitle-text" id="rp-subtitle-target-text">${currentLine?.text || ''}</div>
-            
-            ${currentLine?.ipa ? `
-              <div class="video-subtitle-ipa" id="rp-subtitle-ipa">
-                ${currentLine.ipa}
-              </div>
-            ` : ''}
-
-            ${currentLine?.meaning ? `
-              <div class="video-subtitle-meaning" id="rp-subtitle-meaning">
-                💡 <b>Nghĩa:</b> ${currentLine.meaning}
-              </div>
-            ` : ''}
-
-            ${currentLine?.tip ? `
-              <div class="video-tip-pill" id="rp-subtitle-tip">
-                <span>🎯</span>
-                <span><b>Mẹo phát âm:</b> ${currentLine.tip}</span>
-              </div>
-            ` : ''}
-          </div>
-
           <!-- KHUNG TƯƠNG TÁC THU ÂM CỦA HỌC VIÊN -->
           <div class="user-speak-box ${isUserTurn ? 'active-turn' : ''}" id="rp-speak-box">
             ${isUserTurn ? `
@@ -1785,6 +1753,16 @@ function renderActiveRoleplayView() {
       </div>
     </div>
   `;
+
+  const recordedAudioUrl = rpScores[currentRpTurnIdx]?.userAudioUrl;
+  if (recordedAudioUrl) {
+    renderUserRoleplayPlaybackControls(recordedAudioUrl);
+  } else {
+    const existingPlaybackCard = document.getElementById('rp-user-playback-card');
+    if (existingPlaybackCard) {
+      existingPlaybackCard.remove();
+    }
+  }
 }
 
 // -------------------------------------------------------------------------
@@ -1857,28 +1835,31 @@ function playCurrentRpTurn() {
   const videoElem = document.getElementById('rp-video-player');
   const avatarStage = document.getElementById('rp-avatar-stage');
 
-  // Cập nhật giao diện
   renderActiveRoleplayView();
 
   const refreshedVideoElem = document.getElementById('rp-video-player');
   const refreshedAvatarStage = document.getElementById('rp-avatar-stage');
+  const shouldForcePlayback = forceTurnPlayback;
 
-  if (isUserTurn) {
-    // LƯỢT CỦA HỌC VIÊN: Dừng video hoặc hiển thị avatar lắng nghe
+  if (isUserTurn && !shouldForcePlayback) {
     if (refreshedVideoElem) {
       refreshedVideoElem.pause();
       refreshedVideoElem.style.display = 'none';
     }
     if (refreshedAvatarStage) refreshedAvatarStage.style.display = 'block';
-  } else {
-    // LƯỢT CỦA MÁY / ĐỐI TÁC: Phát video hoặc TTS tự nhiên
-    if (currentLine.videoUrl && refreshedVideoElem) {
-      refreshedVideoElem.style.display = 'block';
-      if (refreshedAvatarStage) refreshedAvatarStage.style.display = 'none';
+    forceTurnPlayback = false;
+    return;
+  }
 
+  const shouldUseVideoPlayback = !isUserTurn && !!currentLine.videoUrl && !shouldForcePlayback;
+
+  if (shouldUseVideoPlayback) {
+    if (refreshedVideoElem) {
+      refreshedVideoElem.style.display = 'block';
       refreshedVideoElem.src = currentLine.videoUrl;
       refreshedVideoElem.playbackRate = rpPlaybackSpeed;
       refreshedVideoElem.currentTime = currentLine.startTime || 0;
+      if (refreshedAvatarStage) refreshedAvatarStage.style.display = 'none';
 
       const playPromise = refreshedVideoElem.play();
       if (playPromise !== undefined) {
@@ -1897,16 +1878,25 @@ function playCurrentRpTurn() {
           window.advanceRoleplayTurnManual();
         }, 700);
       };
-    } else {
-      // Không có video URL: Dùng Natural Speech Synthesis TTS
-      if (refreshedVideoElem) refreshedVideoElem.style.display = 'none';
-      if (refreshedAvatarStage) refreshedAvatarStage.style.display = 'block';
-      speakLineWithTTS(currentLine.text, () => {
-        setTimeout(() => {
-          window.advanceRoleplayTurnManual();
-        }, 700);
-      });
+      forceTurnPlayback = false;
+      return;
     }
+  }
+
+  if (refreshedVideoElem) refreshedVideoElem.style.display = 'none';
+  if (refreshedAvatarStage) refreshedAvatarStage.style.display = 'block';
+
+  speakLineWithTTS(currentLine.text, () => {
+    forceTurnPlayback = false;
+    if (!isUserTurn && !shouldForcePlayback) {
+      setTimeout(() => {
+        window.advanceRoleplayTurnManual();
+      }, 700);
+    }
+  });
+
+  if (shouldForcePlayback) {
+    setTimeout(() => { forceTurnPlayback = false; }, 600);
   }
 }
 
@@ -1953,6 +1943,7 @@ window.jumpToRoleplayTurn = function(idx) {
   const dialogue = currentRpLesson.dialogue || [];
   if (idx >= 0 && idx < dialogue.length) {
     currentRpTurnIdx = idx;
+    forceTurnPlayback = true;
     playCurrentRpTurn();
   }
 };
