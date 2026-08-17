@@ -42,6 +42,30 @@ function savePostsToLocal() {
   } catch(e){}
 }
 
+function getCurrentUserDisplay() {
+  try {
+    const teacherUser = localStorage.getItem('teacher_user');
+    if (teacherUser) {
+      const parsed = JSON.parse(teacherUser);
+      if (parsed?.name) {
+        return { name: parsed.name, role: parsed.role || 'Giáo viên' };
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const studentUser = localStorage.getItem('st_user');
+    if (studentUser) {
+      const parsed = JSON.parse(studentUser);
+      if (parsed?.name) {
+        return { name: parsed.name, role: parsed.role || 'Học viên' };
+      }
+    }
+  } catch (e) {}
+
+  return { name: 'Người dùng', role: 'Giáo viên' };
+}
+
 export function renderClassStream(options = {}) {
   const container = document.getElementById('class-stream-container');
   const allowCreate = options.allowCreate !== false;
@@ -105,11 +129,12 @@ export function submitStreamPost() {
     return;
   }
 
+  const currentUser = getCurrentUserDisplay();
   const newPost = {
     id: 'post_' + Date.now(),
-    authorName: 'Ban Quản Trị EduCore',
-    authorRole: 'Giáo viên',
-    authorAvatar: '⚡',
+    authorName: currentUser.name || 'Ban Quản Trị EduCore',
+    authorRole: currentUser.role || 'Giáo viên',
+    authorAvatar: currentUser.role === 'Học viên' ? '🎓' : '⚡',
     createdAt: new Date().toISOString(),
     content: text,
     comments: []
@@ -126,12 +151,13 @@ export function submitPostComment(postId) {
   const text = input ? input.value.trim() : '';
   if (!text) return;
 
+  const currentUser = getCurrentUserDisplay();
   const post = classPostsList.find(p => p.id === postId);
   if (post) {
     if (!post.comments) post.comments = [];
     post.comments.push({
       id: 'c_' + Date.now(),
-      authorName: 'Giáo Viên Admin',
+      authorName: currentUser.name || 'Người dùng',
       text: text,
       createdAt: new Date().toISOString()
     });
