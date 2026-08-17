@@ -175,6 +175,25 @@ window.globalLogout = async function() {
     }
   };
 
+  window.toggleAdminSidebar = function() {
+    const wrapper = document.getElementById('t-panel');
+    const sidebar = document.getElementById('admin-sidebar');
+    if (!wrapper || !sidebar) return;
+
+    const isMobile = window.innerWidth <= 992;
+    const shouldOpen = isMobile ? !sidebar.classList.contains('open') : !wrapper.classList.contains('sidebar-collapsed');
+
+    if (isMobile) {
+      sidebar.classList.toggle('open', shouldOpen);
+      sidebar.style.transform = shouldOpen ? 'translateX(0)' : 'translateX(-100%)';
+      wrapper.classList.remove('sidebar-collapsed');
+    } else {
+      wrapper.classList.toggle('sidebar-collapsed', !shouldOpen);
+      sidebar.classList.remove('open');
+      sidebar.style.transform = '';
+    }
+  };
+
   window.switchTTab = function(tabName) {
     var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics'];
     if (tabs.indexOf(tabName) === -1) tabName = 'dash';
@@ -383,7 +402,7 @@ window.globalLogout = async function() {
       <!-- TOP HEADER BAR -->
       <header class="admin-top-bar">
         <div style="display:flex;align-items:center;gap:14px">
-          <button class="btn btn-sm" onclick="document.getElementById('admin-sidebar').classList.toggle('open')" style="background:#f1f5f9;border:1px solid #cbd5e1;font-weight:700" title="Đóng / Mở Menu Sidebar">
+          <button class="btn btn-sm" onclick="window.toggleAdminSidebar()" style="background:#f1f5f9;border:1px solid #cbd5e1;font-weight:700" title="Đóng / Mở Menu Sidebar">
             ☰ Menu
           </button>
           <div class="admin-cmd-search" onclick="window.openCommandPalette();">
