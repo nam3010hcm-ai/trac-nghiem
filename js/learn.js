@@ -109,40 +109,59 @@ initVoices();
 export function getBestNaturalVoice(gender = 'neutral', lang = 'en') {
   if (!window.speechSynthesis) return null;
   if (!cachedVoices.length) cachedVoices = window.speechSynthesis.getVoices() || [];
-  
-  const enVoices = cachedVoices.filter(v => v.lang && v.lang.toLowerCase().startsWith(lang.toLowerCase()));
-  if (!enVoices.length) return cachedVoices[0] || null;
+
+  const allEnVoices = cachedVoices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+  if (!allEnVoices.length) return cachedVoices[0] || null;
+
+  const preferredLanguageOrder = ['en-gb', 'en-au', 'en-us', 'en'];
+  const preferredVoices = allEnVoices.sort((a, b) => {
+    const aLang = (a.lang || '').toLowerCase();
+    const bLang = (b.lang || '').toLowerCase();
+    const aRank = preferredLanguageOrder.indexOf(aLang.includes('gb') || aLang.includes('uk') ? 'en-gb' : aLang.includes('au') ? 'en-au' : aLang.includes('us') ? 'en-us' : 'en');
+    const bRank = preferredLanguageOrder.indexOf(bLang.includes('gb') || bLang.includes('uk') ? 'en-gb' : bLang.includes('au') ? 'en-au' : bLang.includes('us') ? 'en-us' : 'en');
+    return aRank - bRank;
+  });
 
   const femaleKeywords = ['jenny', 'aria', 'michelle', 'sonia', 'female', 'samantha', 'ava', 'serena', 'karen', 'victoria', 'moira', 'zira', 'emma'];
-  const maleKeywords = ['guy', 'christopher', 'ryan', 'eric', 'male', 'daniel', 'oliver', 'tom', 'alex', 'david', 'george', 'mark', 'andrew'];
+  const maleKeywords = ['guy', 'christopher', 'ryan', 'eric', 'male', 'daniel', 'oliver', 'tom', 'alex', 'david', 'george', 'mark', 'andrew', 'harry', 'thomas', 'james', 'nathan'];
 
-  // 1. Nếu yêu cầu giọng Nữ (Female)
+  const britishMaleKeywords = ['george', 'daniel', 'harry', 'andrew', 'thomas', 'james', 'david'];
+  const britishVoices = preferredVoices.filter(v => {
+    const lang = (v.lang || '').toLowerCase();
+    const name = (v.name || '').toLowerCase();
+    return lang.includes('gb') || lang.includes('uk') || britishMaleKeywords.some(k => name.includes(k));
+  });
+
   if (gender === 'female') {
-    const fNatural = enVoices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Neural') || v.name.includes('Google') || v.name.includes('Enhanced')) && femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
+    const fNatural = preferredVoices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Neural') || v.name.includes('Google') || v.name.includes('Enhanced')) && femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
     if (fNatural) return fNatural;
-    const fAny = enVoices.find(v => femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
+    const fAny = preferredVoices.find(v => femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
     if (fAny) return fAny;
-  } 
-  // 2. Nếu yêu cầu giọng Nam (Male)
-  else if (gender === 'male') {
-    const mNatural = enVoices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Neural') || v.name.includes('Google') || v.name.includes('Enhanced')) && maleKeywords.some(k => v.name.toLowerCase().includes(k)));
+  }
+
+  if (gender === 'male') {
+    const mBritish = britishVoices.find(v => maleKeywords.some(k => v.name.toLowerCase().includes(k)));
+    if (mBritish) return mBritish;
+
+    const mNatural = preferredVoices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Neural') || v.name.includes('Google') || v.name.includes('Enhanced')) && maleKeywords.some(k => v.name.toLowerCase().includes(k)));
     if (mNatural) return mNatural;
-    const mAny = enVoices.find(v => maleKeywords.some(k => v.name.toLowerCase().includes(k)));
+
+    const mAny = preferredVoices.find(v => maleKeywords.some(k => v.name.toLowerCase().includes(k)));
     if (mAny) return mAny;
   }
 
-  // 3. Fallback: Chọn bất kỳ giọng Natural / Neural / Enhanced / Google nào
-  const premiumVoice = enVoices.find(v => 
+  const premiumVoice = preferredVoices.find(v => 
     v.name.includes('Natural') || 
     v.name.includes('Online') || 
     v.name.includes('Neural') || 
     v.name.includes('Google') || 
     v.name.includes('Enhanced') ||
     v.name.includes('Samantha') ||
-    v.name.includes('Daniel')
+    v.name.includes('Daniel') ||
+    v.name.includes('George')
   );
 
-  return premiumVoice || enVoices[0] || cachedVoices[0] || null;
+  return premiumVoice || preferredVoices[0] || cachedVoices[0] || null;
 }
 
 export function speakText(text, options = {}) {
@@ -152,7 +171,7 @@ export function speakText(text, options = {}) {
   const gender = typeof options === 'string' ? options : (options.gender || 'neutral');
   const rate = (typeof options === 'object' && options.rate) ? options.rate : 0.92;
   const pitch = (typeof options === 'object' && options.pitch) ? options.pitch : (gender === 'female' ? 1.04 : gender === 'male' ? 0.94 : 1.0);
-  const lang = (typeof options === 'object' && options.lang) || 'en-US';
+  const lang = (typeof options === 'object' && options.lang) || (gender === 'male' ? 'en-GB' : 'en-US');
   const onEnd = typeof options === 'object' ? options.onEnd : null;
 
   const utter = new SpeechSynthesisUtterance(text);
