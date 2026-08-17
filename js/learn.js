@@ -106,73 +106,87 @@ function initVoices() {
 }
 initVoices();
 
-export function getBestNaturalVoice(gender = 'neutral', lang = 'en') {
+export function getBestNaturalVoice(gender = 'male', lang = 'en') {
   if (!window.speechSynthesis) return null;
   if (!cachedVoices.length) cachedVoices = window.speechSynthesis.getVoices() || [];
 
-  const allEnVoices = cachedVoices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
-  if (!allEnVoices.length) return cachedVoices[0] || null;
+  const enVoices = (cachedVoices || []).filter(v => v.lang && v.lang.toLowerCase().startsWith(lang.toLowerCase()));
+  if (!enVoices.length) return cachedVoices[0] || null;
 
   const preferredLanguageOrder = ['en-gb', 'en-au', 'en-us', 'en'];
-  const preferredVoices = allEnVoices.sort((a, b) => {
+  const rankedVoices = [...enVoices].sort((a, b) => {
     const aLang = (a.lang || '').toLowerCase();
     const bLang = (b.lang || '').toLowerCase();
-    const aRank = preferredLanguageOrder.indexOf(aLang.includes('gb') || aLang.includes('uk') ? 'en-gb' : aLang.includes('au') ? 'en-au' : aLang.includes('us') ? 'en-us' : 'en');
-    const bRank = preferredLanguageOrder.indexOf(bLang.includes('gb') || bLang.includes('uk') ? 'en-gb' : bLang.includes('au') ? 'en-au' : bLang.includes('us') ? 'en-us' : 'en');
-    return aRank - bRank;
+    const rank = value => {
+      if (value.includes('en-gb') || value.includes('en-uk')) return 0;
+      if (value.includes('en-au')) return 1;
+      if (value.includes('en-us')) return 2;
+      return 3;
+    };
+    return rank(aLang) - rank(bLang);
   });
 
   const femaleKeywords = ['jenny', 'aria', 'michelle', 'sonia', 'female', 'samantha', 'ava', 'serena', 'karen', 'victoria', 'moira', 'zira', 'emma'];
   const maleKeywords = ['guy', 'christopher', 'ryan', 'eric', 'male', 'daniel', 'oliver', 'tom', 'alex', 'david', 'george', 'mark', 'andrew', 'harry', 'thomas', 'james', 'nathan'];
 
-  const britishMaleKeywords = ['george', 'daniel', 'harry', 'andrew', 'thomas', 'james', 'david'];
-  const britishVoices = preferredVoices.filter(v => {
-    const lang = (v.lang || '').toLowerCase();
-    const name = (v.name || '').toLowerCase();
-    return lang.includes('gb') || lang.includes('uk') || britishMaleKeywords.some(k => name.includes(k));
-  });
-
   if (gender === 'female') {
-    const fNatural = preferredVoices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Neural') || v.name.includes('Google') || v.name.includes('Enhanced')) && femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
+    const fNatural = rankedVoices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Neural') || v.name.includes('Google') || v.name.includes('Enhanced')) && femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
     if (fNatural) return fNatural;
-    const fAny = preferredVoices.find(v => femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
+    const fAny = rankedVoices.find(v => femaleKeywords.some(k => v.name.toLowerCase().includes(k)));
     if (fAny) return fAny;
   }
 
   if (gender === 'male') {
-    const mBritish = britishVoices.find(v => maleKeywords.some(k => v.name.toLowerCase().includes(k)));
-    if (mBritish) return mBritish;
+    const ukPriority = rankedVoices.find(v => {
+      const name = (v.name || '').toLowerCase();
+      const lang = (v.lang || '').toLowerCase();
+      return (lang.includes('en-gb') || lang.includes('en-uk') || lang.includes('en-au')) && maleKeywords.some(k => name.includes(k));
+    });
+    if (ukPriority) return ukPriority;
 
-    const mNatural = preferredVoices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Neural') || v.name.includes('Google') || v.name.includes('Enhanced')) && maleKeywords.some(k => v.name.toLowerCase().includes(k)));
+    const mNatural = rankedVoices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Neural') || v.name.includes('Google') || v.name.includes('Enhanced')) && maleKeywords.some(k => v.name.toLowerCase().includes(k)));
     if (mNatural) return mNatural;
 
-    const mAny = preferredVoices.find(v => maleKeywords.some(k => v.name.toLowerCase().includes(k)));
+    const mAny = rankedVoices.find(v => maleKeywords.some(k => v.name.toLowerCase().includes(k)));
     if (mAny) return mAny;
   }
 
-  const premiumVoice = preferredVoices.find(v => 
-    v.name.includes('Natural') || 
-    v.name.includes('Online') || 
-    v.name.includes('Neural') || 
-    v.name.includes('Google') || 
+  const premiumVoice = rankedVoices.find(v =>
+    v.name.includes('Natural') ||
+    v.name.includes('Online') ||
+    v.name.includes('Neural') ||
+    v.name.includes('Google') ||
     v.name.includes('Enhanced') ||
-    v.name.includes('Samantha') ||
     v.name.includes('Daniel') ||
     v.name.includes('George')
   );
 
-  return premiumVoice || preferredVoices[0] || cachedVoices[0] || null;
+  return premiumVoice || rankedVoices[0] || cachedVoices[0] || null;
 }
 
-export function speakText(text, options = {}) {
+export function speakText(text, options = {}, forcedLang = null) {
   if (!window.speechSynthesis || !text) return;
   window.speechSynthesis.cancel();
 
-  const gender = typeof options === 'string' ? options : (options.gender || 'neutral');
-  const rate = (typeof options === 'object' && options.rate) ? options.rate : 0.92;
-  const pitch = (typeof options === 'object' && options.pitch) ? options.pitch : (gender === 'female' ? 1.04 : gender === 'male' ? 0.94 : 1.0);
-  const lang = (typeof options === 'object' && options.lang) || (gender === 'male' ? 'en-GB' : 'en-US');
-  const onEnd = typeof options === 'object' ? options.onEnd : null;
+  let gender = 'male';
+  let rate = 0.92;
+  let pitch = 0.94;
+  let lang = 'en-GB';
+  let onEnd = null;
+
+  if (typeof options === 'number') {
+    rate = options;
+  } else if (typeof options === 'string') {
+    lang = options;
+  } else if (options && typeof options === 'object') {
+    gender = options.gender || 'male';
+    rate = options.rate || 0.92;
+    pitch = options.pitch || (gender === 'female' ? 1.04 : 0.94);
+    lang = options.lang || 'en-GB';
+    onEnd = options.onEnd || null;
+  }
+
+  if (forcedLang) lang = forcedLang;
 
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = lang;
