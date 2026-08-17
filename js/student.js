@@ -2,6 +2,7 @@ import { initData, state, $, KEYS, shuffle, getPool, esc, mediaHTML, audioHTML, 
 import { populateExamSelect, updateExamDesc } from './exams.js';
 import { saveResult } from './results.js';
 import { recordAuthEvent, recordStudyTime } from './auth-logs.js';
+import { loadClassPosts, renderClassStream, submitPostComment } from './class-stream.js';
 
 const db = () => window.supabaseClient;
 
@@ -136,11 +137,20 @@ export function renderStudentPortal(student) {
   if ($('st-auth-class')) $('st-auth-class').textContent = student.class_name || '';
 
   showScreen('sc-portal');
+  loadClassPosts().then(() => {
+    if (typeof renderClassStream === 'function') {
+      renderClassStream({ allowCreate: false });
+    }
+  });
   populatePracticeCategories();
   populatePracticeExamSelect();
   loadActiveCohorts();
   switchExamMode('practice');
 }
+
+window.loadClassPosts = loadClassPosts;
+window.renderClassStream = renderClassStream;
+window.submitPostComment = submitPostComment;
 
 export function switchExamMode(mode = 'assigned') {
   const btnAssigned = $('tab-mode-assigned');

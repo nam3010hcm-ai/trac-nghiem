@@ -42,22 +42,28 @@ function savePostsToLocal() {
   } catch(e){}
 }
 
-export function renderClassStream() {
+export function renderClassStream(options = {}) {
   const container = document.getElementById('class-stream-container');
+  const allowCreate = options.allowCreate !== false;
   if (!container) return;
 
   container.innerHTML = `
-    <!-- CREATE ANNOUNCEMENT FORM -->
-    <div class="card" style="margin-bottom:20px">
-      <div style="font-weight:700;font-size:15px;margin-bottom:8px">📢 Đăng Thông Báo Hoặc Thảo Luận Mới:</div>
-      <textarea id="stream-post-input" rows="3" placeholder="Nhập thông báo, nhắc nhở hoặc câu hỏi thảo luận cho lớp học..." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit"></textarea>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
-        <span style="font-size:12px;color:#64748b">📎 Có thể đính kèm đường dẫn bài học hoặc đề thi</span>
-        <button class="btn btn-p" onclick="window.submitStreamPost()">🚀 Đăng Bài</button>
+    ${allowCreate ? `
+      <div class="card" style="margin-bottom:20px">
+        <div style="font-weight:700;font-size:15px;margin-bottom:8px">📢 Đăng Thông Báo Hoặc Thảo Luận Mới:</div>
+        <textarea id="stream-post-input" rows="3" placeholder="Nhập thông báo, nhắc nhở hoặc câu hỏi thảo luận cho lớp học..." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit"></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+          <span style="font-size:12px;color:#64748b">📎 Có thể đính kèm đường dẫn bài học hoặc đề thi</span>
+          <button class="btn btn-p" onclick="window.submitStreamPost()">🚀 Đăng Bài</button>
+        </div>
       </div>
-    </div>
+    ` : `
+      <div class="card" style="margin-bottom:18px;padding:12px 14px;border-left:4px solid #22c55e;">
+        <div style="font-size:13px;font-weight:700;color:#166534">📣 Bảng thông báo lớp học</div>
+        <div style="font-size:12px;color:#64748b;margin-top:4px">Bạn có thể đọc tin nhắn của giáo viên và phản hồi bình luận dưới từng bài đăng.</div>
+      </div>
+    `}
 
-    <!-- POSTS FEED TIMELINE -->
     <div style="display:flex;flex-direction:column;gap:16px">
       ${classPostsList.map(post => `
         <div class="card" style="border-left:4px solid #6366f1">
@@ -72,7 +78,6 @@ export function renderClassStream() {
 
           <div style="font-size:14px;line-height:1.6;color:#1e293b;margin-bottom:14px;white-space:pre-line">${esc(post.content)}</div>
 
-          <!-- COMMENTS LIST -->
           <div style="background:#f8fafc;padding:12px;border-radius:8px;margin-top:10px">
             <div style="font-size:12px;font-weight:700;color:#64748b;margin-bottom:8px">💬 BÌNH LUẬN (${post.comments ? post.comments.length : 0}):</div>
             ${post.comments && post.comments.length > 0 ? post.comments.map(c => `
