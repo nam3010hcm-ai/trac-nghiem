@@ -184,6 +184,64 @@ body.learn-body {
   outline-offset: 2px;
 }
 
+@media (max-width: 1100px) {
+  .subject-nav-bar {
+    gap: 10px;
+    padding: 8px 10px;
+  }
+
+  .subject-tab,
+  .skill-tab-btn {
+    min-width: 140px;
+    padding: 14px 12px;
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+  }
+}
+
+@media (max-width: 768px) {
+  .subject-nav-bar {
+    flex-wrap: wrap;
+    justify-content: stretch;
+    padding: 10px;
+  }
+
+  .subject-tab,
+  .skill-tab-btn {
+    flex: 1 1 calc(50% - 10px);
+    min-width: 0;
+    width: calc(50% - 10px);
+    padding: 12px 10px;
+    font-size: 12px;
+    letter-spacing: 0.01em;
+  }
+
+  .subject-tab .tab-icon,
+  .skill-tab-btn .tab-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .subject-nav-bar {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .subject-tab,
+  .skill-tab-btn {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+    padding: 12px 14px;
+    font-size: 11.5px;
+  }
+}
+
 .units-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -301,6 +359,60 @@ body.learn-body {
 .mic-btn-large.recording {
   background: linear-gradient(135deg, #ef4444, #dc2626);
   animation: pulseMic 1.2s infinite;
+}
+
+.voice-playback-btn {
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-radius: 9999px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.voice-playback-btn:hover {
+  background: #dbeafe;
+}
+
+.voice-playback-btn.playing {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #86efac;
+}
+
+.speech-diff-box {
+  width: 100%;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.diff-word-correct {
+  color: #dc2626;
+  font-weight: 800;
+}
+
+.diff-word-target {
+  color: #64748b;
+  font-weight: 600;
+  opacity: 0.8;
+  margin-left: 4px;
+}
+
+.diff-word-wrong {
+  color: #f97316;
+  font-weight: 700;
+  text-decoration: line-through;
+}
+
+.diff-word-missing {
+  color: #475569;
+  opacity: 0.75;
 }
 
 @keyframes pulseMic {

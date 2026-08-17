@@ -1,18 +1,18 @@
 Supabase REST requests report
-Generated: 2026-08-17T02:21:58.264Z
+Generated: 2026-08-17T03:07:08.083Z
 
 Test: teacher_management
 URL at capture time: http://localhost:4173/teacher.html
-Timestamp: 2026-08-17T02:21:57.324Z
+Timestamp: 2026-08-17T03:07:06.582Z
 Requests:
   - GET https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1/dist/umd/supabase.min.js
   - GET http://localhost:4173/js/supabase.js
   - GET https://xuioxmjufpfdblecjvuv.supabase.co/rest/v1/teachers?select=*&order=created_at.desc
   - GET https://xuioxmjufpfdblecjvuv.supabase.co/rest/v1/teachers?select=*&order=created_at.desc
   - POST https://xuioxmjufpfdblecjvuv.supabase.co/rest/v1/teachers?columns=%22id%22%2C%22email%22%2C%22teacher_name%22%2C%22department%22%2C%22role%22%2C%22is_active%22%2C%22created_at%22&select=*
-    Payload: [{"id":"T002","email":"alice@example.com","teacher_name":"Alice","department":"Khoa Testing","role":"teacher","is_active":true,"created_at":"2026-08-17T02:21:57.315Z"}]
+    Payload: [{"id":"T002","email":"alice@example.com","teacher_name":"Alice","department":"Khoa Testing","role":"teacher","is_active":true,"created_at":"2026-08-17T03:07:06.572Z"}]
   - POST https://xuioxmjufpfdblecjvuv.supabase.co/rest/v1/teachers?columns=%22id%22%2C%22email%22%2C%22teacher_name%22%2C%22department%22%2C%22role%22%2C%22is_active%22%2C%22created_at%22&select=*
-    Payload: [{"id":"T002","email":"alice@example.com","teacher_name":"Alice","department":"Khoa Testing","role":"teacher","is_active":true,"created_at":"2026-08-17T02:21:57.315Z"}]
+    Payload: [{"id":"T002","email":"alice@example.com","teacher_name":"Alice","department":"Khoa Testing","role":"teacher","is_active":true,"created_at":"2026-08-17T03:07:06.572Z"}]
   - POST https://xuioxmjufpfdblecjvuv.supabase.co/rest/v1/teachers?columns=%22id%22%2C%22email%22%2C%22teacher_name%22
     Payload: [{"id":"TXXX","email":"alice@example.com","teacher_name":"Alice"}]
   - POST https://xuioxmjufpfdblecjvuv.supabase.co/rest/v1/teachers?columns=%22id%22%2C%22email%22%2C%22teacher_name%22

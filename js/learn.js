@@ -1106,7 +1106,7 @@ window.checkDictation = function(idx, targetSentence) {
       matchCount++;
       return `<span class="diff-word-correct">${targetWord}</span>`;
     } else if (userWord) {
-      return `<span class="diff-word-wrong">${userWord}</span><span class="diff-word-correct">${targetWord}</span>`;
+      return `<span class="diff-word-wrong">${userWord}</span><span class="diff-word-target">${targetWord}</span>`;
     } else {
       return `<span class="diff-word-missing">${targetWord}</span>`;
     }
@@ -1127,6 +1127,52 @@ window.checkDictation = function(idx, targetSentence) {
     playWrongSound();
   }
 };
+
+function normalizeSpeechText(text = '') {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[.,!?;:'"()\[\]{}]/g, '')
+    .replace(/-/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function tokenizeSpeechText(text = '') {
+  const normalized = normalizeSpeechText(text);
+  return normalized ? normalized.split(' ').filter(Boolean) : [];
+}
+
+function computeWordDiffAndScore(targetText, transcriptText = '') {
+  const targetWords = tokenizeSpeechText(targetText);
+  const transcriptWords = tokenizeSpeechText(transcriptText);
+  const totalTarget = Math.max(targetWords.length, 1);
+
+  let matched = 0;
+  const rendered = targetWords.map((targetWord, index) => {
+    const userWord = transcriptWords[index];
+    if (userWord && userWord === targetWord) {
+      matched++;
+      return `<span class="diff-word-correct">${targetWord}</span>`;
+    }
+    if (userWord) {
+      return `<span class="diff-word-wrong">${userWord}</span><span class="diff-word-target">${targetWord}</span>`;
+    }
+    return `<span class="diff-word-missing">${targetWord}</span>`;
+  });
+
+  if (!transcriptWords.length) {
+    return {
+      score: 0,
+      diffHtml: `<span class="diff-word-missing">${targetWords.join(' ') || 'Chưa có câu mẫu'}</span>`
+    };
+  }
+
+  const score = Math.min(100, Math.max(0, Math.round((matched / totalTarget) * 100)));
+  return {
+    score,
+    diffHtml: rendered.join(' ')
+  };
+}
 
 // =========================================================================
 // 2. READING MODULE
@@ -1949,6 +1995,150 @@ window.retryCurrentRoleplayTurn = function() {
 // -------------------------------------------------------------------------
 // 3.4 THU ÂM HỌC VIÊN (MEDIARECORDER) + CHẤM ĐIỂM AI (SPEECH DIFF ENGINE)
 // -------------------------------------------------------------------------
+function renderUserRoleplayPlaybackControls(audioUrl) {
+  const existingWrap = document.getElementById('rp-user-playback-card');
+  const container = document.getElementById('rp-speak-box');
+  if (!container) return;
+
+  const html = `
+    <div id="rp-user-playback-card" style="margin-top:14px;width:100%;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div style="font-size:12.5px;font-weight:800;color:#1d4ed8;display:flex;align-items:center;gap:6px">
+        <span>🎧</span>
+        <span>Giọng nói của bạn</span>
+      </div>
+      <button id="btn-play-user-audio" class="voice-playback-btn" type="button" onclick="window.playUserRecordedAudio('${audioUrl.replace(/'/g, "\\'")}')">🎧 Nghe lại giọng của bạn</button>
+    </div>
+  `;
+
+  if (existingWrap) {
+    existingWrap.outerHTML = html;
+  } else {
+    container.insertAdjacentHTML('beforeend', html);
+  }
+}
+
+function showRoleplayCompletionSummary() {
+  const workspace = document.getElementById('spk-workspace');
+  if (!workspace) return;
+
+  const totalTurns = (currentRpLesson?.dialogue || []).length;
+  const scoredTurns = Object.keys(rpScores).length;
+  const avgScore = scoredTurns ? Math.round(Object.values(rpScores).reduce((sum, item) => sum + (Number(item.score || 0)), 0) / scoredTurns) : 0;
+
+  workspace.innerHTML = `
+    <div class="card" style="margin:0 auto;max-width:700px;border-left:4px solid #10b981">
+      <div style="font-size:28px;margin-bottom:8px">🎉</div>
+      <div style="font-size:22px;font-weight:800;color:#0f172a;margin-bottom:8px">Hoàn thành luyện hội thoại</div>
+      <div style="color:#475569;line-height:1.7">Bạn đã luyện ${scoredTurns}/${totalTurns} lượt và đạt điểm trung bình <b>${avgScore}%</b>.</div>
+      <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:10px">
+        <button class="btn btn-p" onclick="window.startRoleplayAsRole('${currentRpRole || 'A'}')">🔁 Luyện lại</button>
+        <button class="btn btn-sm" onclick="window.openRoleSelectionScreen()">⚙️ Chọn vai mới</button>
+      </div>
+    </div>
+  `;
+}
+
+function startRoleplaySpeechRecognition(currentLine, micBtn, statusLabel, diffBox, diffContent, scoreVal) {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) return;
+
+  const recognizer = new SpeechRec();
+  rpSpeechRecognizer = recognizer;
+  recognizer.lang = 'en-US';
+  recognizer.interimResults = false;
+  recognizer.maxAlternatives = 1;
+  isRpRecording = true;
+
+  if (micBtn) {
+    micBtn.classList.add('recording');
+    micBtn.textContent = '🔴';
+  }
+  if (statusLabel) {
+    statusLabel.textContent = 'Đang nghe bạn nói…';
+    statusLabel.style.color = '#dc2626';
+  }
+
+  recognizer.onstart = () => {
+    isRpRecording = true;
+    if (micBtn) {
+      micBtn.classList.add('recording');
+      micBtn.textContent = '🔴';
+    }
+  };
+
+  recognizer.onresult = (event) => {
+    const transcript = (event.results && event.results[0] && event.results[0][0]?.transcript) || '';
+    const { score, diffHtml } = computeWordDiffAndScore(currentLine?.text || '', transcript);
+
+    if (diffBox) diffBox.style.display = 'block';
+    if (diffContent) diffContent.innerHTML = diffHtml;
+
+    if (scoreVal) {
+      const color = score >= 80 ? '#16a34a' : score >= 60 ? '#f59e0b' : '#dc2626';
+      scoreVal.innerHTML = `Điểm: <span style="color:${color};font-weight:800">${score}%</span>`;
+    }
+
+    if (currentRpLesson) {
+      rpScores[currentRpTurnIdx] = {
+        ...rpScores[currentRpTurnIdx],
+        score,
+        transcript,
+        diffHtml,
+        userAudioUrl: rpScores[currentRpTurnIdx]?.userAudioUrl || null,
+      };
+    }
+
+    if (statusLabel) {
+      statusLabel.textContent = transcript ? `Đã nhận diện: “${transcript}”` : 'Đã nghe xong. Bấm Mic để nói lại';
+      statusLabel.style.color = score >= 80 ? '#15803d' : '#7c2d12';
+    }
+
+    if (transcript) {
+      if (score >= 75) {
+        playSuccessSound();
+        addXP(20, 'Phát âm roleplay tốt');
+      } else {
+        playWrongSound();
+      }
+    }
+  };
+
+  recognizer.onerror = (event) => {
+    console.error('Lỗi SpeechRecognition:', event.error);
+    if (statusLabel) {
+      statusLabel.textContent = 'Không nhận diện được giọng nói. Hãy thử lại!';
+      statusLabel.style.color = '#dc2626';
+    }
+    if (diffBox) diffBox.style.display = 'block';
+    if (diffContent) diffContent.innerHTML = `<span class="diff-word-missing">Không nhận diện được giọng nói. Vui lòng thử lại.</span>`;
+  };
+
+  recognizer.onend = () => {
+    isRpRecording = false;
+    if (micBtn) {
+      micBtn.classList.remove('recording');
+      micBtn.textContent = '🎙️';
+    }
+    if (statusLabel) statusLabel.style.color = '#64748b';
+    if (activeMediaRecorder && activeMediaRecorder.state === 'recording') {
+      try { activeMediaRecorder.stop(); } catch (e) {}
+    }
+  };
+
+  try {
+    recognizer.start();
+  } catch (err) {
+    isRpRecording = false;
+    if (micBtn) {
+      micBtn.classList.remove('recording');
+      micBtn.textContent = '🎙️';
+    }
+    if (statusLabel) {
+      statusLabel.textContent = 'Mic đang bận. Vui lòng thử lại sau vài giây';
+    }
+  }
+}
+
 window.toggleRoleplayRecording = function() {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRec) {
