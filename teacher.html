@@ -181,17 +181,26 @@ window.globalLogout = async function() {
     if (!wrapper || !sidebar) return;
 
     const isMobile = window.innerWidth <= 992;
-    const shouldOpen = isMobile ? !sidebar.classList.contains('open') : !wrapper.classList.contains('sidebar-collapsed');
+    const isHidden = wrapper.classList.contains('sidebar-hidden');
 
     if (isMobile) {
-      sidebar.classList.toggle('open', shouldOpen);
-      sidebar.style.transform = shouldOpen ? 'translateX(0)' : 'translateX(-100%)';
-      wrapper.classList.remove('sidebar-collapsed');
-    } else {
-      wrapper.classList.toggle('sidebar-collapsed', !shouldOpen);
-      sidebar.classList.remove('open');
-      sidebar.style.transform = '';
+      if (isHidden) {
+        wrapper.classList.remove('sidebar-hidden');
+        sidebar.classList.add('open');
+        sidebar.style.transform = 'translateX(0)';
+        sidebar.style.display = '';
+      } else {
+        wrapper.classList.add('sidebar-hidden');
+        sidebar.classList.remove('open');
+        sidebar.style.transform = 'translateX(-100%)';
+      }
+      return;
     }
+
+    wrapper.classList.toggle('sidebar-hidden', !isHidden);
+    sidebar.classList.remove('open');
+    sidebar.style.transform = '';
+    sidebar.style.display = wrapper.classList.contains('sidebar-hidden') ? 'none' : '';
   };
 
   window.switchTTab = function(tabName) {
@@ -226,6 +235,17 @@ window.globalLogout = async function() {
         }
       });
     });
+
+    const wrapper = document.getElementById('t-panel');
+    const sidebar = document.getElementById('admin-sidebar');
+    if (wrapper) {
+      wrapper.classList.remove('sidebar-hidden', 'sidebar-collapsed');
+    }
+    if (sidebar) {
+      sidebar.classList.remove('open');
+      sidebar.style.transform = '';
+      sidebar.style.display = '';
+    }
 
     if (tabName === 'classes' && typeof window.loadClasses === 'function') {
       window.loadClasses().then(function() { if (typeof window.renderClassesList === 'function') window.renderClassesList(); });

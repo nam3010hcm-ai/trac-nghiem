@@ -1340,40 +1340,13 @@ textarea {
   transition: width 0.25s ease, transform 0.25s ease;
 }
 
-.admin-layout-wrapper.sidebar-collapsed .admin-sidebar {
-  width: 88px;
+.admin-layout-wrapper.sidebar-hidden .admin-sidebar {
+  display: none;
 }
 
-.admin-layout-wrapper.sidebar-collapsed .admin-sidebar-header,
-.admin-layout-wrapper.sidebar-collapsed .admin-sidebar-footer,
-.admin-layout-wrapper.sidebar-collapsed .sidebar-section-title,
-.admin-layout-wrapper.sidebar-collapsed .admin-sidebar .sidebar-item span:nth-child(2),
-.admin-layout-wrapper.sidebar-collapsed .admin-sidebar .sidebar-item .item-badge,
-.admin-layout-wrapper.sidebar-collapsed .admin-sidebar .user-profile-card .user-profile-info,
-.admin-layout-wrapper.sidebar-collapsed .admin-sidebar .user-profile-card .user-profile-role,
-.admin-layout-wrapper.sidebar-collapsed .admin-sidebar .btn {
-  display: none !important;
-}
-
-.admin-layout-wrapper.sidebar-collapsed .admin-sidebar .sidebar-item {
-  justify-content: center;
-  padding-left: 10px;
-  padding-right: 10px;
-}
-
-.admin-layout-wrapper.sidebar-collapsed .admin-sidebar-header {
-  padding-left: 10px;
-  padding-right: 10px;
-  justify-content: center;
-}
-
-.admin-layout-wrapper.sidebar-collapsed .admin-sidebar-footer {
-  padding-left: 8px;
-  padding-right: 8px;
-}
-
-.admin-layout-wrapper.sidebar-collapsed .user-profile-card {
-  justify-content: center;
+.admin-layout-wrapper.sidebar-hidden .admin-main-wrapper {
+  flex: 1 1 100%;
+  width: 100%;
 }
 
 .admin-sidebar-header {
@@ -1736,9 +1709,8 @@ textarea {
     width: 270px;
   }
   .admin-sidebar.open { transform: translateX(0); }
-  .admin-layout-wrapper.sidebar-collapsed .admin-sidebar {
-    width: 270px;
-    transform: translateX(-100%);
+  .admin-layout-wrapper.sidebar-hidden .admin-sidebar {
+    display: none;
   }
 }
 
