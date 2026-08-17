@@ -1665,7 +1665,7 @@ function renderActiveRoleplayView() {
         </div>
 
         <!-- PHẦN SPEAKING Ở DƯỚI -->
-        <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="speaking-panel-row">
           <!-- KHUNG VIDEO TƯƠNG TÁC -->
           <div class="video-player-frame" id="rp-video-container">
             <div class="video-turn-indicator" id="rp-turn-indicator">
@@ -1692,6 +1692,16 @@ function renderActiveRoleplayView() {
                 ${activeChar.roleTitle || 'Nhân vật hội thoại'}
               </div>
             </div>
+          </div>
+
+          <!-- KHUNG CHỨA CÂU TƯƠNG TÁC CẦN NÓI -->
+          <div class="target-script-box">
+            <div class="target-script-header">
+              <span class="target-script-title">${currentLine?.speakerName || activeChar.name}</span>
+              ${isUserTurn ? '<span class="target-script-pill">• Bạn nói</span>' : '<span class="target-script-pill target-script-pill-muted">• Đang phát</span>'}
+            </div>
+            <div class="target-script-text">${currentLine?.text || ''}</div>
+            ${currentLine?.meaning ? `<div class="target-script-meaning">${currentLine.meaning}</div>` : ''}
           </div>
 
           <!-- KHUNG TƯƠNG TÁC THU ÂM CỦA HỌC VIÊN -->
