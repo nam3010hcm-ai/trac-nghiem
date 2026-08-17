@@ -35,8 +35,72 @@ export function getAuthenticatedStudent() {
 
 export function toggleStudentPassVisible() {
   const input = $('st-login-pass');
+  const btn = $('btn-toggle-st-pass');
   if (!input) return;
-  input.type = input.type === 'password' ? 'text' : 'password';
+  const willShow = input.type === 'password';
+  input.type = willShow ? 'text' : 'password';
+  if (btn) btn.textContent = willShow ? '🙈' : '👁️';
+}
+
+export function openStudentPasswordModal() {
+  const modal = document.getElementById('student-password-modal');
+  const pwd = document.getElementById('student-new-password');
+  const confirmPwd = document.getElementById('student-confirm-password');
+  if (modal) modal.style.display = 'flex';
+  if (pwd) pwd.value = '';
+  if (confirmPwd) confirmPwd.value = '';
+}
+
+export function closeStudentPasswordModal() {
+  const modal = document.getElementById('student-password-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+export async function submitStudentPasswordChange() {
+  const currentStudent = getAuthenticatedStudent();
+  if (!currentStudent) {
+    alert('❌ Phiên làm việc của học viên đã hết hạn. Vui lòng đăng nhập lại.');
+    return;
+  }
+
+  const pwd = document.getElementById('student-new-password');
+  const confirmPwd = document.getElementById('student-confirm-password');
+  const newPassword = (pwd ? pwd.value.trim() : '');
+  const confirmPassword = (confirmPwd ? confirmPwd.value.trim() : '');
+
+  if (!newPassword || newPassword.length < 6) {
+    alert('❌ Mật khẩu mới phải có ít nhất 6 ký tự.');
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    alert('❌ Mật khẩu xác nhận không khớp.');
+    return;
+  }
+
+  try {
+    const { updateCurrentUserPassword } = await import('./supabase.js');
+    const result = await updateCurrentUserPassword(newPassword, currentStudent, 'students');
+
+    if (result?.method === 'auth') {
+      alert('✅ Đổi mật khẩu thành công! Hãy đăng nhập lại bằng mật khẩu mới.');
+    } else {
+      const updatedStudent = { ...currentStudent, password: newPassword };
+      sessionStorage.setItem(STUDENT_AUTH_KEY, JSON.stringify(updatedStudent));
+      localStorage.setItem('st_user', JSON.stringify({
+        sid: updatedStudent.id,
+        name: updatedStudent.full_name || updatedStudent.id,
+        class_name: updatedStudent.class_name || '',
+        email: updatedStudent.email || ''
+      }));
+      alert('✅ Mật khẩu học viên đã được cập nhật thành công.');
+    }
+
+    closeStudentPasswordModal();
+  } catch (error) {
+    console.error('Lỗi đổi mật khẩu học viên:', error);
+    alert('❌ Không thể cập nhật mật khẩu: ' + (error.message || 'Vui lòng thử lại.'));
+  }
 }
 
 export async function loginStudent() {
@@ -61,40 +125,60 @@ export async function loginStudent() {
   if (btn) { btn.disabled = true; btn.textContent = 'Đang xác thực...'; }
 
   try {
-    let data = null;
-    if (db()) {
-      // 1. Thử tìm kiếm theo Mã sinh viên (id) hoặc Email (không phân biệt hoa/thường)
-      try {
-        const { data: students, error } = await db()
-          .from('students')
-          .select('*')
-          .or(`email.ilike."${userInput}",id.ilike."${userInput}"`)
-          .eq('password', pass);
+    let profile = null;
+    let authUser = null;
 
-        if (students && students.length > 0) {
-          data = students[0];
-        }
-      } catch (e) {
-        console.warn("Lỗi truy vấn OR trong Supabase, chuyển sang truy vấn fallback:", e);
+    if (db()) {
+      const candidateKey = userInput.includes('@') ? 'email' : 'id';
+      const { data: studentRows, error: lookupError } = await db().from('students').select('*').or(`email.ilike."${userInput}",id.ilike."${userInput}"`).limit(1);
+      if (!lookupError && studentRows && studentRows.length > 0) {
+        profile = studentRows[0];
+      } else if (!userInput.includes('@')) {
+        const resId = await db().from('students').select('*').ilike('id', userInput).limit(1).maybeSingle();
+        if (resId.data) profile = resId.data;
       }
 
-      // Fallback: Nếu OR không tìm thấy hoặc bị lỗi syntax, tìm tuần tự theo ID rồi theo Email
-      if (!data) {
-        // Thử theo Mã sinh viên (ID)
-        const resId = await db().from('students').select('*').ilike('id', userInput).eq('password', pass).maybeSingle();
-        if (resId.data) {
-          data = resId.data;
-        } else {
-          // Thử theo Email
-          const resEmail = await db().from('students').select('*').ilike('email', userInput).eq('password', pass).maybeSingle();
-          if (resEmail.data) {
-            data = resEmail.data;
+      const emailToUse = (profile?.email || (userInput.includes('@') ? userInput : '')).trim();
+      if (emailToUse && db() && db().auth) {
+        const { data: authData, error: authError } = await db().auth.signInWithPassword({ email: emailToUse, password: pass });
+        if (authError) {
+          if (userInput.includes('@')) {
+            throw authError;
           }
+          const direct = await db().auth.signInWithPassword({ email: userInput, password: pass }).catch(() => null);
+          if (!direct || direct.error) {
+            throw authError;
+          }
+          authUser = direct.data?.user || null;
+        } else {
+          authUser = authData?.user || null;
         }
       }
     }
 
-    if (!data) {
+    if (!authUser) {
+      const emailToUse = userInput.includes('@') ? userInput : (profile && profile.email ? profile.email : '');
+      if (!emailToUse && db() && db().auth && userInput) {
+        const resEmail = await db().from('students').select('*').ilike('email', userInput).limit(1).maybeSingle();
+        if (resEmail.data && resEmail.data.email) {
+          profile = resEmail.data;
+          const { data: authData, error: authError } = await db().auth.signInWithPassword({ email: resEmail.data.email, password: pass });
+          if (authError) throw authError;
+          authUser = authData?.user || null;
+        }
+      }
+    }
+
+    if (!authUser && db() && db().auth) {
+      const fallbackEmail = userInput.includes('@') ? userInput : (profile && profile.email ? profile.email : '');
+      if (fallbackEmail) {
+        const { data: authData, error: authError } = await db().auth.signInWithPassword({ email: fallbackEmail, password: pass });
+        if (authError) throw authError;
+        authUser = authData?.user || null;
+      }
+    }
+
+    if (!authUser) {
       if (errBox) {
         errBox.textContent = '❌ Mã Sinh Viên (ID) / Email hoặc Mật khẩu không chính xác!';
         errBox.style.display = 'block';
@@ -102,7 +186,16 @@ export async function loginStudent() {
       return;
     }
 
-    if (data.is_active === false) {
+    const resolvedProfile = profile || await (db() && db().from ? db().from('students').select('*').eq('email', authUser.email).limit(1).maybeSingle() : Promise.resolve({ data: null })).then(r => r.data || null);
+    if (!resolvedProfile && authUser.email) {
+      const profileByEmail = await db().from('students').select('*').ilike('email', authUser.email).limit(1).maybeSingle();
+      if (profileByEmail.data) {
+        profile = profileByEmail.data;
+      }
+    }
+
+    const finalProfile = profile || resolvedProfile;
+    if (finalProfile && finalProfile.is_active === false) {
       if (errBox) {
         errBox.textContent = '⛔ Tài khoản học viên của bạn đã bị khóa. Vui lòng liên hệ Giáo viên/Quản trị viên!';
         errBox.style.display = 'block';
@@ -110,20 +203,22 @@ export async function loginStudent() {
       return;
     }
 
-    // Đăng nhập thành công -> lưu session & ghi nhận login event
-    const stPayload = { sid: data.id, name: data.full_name || data.id, class_name: data.class_name || '', email: data.email || '' };
+    if (!finalProfile) {
+      throw new Error('Không tìm thấy hồ sơ học viên tương ứng với tài khoản auth này.');
+    }
+
+    const stPayload = { sid: finalProfile.id, name: finalProfile.full_name || finalProfile.id, class_name: finalProfile.class_name || '', email: finalProfile.email || authUser.email || '' };
     localStorage.setItem('st_user', JSON.stringify(stPayload));
-    sessionStorage.setItem(STUDENT_AUTH_KEY, JSON.stringify(data));
+    sessionStorage.setItem(STUDENT_AUTH_KEY, JSON.stringify(finalProfile));
     sessionStorage.setItem('st_session_start', Date.now().toString());
 
-    // Ghi nhận sự kiện Login vào Supabase
-    recordAuthEvent(data.email, 'student', 'login', 0, data.id, data.full_name || data.id, data.class_name || '');
+    recordAuthEvent(finalProfile.email || authUser.email, 'student', 'login', 0, finalProfile.id, finalProfile.full_name || finalProfile.id, finalProfile.class_name || '');
 
-    renderStudentPortal(data);
+    renderStudentPortal(finalProfile);
   } catch (err) {
     console.error("Lỗi đăng nhập học viên:", err);
     if (errBox) {
-      errBox.textContent = '❌ Lỗi kết nối máy chủ: ' + (err.message || '');
+      errBox.textContent = '❌ ' + (err.message || 'Lỗi kết nối máy chủ');
       errBox.style.display = 'block';
     }
   } finally {
@@ -351,6 +446,9 @@ function checkStudentAuth() {
 window.loginStudent = loginStudent;
 window.logoutStudent = logoutStudent;
 window.toggleStudentPassVisible = toggleStudentPassVisible;
+window.openStudentPasswordModal = openStudentPasswordModal;
+window.closeStudentPasswordModal = closeStudentPasswordModal;
+window.submitStudentPasswordChange = submitStudentPasswordChange;
 window.switchExamMode = switchExamMode;
 window.populatePracticeCategories = populatePracticeCategories;
 window.populatePracticeExamSelect = populatePracticeExamSelect;

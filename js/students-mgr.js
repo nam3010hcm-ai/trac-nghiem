@@ -95,8 +95,8 @@ export function renderStudentsList() {
         </td>
         <td style="font-family:monospace;color:#2563eb;font-size:13px">${esc(st.email)}</td>
         <td>
-          <span style="font-family:monospace;background:#f8fafc;padding:3px 6px;border-radius:4px;border:1px solid #e2e8f0;font-size:12px">
-            ${esc(st.password || '••••••')}
+          <span style="font-family:monospace;background:#ecfeff;padding:3px 6px;border-radius:4px;border:1px solid #99f6e4;font-size:12px;color:#0f766e">
+            Auth
           </span>
         </td>
         <td>
@@ -132,7 +132,8 @@ export function openStudentModal(studentId = null) {
   $('stm-class').value = st ? st.class_name : '';
   $('stm-year').value = st ? st.academic_year : '2025 - 2026';
   $('stm-email').value = st ? st.email : '';
-  $('stm-pass').value = st ? st.password : '123456';
+  $('stm-pass').value = '';
+  $('stm-pass').placeholder = st ? 'Để trống nếu không đổi mật khẩu auth' : 'Nhập mật khẩu tạo tài khoản';
   $('stm-active').checked = st ? (st.is_active !== false) : true;
 
   modal.style.display = 'flex';
@@ -154,12 +155,11 @@ export async function saveStudent() {
   const password = $('stm-pass')?.value.trim();
   const is_active = $('stm-active')?.checked ?? true;
 
-  if (!id || !full_name || !class_name || !email || !password) {
-    alert("Vui lòng điền đầy đủ các thông tin: Mã học viên, Họ và tên, Lớp, Email và Mật khẩu!");
+  if (!id || !full_name || !class_name || !email) {
+    alert("Vui lòng điền đầy đủ các thông tin: Mã học viên, Họ và tên, Lớp, Email.");
     return;
   }
 
-  // Validate format email
   if (!email.includes('@')) {
     alert("Địa chỉ Gmail/Email không hợp lệ!");
     return;
@@ -169,31 +169,46 @@ export async function saveStudent() {
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Đang lưu...'; }
 
   try {
-    const payload = {
+    const existingStudent = studentsList.find(s => s.id === id || s.email?.toLowerCase() === email);
+    const profilePayload = {
       id,
       full_name,
       class_name,
       academic_year: academic_year || '2025 - 2026',
       email,
-      password,
       is_active,
       created_at: Date.now(),
       created_by: 'nam3010hcm@gmail.com'
     };
 
-    const { error } = await db().from('students').upsert([payload], { onConflict: 'id' });
+    if (!existingStudent) {
+      if (!password || password.length < 6) {
+        throw new Error('Mật khẩu tài khoản học viên phải có ít nhất 6 ký tự.');
+      }
+
+      const { data: authData, error: authError } = await db().auth.signUp({ email, password });
+      if (authError) throw authError;
+      if (!authData?.user?.id) throw new Error('Không thể tạo tài khoản auth cho học viên.');
+      profilePayload.user_id = authData.user.id;
+    } else if (password && password.length >= 6) {
+      const { error: updateAuthError } = await db().auth.updateUser({ password });
+      if (updateAuthError) throw updateAuthError;
+    }
+
+    const { error } = await db().from('students').upsert([profilePayload], { onConflict: 'id' });
     if (error) throw error;
 
+    const nextRecord = { ...existingStudent, ...profilePayload };
     const existingIdx = studentsList.findIndex(s => s.id === id);
     if (existingIdx >= 0) {
-      studentsList[existingIdx] = payload;
+      studentsList[existingIdx] = nextRecord;
     } else {
-      studentsList.unshift(payload);
+      studentsList.unshift(nextRecord);
     }
 
     closeStudentModal();
     renderStudentsList();
-    alert("✅ Đã lưu tài khoản học viên thành công!");
+    alert(existingStudent ? '✅ Đã cập nhật thông tin học viên thành công!' : '✅ Đã lưu tài khoản học viên thành công!');
   } catch (err) {
     console.error("Lỗi khi lưu học viên:", err);
     alert("❌ Lỗi: " + (err.message || 'Không thể lưu học viên.'));
@@ -302,7 +317,26 @@ export async function saveBulkStudents() {
   if (btn) { btn.disabled = true; btn.textContent = `Đang nạp ${parsed.length} học viên...`; }
 
   try {
-    const { error } = await db().from('students').upsert(parsed, { onConflict: 'id' });
+    const upsertRows = [];
+    for (const item of parsed) {
+      const { data: authData, error: authError } = await db().auth.signUp({ email: item.email, password: item.password });
+      if (authError) throw authError;
+      const authUserId = authData?.user?.id;
+      if (!authUserId) throw new Error(`Không thể tạo auth user cho ${item.email}`);
+      upsertRows.push({
+        id: item.id,
+        full_name: item.full_name,
+        class_name: item.class_name,
+        academic_year: item.academic_year,
+        email: item.email,
+        user_id: authUserId,
+        is_active: item.is_active,
+        created_at: item.created_at,
+        created_by: item.created_by
+      });
+    }
+
+    const { error } = await db().from('students').upsert(upsertRows, { onConflict: 'id' });
     if (error) throw error;
 
     await loadStudents();
@@ -321,9 +355,9 @@ export async function saveBulkStudents() {
 export function exportStudentsCSV() {
   if (!studentsList.length) { alert("Chưa có dữ liệu học viên để xuất!"); return; }
 
-  let csv = "Mã Học Viên,Họ và Tên,Lớp,Niên Khóa,Gmail/Email,Mật Khẩu,Trạng Thái\n";
+  let csv = "Mã Học Viên,Họ và Tên,Lớp,Niên Khóa,Gmail/Email,Trạng Thái\n";
   studentsList.forEach(s => {
-    csv += `"${s.id}","${s.full_name}","${s.class_name}","${s.academic_year}","${s.email}","${s.password}","${s.is_active !== false ? 'Hoạt động' : 'Đã khóa'}"\n`;
+    csv += `"${s.id}","${s.full_name}","${s.class_name}","${s.academic_year}","${s.email}","${s.is_active !== false ? 'Hoạt động' : 'Đã khóa'}"\n`;
   });
 
   const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });

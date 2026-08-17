@@ -5,6 +5,12 @@ export async function signInWithEmailAndPassword(email, password) {
   return data;
 }
 
+export async function signUpWithEmailAndPassword(email, password) {
+  const { data, error } = await window.supabaseClient.auth.signUp({ email, password });
+  if (error) throw error;
+  return data;
+}
+
 export async function signOut() {
   const { error } = await window.supabaseClient.auth.signOut();
   if (error) throw error;
@@ -23,6 +29,35 @@ export function onAuthStateChanged(callback) {
 export async function getCurrentUser() {
   const { data: { user } } = await window.supabaseClient.auth.getUser();
   return user;
+}
+
+export async function updateCurrentUserPassword(newPassword, legacyProfile = null, legacyTable = null) {
+  const trimmed = String(newPassword || '').trim();
+  if (!trimmed || trimmed.length < 6) {
+    throw new Error('Mật khẩu mới phải có ít nhất 6 ký tự.');
+  }
+
+  const client = window.supabaseClient;
+  if (client && client.auth) {
+    try {
+      const { data: userData, error: userError } = await client.auth.getUser();
+      if (!userError && userData?.user) {
+        const { data, error } = await client.auth.updateUser({ password: trimmed });
+        if (!error) return { method: 'auth', data };
+      }
+    } catch (e) {
+      console.warn('[Auth password change fallback] Not an auth session:', e?.message || e);
+    }
+  }
+
+  if (!legacyProfile || !legacyTable) {
+    throw new Error('Không tìm thấy phiên đăng nhập hợp lệ để đổi mật khẩu.');
+  }
+
+  const matchBy = legacyProfile.email ? { email: legacyProfile.email } : { id: legacyProfile.id };
+  const { data, error } = await client.from(legacyTable).update({ password: trimmed }).match(matchBy);
+  if (error) throw error;
+  return { method: 'legacy', data };
 }
 
 // --- HELPER: UPLOAD FILE LÊN SUPABASE STORAGE CÓ TỰ ĐỘNG DỰ PHÒNG ---

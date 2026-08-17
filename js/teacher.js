@@ -148,13 +148,9 @@ function togglePasswordVisibility() {
 
   if (!passInput || !btn) return;
 
-  if (passInput.type === 'password') {
-    passInput.type = 'text';
-    btn.innerText = '🙈 Ẩn';
-  } else {
-    passInput.type = 'password';
-    btn.innerText = '👁 Hiện';
-  }
+  const shouldShow = passInput.type === 'password';
+  passInput.type = shouldShow ? 'text' : 'password';
+  btn.innerText = shouldShow ? '🙈 Ẩn' : '👁 Hiện';
 }
 
 async function doLogin() {
