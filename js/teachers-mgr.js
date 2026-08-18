@@ -352,6 +352,18 @@ export async function saveTeacher() {
         throw new Error('Supabase trả về user rỗng sau khi signUp.');
       }
 
+      // Thử tự động xác nhận email/tài khoản bằng endpoint admin (cần chạy server có SUPABASE_SERVICE_ROLE_KEY)
+      try {
+        await fetch('/api/admin/confirm-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: authData.user.id })
+        });
+      } catch (err) {
+        // Không block luồng — nếu xác thực admin thất bại thì vẫn tiếp tục tạo profile.
+        console.warn('Auto-confirm user failed:', err?.message || err);
+      }
+
       const teacherCode = generateNextTeacherCode();
       const profile = {
         user_id: authData.user.id,
