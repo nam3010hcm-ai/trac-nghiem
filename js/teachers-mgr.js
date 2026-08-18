@@ -5,7 +5,7 @@
  * =========================================================================
  */
 
-import { $, esc, isRootUser, ROOT_ADMIN_EMAIL } from './common.js';
+import { $, esc, isRootUser, ROOT_ADMIN_EMAIL, state } from './common.js';
 
 const db = () => window.supabaseClient;
 
@@ -51,6 +51,12 @@ export function renderTeachersList() {
   const container = document.getElementById('teachers-table-body');
   const countEl = document.getElementById('teacher-count-badge');
   const searchInput = document.getElementById('flt-teacher-search');
+  const addBtn = document.getElementById('btn-open-add-teacher');
+
+  const currentUserIsRoot = isRootUser(state?.currentUserEmail);
+  if (addBtn) {
+    addBtn.style.display = currentUserIsRoot ? 'inline-flex' : 'none';
+  }
 
   if (countEl) countEl.textContent = teachersList.length;
   if (!container) return;
@@ -89,6 +95,21 @@ export function renderTeachersList() {
     const loginTime = t.last_login_at ? new Date(t.last_login_at).toLocaleString('vi-VN') : 'Chưa có nhật ký';
     const logoutTime = t.last_logout_at ? new Date(t.last_logout_at).toLocaleString('vi-VN') : 'Đang online / Chưa xuất';
 
+    let actionButtonsHtml = '';
+    if (currentUserIsRoot) {
+      actionButtonsHtml = `
+        <button class="action-btn-sm" onclick="window.openTeacherModal('${esc(t.id)}')">✏️ Sửa</button>
+        <button class="action-btn-sm" style="color:${isActive ? '#d97706' : '#16a34a'}" onclick="window.toggleTeacherStatus('${esc(t.id)}')">
+          ${isActive ? '🔒 Khóa' : '🔓 Mở khóa'}
+        </button>
+        ${!isRoot ? `<button class="action-btn-sm" style="color:#ef4444" onclick="window.deleteTeacher('${esc(t.id)}')">🗑️ Xóa</button>` : ''}
+      `;
+    } else {
+      actionButtonsHtml = `
+        <span style="font-size:12px;color:#94a3b8;padding:4px 8px;background:#f1f5f9;border-radius:6px;border:1px solid #e2e8f0" title="Chỉ Root Admin mới có quyền sửa/xóa/thêm giảng viên">🔒 Chỉ xem</span>
+      `;
+    }
+
     return `
       <tr>
         <td>
@@ -124,11 +145,7 @@ export function renderTeachersList() {
         </td>
         <td>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="action-btn-sm" onclick="window.openTeacherModal('${esc(t.id)}')">✏️ Sửa</button>
-            <button class="action-btn-sm" style="color:${isActive ? '#d97706' : '#16a34a'}" onclick="window.toggleTeacherStatus('${esc(t.id)}')">
-              ${isActive ? '🔒 Khóa' : '🔓 Mở khóa'}
-            </button>
-            ${!isRoot ? `<button class="action-btn-sm" style="color:#ef4444" onclick="window.deleteTeacher('${esc(t.id)}')">🗑️ Xóa</button>` : ''}
+            ${actionButtonsHtml}
           </div>
         </td>
       </tr>
@@ -138,6 +155,11 @@ export function renderTeachersList() {
 
 // 3. MỞ MODAL THÊM / SỬA GIẢNG VIÊN
 export function openTeacherModal(id = null) {
+  if (!isRootUser(state?.currentUserEmail)) {
+    alert("🔒 Quyền hạn bị từ chối: Chỉ tài khoản Root Admin mới có quyền thêm mới hoặc chỉnh sửa giảng viên!");
+    return;
+  }
+
   editingTeacherId = id;
   const modal = document.getElementById('modal-teacher');
   const title = document.getElementById('modal-teacher-title');
@@ -171,6 +193,11 @@ export function closeTeacherModal() {
 
 // 4. LƯU TÀI KHOẢN GIẢNG VIÊN LÊN SUPABASE
 export async function saveTeacher() {
+  if (!isRootUser(state?.currentUserEmail)) {
+    alert("🔒 Quyền hạn bị từ chối: Chỉ tài khoản Root Admin mới có quyền lưu hoặc thêm mới giảng viên!");
+    return;
+  }
+
   const email = ($('t-mod-email')?.value || '').trim().toLowerCase();
   const name = ($('t-mod-name')?.value || '').trim();
   const dept = ($('t-mod-dept')?.value || '').trim();
@@ -255,6 +282,11 @@ export async function saveTeacher() {
 
 // 5. MỞ / KHÓA TÀI KHOẢN GIẢNG VIÊN TRÊN SUPABASE
 export async function toggleTeacherStatus(id) {
+  if (!isRootUser(state?.currentUserEmail)) {
+    alert("🔒 Quyền hạn bị từ chối: Chỉ tài khoản Root Admin mới có quyền khóa hoặc mở khóa tài khoản giảng viên!");
+    return;
+  }
+
   const t = teachersList.find(item => item.id === id);
   if (!t) return;
   const nextStatus = !(t.is_active !== false);
@@ -278,6 +310,11 @@ export async function toggleTeacherStatus(id) {
 
 // 6. XÓA GIẢNG VIÊN TRÊN SUPABASE
 export async function deleteTeacher(id) {
+  if (!isRootUser(state?.currentUserEmail)) {
+    alert("🔒 Quyền hạn bị từ chối: Chỉ tài khoản Root Admin mới có quyền xóa tài khoản giảng viên!");
+    return;
+  }
+
   const t = teachersList.find(item => item.id === id);
   if (!t) return;
   const teacherDisplayName = t.teacher_name || t.name || t.email;

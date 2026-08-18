@@ -34,8 +34,38 @@ export const DEFAULT_EXAMS = [
 export const ROOT_ADMIN_EMAIL = 'nam3010hcm@gmail.com';
 
 export function isRootUser(email) {
-  if (!email) return false;
-  return String(email).trim().toLowerCase() === ROOT_ADMIN_EMAIL.toLowerCase();
+  let targetEmail = email;
+  if (!targetEmail && typeof state !== 'undefined' && state.currentUserEmail) {
+    targetEmail = state.currentUserEmail;
+  }
+  if (!targetEmail) {
+    try {
+      const userRaw = localStorage.getItem('teacher_user');
+      if (userRaw) {
+        const u = JSON.parse(userRaw);
+        if (u.role === 'root' || u.role === 'admin' || String(u.email || '').trim().toLowerCase() === ROOT_ADMIN_EMAIL.toLowerCase()) {
+          return true;
+        }
+        targetEmail = u.email;
+      }
+    } catch(e){}
+  }
+  if (!targetEmail) return false;
+  
+  const emailStr = String(targetEmail).trim().toLowerCase();
+  if (emailStr === ROOT_ADMIN_EMAIL.toLowerCase()) return true;
+
+  try {
+    const userRaw = localStorage.getItem('teacher_user');
+    if (userRaw) {
+      const u = JSON.parse(userRaw);
+      if (String(u.email || '').trim().toLowerCase() === emailStr && (u.role === 'root' || u.role === 'admin')) {
+        return true;
+      }
+    }
+  } catch(e){}
+  
+  return false;
 }
 
 export async function logUserAuthEvent(userEmail, userType = 'teacher', eventType = 'login') {

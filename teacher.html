@@ -143,10 +143,12 @@ window.globalLogout = async function() {
       if (err) err.style.display = 'none';
 
       // Lưu session teacher_user cho toàn ứng dụng
+      const userEmail = authUser?.email || email;
+      const isRoot = (userEmail.trim().toLowerCase() === 'nam3010hcm@gmail.com');
       localStorage.setItem('teacher_user', JSON.stringify({
-        email: authUser?.email || email,
-        name: (authUser?.email || email).split('@')[0],
-        role: 'teacher'
+        email: userEmail,
+        name: userEmail.split('@')[0],
+        role: isRoot ? 'root' : 'teacher'
       }));
 
       // Chuyển sang màn hình quản lý
@@ -992,7 +994,7 @@ window.globalLogout = async function() {
           <div style="font-size:18px;font-weight:800;color:#0f172a">👨‍🏫 Quản Lý Người Dạy / Giảng Viên</div>
           <div style="font-size:12.5px;color:#64748b">Quản lý tài khoản giảng viên, cấp quyền phân hệ và kiểm soát quyền hạn.</div>
         </div>
-        <button class="btn btn-p" onclick="window.openTeacherModal();">
+        <button class="btn btn-p" id="btn-open-add-teacher" onclick="window.openTeacherModal();">
           ➕ Thêm Giảng Viên Mới
         </button>
       </div>

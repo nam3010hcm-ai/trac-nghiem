@@ -61,13 +61,22 @@ async function showTeacherPanel(user) {
 
   state.currentUserEmail = user?.email || 'nam3010hcm@gmail.com';
 
+  const isRoot = isRootUser(state.currentUserEmail);
+  try {
+    localStorage.setItem('teacher_user', JSON.stringify({
+      email: state.currentUserEmail,
+      name: state.currentUserEmail.split('@')[0],
+      role: isRoot ? 'root' : 'teacher'
+    }));
+  } catch(e){}
+
   if ($('current-user-email')) {
     $('current-user-email').innerText = state.currentUserEmail;
   }
 
   const roleBadge = $('user-role-badge');
   if (roleBadge) {
-    if (isRootUser(state.currentUserEmail)) {
+    if (isRoot) {
       roleBadge.style.background = '#fef3c7';
       roleBadge.style.color = '#92400e';
       roleBadge.style.border = '1px solid #fde68a';
