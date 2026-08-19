@@ -201,9 +201,15 @@ export async function saveTeacher() {
   const email = ($('t-mod-email')?.value || '').trim().toLowerCase();
   const name = ($('t-mod-name')?.value || '').trim();
   const dept = ($('t-mod-dept')?.value || '').trim();
+  const password = ($('t-mod-pass')?.value || '').trim();
 
   if (!email || !name) {
     alert("❌ Vui lòng nhập đầy đủ Email và Họ tên giảng viên!");
+    return;
+  }
+
+  if (!editingTeacherId && !password) {
+    alert("❌ Vui lòng nhập mật khẩu cho tài khoản giảng viên mới!");
     return;
   }
 
@@ -212,6 +218,10 @@ export async function saveTeacher() {
       teacher_name: name,
       department: dept || 'Khoa Ngoại Ngữ'
     };
+
+    if (password) {
+      updatePayload.password = password;
+    }
 
     try {
       if (db()) {
@@ -233,6 +243,9 @@ export async function saveTeacher() {
       t.teacher_name = name;
       t.name = name;
       t.department = dept || 'Khoa Ngoại Ngữ';
+      if (password) {
+        t.password = password;
+      }
     }
     alert("✅ Đã cập nhật thông tin Giảng viên thành công!");
   } else {
@@ -248,6 +261,7 @@ export async function saveTeacher() {
       email: email,
       teacher_name: name,
       department: dept || 'Khoa Ngoại Ngữ',
+      password: password,
       role: isRootUser(email) ? 'admin' : 'teacher',
       is_active: true,
       created_at: new Date().toISOString()

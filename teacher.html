@@ -131,18 +131,36 @@ window.globalLogout = async function() {
     if (btn) { btn.disabled = true; btn.innerText = 'Đang đăng nhập...'; }
 
     try {
-      // Dùng ĐÚNG window.supabaseClient - cùng client với toàn bộ module JS
       const client = window.supabaseClient;
       if (!client) throw new Error("Supabase client chưa sẵn sàng. Hãy tải lại trang!");
 
-      const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
-      if (error) throw error;
+      let authUser = null;
+      try {
+        const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
+        if (error) throw error;
+        authUser = data.user;
+      } catch (authErr) {
+        const { data: teacherRow, error: teacherError } = await client
+          .from('teachers')
+          .select('*')
+          .ilike('email', email)
+          .eq('password', pass)
+          .maybeSingle();
 
-      const authUser = data.user;
+        if (teacherError || !teacherRow || teacherRow.is_active === false) {
+          throw authErr;
+        }
+
+        authUser = {
+          id: teacherRow.id,
+          email: teacherRow.email,
+          role: teacherRow.role || 'teacher',
+          name: teacherRow.teacher_name || teacherRow.name || teacherRow.email
+        };
+      }
 
       if (err) err.style.display = 'none';
 
-      // Lưu session teacher_user cho toàn ứng dụng
       const userEmail = authUser?.email || email;
       const isRoot = (userEmail.trim().toLowerCase() === 'nam3010hcm@gmail.com');
       localStorage.setItem('teacher_user', JSON.stringify({
@@ -151,14 +169,12 @@ window.globalLogout = async function() {
         role: isRoot ? 'root' : 'teacher'
       }));
 
-      // Chuyển sang màn hình quản lý
       document.getElementById('t-login').style.display = 'none';
       document.getElementById('t-panel').style.display = 'flex';
       if (document.getElementById('current-user-email')) {
         document.getElementById('current-user-email').innerText = authUser?.email || email;
       }
 
-      // Gọi hàm khởi tạo panel từ module JS
       if (typeof window.initTeacherPanelDirect === 'function') {
         await window.initTeacherPanelDirect(authUser);
       }
