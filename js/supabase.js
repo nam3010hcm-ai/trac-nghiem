@@ -1,8 +1,52 @@
 // --- HELPER: XÁC THỰC (AUTH) ---
 export async function signInWithEmailAndPassword(email, password) {
-  const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
-  if (error) throw error;
-  return data;
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const normalizedPassword = String(password || '').trim();
+
+  if (!window.supabaseClient) {
+    throw new Error('Supabase client chưa sẵn sàng. Hãy tải lại trang!');
+  }
+
+  try {
+    const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+      email: normalizedEmail,
+      password: normalizedPassword
+    });
+    if (!error) return data;
+
+    if (!normalizedEmail || !normalizedPassword) {
+      throw error;
+    }
+
+    const { data: teacherRow, error: teacherError } = await window.supabaseClient
+      .from('teachers')
+      .select('*')
+      .ilike('email', normalizedEmail)
+      .eq('password', normalizedPassword)
+      .maybeSingle();
+
+    if (teacherError) {
+      throw error;
+    }
+
+    if (teacherRow && teacherRow.is_active !== false) {
+      return {
+        user: {
+          id: teacherRow.id,
+          email: teacherRow.email,
+          name: teacherRow.teacher_name || teacherRow.name || teacherRow.email,
+          role: teacherRow.role || 'teacher'
+        }
+      };
+    }
+
+    throw error;
+  } catch (err) {
+    if (err && err.message && err.message.includes('Invalid login credentials')) {
+      throw new Error('Sai email hoặc mật khẩu! Vui lòng kiểm tra lại.');
+    }
+    throw err;
+  }
 }
 
 export async function signOut() {
