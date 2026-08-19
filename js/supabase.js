@@ -1,4 +1,14 @@
 // --- HELPER: XÁC THỰC (AUTH) ---
+export async function teacherPasswordColumnAvailable() {
+  if (!window.supabaseClient) return false;
+  try {
+    const { error } = await window.supabaseClient.from('teachers').select('password').limit(1);
+    return !error;
+  } catch (e) {
+    return false;
+  }
+}
+
 export async function signInWithEmailAndPassword(email, password) {
   const normalizedEmail = String(email || '').trim().toLowerCase();
   const normalizedPassword = String(password || '').trim();
@@ -15,6 +25,11 @@ export async function signInWithEmailAndPassword(email, password) {
     if (!error) return data;
 
     if (!normalizedEmail || !normalizedPassword) {
+      throw error;
+    }
+
+    const hasPasswordColumn = await teacherPasswordColumnAvailable();
+    if (!hasPasswordColumn) {
       throw error;
     }
 

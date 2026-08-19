@@ -6,6 +6,7 @@
  */
 
 import { $, esc, isRootUser, ROOT_ADMIN_EMAIL, state } from './common.js';
+import { teacherPasswordColumnAvailable } from './supabase.js';
 
 const db = () => window.supabaseClient;
 
@@ -208,6 +209,13 @@ export async function saveTeacher() {
     return;
   }
 
+  const hasPasswordColumn = await teacherPasswordColumnAvailable();
+
+  if (!editingTeacherId && !password && !hasPasswordColumn) {
+    alert("❌ Vui lòng tạo tài khoản teacher qua Supabase Auth hoặc thêm cột password vào bảng teachers.");
+    return;
+  }
+
   if (!editingTeacherId && !password) {
     alert("❌ Vui lòng nhập mật khẩu cho tài khoản giảng viên mới!");
     return;
@@ -219,7 +227,7 @@ export async function saveTeacher() {
       department: dept || 'Khoa Ngoại Ngữ'
     };
 
-    if (password) {
+    if (password && hasPasswordColumn) {
       updatePayload.password = password;
     }
 
@@ -243,7 +251,7 @@ export async function saveTeacher() {
       t.teacher_name = name;
       t.name = name;
       t.department = dept || 'Khoa Ngoại Ngữ';
-      if (password) {
+      if (password && hasPasswordColumn) {
         t.password = password;
       }
     }
@@ -261,14 +269,31 @@ export async function saveTeacher() {
       email: email,
       teacher_name: name,
       department: dept || 'Khoa Ngoại Ngữ',
-      password: password,
       role: isRootUser(email) ? 'admin' : 'teacher',
       is_active: true,
       created_at: new Date().toISOString()
     };
 
+    if (password && hasPasswordColumn) {
+      newTeacher.password = password;
+    }
+
     try {
       if (db()) {
+        if (!hasPasswordColumn && password) {
+          try {
+            const { error: signUpError } = await db().auth.signUp({
+              email,
+              password
+            });
+            if (signUpError) throw signUpError;
+          } catch (signUpErr) {
+            console.error('Lỗi tạo user Supabase Auth cho giảng viên:', signUpErr);
+            alert('❌ Không thể tạo tài khoản Supabase Auth cho giảng viên. Vui lòng kiểm tra cấu hình Authentication.');
+            return;
+          }
+        }
+
         const { data, error } = await db().from('teachers').insert([newTeacher]).select();
         if (error) {
           console.error("Lỗi thêm giảng viên vào Supabase:", error);
