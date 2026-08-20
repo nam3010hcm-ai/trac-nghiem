@@ -20,6 +20,24 @@ window.MathJax = {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1/dist/umd/supabase.min.js"></script>
 <script>
 window.$ = function(id) { return document.getElementById(id); };
+window.toggleSidebar = function() {
+  const sidebar = document.getElementById('admin-sidebar');
+  if (!sidebar) return;
+  const isMobile = window.innerWidth <= 992;
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if (isMobile) {
+    const isOpen = sidebar.classList.toggle('open');
+    if (backdrop) {
+      if (isOpen) backdrop.classList.add('active');
+      else backdrop.classList.remove('active');
+    }
+  } else {
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    try {
+      localStorage.setItem('admin_sidebar_collapsed', isCollapsed ? '1' : '0');
+    } catch(e){}
+  }
+};
 (function() {
   var SB_URL = "https://xuioxmjufpfdblecjvuv.supabase.co";
   var SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1aW94bWp1ZnBmZGJsZWNqdnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NDk0NDIsImV4cCI6MjEwMjMyNTQ0Mn0.udJ9W9Y_6WgqENT6j2xSXGZg2pEKfvnMTWfzKR_3gfY";
@@ -300,6 +318,9 @@ window.globalLogout = async function() {
           EduCore Admin
           <span>Hệ Sinh Thái Học Tập & Đánh Giá Số</span>
         </div>
+        <button class="btn btn-sm btn-ghost sidebar-close-btn" onclick="window.toggleSidebar();" style="margin-left:auto; color:#64748b; font-size:18px; padding:4px 8px; cursor:pointer;" title="Thu gọn Menu">
+          ✕
+        </button>
       </div>
 
       <nav class="admin-sidebar-nav">
@@ -401,12 +422,15 @@ window.globalLogout = async function() {
       </div>
     </aside>
 
+    <!-- BACKDROP CHO MOBILE KHI MỞ SIDEBAR -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="window.toggleSidebar();"></div>
+
     <!-- MAIN WRAPPER -->
     <div class="admin-main-wrapper">
       <!-- TOP HEADER BAR -->
       <header class="admin-top-bar">
         <div style="display:flex;align-items:center;gap:14px">
-          <button class="btn btn-sm" onclick="document.getElementById('admin-sidebar').classList.toggle('open')" style="background:#f1f5f9;border:1px solid #cbd5e1;font-weight:700" title="Đóng / Mở Menu Sidebar">
+          <button class="btn btn-sm" id="btn-toggle-sidebar" onclick="window.toggleSidebar();" style="background:#f1f5f9;border:1px solid #cbd5e1;font-weight:700;cursor:pointer;" title="Đóng / Mở Menu Sidebar">
             ☰ Menu
           </button>
           <div class="admin-cmd-search" onclick="window.openCommandPalette();">

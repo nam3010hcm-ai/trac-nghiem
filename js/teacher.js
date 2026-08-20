@@ -145,7 +145,6 @@ async function showTeacherPanel(user) {
       window.populateCohortExams(); 
     }
     updateDashboardKPICounts();
-    showToast('success', 'EduCore Command Center', 'Hệ thống Quản trị sẵn sàng!');
   } catch(e) {
     console.error("Lỗi khi hiển thị giao diện quản trị:", e);
   }
@@ -248,6 +247,14 @@ function switchTTab(t) {
     }
   } catch(e) {}
 
+  // Tự động đóng sidebar trên mobile sau khi chọn tab
+  if (window.innerWidth <= 992) {
+    const sidebar = document.getElementById('admin-sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (sidebar) sidebar.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('active');
+  }
+
   tabs.forEach(x => {
     const content = $('tc-' + x);
     if(content) {
@@ -286,6 +293,27 @@ function switchTTab(t) {
   }
 }
 
+export function toggleSidebar() {
+  const sidebar = document.getElementById('admin-sidebar');
+  if (!sidebar) return;
+  const isMobile = window.innerWidth <= 992;
+  const backdrop = document.getElementById('sidebar-backdrop');
+
+  if (isMobile) {
+    const isOpen = sidebar.classList.toggle('open');
+    if (backdrop) {
+      if (isOpen) backdrop.classList.add('active');
+      else backdrop.classList.remove('active');
+    }
+  } else {
+    const isCollapsed = sidebar.classList.toggle('collapsed');
+    try {
+      localStorage.setItem('admin_sidebar_collapsed', isCollapsed ? '1' : '0');
+    } catch(e){}
+  }
+}
+
+window.toggleSidebar = toggleSidebar;
 window.switchTTab = switchTTab;
 window._teacherModuleSwitchTab = switchTTab;
 window.doLogout = doLogout;
@@ -347,6 +375,15 @@ window.renderCatManagementList = renderCatManagementList;
 function initTeacherApp() {
   if (window._teacherAppInitialized) return;
   window._teacherAppInitialized = true;
+
+  // Khôi phục trạng thái sidebar đã lưu trên Desktop
+  try {
+    const isCollapsed = localStorage.getItem('admin_sidebar_collapsed') === '1';
+    const sidebar = document.getElementById('admin-sidebar');
+    if (sidebar && window.innerWidth > 992 && isCollapsed) {
+      sidebar.classList.add('collapsed');
+    }
+  } catch(e){}
 
   if ($('btn-login')) $('btn-login').addEventListener('click', doLogin);
   if ($('btn-toggle-pass')) {
