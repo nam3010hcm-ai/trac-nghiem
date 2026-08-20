@@ -7,11 +7,11 @@ import { showToast, renderLMSBadge } from './ui-components.js';
 
 export let classesList = [];
 
-// Default demo classes if database is empty
+// Default demo classes matching Supabase SQL schema
 export const DEFAULT_CLASSES = [
-  { id: 'cls_10a1', name: 'Lớp 10A1 - Anh Văn Chuyên', school: 'Trường THPT Chuyên EduCore', grade: 10, academicYear: '2025-2026', inviteCode: 'ENG10A', studentCount: 35, status: 'active' },
-  { id: 'cls_11b2', name: 'Lớp 11B2 - Luyện Thi IELTS & B2', school: 'Trường THPT Chuyên EduCore', grade: 11, academicYear: '2025-2026', inviteCode: 'IELTS11', studentCount: 28, status: 'active' },
-  { id: 'cls_12c3', name: 'Lớp 12C3 - Ôn Thi Tốt Nghiệp THPT', school: 'Trường THPT Chuyên EduCore', grade: 12, academicYear: '2025-2026', inviteCode: 'THPT12', studentCount: 42, status: 'active' }
+  { id: '00000000-0000-0000-0000-000000000010', name: 'Lớp 10A1 - Anh Văn Chuyên', school: 'Trường THPT Chuyên EduCore', grade: 10, grade_level: 10, academicYear: '2025-2026', inviteCode: 'ENG10A', invite_code: 'ENG10A', studentCount: 35, status: 'active' },
+  { id: '00000000-0000-0000-0000-000000000011', name: 'Lớp 11B2 - Luyện Thi IELTS & B2', school: 'Trường THPT Chuyên EduCore', grade: 11, grade_level: 11, academicYear: '2025-2026', inviteCode: 'IELTS11', invite_code: 'IELTS11', studentCount: 28, status: 'active' },
+  { id: '00000000-0000-0000-0000-000000000012', name: 'Lớp 12C3 - Ôn Thi Tốt Nghiệp THPT', school: 'Trường THPT Chuyên EduCore', grade: 12, grade_level: 12, academicYear: '2025-2026', inviteCode: 'THPT12', invite_code: 'THPT12', studentCount: 42, status: 'active' }
 ];
 
 /**
@@ -22,8 +22,22 @@ export async function loadClasses() {
     const client = window.supabaseClient;
     if (client) {
       const { data, error } = await client.from('classes').select('*');
-      if (!error && data && data.length > 0) {
-        classesList = data;
+      if (!error && Array.isArray(data) && data.length > 0) {
+        classesList = data.map(c => ({
+          ...c,
+          id: c.id,
+          name: c.name,
+          grade: c.grade_level || c.grade || 10,
+          grade_level: c.grade_level || c.grade || 10,
+          inviteCode: c.invite_code || c.inviteCode || 'ENG10A',
+          invite_code: c.invite_code || c.inviteCode || 'ENG10A',
+          school: 'Trường THPT Chuyên EduCore',
+          academicYear: '2025-2026',
+          studentCount: c.student_count || 35,
+          status: c.status || 'active'
+        }));
+        saveClassesToLocal();
+        renderClassesList();
         return classesList;
       }
     }
@@ -38,6 +52,7 @@ export async function loadClasses() {
     classesList = DEFAULT_CLASSES;
     saveClassesToLocal();
   }
+  renderClassesList();
   return classesList;
 }
 

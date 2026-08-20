@@ -5,34 +5,54 @@
 
 import { showToast, renderLMSBadge } from './ui-components.js';
 
-export let classPostsList = [
+export const DEFAULT_CLASS_POSTS = [
   {
-    id: 'post_1',
+    id: 'c7ef186c-7a1e-4305-8148-2f02416aa41a',
+    classId: '00000000-0000-0000-0000-000000000010',
     authorName: 'Cô Emma (Giáo Viên Tiếng Anh)',
     authorRole: 'Giáo viên',
     authorAvatar: '👩‍🏫',
-    createdAt: '2026-08-16T10:00',
-    content: '📢 Thông báo: Đã phát hành bài tập Video Roleplay 2 Nhân Vật A & B cho Lớp 10A1. Các em vào mục "Bài học & Unit" hoặc "Cổng Học Viên" để luyện tập đóng vai và nhận điểm thưởng +50 XP nhé!',
-    comments: [
-      { id: 'c_1', authorName: 'Nguyễn Văn An', text: 'Dạ vâng ạ cô, em vừa hoàn thành lượt đóng vai A đạt 92% điểm chuẩn xác!', createdAt: '2026-08-16T10:30' }
-    ]
-  },
-  {
-    id: 'post_2',
-    authorName: 'Thầy David (Phụ Trách Thi)',
-    authorRole: 'Giáo viên',
-    authorAvatar: '👨‍🏫',
-    createdAt: '2026-08-15T16:20',
-    content: '📝 Nhắc nhở: Lịch thi Giữa kỳ 1 Môn Tiếng Anh sẽ bắt đầu từ 08:00 sáng Thứ Hai tới. Đề thi gồm 40 câu trắc nghiệm ma trận (45 phút). Chúc các em ôn tập tốt!',
+    createdAt: '2026-08-16T07:24:51.986Z',
+    content: '📢 Thông báo: Đã phát hành bài tập Video Roleplay 2 Nhân Vật A & B cho Lớp 10A1. Các em vào mục "Bài học & Unit" hoặc "Cổng Học Viên" để luyện tập nhé!',
     comments: []
   }
 ];
 
+export let classPostsList = [...DEFAULT_CLASS_POSTS];
+
 export async function loadClassPosts() {
+  try {
+    const client = window.supabaseClient;
+    if (client) {
+      const { data, error } = await client.from('class_posts').select('*');
+      if (!error && Array.isArray(data) && data.length > 0) {
+        classPostsList = data.map(p => ({
+          id: p.id,
+          classId: p.class_id,
+          authorName: p.author_name || 'Giáo viên',
+          authorRole: p.author_role || 'Giáo viên',
+          authorAvatar: p.author_avatar || '👩‍🏫',
+          content: p.content || '',
+          comments: typeof p.comments === 'string' ? (JSON.parse(p.comments || '[]')) : (p.comments || []),
+          createdAt: p.created_at || new Date().toISOString()
+        }));
+        savePostsToLocal();
+        renderClassStream();
+        return classPostsList;
+      }
+    }
+  } catch(err) {
+    console.warn('[ClassPosts] Fetch warning:', err);
+  }
+
   const saved = localStorage.getItem('educore_class_posts');
   if (saved) {
-    try { classPostsList = JSON.parse(saved); } catch(e){}
+    try { classPostsList = JSON.parse(saved); } catch(e){ classPostsList = DEFAULT_CLASS_POSTS; }
+  } else {
+    classPostsList = DEFAULT_CLASS_POSTS;
+    savePostsToLocal();
   }
+  renderClassStream();
   return classPostsList;
 }
 
