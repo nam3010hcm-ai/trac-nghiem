@@ -13,9 +13,10 @@ export const DEFAULT_TEACHERS = [
     email: 'nam3010hcm@gmail.com',
     teacher_name: 'Thầy Nam (Root Admin)',
     name: 'Thầy Nam (Root Admin)',
-    department: 'Ban Giám Hiệu & Quản Trị LMS',
+    department: 'Quản Trị Hệ Thống',
     role: 'admin',
-    is_active: true
+    is_active: true,
+    teacher_code: 'T001'
   },
   {
     id: 'T002',
@@ -24,25 +25,28 @@ export const DEFAULT_TEACHERS = [
     name: 'Dr. Chen',
     department: 'Khoa Ngoại Ngữ',
     role: 'teacher',
-    is_active: true
+    is_active: true,
+    teacher_code: 'T002'
   },
   {
     id: 'T004',
     email: 'alice@example.com',
     teacher_name: 'Alice',
     name: 'Alice',
-    department: 'Khoa Ngoại Ngữ',
+    department: 'Khoa Testing',
     role: 'teacher',
-    is_active: true
+    is_active: true,
+    teacher_code: 'T004'
   },
   {
     id: 'T005',
     email: 'nam84hcm@gmail.com',
     teacher_name: 'Lê Văn Nam',
     name: 'Lê Văn Nam',
-    department: 'Khoa Tin Học',
+    department: 'Khoa Khoa học cơ bản/ Ngoại ngữ',
     role: 'teacher',
-    is_active: true
+    is_active: true,
+    teacher_code: 'T005'
   }
 ];
 
