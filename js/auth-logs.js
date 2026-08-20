@@ -48,7 +48,6 @@ export async function recordAuthEvent(userEmail, userType, eventType, durationSe
       user_email: userEmail,
       user_type: userType, // 'student' hoặc 'teacher'
       event_type: eventType, // 'login' hoặc 'logout'
-      duration_seconds: durationSeconds || 0,
       timestamp: nowISO
     };
 

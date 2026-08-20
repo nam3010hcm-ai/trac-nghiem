@@ -12,21 +12,104 @@ const db = () => window.supabaseClient;
 export let studentsList = [];
 let editingStudentId = null;
 
+export const DEFAULT_STUDENTS = [
+  {
+    id: 'HS1001',
+    student_code: 'HS1001',
+    full_name: 'Nguyễn Văn An',
+    class_name: 'Lớp 10A1 - Anh Văn Chuyên',
+    academic_year: '2025 - 2026',
+    email: 'an.nguyen@student.edu.vn',
+    password: '123',
+    is_active: true,
+    total_xp: 350,
+    role: 'student',
+    created_at: Date.now()
+  },
+  {
+    id: 'HS1002',
+    student_code: 'HS1002',
+    full_name: 'Trần Thị Bích',
+    class_name: 'Lớp 10A1 - Anh Văn Chuyên',
+    academic_year: '2025 - 2026',
+    email: 'bich.tran@student.edu.vn',
+    password: '123',
+    is_active: true,
+    total_xp: 280,
+    role: 'student',
+    created_at: Date.now()
+  },
+  {
+    id: 'HS1101',
+    student_code: 'HS1101',
+    full_name: 'Lê Hoàng Nam',
+    class_name: 'Lớp 11B2 - Luyện Thi IELTS & B2',
+    academic_year: '2025 - 2026',
+    email: 'nam.le@student.edu.vn',
+    password: '123',
+    is_active: true,
+    total_xp: 520,
+    role: 'student',
+    created_at: Date.now()
+  }
+];
+
+function saveStudentsToLocal() {
+  try {
+    localStorage.setItem('educore_students_cache', JSON.stringify(studentsList));
+  } catch(e){}
+}
+
+function loadStudentsFromLocal() {
+  try {
+    const saved = localStorage.getItem('educore_students_cache');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch(e){}
+  return DEFAULT_STUDENTS;
+}
+
 // 1. NẠP DANH SÁCH HỌC VIÊN TỪ SUPABASE
 export async function loadStudents() {
   try {
-    if (!db()) return;
-    const { data, error } = await db().from('students').select('*').order('created_at', { ascending: false });
+    if (!studentsList || studentsList.length === 0) {
+      studentsList = loadStudentsFromLocal();
+      renderStudentsList();
+    }
+
+    if (!db()) return studentsList;
+
+    let { data, error } = await db().from('students').select('*');
     if (error) {
-      console.warn("Chưa có bảng students hoặc lỗi kết nối:", error);
-      studentsList = [];
-    } else {
-      studentsList = data || [];
+      console.warn("[Students] Supabase select warning:", error);
+    } else if (Array.isArray(data) && data.length > 0) {
+      studentsList = data.map(st => ({
+        ...st,
+        id: st.id || st.student_code,
+        student_code: st.student_code || st.id,
+        full_name: st.full_name || st.name || st.student_name || 'Học viên',
+        class_name: st.class_name || 'Lớp 10A1',
+        academic_year: st.academic_year || '2025 - 2026',
+        email: st.email || '',
+        password: st.password || '123456',
+        is_active: st.is_active !== false,
+        total_xp: st.total_xp || 0
+      }));
+      saveStudentsToLocal();
+      renderStudentsList();
+      return studentsList;
     }
   } catch (err) {
-    console.error("Lỗi loadStudents:", err);
-    studentsList = [];
+    console.warn("[Students] Lỗi loadStudents:", err);
   }
+
+  if (!studentsList || studentsList.length === 0) {
+    studentsList = loadStudentsFromLocal();
+    renderStudentsList();
+  }
+  return studentsList;
 }
 
 // 2. RENDER DANH SÁCH HỌC VIÊN LÊN BẢNG
@@ -191,6 +274,7 @@ export async function saveStudent() {
       studentsList.unshift(payload);
     }
 
+    saveStudentsToLocal();
     closeStudentModal();
     renderStudentsList();
     alert("✅ Đã lưu tài khoản học viên thành công!");
@@ -209,14 +293,14 @@ export async function toggleStudentStatus(studentId) {
 
   const nextStatus = !(st.is_active !== false);
   st.is_active = nextStatus;
+  saveStudentsToLocal();
+  renderStudentsList();
 
   try {
     const { error } = await db().from('students').update({ is_active: nextStatus }).eq('id', studentId);
     if (error) throw error;
-    renderStudentsList();
   } catch (e) {
     console.error("Lỗi toggleStudentStatus:", e);
-    alert("❌ Lỗi cập nhật trạng thái học viên: " + (e.message || ''));
   }
 }
 
@@ -224,15 +308,16 @@ export async function toggleStudentStatus(studentId) {
 export async function deleteStudent(studentId) {
   if (!confirm(`⚠️ Bạn có chắc chắn muốn xóa tài khoản học viên [${studentId}]?`)) return;
 
+  studentsList = studentsList.filter(s => s.id !== studentId);
+  saveStudentsToLocal();
+  renderStudentsList();
+
   try {
     const { error } = await db().from('students').delete().eq('id', studentId);
     if (error) throw error;
-    studentsList = studentsList.filter(s => s.id !== studentId);
-    renderStudentsList();
     alert("✅ Đã xóa tài khoản học viên!");
   } catch (e) {
     console.error("Lỗi xóa học viên:", e);
-    alert("❌ Lỗi xóa học viên: " + (e.message || ''));
   }
 }
 

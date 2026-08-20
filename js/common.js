@@ -78,7 +78,6 @@ export async function logUserAuthEvent(userEmail, userType = 'teacher', eventTyp
         user_email: userEmail,
         user_type: userType,
         event_type: eventType,
-        duration_seconds: durationSeconds || 0,
         timestamp: nowStr
       }]);
 
