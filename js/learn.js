@@ -6,6 +6,7 @@
  */
 
 import { LEARN_DATA, DEFAULT_UNITS } from './learn-data.js';
+import { renderRich, typesetMath } from './common.js';
 
 const db = () => window.supabaseClient;
 
@@ -977,6 +978,7 @@ function loadListeningLesson(id) {
       ${renderListeningExercises(l.exercises || [])}
     </div>
   `;
+  typesetMath(workspace);
 }
 
 window.setListeningSpeed = function(spd) {
@@ -1196,6 +1198,7 @@ function loadReadingLesson(id) {
       </div>
     </div>
   `;
+  typesetMath(workspace);
 }
 
 window.showVocabLookup = function(word) {
@@ -1384,6 +1387,7 @@ function loadSpeakingLesson(id) {
         `).join('')}
       </div>
     `;
+    typesetMath(workspace);
     return;
   }
 
@@ -1412,6 +1416,7 @@ function loadSpeakingLesson(id) {
         </div>
       </div>
     `;
+    typesetMath(workspace);
   }
 }
 
@@ -1738,6 +1743,7 @@ function renderActiveRoleplayView() {
       </div>
     </div>
   `;
+  typesetMath(workspace);
 }
 
 // -------------------------------------------------------------------------
@@ -2270,6 +2276,7 @@ function showRoleplayCompletionSummary() {
       </div>
     </div>
   `;
+  typesetMath(workspace);
 }
 
 if (typeof window !== 'undefined') {
@@ -2569,10 +2576,10 @@ function loadWritingView(type) {
             <button class="btn btn-p" style="margin-top:12px" onclick="window.checkErrorFix(${idx}, '${item.errorWord}', '${item.correctWord}', '${(item.explain || '').replace(/'/g, "\\'")}')">Kiểm tra sửa lỗi</button>
             <div id="err-fb-${idx}" class="fb" style="display:none"></div>
           </div>
-        `).join('')}
       </div>
     `;
   }
+  typesetMath(workspace);
 }
 
 window.placedWordsState = {};
@@ -2693,6 +2700,7 @@ function loadLanguageFocusView() {
       ${renderFlashcardsView(currentCard, fCards.length || 1)}
     </div>
   `;
+  typesetMath(workspace);
 }
 
 window.switchLangSubTab = function(tab) {
@@ -2708,6 +2716,7 @@ window.switchLangSubTab = function(tab) {
   } else if (tab === 'quiz') {
     container.innerHTML = renderGrammarQuizView();
   }
+  typesetMath(container);
 };
 
 function renderFlashcardsView(card, total) {
@@ -2888,6 +2897,7 @@ window.checkGrammarQuiz = function(qIdx, chosenIdx, correctIdx) {
     fb.className = 'fb fb-ok';
     fb.innerHTML = '🎉 <b>Chính xác!</b> ' + (quizItem?.explain || '');
     fb.style.display = 'block';
+    typesetMath(fb);
     playSuccessSound();
     addXP(15, 'Ngữ pháp đúng');
   } else {
@@ -2897,6 +2907,7 @@ window.checkGrammarQuiz = function(qIdx, chosenIdx, correctIdx) {
     fb.className = 'fb fb-bad';
     fb.innerHTML = '❌ <b>Chưa đúng.</b> ' + (quizItem?.explain || '');
     fb.style.display = 'block';
+    typesetMath(fb);
     playWrongSound();
   }
 };

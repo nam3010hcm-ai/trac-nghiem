@@ -376,11 +376,28 @@ export function renderRich(txt) {
 }
 
 export function typesetMath(root=document.body){
-  if(window.MathJax?.typesetPromise){
+  if(window.MathJax && window.MathJax.typesetPromise){
     if(window.MathJax.typesetClear){
       try { window.MathJax.typesetClear([root]); } catch(e){}
     }
     window.MathJax.typesetPromise([root]).catch(console.error);
+  } else {
+    if(window.MathJax && window.MathJax.startup?.promise){
+      window.MathJax.startup.promise.then(() => {
+        typesetMath(root);
+      });
+    } else {
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if(window.MathJax && window.MathJax.typesetPromise){
+          clearInterval(interval);
+          typesetMath(root);
+        } else if(attempts > 50) {
+          clearInterval(interval);
+        }
+      }, 200);
+    }
   }
 }
 
