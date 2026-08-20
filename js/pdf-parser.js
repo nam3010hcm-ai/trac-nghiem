@@ -597,10 +597,11 @@ export async function saveParsedExamToSupabase() {
 
     // 1. Chuẩn bị payload danh sách câu hỏi
     const questionsToInsert = currentParsedExam.questions.map(q => ({
-      cat,
-      subcat,
+      cat: cat || 'Toán',
+      subcat: subcat || 'Toán/Phần 2 - Đại số',
       text: q.text,
       image: '',
+      audio: '',
       explain: q.explain || '',
       opts: q.opts,
       ans: q.ans,
@@ -608,12 +609,12 @@ export async function saveParsedExamToSupabase() {
       created_by: authorEmail
     }));
 
-    // 2. Insert câu hỏi vào bảng 'questions'
+    // 2. Insert câu hỏi vào bảng 'questions' trong Supabase
     let insertedQuestionIds = [];
     const { data: qData, error: qErr } = await db()
       .from('questions')
       .insert(questionsToInsert)
-      .select('id');
+      .select();
 
     if (qErr) {
       console.warn("Lỗi insert questions:", qErr);
@@ -621,17 +622,21 @@ export async function saveParsedExamToSupabase() {
       questionsToInsert.forEach(q => {
         const fakeId = state.nextQId++;
         q.id = fakeId;
-        state.questions.push(q);
         insertedQuestionIds.push(fakeId);
       });
+      state.questions = [...questionsToInsert, ...state.questions];
     } else if (qData && qData.length > 0) {
       insertedQuestionIds = qData.map(item => Number(item.id));
-      // Đồng bộ vào state.questions
-      questionsToInsert.forEach((q, idx) => {
-        const realId = insertedQuestionIds[idx] || (state.nextQId++);
-        q.id = realId;
-        state.questions.push(q);
-      });
+      // Đưa các câu hỏi mới lên ĐẦU danh sách state.questions
+      const formattedQuestions = qData.map(q => ({
+        ...q,
+        id: Number(q.id),
+        opts: q.opts || [],
+        blanks: q.blanks || [],
+        bank: q.bank || [],
+        pairs: q.pairs || []
+      }));
+      state.questions = [...formattedQuestions, ...state.questions];
     }
 
     // 3. Insert Đề thi mới vào bảng 'exams'
@@ -639,8 +644,8 @@ export async function saveParsedExamToSupabase() {
       name: examName,
       description: desc,
       count: insertedQuestionIds.length,
-      cat,
-      subcat,
+      cat: cat || 'Toán',
+      subcat: subcat || 'Toán/Phần 2 - Đại số',
       time_limit: timeLimit,
       is_hidden: false,
       q_ids: insertedQuestionIds,
@@ -678,21 +683,37 @@ export async function saveParsedExamToSupabase() {
       });
     }
 
-    // 4. Làm mới giao diện và thông báo
+    // 4. Đồng bộ bộ lọc Tab Ngân hàng câu hỏi để hiển thị các câu hỏi mới ngay lập tức
+    if ($('flt-cat')) {
+      $('flt-cat').value = cat || '';
+      if (typeof window.updateFltSubcat === 'function') {
+        window.updateFltSubcat();
+      }
+      if ($('flt-subcat') && subcat) {
+        $('flt-subcat').value = subcat;
+      }
+    }
+    if ($('q-search')) $('q-search').value = '';
+    window.qPage = 1;
+
+    // 5. Làm mới giao diện
     renderQuestions();
     renderExams();
+    if (typeof window.renderPracticeExams === 'function') {
+      window.renderPracticeExams();
+    }
     populateExamSelect();
     if (typeof window.populateCohortExams === 'function') {
       window.populateCohortExams();
     }
 
     closePdfImportModal();
-    showToast(`🎉 Đã tạo thành công Đề thi "${examName}" với ${insertedQuestionIds.length} câu hỏi!`, 'success');
-    alert(`✅ Thành công!\nĐã bóc tách và tạo Đề thi: "${examName}" (${insertedQuestionIds.length} câu hỏi).\nĐáp án chữ ĐỎ đã được thiết lập chính xác.`);
+    showToast('success', 'Nhập Đề PDF', `Đã lưu thành công ${insertedQuestionIds.length} câu hỏi vào Ngân hàng câu hỏi!`);
+    alert(`✅ Thành công!\nĐã lưu ${insertedQuestionIds.length} câu hỏi vào Ngân hàng câu hỏi và tạo Đề thi: "${examName}".\nHệ thống đã tự động chuyển bạn đến mục Ngân Hàng Câu Hỏi để kiểm tra.`);
 
-    // Tự động chuyển qua tab Đề thi
+    // Tự động chuyển qua tab Ngân hàng câu hỏi (q)
     if (typeof window.switchTTab === 'function') {
-      window.switchTTab('e');
+      window.switchTTab('q');
     }
   } catch (error) {
     console.error("Lỗi khi lưu đề thi từ PDF:", error);
