@@ -133,7 +133,9 @@ export async function globalLogout() {
   window.location.href = 'index.html';
 }
 
-window.globalLogout = globalLogout;
+if (typeof window !== 'undefined') {
+  window.globalLogout = globalLogout;
+}
 
 export function canEditItem(item, currentUserEmail) {
   if (!currentUserEmail) return true;
@@ -163,7 +165,7 @@ export function mediaHTML(url, cls='q-img'){
 export function audioHTML(url, qIdx = null, mode = 'practice'){
   const u = String(url || '').trim();
   if(!u) return '';
-  if(!/^https?:\/\//i.test(u) && !/^data:audio\//i.test(u)) return '';
+  if(!/^https?:\/\//i.test(u) && !/^data:audio\//i.test(u) && !/^blob:/i.test(u)) return '';
   const idAttr = qIdx !== null ? `id="q-audio-${qIdx}" data-qidx="${qIdx}"` : '';
   const badgeId = qIdx !== null ? `id="audio-limit-${qIdx}"` : '';
   return `
@@ -174,6 +176,58 @@ export function audioHTML(url, qIdx = null, mode = 'practice'){
       </div>
       <audio class="q-audio" ${idAttr} controls ${mode === 'exam' ? 'controlsList="nodownload"' : ''} preload="metadata" src="${esc(u)}">Trình duyệt không hỗ trợ phát audio.</audio>
     </div>`;
+}
+
+export function videoHTML(url, qIdx = null, mode = 'practice'){
+  const u = String(url || '').trim();
+  if(!u) return '';
+  if(!/^https?:\/\//i.test(u) && !/^data:video\//i.test(u) && !/^blob:/i.test(u)) return '';
+  const idAttr = qIdx !== null ? `id="q-video-${qIdx}" data-qidx="${qIdx}"` : '';
+  const badgeId = qIdx !== null ? `id="video-limit-${qIdx}"` : '';
+  const controlsId = qIdx !== null ? `data-qidx="${qIdx}"` : '';
+  return `
+    <div class="video-player-card">
+      <div class="video-header">
+        <span class="video-badge">🎬 Video Bài Học & Bài Tập (Video Comprehension)</span>
+        ${mode === 'exam' ? `<span class="video-limit-badge" ${badgeId}>Số lần xem: 0 / 2</span>` : `<span class="video-hint-badge">Chế độ Ôn luyện (Tự do xem)</span>`}
+      </div>
+      <div class="video-wrapper">
+        <video class="q-video" ${idAttr} controls playsinline preload="metadata" ${mode === 'exam' ? 'controlsList="nodownload"' : ''} src="${esc(u)}">
+          Trình duyệt của bạn không hỗ trợ phát video MP4.
+        </video>
+      </div>
+      <div class="video-speed-toolbar">
+        <span style="font-size:12px; font-weight:700; color:#475569; display:flex; align-items:center; gap:4px;">
+          <span>⚡</span> Tốc độ phát:
+        </span>
+        <div class="video-speed-group" ${controlsId}>
+          <button type="button" class="btn-video-speed" onclick="window.setVideoPlaybackSpeed(this, ${qIdx !== null ? `'q-video-${qIdx}'` : 'null'}, 0.75)">0.75x</button>
+          <button type="button" class="btn-video-speed active" onclick="window.setVideoPlaybackSpeed(this, ${qIdx !== null ? `'q-video-${qIdx}'` : 'null'}, 1.0)">1.0x (Chuẩn)</button>
+          <button type="button" class="btn-video-speed" onclick="window.setVideoPlaybackSpeed(this, ${qIdx !== null ? `'q-video-${qIdx}'` : 'null'}, 1.25)">1.25x</button>
+          <button type="button" class="btn-video-speed" onclick="window.setVideoPlaybackSpeed(this, ${qIdx !== null ? `'q-video-${qIdx}'` : 'null'}, 1.5)">1.5x</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+if (typeof window !== 'undefined') {
+  window.setVideoPlaybackSpeed = function(btn, videoId, speed) {
+    let videoEl = null;
+    if (videoId) {
+      videoEl = document.getElementById(videoId);
+    } else if (btn) {
+      const card = btn.closest('.video-player-card');
+      videoEl = card ? card.querySelector('video') : null;
+    }
+    if (videoEl) {
+      videoEl.playbackRate = speed;
+      const group = btn.closest('.video-speed-group');
+      if (group) {
+        group.querySelectorAll('.btn-video-speed').forEach(b => b.classList.remove('active'));
+      }
+      btn.classList.add('active');
+    }
+  };
 }
 
 export const TYPE_LABELS = {

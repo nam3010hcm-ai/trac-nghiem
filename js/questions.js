@@ -1,4 +1,4 @@
-import { state, $, esc, KEYS, mediaHTML, audioHTML, renderRich, typesetMath, TYPE_LABELS, splitBlanks, countBlanks, fillSubcatSelect, canEditItem, isRootUser } from './common.js';
+import { state, $, esc, KEYS, mediaHTML, audioHTML, videoHTML, renderRich, typesetMath, TYPE_LABELS, splitBlanks, countBlanks, fillSubcatSelect, canEditItem, isRootUser } from './common.js';
 
 const db = () => window.supabaseClient;
 
@@ -164,7 +164,73 @@ function ensureQuestionTools(){
       if ($('qf-audio-file')) $('qf-audio-file').value = '';
       if ($('audio-preview')) $('audio-preview').innerHTML = '';
       if ($('audio-upload-progress')) $('audio-upload-progress').style.display = 'none';
+      btnClearAudio.style.display = 'none';
     });
+  }
+
+  // --- XỬ LÝ UPLOAD VIDEO MP4 LÊN SUPABASE STORAGE ---
+  const qfVideoFile = $('qf-video-file');
+  if (qfVideoFile && !qfVideoFile.dataset.bound) {
+    qfVideoFile.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const progressWrapper = $('video-upload-progress');
+      const progressBar = $('video-upload-fill');
+      const progressText = $('video-upload-text');
+      const preview = $('video-preview');
+
+      if (progressWrapper) progressWrapper.style.display = 'block';
+      if (progressBar) progressBar.style.width = '0%';
+      if (progressText) progressText.textContent = 'Đang tải video: 0%';
+
+      try {
+        const downloadURL = await uploadMediaFile(file, 'video-bank', (pct) => {
+          if (progressBar) progressBar.style.width = `${pct}%`;
+          if (progressText) progressText.textContent = `Đang tải video: ${pct}%`;
+        });
+
+        $('qf-video').value = downloadURL;
+        if (progressText) progressText.textContent = '✅ Đã tải video lên 100%';
+        if ($('btn-clear-video')) $('btn-clear-video').style.display = 'inline-block';
+        if (preview) {
+          preview.innerHTML = `
+            <div style="font-size:12px;color:#10b981;margin-bottom:4px;font-weight:700;">✅ Đã tải video lên Supabase:</div>
+            <video controls playsinline src="${downloadURL}" style="width:100%;max-width:360px;max-height:200px;border-radius:8px;border:1.5px solid #cbd5e1;background:#000;"></video>
+          `;
+        }
+      } catch (err) {
+        console.error("Lỗi upload video:", err);
+        alert('Lỗi khi tải file video lên Supabase Storage: ' + (err.message || ''));
+        if (progressWrapper) progressWrapper.style.display = 'none';
+      }
+    });
+    qfVideoFile.dataset.bound = 'true';
+  }
+
+  const qfVideoInput = $('qf-video');
+  if (qfVideoInput && !qfVideoInput.dataset.bound) {
+    qfVideoInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      const preview = $('video-preview');
+      if (preview) {
+        preview.innerHTML = val ? `<video controls playsinline src="${val}" style="width:100%;max-width:360px;max-height:200px;border-radius:8px;border:1.5px solid #cbd5e1;background:#000;margin-top:6px;"></video>` : '';
+      }
+      if ($('btn-clear-video')) $('btn-clear-video').style.display = val ? 'inline-block' : 'none';
+    });
+    qfVideoInput.dataset.bound = 'true';
+  }
+
+  const btnClearVideo = $('btn-clear-video');
+  if (btnClearVideo && !btnClearVideo.dataset.bound) {
+    btnClearVideo.addEventListener('click', () => {
+      $('qf-video').value = '';
+      if ($('qf-video-file')) $('qf-video-file').value = '';
+      if ($('video-preview')) $('video-preview').innerHTML = '';
+      if ($('video-upload-progress')) $('video-upload-progress').style.display = 'none';
+      btnClearVideo.style.display = 'none';
+    });
+    btnClearVideo.dataset.bound = 'true';
   }
 
   // --- XỬ LÝ UPLOAD ẢNH LÊN SUPABASE STORAGE ---
@@ -269,6 +335,12 @@ export function openQForm(id = null){
   if($('audio-upload-progress')) $('audio-upload-progress').style.display = 'none';
   if($('btn-clear-audio')) $('btn-clear-audio').style.display = 'none';
 
+  if($('qf-video-file')) $('qf-video-file').value = '';
+  if($('qf-video')) $('qf-video').value = '';
+  if($('video-preview')) $('video-preview').innerHTML = '';
+  if($('video-upload-progress')) $('video-upload-progress').style.display = 'none';
+  if($('btn-clear-video')) $('btn-clear-video').style.display = 'none';
+
   if(id){
     const q = state.questions.find(x => x.id === id);
     if(!q) return;
@@ -283,6 +355,12 @@ export function openQForm(id = null){
       $('qf-audio').value = q.audio;
       $('audio-preview').innerHTML = `<audio controls style="width:100%; margin-top:6px;" src="${q.audio}"></audio>`;
       if($('btn-clear-audio')) $('btn-clear-audio').style.display = 'inline-block';
+    }
+
+    if(q.video) {
+      $('qf-video').value = q.video;
+      $('video-preview').innerHTML = `<video controls playsinline style="width:100%; max-width:360px; max-height:200px; border-radius:8px; margin-top:6px; border:1.5px solid #cbd5e1; background:#000;" src="${q.video}"></video>`;
+      if($('btn-clear-video')) $('btn-clear-video').style.display = 'inline-block';
     }
     
     if(q.image) {
@@ -306,7 +384,7 @@ export function openQForm(id = null){
     applyQTypeUI();
     if(type === 'fill_blank' || type === 'drag_drop') renderBlankInputs(q.blanks || []);
   }else{
-    ['qf-text','qf-audio','qf-explain','qf-a','qf-b','qf-c','qf-d','qf-bank','qf-pairs'].forEach(id => { if($(id)) $(id).value = ''; });
+    ['qf-text','qf-audio','qf-video','qf-explain','qf-a','qf-b','qf-c','qf-d','qf-bank','qf-pairs'].forEach(id => { if($(id)) $(id).value = ''; });
     $('qf-ans').value = '0';
     $('qf-type').value = 'mcq_single';
     applyQTypeUI();
@@ -335,6 +413,7 @@ export async function saveQ(){
   if(!text){ alert('Vui lòng nhập nội dung câu hỏi!'); return; }
   const image = $('qf-image') ? $('qf-image').value.trim() : '';
   const audio = $('qf-audio') ? $('qf-audio').value.trim() : '';
+  const video = $('qf-video') ? $('qf-video').value.trim() : '';
   const explain = $('qf-explain') ? $('qf-explain').value.trim() : ''; 
   const cat = $('qf-cat').value;
   const subcat = $('qf-subcat').value;
@@ -387,14 +466,29 @@ export async function saveQ(){
       }
       if(q) {
         delete q.opts; delete q.ans; delete q.blanks; delete q.bank; delete q.pairs;
-        Object.assign(q, { cat, subcat, text, image, audio, explain, ...fields }); 
+        Object.assign(q, { cat, subcat, text, image, audio, video, explain, ...fields }); 
       }
-      const { error } = await db().from('questions').update({ cat, subcat, text, image, audio, explain, ...fields }).eq('id', editQId);
-      if(error) throw error;
+      let updatePayload = { cat, subcat, text, image, audio, video, explain, ...fields };
+      let { error } = await db().from('questions').update(updatePayload).eq('id', editQId);
+      if(error && error.message && error.message.includes('column') && error.message.includes('video')) {
+        delete updatePayload.video;
+        const retry = await db().from('questions').update(updatePayload).eq('id', editQId);
+        if (retry.error) throw retry.error;
+      } else if (error) {
+        throw error;
+      }
       alert("✅ Đã cập nhật câu hỏi thành công!");
     }else{
-      const payload = { cat, subcat, text, image, audio, explain, created_by: state.currentUserEmail || 'nam3010hcm@gmail.com', ...fields }; 
-      const { data, error } = await db().from('questions').insert([payload]).select();
+      const payload = { cat, subcat, text, image, audio, video, explain, created_by: state.currentUserEmail || 'nam3010hcm@gmail.com', ...fields }; 
+      let insertPayload = [payload];
+      let { data, error } = await db().from('questions').insert(insertPayload).select();
+      if(error && error.message && error.message.includes('column') && error.message.includes('video')) {
+        const fallbackPayload = [{ ...payload }];
+        delete fallbackPayload[0].video;
+        const retry = await db().from('questions').insert(fallbackPayload).select();
+        data = retry.data;
+        error = retry.error;
+      }
       if(error) throw error;
       const created = data?.[0] || { id: state.nextQId++, ...payload };
       state.questions.unshift({
@@ -496,10 +590,12 @@ export function renderQuestions(){
             <div class="cat-badge" style="background:#eef2ff;color:#4338ca">${esc(TYPE_LABELS[type] || type)}</div>
             ${authorBadge}
             ${q.audio ? '<div class="cat-badge" style="background:#fef3c7;color:#92400e">🔊 Nghe</div>' : ''}
+            ${q.video ? '<div class="cat-badge" style="background:#fdf2f8;color:#db2777">🎬 Video</div>' : ''}
           </div>
           <div>${renderRich(q.text)}</div>
           ${mediaHTML(q.image)}
           ${audioHTML(q.audio)}
+          ${videoHTML(q.video)}
         </div>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
           <button class="btn btn-sm" type="button" onclick="window.toggleQLatexSource('${q.id}')" style="background:#f8fafc;color:#334155;border:1.5px solid #cbd5e1;font-size:11.5px;padding:4px 8px;font-weight:700;">📝 Xem mã LaTeX</button>

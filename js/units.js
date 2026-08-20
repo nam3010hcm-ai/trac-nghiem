@@ -103,9 +103,12 @@ export async function loadUnits() {
         let spk = u.speaking || [];
         if (!spk.length && defUnit?.speaking) {
           spk = clone(defUnit.speaking);
-        } else if (defUnit?.speaking && !spk.some(s => s.type === 'video_roleplay')) {
-          const defRps = defUnit.speaking.filter(s => s.type === 'video_roleplay');
-          if (defRps.length) spk = [...clone(defRps), ...spk];
+        } else if (defUnit?.speaking) {
+          defUnit.speaking.forEach(defItem => {
+            if (!spk.some(s => s.id === defItem.id || s.title === defItem.title)) {
+              spk.unshift(clone(defItem));
+            }
+          });
         }
 
         return {

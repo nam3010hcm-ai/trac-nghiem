@@ -1,4 +1,4 @@
-import { initData, state, $, KEYS, shuffle, getPool, esc, mediaHTML, audioHTML, renderRich, typesetMath, isCorrect, formatAnswer, splitBlanks } from './common.js';
+import { initData, state, $, KEYS, shuffle, getPool, esc, mediaHTML, audioHTML, videoHTML, renderRich, typesetMath, isCorrect, formatAnswer, splitBlanks } from './common.js';
 import { populateExamSelect, updateExamDesc } from './exams.js';
 import { saveResult } from './results.js';
 import { recordAuthEvent, recordStudyTime } from './auth-logs.js';
@@ -514,6 +514,7 @@ function renderPart() {
           </div>
           ${mediaHTML(q.image)}
           ${audioHTML(q.audio, gIdx, qState.mode)}
+          ${videoHTML(q.video, gIdx, qState.mode)}
           <div style="margin-top:14px;">${bodyHtml}</div>
       `;
       container.appendChild(qCard);

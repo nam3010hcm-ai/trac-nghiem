@@ -598,14 +598,12 @@ function getUnitSkillList(unit, skillName) {
   if (!list.length) {
     list = safeArray(defMatch?.[skillName], []);
   } else if (skillName === 'speaking' && defMatch?.speaking) {
-    // Nếu trong DB chỉ có câu cũ mà chưa có video_roleplay, tự động nạp các bài Video Roleplay A-B từ mẫu
-    const hasVideoRp = list.some(item => item.type === 'video_roleplay' || (item.characterA && item.characterB));
-    if (!hasVideoRp) {
-      const defRpLessons = defMatch.speaking.filter(item => item.type === 'video_roleplay');
-      if (defRpLessons.length > 0) {
-        list = [...defRpLessons, ...list];
+    // Tự động nạp bổ sung các bài Video Roleplay đa nhân vật từ mẫu nếu chưa có trong DB
+    defMatch.speaking.forEach(defItem => {
+      if (!list.some(item => item.id === defItem.id || item.title === defItem.title)) {
+        list.unshift(defItem);
       }
-    }
+    });
   }
 
   if (!list.length && DEFAULT_UNITS[0]?.[skillName]) {
@@ -1418,78 +1416,92 @@ function loadSpeakingLesson(id) {
 }
 
 // -------------------------------------------------------------------------
-// 3.1 MÀN HÌNH CHỌN VAI TRÒ VIDEO ROLEPLAY (CHARACTER A VS CHARACTER B)
+// 3.1 MÀN HÌNH CHỌN VAI TRÒ VIDEO ROLEPLAY (HỖ TRỢ ĐA NHÂN VẬT: A, B, C, D...)
 // -------------------------------------------------------------------------
+function getLessonCharacters(lesson) {
+  if (!lesson) return [];
+  if (lesson.characters && Array.isArray(lesson.characters) && lesson.characters.length > 0) {
+    return lesson.characters.map((c, idx) => ({
+      code: c.code || String.fromCharCode(65 + idx),
+      id: c.id || c.code || String.fromCharCode(65 + idx),
+      name: c.name || `Nhân vật ${String.fromCharCode(65 + idx)}`,
+      avatar: c.avatar || (idx % 2 === 0 ? '👩‍💼' : '🧑‍💼'),
+      roleTitle: c.roleTitle || `Speaker ${String.fromCharCode(65 + idx)}`,
+      color: c.color || (idx === 0 ? '#2563eb' : idx === 1 ? '#059669' : idx === 2 ? '#db2777' : '#7c3aed'),
+      videoUrl: c.videoUrl || ''
+    }));
+  }
+  const chars = [];
+  if (lesson.characterA) chars.push({ code: 'A', id: 'A', ...lesson.characterA, color: lesson.characterA.color || '#2563eb' });
+  if (lesson.characterB) chars.push({ code: 'B', id: 'B', ...lesson.characterB, color: lesson.characterB.color || '#059669' });
+  if (lesson.characterC) chars.push({ code: 'C', id: 'C', ...lesson.characterC, color: lesson.characterC.color || '#db2777' });
+  if (lesson.characterD) chars.push({ code: 'D', id: 'D', ...lesson.characterD, color: lesson.characterD.color || '#7c3aed' });
+  if (!chars.length) {
+    chars.push({ code: 'A', id: 'A', name: 'Nhân vật A', avatar: '👩‍💼', roleTitle: 'Speaker A', color: '#2563eb' });
+    chars.push({ code: 'B', id: 'B', name: 'Nhân vật B', avatar: '🧑‍💼', roleTitle: 'Speaker B', color: '#059669' });
+  }
+  return chars;
+}
+
+function getCharacterByCode(lesson, code) {
+  const chars = getLessonCharacters(lesson);
+  return chars.find(c => c.code === code || c.id === code) || chars[0] || { code, name: `Nhân vật ${code}`, avatar: '👤', color: '#2563eb' };
+}
+
 function renderRoleSelectionView(lesson) {
   const workspace = document.getElementById('spk-workspace');
   if (!workspace) return;
 
-  const charA = lesson.characterA || { name: 'Nhân vật A', avatar: '👩‍💼', roleTitle: 'Speaker A', color: '#2563eb' };
-  const charB = lesson.characterB || { name: 'Nhân vật B', avatar: '🧑‍💼', roleTitle: 'Speaker B', color: '#059669' };
+  const chars = getLessonCharacters(lesson);
   const turnsCount = (lesson.dialogue || []).length;
 
   workspace.innerHTML = `
     <div class="video-rp-container">
       <div class="video-rp-header">
         <div class="video-rp-title-wrap">
-          <span class="video-rp-badge">🎬 Video Roleplay A & B</span>
+          <span class="video-rp-badge">🎬 Multi-Character Video Roleplay</span>
           <span style="font-weight:800;font-size:16px;color:#0f172a">${lesson.title}</span>
         </div>
         <div style="font-size:13px;color:#64748b;font-weight:600">
-          🎯 Chủ đề: <b>${lesson.topic || 'Giao tiếp'}</b> • ${turnsCount} lượt thoại
+          🎯 Chủ đề: <b>${lesson.topic || 'Giao tiếp'}</b> • ${chars.length} nhân vật • ${turnsCount} lượt thoại
         </div>
       </div>
 
       <div class="role-select-screen">
         <div style="font-size:36px;margin-bottom:8px">🎭</div>
         <h2 style="font-size:22px;font-weight:800;color:#0f172a;margin-bottom:6px">Chọn Nhân Vật Bạn Muốn Đóng Vai</h2>
-        <p style="font-size:14px;color:#64748b;max-width:580px;margin:0 auto">
-          ${lesson.description || 'Bạn sẽ trực tiếp đọc thoại của nhân vật đã chọn. Hệ thống sẽ phát video của nhân vật đối tác và chấm điểm phát âm của bạn theo thời gian thực!'}
+        <p style="font-size:14px;color:#64748b;max-width:620px;margin:0 auto 20px auto">
+          ${lesson.description || 'Bạn sẽ trực tiếp đóng vai nhân vật đã chọn. Hệ thống tự động phát video của các nhân vật đối tác và chuyển lượt thông minh để bạn luyện nói!'}
         </p>
 
-        <div class="role-select-grid">
-          <!-- NHÂN VẬT A -->
-          <div class="role-card role-a" onclick="window.startRoleplayAsRole('A')">
-            <div style="position:absolute;top:12px;right:12px;background:#eff6ff;color:#1d4ed8;padding:4px 10px;border-radius:9999px;font-size:11px;font-weight:800">
-              NHÂN VẬT A
-            </div>
-            <div class="role-avatar-circle" style="border-color:#93c5fd;background:#eff6ff">
-              ${charA.avatar || '👩‍💼'}
-            </div>
-            <div class="role-card-name">${charA.name}</div>
-            <div class="role-card-title">${charA.roleTitle || 'Vai trò chính'}</div>
-            <div style="font-size:12.5px;color:#475569;margin-bottom:16px;line-height:1.4">
-              👉 Bạn nói vai <b>${charA.name}</b><br>
-              🤖 Máy tự động phát video & giọng vai <b>${charB.name}</b>
-            </div>
-            <button type="button" class="role-card-cta">
-              Đóng Vai Nhân Vật A →
-            </button>
-          </div>
-
-          <!-- NHÂN VẬT B -->
-          <div class="role-card role-b" onclick="window.startRoleplayAsRole('B')">
-            <div style="position:absolute;top:12px;right:12px;background:#f0fdf4;color:#047857;padding:4px 10px;border-radius:9999px;font-size:11px;font-weight:800">
-              NHÂN VẬT B
-            </div>
-            <div class="role-avatar-circle" style="border-color:#86efac;background:#f0fdf4">
-              ${charB.avatar || '🧑‍💼'}
-            </div>
-            <div class="role-card-name">${charB.name}</div>
-            <div class="role-card-title">${charB.roleTitle || 'Vai trò phản hồi'}</div>
-            <div style="font-size:12.5px;color:#475569;margin-bottom:16px;line-height:1.4">
-              👉 Bạn nói vai <b>${charB.name}</b><br>
-              🤖 Máy tự động phát video & giọng vai <b>${charA.name}</b>
-            </div>
-            <button type="button" class="role-card-cta">
-              Đóng Vai Nhân Vật B →
-            </button>
-          </div>
+        <div class="role-select-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;max-width:960px;margin:0 auto">
+          ${chars.map(c => {
+            const charTurns = (lesson.dialogue || []).filter(d => d.speaker === c.code).length;
+            return `
+              <div class="role-card" onclick="window.startRoleplayAsRole('${c.code}')" style="border-top:4px solid ${c.color};position:relative;background:#ffffff;border-radius:14px;padding:20px 16px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,0.06);cursor:pointer;transition:transform 0.2s,box-shadow 0.2s">
+                <div style="position:absolute;top:12px;right:12px;background:${c.color}15;color:${c.color};padding:3px 8px;border-radius:9999px;font-size:11px;font-weight:800">
+                  VAI ${c.code}
+                </div>
+                <div class="role-avatar-circle" style="font-size:42px;width:76px;height:76px;margin:0 auto 12px auto;display:flex;align-items:center;justify-content:center;background:${c.color}10;border:2px solid ${c.color}40;border-radius:50%">
+                  ${c.avatar || '👤'}
+                </div>
+                <div class="role-card-name" style="font-weight:800;font-size:15px;color:#0f172a;margin-bottom:4px">${c.name}</div>
+                <div class="role-card-title" style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:12px">${c.roleTitle || 'Nhân vật hội thoại'}</div>
+                <div style="font-size:12px;color:#475569;margin-bottom:16px;line-height:1.4">
+                  👉 Luyện nói: <b>${charTurns} lượt thoại</b><br>
+                  🤖 Máy phát video các vai còn lại
+                </div>
+                <button type="button" class="btn btn-p" style="width:100%;background:${c.color};border-color:${c.color};font-size:13px;padding:8px">
+                  Đóng Vai ${c.name.split('(')[0].trim()} →
+                </button>
+              </div>
+            `;
+          }).join('')}
         </div>
 
-        <div style="margin-top:16px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
-          <button class="btn btn-sm" onclick="window.startRoleplayAsRole('ALL')" style="background:#ffffff;border:1.5px solid #cbd5e1;color:#475569;padding:8px 16px;font-weight:700">
-            🎬 Chế độ Luyện toàn bộ (Luyện phát âm cả 2 vai A & B)
+        <div style="margin-top:20px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="window.startRoleplayAsRole('ALL')" style="background:#ffffff;border:1.5px solid #cbd5e1;color:#475569;padding:8px 18px;font-weight:700">
+            🎬 Chế độ Luyện toàn bộ (Luyện nói tất cả các nhân vật)
           </button>
         </div>
       </div>
@@ -1507,9 +1519,12 @@ window.startRoleplayAsRole = function(role) {
 
 window.switchRoleplayRoleModal = function() {
   if (!currentRpLesson) return;
-  const nextRole = currentRpRole === 'A' ? 'B' : 'A';
-  if (confirm(`Bạn có muốn đổi sang đóng vai ${nextRole === 'A' ? (currentRpLesson.characterA?.name || 'Nhân vật A') : (currentRpLesson.characterB?.name || 'Nhân vật B')} không?`)) {
-    window.startRoleplayAsRole(nextRole);
+  const chars = getLessonCharacters(currentRpLesson);
+  if (!chars.length) return;
+  const currIdx = chars.findIndex(c => c.code === currentRpRole);
+  const nextChar = chars[(currIdx + 1) % chars.length];
+  if (confirm(`Bạn có muốn đổi sang đóng vai ${nextChar.name} không?`)) {
+    window.startRoleplayAsRole(nextChar.code);
   }
 };
 
@@ -1527,32 +1542,28 @@ function renderActiveRoleplayView() {
 
   const lesson = currentRpLesson;
   const dialogue = lesson.dialogue || [];
-  const charA = lesson.characterA || { name: 'Nhân vật A', avatar: '👩‍💼', roleTitle: 'Role A', color: '#2563eb' };
-  const charB = lesson.characterB || { name: 'Nhân vật B', avatar: '🧑‍💼', roleTitle: 'Role B', color: '#059669' };
+  const chars = getLessonCharacters(lesson);
   const currentLine = dialogue[currentRpTurnIdx] || dialogue[0];
   const isUserTurn = currentRpRole === 'ALL' || (currentLine && currentLine.speaker === currentRpRole);
-  const activeChar = currentLine?.speaker === 'A' ? charA : charB;
-
-  const myRoleName = currentRpRole === 'A' ? charA.name : currentRpRole === 'B' ? charB.name : 'Cả 2 vai (A & B)';
-  const myRoleAvatar = currentRpRole === 'A' ? (charA.avatar || '👩‍💼') : currentRpRole === 'B' ? (charB.avatar || '🧑‍💼') : '👥';
-  const myRoleColor = currentRpRole === 'A' ? '#2563eb' : '#059669';
+  const activeChar = getCharacterByCode(lesson, currentLine?.speaker);
+  const myChar = currentRpRole === 'ALL' ? { name: 'Toàn bộ các vai', avatar: '👥', color: '#6366f1' } : getCharacterByCode(lesson, currentRpRole);
 
   workspace.innerHTML = `
     <div class="video-rp-container">
       <!-- HEADER THANH ĐIỀU KHIỂN -->
       <div class="video-rp-header">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <span class="video-rp-badge">🎬 Video Roleplay</span>
+          <span class="video-rp-badge">🎬 Video Studio</span>
           <span style="font-weight:800;font-size:15px;color:#0f172a">${lesson.title}</span>
-          <div style="background:${myRoleColor}15;color:${myRoleColor};border:1.5px solid ${myRoleColor}40;padding:4px 12px;border-radius:9999px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:6px">
-            <span>${myRoleAvatar}</span>
-            <span>Bạn đang đóng: <b>${myRoleName}</b></span>
+          <div style="background:${myChar.color}15;color:${myChar.color};border:1.5px solid ${myChar.color}40;padding:4px 12px;border-radius:9999px;font-size:12px;font-weight:800;display:inline-flex;align-items:center;gap:6px">
+            <span>${myChar.avatar || '👤'}</span>
+            <span>Bạn đang đóng: <b>${myChar.name}</b></span>
           </div>
         </div>
 
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-sm" onclick="window.switchRoleplayRoleModal()" style="background:#ffffff;border:1px solid #cbd5e1;font-size:12px;font-weight:700" title="Đổi sang vai đối tác">
-            🔁 Đổi vai (${currentRpRole === 'A' ? 'A ➔ B' : 'B ➔ A'})
+          <button class="btn btn-sm" onclick="window.switchRoleplayRoleModal()" style="background:#ffffff;border:1px solid #cbd5e1;font-size:12px;font-weight:700" title="Đổi sang vai tiếp theo">
+            🔁 Đổi vai
           </button>
           <button class="btn btn-sm" onclick="window.openRoleSelectionScreen()" style="background:#ffffff;border:1px solid #cbd5e1;font-size:12px" title="Quay lại chọn vai">
             ⚙️ Chọn lại vai
@@ -1574,15 +1585,15 @@ function renderActiveRoleplayView() {
                 ${activeChar.avatar || '👤'} ${currentLine?.speakerName || activeChar.name}
               </span>
               <span id="rp-turn-status-text">
-                ${isUserTurn ? '🎙️ Đến lượt bạn nói!' : '🔊 Đang phát video đối tác...'}
+                ${isUserTurn ? '🎙️ Đến lượt bạn nói!' : '🔊 Đang nghe đối tác nói...'}
               </span>
             </div>
 
             <!-- THẺ VIDEO THỰC TẾ -->
-            <video id="rp-video-player" playsinline preload="auto" style="display:none;width:100%;height:100%;max-height:340px;object-fit:cover"></video>
+            <video id="rp-video-player" playsinline preload="auto" style="display:none;width:100%;height:100%;max-height:340px;object-fit:cover;background:#000"></video>
 
             <!-- KHUNG SÂN KHẤU AVATAR DỰ PHÒNG HOẶC ĐANG TẢI -->
-            <div id="rp-avatar-stage" class="video-avatar-stage">
+            <div id="rp-avatar-stage" class="video-avatar-stage" style="background:radial-gradient(circle, ${activeChar.color}25 0%, #0f172a 100%)">
               <div style="font-size:72px;margin-bottom:12px;animation:float-avatar 3s ease-in-out infinite">
                 ${activeChar.avatar || '👤'}
               </div>
@@ -1644,11 +1655,11 @@ function renderActiveRoleplayView() {
                 </div>
 
                 <!-- BẢNG SO KHỚP TỪNG TỪ (WORD DIFF) -->
-                <div class="speech-diff-box" id="rp-diff-box" style="display:none">
+                <div class="speech-diff-box" id="rp-diff-box" style="display:none;width:100%;background:#ffffff;padding:10px 12px;border-radius:8px;border:1px solid #e2e8f0;margin-top:6px">
                   <div style="font-size:11.5px;font-weight:800;color:#475569;margin-bottom:6px;text-transform:uppercase">
                     Kết quả nhận diện giọng nói:
                   </div>
-                  <div id="rp-diff-content"></div>
+                  <div id="rp-diff-content" style="line-height:1.6"></div>
                 </div>
 
                 <!-- ĐIỂM SỐ VÀ NÚT ĐIỀU HƯỚNG -->
@@ -1668,7 +1679,7 @@ function renderActiveRoleplayView() {
               </div>
             ` : `
               <div style="padding:16px 0;text-align:center;width:100%">
-                <div style="font-size:28px;margin-bottom:6px">🤖</div>
+                <div style="font-size:28px;margin-bottom:6px">🎧</div>
                 <div style="font-size:14px;font-weight:700;color:#475569">
                   Đang lắng nghe đối tác (<b>${currentLine?.speakerName || activeChar.name}</b>) nói...
                 </div>
@@ -1695,7 +1706,7 @@ function renderActiveRoleplayView() {
           <div class="dialogue-timeline">
             ${dialogue.map((d, idx) => {
               const isCurrent = idx === currentRpTurnIdx;
-              const spkChar = d.speaker === 'A' ? charA : charB;
+              const spkChar = getCharacterByCode(lesson, d.speaker);
               const isUserLine = currentRpRole === 'ALL' || (d.speaker === currentRpRole);
               const scored = rpScores[idx];
               const isCompleted = scored && scored.score >= 75;
@@ -1759,8 +1770,6 @@ window.playUserRecordedAudio = function(customUrl = null) {
     return;
   }
 
-  const playBtn = document.getElementById('btn-play-user-audio');
-
   if (currentUserAudioElement && !currentUserAudioElement.paused) {
     stopUserAudioPlayback();
     return;
@@ -1768,18 +1777,8 @@ window.playUserRecordedAudio = function(customUrl = null) {
 
   stopUserAudioPlayback();
   currentUserAudioElement = new Audio(audioUrl);
-  if (playBtn) {
-    playBtn.classList.add('playing');
-    playBtn.innerHTML = '⏸️ Đang phát giọng bạn...';
-  }
-
-  currentUserAudioElement.onended = () => {
-    stopUserAudioPlayback();
-  };
-  currentUserAudioElement.onerror = () => {
-    stopUserAudioPlayback();
-  };
-
+  currentUserAudioElement.onended = () => stopUserAudioPlayback();
+  currentUserAudioElement.onerror = () => stopUserAudioPlayback();
   currentUserAudioElement.play().catch(e => {
     console.warn("Audio play error:", e);
     stopUserAudioPlayback();
@@ -1796,10 +1795,6 @@ function playCurrentRpTurn() {
   stopUserAudioPlayback();
 
   const isUserTurn = currentRpRole === 'ALL' || (currentLine.speaker === currentRpRole);
-  const videoElem = document.getElementById('rp-video-player');
-  const avatarStage = document.getElementById('rp-avatar-stage');
-
-  // Cập nhật giao diện
   renderActiveRoleplayView();
 
   const refreshedVideoElem = document.getElementById('rp-video-player');
@@ -1814,18 +1809,21 @@ function playCurrentRpTurn() {
     if (refreshedAvatarStage) refreshedAvatarStage.style.display = 'block';
   } else {
     // LƯỢT CỦA MÁY / ĐỐI TÁC: Phát video hoặc TTS tự nhiên
-    if (currentLine.videoUrl && refreshedVideoElem) {
+    const targetVideoUrl = currentLine.videoUrl || currentRpLesson.videoUrl;
+    if (targetVideoUrl && refreshedVideoElem) {
       refreshedVideoElem.style.display = 'block';
       if (refreshedAvatarStage) refreshedAvatarStage.style.display = 'none';
 
-      refreshedVideoElem.src = currentLine.videoUrl;
+      refreshedVideoElem.src = targetVideoUrl;
       refreshedVideoElem.playbackRate = rpPlaybackSpeed;
-      refreshedVideoElem.currentTime = currentLine.startTime || 0;
+      if (currentLine.startTime !== undefined) {
+        refreshedVideoElem.currentTime = currentLine.startTime;
+      }
 
       const playPromise = refreshedVideoElem.play();
       if (playPromise !== undefined) {
         playPromise.catch(err => {
-          console.warn("Video autoplay blocked or format error, fallback to TTS:", err);
+          console.warn("Video autoplay blocked, fallback to TTS:", err);
           if (refreshedVideoElem) refreshedVideoElem.style.display = 'none';
           if (refreshedAvatarStage) refreshedAvatarStage.style.display = 'block';
           speakLineWithTTS(currentLine.text, () => {
@@ -1835,18 +1833,14 @@ function playCurrentRpTurn() {
       }
 
       refreshedVideoElem.onended = () => {
-        setTimeout(() => {
-          window.advanceRoleplayTurnManual();
-        }, 700);
+        setTimeout(() => { window.advanceRoleplayTurnManual(); }, 700);
       };
     } else {
       // Không có video URL: Dùng Natural Speech Synthesis TTS
       if (refreshedVideoElem) refreshedVideoElem.style.display = 'none';
       if (refreshedAvatarStage) refreshedAvatarStage.style.display = 'block';
       speakLineWithTTS(currentLine.text, () => {
-        setTimeout(() => {
-          window.advanceRoleplayTurnManual();
-        }, 700);
+        setTimeout(() => { window.advanceRoleplayTurnManual(); }, 700);
       });
     }
   }
@@ -1858,19 +1852,14 @@ function speakLineWithTTS(text, onEndCallback = null) {
     return;
   }
   const currentLine = currentRpLesson.dialogue?.[currentRpTurnIdx];
-  const charA = currentRpLesson.characterA || {};
-  const charB = currentRpLesson.characterB || {};
-  const spkChar = currentLine?.speaker === 'A' ? charA : charB;
+  const spkChar = getCharacterByCode(currentRpLesson, currentLine?.speaker);
   
-  // Nhận diện giới tính nhân vật để chọn giọng tự nhiên tương ứng
   let gender = 'neutral';
   const nameStr = ((spkChar.name || '') + ' ' + (spkChar.roleTitle || '')).toLowerCase();
-  if (nameStr.includes('emma') || nameStr.includes('sarah') || nameStr.includes('elena') || (spkChar.avatar && spkChar.avatar.includes('👩')) || nameStr.includes('lễ tân') || nameStr.includes('receptionist')) {
+  if (nameStr.includes('emma') || nameStr.includes('bella') || nameStr.includes('sarah') || nameStr.includes('elena') || (spkChar.avatar && spkChar.avatar.includes('👩')) || nameStr.includes('lễ tân') || nameStr.includes('receptionist')) {
     gender = 'female';
-  } else if (nameStr.includes('david') || nameStr.includes('alex') || nameStr.includes('harrison') || (spkChar.avatar && (spkChar.avatar.includes('🧑') || spkChar.avatar.includes('👨'))) || nameStr.includes('mr')) {
+  } else if (nameStr.includes('alex') || nameStr.includes('david') || nameStr.includes('harrison') || (spkChar.avatar && (spkChar.avatar.includes('🧑') || spkChar.avatar.includes('👨'))) || nameStr.includes('mr')) {
     gender = 'male';
-  } else {
-    gender = currentLine?.speaker === 'A' ? 'female' : 'male';
   }
 
   speakText(text, {
@@ -1922,21 +1911,143 @@ window.cancelAutoAdvance = function() {
   }
 };
 
-window.retryCurrentRoleplayTurn = function() {
-  if (advanceTimerTimeout) clearTimeout(advanceTimerTimeout);
-  stopUserAudioPlayback();
-  if (rpScores[currentRpTurnIdx]) {
-    delete rpScores[currentRpTurnIdx];
-  }
-  renderActiveRoleplayView();
-  setTimeout(() => {
-    window.toggleRoleplayRecording();
-  }, 250);
-};
+// -------------------------------------------------------------------------
+// 3.4 THU ÂM HỌC VIÊN + NHẬN DIỆN GIỌNG NÓI & SO KHỚP TỪ (SPEECH DIFF)
+// -------------------------------------------------------------------------
+function computeWordDiffAndScore(targetText, spokenText) {
+  const cleanTarget = String(targetText || '').toLowerCase().replace(/[^a-z0-9\s']/g, ' ').trim().split(/\s+/).filter(Boolean);
+  const cleanSpoken = String(spokenText || '').toLowerCase().replace(/[^a-z0-9\s']/g, ' ').trim().split(/\s+/).filter(Boolean);
+  
+  if (!cleanTarget.length) return { score: 100, diffHtml: '<span>' + esc(targetText) + '</span>' };
+  if (!cleanSpoken.length) return { score: 0, diffHtml: '<span style="color:#ef4444">' + esc(targetText) + '</span>' };
+  
+  let matchedCount = 0;
+  const originalWords = String(targetText || '').split(/\s+/);
+  
+  const diffHtml = originalWords.map(origWord => {
+    const norm = origWord.toLowerCase().replace(/[^a-z0-9']/g, '');
+    const isMatched = cleanSpoken.some(spk => {
+      if (spk === norm) return true;
+      if (norm.length >= 4 && (spk.includes(norm) || norm.includes(spk))) return true;
+      return false;
+    });
+    if (isMatched) {
+      matchedCount++;
+      return `<span class="diff-word-correct" style="color:#15803d;background:#dcfce7;padding:2px 6px;border-radius:4px;font-weight:700;margin:0 2px;">${esc(origWord)}</span>`;
+    } else {
+      return `<span class="diff-word-missing" style="color:#b91c1c;background:#fee2e2;padding:2px 6px;border-radius:4px;text-decoration:underline;margin:0 2px;">${esc(origWord)}</span>`;
+    }
+  }).join(' ');
 
-// -------------------------------------------------------------------------
-// 3.4 THU ÂM HỌC VIÊN (MEDIARECORDER) + CHẤM ĐIỂM AI (SPEECH DIFF ENGINE)
-// -------------------------------------------------------------------------
+  const score = Math.round(Math.min(100, Math.max(0, (matchedCount / originalWords.length) * 100)));
+  return { score, diffHtml, matchedCount, totalWords: originalWords.length };
+}
+
+function startRoleplaySpeechRecognition(currentLine, micBtn, statusLabel, diffBox, diffContent, scoreVal) {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) return;
+
+  rpSpeechRecognizer = new SpeechRec();
+  rpSpeechRecognizer.lang = 'en-US';
+  rpSpeechRecognizer.interimResults = true;
+  rpSpeechRecognizer.maxAlternatives = 1;
+
+  isRpRecording = true;
+  if (micBtn) {
+    micBtn.classList.add('recording');
+    micBtn.innerHTML = '🔴';
+  }
+  if (statusLabel) {
+    statusLabel.innerHTML = '<span style="color:#dc2626;font-weight:800">🎙️ Đang nghe bạn nói... Hãy đọc to câu tiếng Anh!</span>';
+  }
+
+  let finalTranscript = '';
+
+  rpSpeechRecognizer.onresult = (event) => {
+    let interim = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript;
+      } else {
+        interim += event.results[i][0].transcript;
+      }
+    }
+    const currentSpoken = (finalTranscript || interim || '').trim();
+    if (currentSpoken && diffBox && diffContent) {
+      diffBox.style.display = 'block';
+      const { score, diffHtml } = computeWordDiffAndScore(currentLine.text, currentSpoken);
+      diffContent.innerHTML = diffHtml;
+      if (scoreVal) {
+        const scoreColor = score >= 80 ? '#16a34a' : score >= 60 ? '#f59e0b' : '#dc2626';
+        scoreVal.innerHTML = `Độ chính xác: <b style="color:${scoreColor};font-size:17px">${score}/100</b>`;
+      }
+    }
+  };
+
+  rpSpeechRecognizer.onend = () => {
+    isRpRecording = false;
+    if (activeMediaRecorder && activeMediaRecorder.state === 'recording') {
+      try { activeMediaRecorder.stop(); } catch(e){}
+    }
+    if (micBtn) {
+      micBtn.classList.remove('recording');
+      micBtn.innerHTML = '🎙️';
+    }
+    
+    const targetText = currentLine.text;
+    const { score, diffHtml } = computeWordDiffAndScore(targetText, finalTranscript);
+    if (!rpScores[currentRpTurnIdx]) rpScores[currentRpTurnIdx] = {};
+    rpScores[currentRpTurnIdx].score = score;
+    rpScores[currentRpTurnIdx].transcript = finalTranscript;
+    rpScores[currentRpTurnIdx].targetText = targetText;
+
+    if (diffBox && diffContent) {
+      diffBox.style.display = 'block';
+      diffContent.innerHTML = diffHtml || `<span>${esc(targetText)}</span>`;
+    }
+
+    if (scoreVal) {
+      const scoreColor = score >= 80 ? '#16a34a' : score >= 60 ? '#f59e0b' : '#dc2626';
+      scoreVal.innerHTML = `Điểm phát âm: <b style="color:${scoreColor};font-size:18px">${score}/100</b>`;
+    }
+
+    if (statusLabel) {
+      if (score >= 75) {
+        playSuccessSound();
+        addXP(15, 'Hoàn thành lượt đóng vai xuất sắc');
+        statusLabel.innerHTML = `✅ <b>Tuyệt vời (${score}%)!</b> Tự động chuyển câu sau 2 giây... <button class="btn btn-xs" onclick="window.cancelAutoAdvance()" style="margin-left:6px;background:#fff;border:1px solid #cbd5e1">Dừng chuyển</button>`;
+        advanceTimerTimeout = setTimeout(() => {
+          window.advanceRoleplayTurnManual();
+        }, 2200);
+      } else if (score >= 50) {
+        playSuccessSound();
+        statusLabel.innerHTML = `👍 <b>Khá tốt (${score}%)!</b> Bấm "Tiếp tục" hoặc bấm Mic để đọc lại đạt điểm cao hơn.`;
+      } else {
+        playWrongSound();
+        statusLabel.innerHTML = `⚠️ <b>Chưa chuẩn (${score}%)!</b> Hãy bấm Mic để đọc lại rõ ràng hơn nhé.`;
+      }
+    }
+  };
+
+  rpSpeechRecognizer.onerror = (e) => {
+    console.warn("Speech recognition error:", e.error);
+    isRpRecording = false;
+    if (micBtn) {
+      micBtn.classList.remove('recording');
+      micBtn.innerHTML = '🎙️';
+    }
+    if (statusLabel) {
+      statusLabel.innerHTML = '⚠️ Chưa nhận diện rõ âm thanh. Vui lòng bấm Mic đọc lại!';
+    }
+  };
+
+  try {
+    rpSpeechRecognizer.start();
+  } catch (err) {
+    console.warn("SpeechRecognizer start error:", err);
+  }
+}
+
 window.toggleRoleplayRecording = function() {
   const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRec) {
@@ -1955,9 +2066,7 @@ window.toggleRoleplayRecording = function() {
   const diffBox = document.getElementById('rp-diff-box');
   const diffContent = document.getElementById('rp-diff-content');
   const scoreVal = document.getElementById('rp-turn-score-val');
-  const playbackCard = document.getElementById('rp-user-playback-card');
 
-  // NẾU ĐANG THU ÂM -> DỪNG THU ÂM
   if (isRpRecording) {
     if (rpSpeechRecognizer) {
       try { rpSpeechRecognizer.stop(); } catch(e){}
@@ -1968,60 +2077,254 @@ window.toggleRoleplayRecording = function() {
     isRpRecording = false;
     if (micBtn) {
       micBtn.classList.remove('recording');
-      micBtn.textContent = '🎙️';
+      micBtn.innerHTML = '🎙️';
     }
     if (statusLabel) statusLabel.textContent = 'Đã dừng thu âm. Bấm Mic để nói lại';
     return;
   }
 
-  // BẮT ĐẦU THU ÂM BẰNG MEDIARECORDER (LƯU AUDIO THẬT CỦA HỌC VIÊN)
-  navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
+  navigator.mediaDevices?.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
     .then(stream => {
       activeAudioStream = stream;
       recordedAudioChunks = [];
-
       let mimeType = 'audio/webm';
       if (typeof MediaRecorder !== 'undefined') {
         if (!MediaRecorder.isTypeSupported('audio/webm')) {
           if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
-          else if (MediaRecorder.isTypeSupported('audio/ogg')) mimeType = 'audio/ogg';
           else mimeType = '';
         }
         activeMediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-        
         activeMediaRecorder.ondataavailable = (e) => {
           if (e.data && e.data.size > 0) recordedAudioChunks.push(e.data);
         };
-
         activeMediaRecorder.onstop = () => {
           if (recordedAudioChunks.length > 0) {
-            const blobType = mimeType || 'audio/webm';
-            const audioBlob = new Blob(recordedAudioChunks, { type: blobType });
-            const userAudioUrl = URL.createObjectURL(audioBlob);
+            const blob = new Blob(recordedAudioChunks, { type: mimeType || 'audio/webm' });
+            const userAudioUrl = URL.createObjectURL(blob);
             if (currentRpLesson) {
               if (!rpScores[currentRpTurnIdx]) rpScores[currentRpTurnIdx] = {};
               rpScores[currentRpTurnIdx].userAudioUrl = userAudioUrl;
             }
-            // Hiển thị khung nghe lại giọng đọc của học viên
-            renderUserRoleplayPlaybackControls(userAudioUrl);
           }
           if (activeAudioStream) {
             activeAudioStream.getTracks().forEach(t => t.stop());
             activeAudioStream = null;
           }
         };
-
         activeMediaRecorder.start(100);
       }
-
-      // ĐỒNG THỜI CHẠY SPEECH RECOGNITION ĐỂ SO KHỚP TỪNG TỪ & CHẤM ĐIỂM
       startRoleplaySpeechRecognition(currentLine, micBtn, statusLabel, diffBox, diffContent, scoreVal);
     })
     .catch(err => {
-      console.warn("Không thể mở micro qua getUserMedia, tiếp tục với SpeechRecognition thuần:", err);
+      console.warn("getUserMedia fallback to SpeechRecognition:", err);
       startRoleplaySpeechRecognition(currentLine, micBtn, statusLabel, diffBox, diffContent, scoreVal);
     });
 };
+
+// -------------------------------------------------------------------------
+// 3.5 BÁO CÁO TỔNG KẾT & BÀI TẬP HIỂU VIDEO (COMPREHENSION QUIZ)
+// -------------------------------------------------------------------------
+function showRoleplayCompletionSummary() {
+  const workspace = document.getElementById('spk-workspace');
+  if (!workspace || !currentRpLesson) return;
+
+  const lesson = currentRpLesson;
+  const dialogue = lesson.dialogue || [];
+  const chars = getLessonCharacters(lesson);
+  const myChar = currentRpRole === 'ALL' ? { name: 'Tất cả các vai', avatar: '👥', color: '#6366f1' } : getCharacterByCode(lesson, currentRpRole);
+  
+  const userTurns = dialogue.map((d, idx) => ({ ...d, idx })).filter(d => currentRpRole === 'ALL' || d.speaker === currentRpRole);
+  const turnScores = userTurns.map(d => rpScores[d.idx]?.score ?? 0);
+  const avgScore = turnScores.length ? Math.round(turnScores.reduce((a, b) => a + b, 0) / turnScores.length) : 85;
+
+  let badgeEmoji = '🏆';
+  let badgeTitle = 'Xuất Sắc! Giao Tiếp Tự Nhiên & Lưu Loát';
+  let badgeColor = '#059669';
+  if (avgScore < 60) {
+    badgeEmoji = '🌱';
+    badgeTitle = 'Cần Luyện Tập Thêm';
+    badgeColor = '#dc2626';
+  } else if (avgScore < 80) {
+    badgeEmoji = '⭐';
+    badgeTitle = 'Khá Tốt! Tiếp Tục Phát Huy';
+    badgeColor = '#d97706';
+  }
+
+  addXP(30, 'Hoàn thành toàn bộ kịch bản Video Roleplay');
+  const exercises = lesson.exercises || [];
+
+  workspace.innerHTML = `
+    <div class="video-rp-container">
+      <div class="role-select-screen" style="max-width:840px;margin:0 auto;text-align:center">
+        <div style="font-size:48px;margin-bottom:8px">${badgeEmoji}</div>
+        <h2 style="font-size:24px;font-weight:800;color:#0f172a;margin-bottom:4px">Hoàn Thành Đóng Vai Video!</h2>
+        <div style="font-size:16px;font-weight:700;color:${badgeColor};margin-bottom:16px">${badgeTitle}</div>
+        
+        <!-- THẺ ĐIỂM TỔNG HỢP -->
+        <div style="display:flex;justify-content:center;gap:16px;margin-bottom:24px;flex-wrap:wrap">
+          <div class="card" style="margin:0;padding:16px 24px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px">
+            <div style="font-size:12px;font-weight:700;color:#166534;text-transform:uppercase">Điểm Phát Âm Trung Bình</div>
+            <div style="font-size:32px;font-weight:900;color:#15803d">${avgScore}<span style="font-size:18px">/100</span></div>
+          </div>
+          <div class="card" style="margin:0;padding:16px 24px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:12px">
+            <div style="font-size:12px;font-weight:700;color:#1e40af;text-transform:uppercase">Vai Bạn Đã Đóng</div>
+            <div style="font-size:18px;font-weight:800;color:#1d4ed8;margin-top:6px">${myChar.avatar || '👤'} ${myChar.name}</div>
+          </div>
+          <div class="card" style="margin:0;padding:16px 24px;background:#fdf2f8;border:1.5px solid #fbcfe8;border-radius:12px">
+            <div style="font-size:12px;font-weight:700;color:#9d174d;text-transform:uppercase">Thưởng Điểm Tích Lũy</div>
+            <div style="font-size:32px;font-weight:900;color:#db2777">+30 <span style="font-size:18px">XP ⭐</span></div>
+          </div>
+        </div>
+
+        <!-- BẢNG CHI TIẾT TỪNG CÂU VÀ NGHE LẠI BẢN THU ÂM CỦA HỌC VIÊN -->
+        <div class="card" style="text-align:left;background:#f8fafc;border:1px solid #e2e8f0;margin-bottom:24px">
+          <div style="font-weight:800;font-size:15px;color:#0f172a;margin-bottom:12px;display:flex;align-items:center;gap:6px">
+            <span>🎧</span> Bản ghi âm giọng đọc của bạn theo từng câu:
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            ${userTurns.map((d, i) => {
+              const sc = rpScores[d.idx];
+              const score = sc?.score ?? 0;
+              const audioUrl = sc?.userAudioUrl;
+              return `
+                <div style="display:flex;justify-content:space-between;align-items:center;background:#ffffff;padding:12px 16px;border-radius:10px;border:1px solid #e2e8f0;flex-wrap:wrap;gap:10px">
+                  <div style="flex:1;min-width:260px">
+                    <div style="font-weight:700;font-size:13.5px;color:#1e293b">${d.text}</div>
+                    <div style="font-size:12px;color:#64748b;margin-top:2px"><i>${d.meaning || ''}</i></div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-weight:800;font-size:14px;color:${score >= 75 ? '#15803d' : '#dc2626'};background:${score >= 75 ? '#dcfce7' : '#fee2e2'};padding:4px 10px;border-radius:6px">
+                      ${score}%
+                    </span>
+                    ${audioUrl ? `
+                      <button class="btn btn-sm" onclick="window.playUserRecordedAudio('${audioUrl}')" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;font-size:12px">
+                        🎧 Nghe lại giọng
+                      </button>
+                    ` : ''}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- PHẦN BÀI TẬP HIỂU VIDEO (COMPREHENSION QUIZ) NẾU CÓ -->
+        ${exercises.length ? `
+          <div class="card" style="text-align:left;background:#ffffff;border:2px solid #818cf8;border-radius:14px;margin-bottom:24px;box-shadow:0 4px 16px rgba(99,102,241,0.1);padding:18px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #e0e7ff">
+              <span style="font-size:22px">📝</span>
+              <div>
+                <div style="font-weight:800;font-size:16px;color:#3730a3">Bài Tập Kiểm Tra Hiểu Nội Dung Video (Comprehension Quiz)</div>
+                <div style="font-size:12.5px;color:#6366f1">Trả lời các câu hỏi sau để củng cố kiến thức và kiểm tra độ hiểu:</div>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:16px">
+              ${exercises.map((ex, exIdx) => {
+                if (ex.type === 'mcq') {
+                  return `
+                    <div class="card" style="margin:0;background:#f8fafc;border:1px solid #cbd5e1" id="rp-quiz-card-${exIdx}">
+                      <div style="font-weight:700;font-size:14px;color:#1e293b;margin-bottom:10px">
+                        Câu ${exIdx + 1}: ${renderRich(ex.question)}
+                      </div>
+                      <div style="display:flex;flex-direction:column;gap:6px">
+                        ${(ex.options || []).map((opt, optIdx) => `
+                          <button class="opt" id="rp-opt-${exIdx}-${optIdx}" onclick="window.checkRoleplayQuizMCQ(${exIdx}, ${optIdx}, ${ex.answer}, '${(ex.explain || '').replace(/'/g, "\\'")}')" style="text-align:left;padding:8px 12px;background:#fff">
+                            <span class="okey">${KEYS[optIdx]}</span>
+                            <span>${renderRich(opt)}</span>
+                          </button>
+                        `).join('')}
+                      </div>
+                      <div id="rp-quiz-fb-${exIdx}" class="fb" style="display:none;margin-top:10px"></div>
+                    </div>
+                  `;
+                } else if (ex.type === 'gap_fill') {
+                  return `
+                    <div class="card" style="margin:0;background:#f8fafc;border:1px solid #cbd5e1" id="rp-quiz-card-${exIdx}">
+                      <div style="font-weight:700;font-size:14px;color:#1e293b;margin-bottom:10px">
+                        Câu ${exIdx + 1}: ${renderRich(ex.sentence)}
+                      </div>
+                      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                        <input type="text" id="rp-gap-input-${exIdx}" placeholder="Nhập từ còn thiếu..." style="max-width:240px;padding:8px 12px;border:1.5px solid #cbd5e1;border-radius:8px">
+                        <button class="btn btn-p" onclick="window.checkRoleplayQuizGap(${exIdx}, '${(ex.correct || '').replace(/'/g, "\\'")}', '${(ex.explain || '').replace(/'/g, "\\'")}')">Kiểm tra</button>
+                      </div>
+                      <div id="rp-quiz-fb-${exIdx}" class="fb" style="display:none;margin-top:10px"></div>
+                    </div>
+                  `;
+                }
+                return '';
+              }).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- HÀNG NÚT ĐIỀU HƯỚNG CUỐI BÀI -->
+        <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-p" onclick="window.startRoleplayAsRole('${currentRpRole}')" style="padding:10px 20px;font-weight:700">
+            🔄 Luyện lại vai này (${myChar.name})
+          </button>
+          <button class="btn" onclick="window.openRoleSelectionScreen()" style="background:#ffffff;border:1.5px solid #cbd5e1;color:#1e293b;padding:10px 20px;font-weight:700">
+            🎭 Chọn đóng vai nhân vật khác
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+if (typeof window !== 'undefined') {
+  window.checkRoleplayQuizMCQ = function(exIdx, chosenIdx, correctIdx, explain) {
+    const fb = document.getElementById(`rp-quiz-fb-${exIdx}`);
+    const card = document.getElementById(`rp-quiz-card-${exIdx}`);
+    if (!fb || !card) return;
+    
+    card.querySelectorAll('.opt').forEach((btn, idx) => {
+      btn.disabled = true;
+      if (idx === correctIdx) {
+        btn.classList.add('correct');
+      } else if (idx === chosenIdx) {
+        btn.classList.add('wrong');
+      }
+    });
+
+    fb.style.display = 'block';
+    if (chosenIdx === correctIdx) {
+      playSuccessSound();
+      addXP(10, 'Trả lời đúng bài tập hiểu video');
+      fb.className = 'fb ok';
+      fb.innerHTML = `✅ <b>Chính xác!</b> ${explain ? `<br>${explain}` : ''}`;
+    } else {
+      playWrongSound();
+      fb.className = 'fb bad';
+      fb.innerHTML = `❌ <b>Chưa đúng!</b> Đáp án đúng là <b>${KEYS[correctIdx]}</b>. ${explain ? `<br>${explain}` : ''}`;
+    }
+  };
+
+  window.checkRoleplayQuizGap = function(exIdx, correctWord, explain) {
+    const input = document.getElementById(`rp-gap-input-${exIdx}`);
+    const fb = document.getElementById(`rp-quiz-fb-${exIdx}`);
+    if (!input || !fb) return;
+    const val = input.value.trim().toLowerCase();
+    const correct = String(correctWord || '').trim().toLowerCase();
+
+    fb.style.display = 'block';
+    if (val === correct) {
+      playSuccessSound();
+      addXP(10, 'Điền đúng từ trong bài tập video');
+      fb.className = 'fb ok';
+      fb.innerHTML = `✅ <b>Chính xác!</b> ${explain ? `<br>${explain}` : ''}`;
+      input.disabled = true;
+      input.style.borderColor = '#22c55e';
+      input.style.background = '#f0fdf4';
+    } else {
+      playWrongSound();
+      fb.className = 'fb bad';
+      fb.innerHTML = `❌ <b>Chưa đúng!</b> Từ đúng là: <b>${correctWord}</b>. ${explain ? `<br>${explain}` : ''}`;
+      input.style.borderColor = '#ef4444';
+      input.style.background = '#fef2f2';
+    }
+  };
+}
 
 
 

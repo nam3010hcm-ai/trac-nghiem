@@ -128,10 +128,141 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
     ],
     speaking: [
       {
+        id: 'spk_video_multi_1',
+        type: 'video_roleplay',
+        title: '🎬 Multi-Character Video: Project Kickoff Meeting',
+        topic: 'Business & Teamwork (3 Nhân Vật)',
+        level: 'B1 - B2',
+        description: 'Hội thoại tương tác 3 nhân vật trong cuộc họp dự án: Alex (Project Lead), Bella (UI/UX Designer), David (Tech Lead). Bạn có thể chọn đóng vai bất kỳ nhân vật nào để luyện phản xạ và giao tiếp đa chiều!',
+        characters: [
+          {
+            code: 'A',
+            id: 'A',
+            name: 'Alex (Project Manager)',
+            avatar: '👨‍💼',
+            roleTitle: 'Trưởng Dự Án',
+            color: '#2563eb',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          },
+          {
+            code: 'B',
+            id: 'B',
+            name: 'Bella (UI/UX Designer)',
+            avatar: '👩‍🎨',
+            roleTitle: 'Chuyên Viên Thiết Kế',
+            color: '#db2777',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+          },
+          {
+            code: 'C',
+            id: 'C',
+            name: 'David (Tech Lead)',
+            avatar: '🧑‍💻',
+            roleTitle: 'Kỹ Sư Trưởng Backend',
+            color: '#059669',
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          }
+        ],
+        dialogue: [
+          {
+            id: 'm_dlg_1',
+            speaker: 'A',
+            speakerName: 'Alex (Project Manager)',
+            text: "Good morning team! Today we are kicking off the mobile learning app redesign.",
+            ipa: "/ɡʊd ˈmɔː.nɪŋ tiːm! təˈdeɪ wiː ɑːr ˈkɪk.ɪŋ ɒf ðə ˈməʊ.baɪl ˈlɜː.nɪŋ æp ˌriː.dɪˈzaɪn/",
+            meaning: "Chào cả nhóm! Hôm nay chúng ta chính thức khởi động dự án thiết kế lại ứng dụng học tập di động.",
+            tip: "Cụm 'kick off' mang nghĩa bắt đầu/khởi động. Nhấn trọng âm vào 'mobile learning' và 'redesign'.",
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          },
+          {
+            id: 'm_dlg_2',
+            speaker: 'B',
+            speakerName: 'Bella (UI/UX Designer)',
+            text: "I have prepared the interactive prototype with a fresh modern color palette and intuitive navigation.",
+            ipa: "/aɪ hæv prɪˈpeəd ðə ˌɪn.təˈræk.tɪv ˈprəʊ.tə.taɪp wɪð ə freʃ ˈmɒd.ən ˈkʌl.ər ˈpæl.ət ænd ɪnˈtjuː.ɪ.tɪv ˌnæv.ɪˈɡeɪ.ʃən/",
+            meaning: "Tôi đã chuẩn bị bản mẫu tương tác với bảng màu hiện đại và luồng điều hướng rất trực quan.",
+            tip: "Phát âm chuẩn âm /p/ trong 'prototype', trọng âm 'intuitive' nhấn vào âm tiết 2 /ɪnˈtjuː.ɪ.tɪv/.",
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+          },
+          {
+            id: 'm_dlg_3',
+            speaker: 'C',
+            speakerName: 'David (Tech Lead)',
+            text: "The backend server and database architecture are optimized and ready for frontend API integration.",
+            ipa: "/ðiː ˈbæk.end ˈsɜː.vər ænd ˈdeɪ.tə.beɪs ˈɑː.kɪ.tek.tʃər ɑːr ˈɒp.tɪ.maɪzd ænd ˈred.i fɔːr ˌfrʌnt.end eɪ.piːˈaɪ ˌɪn.tɪˈɡreɪ.ʃən/",
+            meaning: "Hệ thống máy chủ backend và cơ sở dữ liệu đã được tối ưu hóa, sẵn sàng để tích hợp API với frontend.",
+            tip: "Nối âm /r/ trong 'server and', phát âm chính xác 'architecture' /ˈɑː.kɪ.tek.tʃər/.",
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          },
+          {
+            id: 'm_dlg_4',
+            speaker: 'A',
+            speakerName: 'Alex (Project Manager)',
+            text: "Great progress! Can we conduct our first usability test by next Friday?",
+            ipa: "/ɡreɪt ˈprəʊ.ɡres! kæn wiː kənˈdʌkt aʊər fɜːst ˌjuː.zəˈbɪl.ə.ti test baɪ nekst ˈfraɪ.deɪ?/",
+            meaning: "Tiến độ rất tuyệt vời! Liệu chúng ta có thể tiến hành buổi thử nghiệm trải nghiệm người dùng đầu tiên vào thứ Sáu tới không?",
+            tip: "Lên giọng ở cuối câu hỏi '...by next Friday?'.",
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          },
+          {
+            id: 'm_dlg_5',
+            speaker: 'B',
+            speakerName: 'Bella (UI/UX Designer)',
+            text: "Absolutely! I will finalize the design assets and upload them to Figma by Wednesday.",
+            ipa: "/ˌæb.səˈluːt.li! aɪ wɪl ˈfaɪ.nəl.aɪz ðə dɪˈzaɪn ˈæs.ets ænd ʌpˈləʊd ðem tuː Figma baɪ ˈwenz.deɪ/",
+            meaning: "Chắc chắn rồi! Tôi sẽ hoàn thiện các tài nguyên thiết kế và tải lên Figma trước thứ Tư.",
+            tip: "Từ 'Wednesday' phát âm là /ˈwenz.deɪ/ (âm d câm).",
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+          },
+          {
+            id: 'm_dlg_6',
+            speaker: 'C',
+            speakerName: 'David (Tech Lead)',
+            text: "And our engineering team will set up the automated test suites to ensure zero bugs.",
+            ipa: "/ænd aʊər ˌen.dʒɪˈnɪə.rɪŋ tiːm wɪl set ʌp ðiː ˈɔː.tə.meɪ.tɪd test swiːts tuː ɪnˈʃɔːr ˈzɪə.rəʊ bʌɡz/",
+            meaning: "Và đội ngũ kỹ thuật chúng tôi sẽ thiết lập bộ kiểm thử tự động để đảm bảo không phát sinh lỗi.",
+            tip: "Từ 'suites' đọc giống /swiːts/ (giống từ sweets).",
+            videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          }
+        ],
+        exercises: [
+          {
+            type: 'mcq',
+            question: 'What is Bella responsible for delivering before Wednesday?',
+            options: [
+              'Deploying the database to production',
+              'Finalizing design assets and uploading to Figma',
+              'Writing automated test suites for backend',
+              'Signing the contract with the client'
+            ],
+            answer: 1,
+            explain: 'Bella stated: "I will finalize the design assets and upload them to Figma by Wednesday."'
+          },
+          {
+            type: 'gap_fill',
+            sentence: 'David and his engineering team will set up ___ test suites to ensure zero bugs.',
+            correct: 'automated',
+            hint: 'từ bắt đầu bằng chữ "auto..."'
+          },
+          {
+            type: 'mcq',
+            question: 'When is the team planning to conduct their first usability test?',
+            options: [
+              'Tomorrow morning',
+              'Next Friday',
+              'Next month',
+              'This Wednesday afternoon'
+            ],
+            answer: 1,
+            explain: 'Alex asked: "Can we conduct our first usability test by next Friday?" and the team agreed.'
+          }
+        ]
+      },
+      {
         id: 'spk_video_1',
         type: 'video_roleplay',
         title: '🎬 Video Roleplay: Hotel Check-in & Inquiry',
-        topic: 'Travel & Hospitality Simulation',
+        topic: 'Travel & Hospitality Simulation (2 Nhân Vật)',
         level: 'A2 - B1',
         description: 'Mô phỏng hội thoại video tương tác giữa Lễ tân khách sạn (Emma) và Du khách (David). Bạn có thể chọn đóng vai Nhân vật A hoặc Nhân vật B để luyện phát âm.',
         characterA: {
@@ -210,6 +341,32 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
             meaning: 'Nghe tuyệt quá! Cảm ơn bạn rất nhiều vì sự hỗ trợ nhiệt tình.',
             tip: 'Ngữ điệu hào hứng, thân thiện. Âm cuối /s/ trong "sounds" và "assistance".',
             videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4'
+          }
+        ],
+        exercises: [
+          {
+            type: 'mcq',
+            question: 'Where is breakfast served in Grand Palace Hotel?',
+            options: [
+              'On the 10th floor rooftop',
+              'On the second floor from 6:30 to 10:00 AM',
+              'In the lobby lounge 24/7',
+              'Delivered to the room only'
+            ],
+            answer: 1,
+            explain: 'Emma stated: "Yes, breakfast is served on the second floor from six thirty to ten AM."'
+          },
+          {
+            type: 'mcq',
+            question: 'What documents did the receptionist request for verification?',
+            options: [
+              'Passport and driver license',
+              'Passport and credit card',
+              'Identity card and cash deposit',
+              'Airline ticket and baggage tag'
+            ],
+            answer: 1,
+            explain: 'Emma asked: "Could you please show me your passport and credit card for verification?"'
           }
         ]
       },

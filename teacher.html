@@ -822,6 +822,20 @@ window.globalLogout = async function() {
         </div>
 
         <div class="fg">
+          <label>🎬 Video MP4 bài học / đề thi (Video Comprehension - MP4 / WebM / M4V)</label>
+          <div style="display:flex; gap:10px; margin-bottom: 8px;">
+            <input type="file" id="qf-video-file" accept="video/mp4,video/webm,video/*" style="flex:1;">
+            <button type="button" class="btn btn-sm" id="btn-clear-video" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca; display:none;">✖ Xóa Video</button>
+          </div>
+          <div id="video-upload-progress" style="display:none; margin-bottom:8px;">
+            <div style="font-size:12px; color:#db2777; font-weight:600; margin-bottom:3px;" id="video-upload-text">Đang tải video: 0%</div>
+            <div class="pbar" style="margin:0; height:6px; background:#fdf2f8;"><div id="video-upload-fill" class="pfill" style="width:0%; background:#db2777;"></div></div>
+          </div>
+          <input id="qf-video" placeholder="Link file video MP4 trên đám mây (hoặc tự động điền sau khi tải file)...">
+          <div id="video-preview" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="fg">
           <label>🖼️ Hình ảnh minh họa câu hỏi</label>
           <div style="display:flex; gap:10px; margin-bottom: 8px;">
             <input type="file" id="qf-image-file" accept="image/*" style="flex:1;">
