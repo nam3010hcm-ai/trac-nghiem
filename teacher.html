@@ -2260,16 +2260,17 @@ document.addEventListener('keydown', function(e) {
         </div>
 
         <!-- DANH SÁCH CÂU HỎI BÓC TÁCH -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <div style="font-size:14px; font-weight:800; color:#0f172a;">
-            📋 Danh Sách Câu Hỏi (<span id="pdf-q-total-count" style="color:#2563eb;">0</span> câu)
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <div style="font-size:14px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+            <span>📋</span> Danh Sách Câu Hỏi (<span id="pdf-q-total-count" style="color:#2563eb; font-weight:900;">0</span> câu)
           </div>
-          <div style="font-size:12px; color:#64748b;">
-            Kiểm tra công thức và đáp án đúng (đã tự động tích chọn theo màu đỏ)
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="text" id="pdf-q-search" placeholder="🔍 Tìm nhanh câu hỏi..." style="padding:5px 10px; font-size:12px; border:1px solid #cbd5e1; border-radius:6px; width:190px;" oninput="window.filterParsedQuestionsPreview(this.value)">
+            <button type="button" class="btn btn-sm" onclick="window.addBlankQuestionToParsed();" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:11.5px; padding:5px 10px; font-weight:700; border-radius:6px; cursor:pointer;">+ Thêm câu</button>
           </div>
         </div>
 
-        <div id="pdf-questions-container" style="max-height:420px; overflow-y:auto; padding-right:6px;">
+        <div id="pdf-questions-container" style="max-height:480px; overflow-y:auto; padding-right:6px;">
           <!-- Các thẻ câu hỏi sẽ được render động từ pdf-parser.js -->
         </div>
 

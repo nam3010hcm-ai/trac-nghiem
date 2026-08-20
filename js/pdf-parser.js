@@ -162,27 +162,16 @@ async function loadPdfJs() {
 }
 
 // ==============================================================
-// 3. THUẬT TOÁN BÓC TÁCH FILE PDF GENERIC
+// 3. THUẬT TOÁN BÓC TÁCH FILE PDF TOÀN DIỆN & ĐA LUỒNG
 // ==============================================================
 export async function parsePdfDocument(file, onProgress = null) {
   if (typeof onProgress === 'function') onProgress(10, "Đang khởi tạo thư viện đọc PDF...");
   const pdfjs = await loadPdfJs();
 
-  const arrayBuffer = await file.arrayBuffer();
-  if (typeof onProgress === 'function') onProgress(25, "Đang tải cấu trúc trang PDF...");
-
-  const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
-  const pdfDoc = await loadingTask.promise;
-  const numPages = pdfDoc.numPages;
-
-  let allQuestions = [];
-  let detectedTitle = file.name.replace(/\.[^/.]+$/, "");
-
-  // Kiểm tra nếu là file 2 trang.pdf thì dùng dữ liệu hiệu chỉnh toán học siêu chuẩn
-  const isSample2Trang = (file.name && file.name.includes("2 trang")) || (numPages === 2 && file.size > 300000 && file.size < 600000);
-  if (isSample2Trang) {
-    if (typeof onProgress === 'function') onProgress(70, "Đang nhận diện công thức ma trận & định thức và mã màu RGB...");
-    await new Promise(r => setTimeout(r, 600));
+  // Nếu người dùng bấm trực tiếp nút thử nghiệm mẫu 2 trang.pdf
+  if (file.isSampleTest) {
+    if (typeof onProgress === 'function') onProgress(70, "Đang nạp dữ liệu mẫu 11 câu hỏi ma trận & định thức...");
+    await new Promise(r => setTimeout(r, 400));
     if (typeof onProgress === 'function') onProgress(100, "Bóc tách hoàn tất 11 câu hỏi!");
     return {
       examName: SAMPLE_2_TRANG_PDF_DATA.examName,
@@ -194,128 +183,479 @@ export async function parsePdfDocument(file, onProgress = null) {
     };
   }
 
-  // Thuật toán bóc tách động cho các file PDF thông thường khác
-  let fullRawText = "";
-  let redOptionMarkers = []; // Lưu các vị trí nhận diện chữ màu đỏ
+  const arrayBuffer = await file.arrayBuffer();
+  if (typeof onProgress === 'function') onProgress(20, "Đang đọc cấu trúc các trang PDF...");
 
+  const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
+  const pdfDoc = await loadingTask.promise;
+  const numPages = pdfDoc.numPages;
+
+  let allQuestions = [];
+  let detectedTitle = (file.name || "Đề thi PDF").replace(/\.[^/.]+$/, "");
+  let fullRawText = "";
+  let allRedTexts = [];
+
+  // Quét từng trang PDF
   for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-    const progressPercent = Math.round(30 + (pageNum / numPages) * 50);
-    if (typeof onProgress === 'function') onProgress(progressPercent, `Đang xử lý trang ${pageNum}/${numPages}...`);
+    const progressPercent = Math.round(25 + (pageNum / numPages) * 55);
+    if (typeof onProgress === 'function') onProgress(progressPercent, `Đang phân tích cấu trúc trang ${pageNum}/${numPages}...`);
 
     const page = await pdfDoc.getPage(pageNum);
+    const viewport = page.getViewport({ scale: 1.0 });
+    const pageWidth = viewport.width || 595;
+    const pageHeight = viewport.height || 842;
+
+    // 1. Quét văn bản và tọa độ
     const textContent = await page.getTextContent({ includeMarkedContent: true });
     
-    // Quét từng item text
-    let pageLines = [];
-    let currentLine = "";
-    let lastY = null;
-
-    for (const item of textContent.items) {
-      if (!item.str) continue;
-      const y = item.transform ? Math.round(item.transform[5]) : null;
-      if (lastY !== null && y !== null && Math.abs(y - lastY) > 5) {
-        if (currentLine.trim()) pageLines.push(currentLine.trim());
-        currentLine = "";
+    // 2. Nhận diện chữ màu đỏ từ OperatorList (nếu có)
+    try {
+      const opList = await page.getOperatorList();
+      let isCurrentFillRed = false;
+      
+      for (let i = 0; i < opList.fnArray.length; i++) {
+        const fn = opList.fnArray[i];
+        const args = opList.argsArray[i];
+        
+        if (fn === pdfjs.OPS.setFillRGBColor || fn === pdfjs.OPS.setFillColorN) {
+          if (args && args.length >= 3) {
+            const [r, g, b] = args;
+            const rNorm = r > 1 ? r / 255 : r;
+            const gNorm = g > 1 ? g / 255 : g;
+            const bNorm = b > 1 ? b / 255 : b;
+            // Nhận diện sắc đỏ đặc trưng trong đề thi (#dc2626, #ef4444, #ee0000, #ff0000, rgb>0.65)
+            isCurrentFillRed = (rNorm > 0.65 && gNorm < 0.35 && bNorm < 0.35);
+          }
+        } else if (fn === pdfjs.OPS.showText || fn === pdfjs.OPS.showSpacedText) {
+          if (isCurrentFillRed && args && args[0]) {
+            const glyphs = args[0];
+            let textChunk = "";
+            if (Array.isArray(glyphs)) {
+              textChunk = glyphs.map(g => (typeof g === 'string' ? g : (g?.unicode || ''))).join('');
+            } else if (typeof glyphs === 'string') {
+              textChunk = glyphs;
+            }
+            if (textChunk.trim().length >= 1) {
+              allRedTexts.push(textChunk.trim());
+            }
+          }
+        }
       }
-      currentLine += " " + item.str;
-      lastY = y;
+    } catch (e) {
+      console.warn("Không đọc được mã màu trang " + pageNum, e);
     }
-    if (currentLine.trim()) pageLines.push(currentLine.trim());
 
-    fullRawText += "\n" + pageLines.join("\n");
+    // 3. Tái cấu trúc văn bản theo cột và thứ tự đọc tự nhiên
+    const pageText = extractPageTextStructured(textContent.items, pageWidth, pageHeight);
+    fullRawText += "\n" + pageText;
   }
 
-  if (typeof onProgress === 'function') onProgress(85, "Đang phân tích cú pháp câu hỏi & đáp án...");
-  allQuestions = extractQuestionsFromText(fullRawText);
+  if (typeof onProgress === 'function') onProgress(85, "Đang phân tích cú pháp các câu hỏi, phương án & công thức LaTeX...");
+  
+  allQuestions = extractQuestionsFromText(fullRawText, allRedTexts);
 
+  // Nếu file quá ít text (ví dụ ảnh scan) và không bóc tách được câu nào
   if (!allQuestions.length) {
-    // Dự phòng phương án mẫu nếu file không khớp regex tiêu chuẩn
-    allQuestions = JSON.parse(JSON.stringify(SAMPLE_2_TRANG_PDF_DATA.questions));
+    if (fullRawText.trim().length < 50) {
+      throw new Error("File PDF không chứa lớp văn bản (Text Layer). Có thể đây là file ảnh scan! Vui lòng chọn file PDF được xuất từ Word/LaTeX.");
+    }
+    // Thử fallback lần cuối
+    allQuestions = fallbackExtractQuestions(fullRawText, allRedTexts);
   }
 
   if (typeof onProgress === 'function') onProgress(100, `Bóc tách thành công ${allQuestions.length} câu hỏi!`);
 
   return {
-    examName: detectedTitle.startsWith("2 trang") ? SAMPLE_2_TRANG_PDF_DATA.examName : `Đề thi từ PDF: ${detectedTitle}`,
+    examName: detectedTitle ? `Đề thi: ${detectedTitle}` : "Đề thi mới từ PDF",
     cat: "Toán",
     subcat: "Toán/Phần 2 - Đại số",
-    timeLimit: Math.max(15, allQuestions.length * 4),
-    description: `Bóc tách tự động từ file ${file.name} (${allQuestions.length} câu).`,
+    timeLimit: Math.max(15, Math.min(180, Math.ceil(allQuestions.length * 1.5))),
+    description: `Bóc tách tự động từ file ${file.name} (${allQuestions.length} câu hỏi).`,
     questions: allQuestions
   };
 }
 
-// Bóc tách text thành danh sách câu hỏi
-function extractQuestionsFromText(rawText) {
-  const questions = [];
-  const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
-  
-  let currentQ = null;
-  let currentOpt = -1;
+// Hàm sắp xếp các text item theo dòng & cột tự nhiên của trang PDF
+function extractPageTextStructured(items, pageWidth, pageHeight) {
+  if (!items || !items.length) return "";
 
-  const qRegex = /^(?:Câu|Bài|Question)\s*(\d+)[:.]\s*(.*)/i;
-  const optRegex = /^([a-d])[\.\)]\s*(.*)/i;
+  // Lọc các item hợp lệ
+  const validItems = items.filter(it => it && it.str && typeof it.transform !== 'undefined').map(it => {
+    const x = it.transform[4] || 0;
+    const y = it.transform[5] || 0;
+    const width = it.width || (it.str.length * 6);
+    const height = it.height || 10;
+    return { str: it.str, x, y, width, height };
+  });
 
-  for (const line of lines) {
-    const qMatch = line.match(qRegex);
-    if (qMatch) {
-      if (currentQ && currentQ.opts.filter(Boolean).length >= 2) {
-        questions.push(finalizeQuestion(currentQ));
-      }
-      currentQ = {
-        text: qMatch[2] || "",
-        opts: ["", "", "", ""],
-        ans: 0,
-        explain: ""
-      };
-      currentOpt = -1;
-      continue;
+  if (!validItems.length) return "";
+
+  // Kiểm tra xem trang có bố cục 2 cột hay không
+  let leftCount = 0;
+  let rightCount = 0;
+  const colBoundary = pageWidth * 0.5;
+
+  validItems.forEach(it => {
+    if (it.x + it.width * 0.5 < colBoundary - 20) leftCount++;
+    else if (it.x > colBoundary + 20) rightCount++;
+  });
+
+  const isTwoColumn = (leftCount > 15 && rightCount > 15 && (leftCount / validItems.length > 0.25) && (rightCount / validItems.length > 0.25));
+
+  if (isTwoColumn) {
+    const leftItems = validItems.filter(it => it.x + it.width * 0.5 <= colBoundary);
+    const rightItems = validItems.filter(it => it.x + it.width * 0.5 > colBoundary);
+    const leftText = assembleLinesFromItems(leftItems);
+    const rightText = assembleLinesFromItems(rightItems);
+    return leftText + "\n" + rightText;
+  } else {
+    return assembleLinesFromItems(validItems);
+  }
+}
+
+// Ghép các item cùng Y thành từng dòng hoàn chỉnh
+function assembleLinesFromItems(items) {
+  if (!items.length) return "";
+
+  // Sắp xếp: Y giảm dần (từ trên xuống dưới trang PDF), X tăng dần (từ trái qua phải)
+  items.sort((a, b) => {
+    if (Math.abs(a.y - b.y) <= 3.5) {
+      return a.x - b.x;
     }
+    return b.y - a.y;
+  });
 
-    if (currentQ) {
-      const optMatch = line.match(optRegex);
-      if (optMatch) {
-        const letter = optMatch[1].toLowerCase();
-        const optIdx = { 'a': 0, 'b': 1, 'c': 2, 'd': 3 }[letter] ?? 0;
-        currentOpt = optIdx;
-        currentQ.opts[optIdx] = optMatch[2] || "";
-      } else if (currentOpt >= 0 && currentOpt < 4) {
-        currentQ.opts[currentOpt] += " " + line;
-      } else {
-        currentQ.text += " " + line;
-      }
+  const lines = [];
+  let currentLineItems = [];
+  let currentY = null;
+
+  for (const it of items) {
+    if (currentY === null || Math.abs(it.y - currentY) <= 3.5) {
+      currentLineItems.push(it);
+      currentY = it.y;
+    } else {
+      lines.push(buildLineString(currentLineItems));
+      currentLineItems = [it];
+      currentY = it.y;
     }
   }
+  if (currentLineItems.length) {
+    lines.push(buildLineString(currentLineItems));
+  }
 
-  if (currentQ && currentQ.opts.filter(Boolean).length >= 2) {
-    questions.push(finalizeQuestion(currentQ));
+  return lines.filter(Boolean).join("\n");
+}
+
+function buildLineString(lineItems) {
+  lineItems.sort((a, b) => a.x - b.x);
+  let lineStr = "";
+  let lastRight = null;
+
+  for (const it of lineItems) {
+    const str = it.str;
+    if (!str) continue;
+
+    if (lastRight !== null) {
+      const gap = it.x - lastRight;
+      if (gap > 2.5 && !lineStr.endsWith(" ") && !str.startsWith(" ")) {
+        lineStr += " ";
+      }
+    }
+    lineStr += str;
+    lastRight = it.x + it.width;
+  }
+
+  // Lọc bớt header/footer rác như "Trang 1/10", "Page 2"
+  const trimmed = lineStr.trim();
+  if (/^(?:Trang|Page)\s*\d+(?:\/\d+)?$/i.test(trimmed)) {
+    return "";
+  }
+  return trimmed;
+}
+
+// ==============================================================
+// 4. THUẬT TOÁN BÓC TÁCH CÂU HỎI & ĐÁP ÁN UNIVERSAL
+// ==============================================================
+export function extractQuestionsFromText(rawText, redTextList = []) {
+  if (!rawText || !rawText.trim()) return [];
+
+  // Chuẩn hóa văn bản đầu vào
+  let text = rawText
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\u00A0/g, ' ')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .trim();
+
+  // 1. Quét Bảng Đáp Án (Answer Key Table) ở cuối hoặc đầu tài liệu
+  const answerKeyMap = extractAnswerKeyTable(text);
+
+  // 2. Tìm tất cả vị trí bắt đầu của các câu hỏi
+  // Hỗ trợ: "Câu 1:", "Câu 1.", "Câu 1-", "Câu 1/", "Câu 1 ", "Câu 01:"
+  // "CÂU 1", "Bài 1:", "Question 1:", "Q1:", "Q.1:"
+  // "Câu 1 (1.0 điểm):", "Câu 1 (NB):", "Câu 1 [Mức 1]:"
+  // Standalone "1.", "1:", "1)" khi đứng đầu dòng
+  const qHeaderRegex = /(?:^|\n)\s*(?:(?:C[âaÂA]u|B[àaÀA]i|Question|Q|Q\.)\s*(\d+)(?:\s*\([^)]*\)|\s*\[[^\]]*\])?[\s.:\-\/)]+|(\d{1,3})[\s.:\-\/)](?=\s+[A-ZÀ-Ỹa-zà-ỹ0-9$]))/gi;
+
+  const qMatches = [];
+  let m;
+  while ((m = qHeaderRegex.exec(text)) !== null) {
+    const qNumStr = m[1] || m[2];
+    const qNum = parseInt(qNumStr, 10);
+    const startIdx = m.index;
+    const matchLen = m[0].length;
+    qMatches.push({ qNum, startIdx, matchLen });
+  }
+
+  // Nếu không tìm thấy header dạng số chuẩn, gọi fallback
+  if (qMatches.length === 0) {
+    return fallbackExtractQuestions(text, redTextList);
+  }
+
+  const questions = [];
+
+  for (let i = 0; i < qMatches.length; i++) {
+    const current = qMatches[i];
+    const nextStart = (i + 1 < qMatches.length) ? qMatches[i + 1].startIdx : text.length;
+
+    // Cắt block nội dung của câu hỏi này
+    let block = text.slice(current.startIdx, nextStart).trim();
+
+    // Nếu là câu hỏi cuối cùng và có Bảng đáp án phía dưới, cắt bỏ phần Bảng đáp án
+    const ansTableIdx = block.search(/(?:B[ẢAảa]NG\s*Đ[ÁAáa]P\s*[ÁAáa]N|ANSWER\s*KEY)/i);
+    if (ansTableIdx !== -1 && i === qMatches.length - 1) {
+      block = block.slice(0, ansTableIdx).trim();
+    }
+
+    if (!block) continue;
+
+    const parsedQ = parseSingleQuestionBlock(block, current.qNum, redTextList);
+    if (parsedQ) {
+      // Nếu chưa có đáp án từ màu đỏ hoặc ký hiệu, lấy từ Bảng Đáp Án
+      if (parsedQ.ans === null || parsedQ.ans === undefined || parsedQ._ansSource === 'default') {
+        if (answerKeyMap[current.qNum] !== undefined) {
+          parsedQ.ans = answerKeyMap[current.qNum];
+          parsedQ._ansSource = 'table';
+        }
+      }
+      delete parsedQ._ansSource;
+      questions.push(parsedQ);
+    }
   }
 
   return questions;
 }
 
-function finalizeQuestion(q) {
+// Bóc tách một block câu hỏi thành Đề bài, 4 phương án A/B/C/D, Lời giải và Đáp án đúng
+function parseSingleQuestionBlock(block, qNum, redTextList = []) {
+  // Bỏ phần tiêu đề câu hỏi (Ví dụ "Câu 1:")
+  const headerMatch = block.match(/^\s*(?:(?:C[âaÂA]u|B[àaÀA]i|Question|Q|Q\.)\s*\d+(?:\s*\([^)]*\)|\s*\[[^\]]*\])?[\s.:\-\/)]+|\d{1,3}[\s.:\-\/)])\s*/i);
+  let content = headerMatch ? block.slice(headerMatch[0].length).trim() : block;
+
+  // Tách Lời giải / Hướng dẫn giải (nếu có)
+  let explain = "";
+  const explainMatch = content.match(/(?:\n|\s{2,})(?:L[ờo]i\s*gi[ảa]i|H[ưu][ớo]ng\s*d[ẫa]n\s*gi[ảa]i|HDG|Gi[ảa]i\s*th[íi]ch|Gi[ảa]i)\s*[:.]\s*([\s\S]*)$/i);
+  if (explainMatch) {
+    explain = explainMatch[1].trim();
+    content = content.slice(0, explainMatch.index).trim();
+  }
+
+  // Regex tìm các phương án lựa chọn A, B, C, D trên cùng dòng hoặc xuống dòng
+  // Hỗ trợ "A.", "B.", "C.", "D.", "A)", "B)", "C)", "D)", "[A]", "[B]", "(A)", "(B)", "A:", "A/"
+  // Hỗ trợ dấu sao "*A." hoặc "[x] A."
+  const optRegex = /(?:^|\n|\s{2,}|\t|\s)(?:\*|\[x\]\s*)?([A-Da-d])[\s.:\-\/)\]]+(?!\d)/g;
+
+  const optMatches = [];
+  let om;
+  while ((om = optRegex.exec(content)) !== null) {
+    const letter = om[1].toUpperCase();
+    const optIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[letter];
+    optMatches.push({
+      letter,
+      optIdx,
+      matchIndex: om.index,
+      fullMatchLength: om[0].length,
+      rawMatch: om[0]
+    });
+  }
+
+  // Tìm chuỗi phương án hợp lệ: A -> B -> C -> D hoặc A -> B -> C
+  let bestSequence = [];
+  for (let i = 0; i < optMatches.length; i++) {
+    if (optMatches[i].letter === 'A') {
+      const seq = [optMatches[i]];
+      let expectedIdx = 1; // Tìm B
+      for (let j = i + 1; j < optMatches.length; j++) {
+        if (optMatches[j].optIdx === expectedIdx) {
+          seq.push(optMatches[j]);
+          expectedIdx++;
+          if (expectedIdx === 4) break; // Đã đủ A, B, C, D
+        }
+      }
+      if (seq.length > bestSequence.length) {
+        bestSequence = seq;
+      }
+    }
+  }
+
+  let qText = content;
+  let opts = ["", "", "", ""];
+  let detectedAns = -1;
+  let ansSource = 'default';
+
+  if (bestSequence.length >= 2) {
+    // Nội dung câu hỏi là đoạn trước phương án A đầu tiên
+    qText = content.slice(0, bestSequence[0].matchIndex).trim();
+
+    for (let k = 0; k < bestSequence.length; k++) {
+      const cur = bestSequence[k];
+      const nextPos = (k + 1 < bestSequence.length) ? bestSequence[k + 1].matchIndex : content.length;
+      let optText = content.slice(cur.matchIndex + cur.fullMatchLength, nextPos).trim();
+
+      // Kiểm tra xem phương án có dấu sao hoặc [x] không
+      if (cur.rawMatch.includes('*') || cur.rawMatch.includes('[x]')) {
+        detectedAns = cur.optIdx;
+        ansSource = 'marker';
+      }
+
+      // Kiểm tra xem phương án có khớp với từ màu ĐỎ từ PDF.js không
+      if (detectedAns === -1 && redTextList && redTextList.length > 0) {
+        for (const redStr of redTextList) {
+          if (redStr && redStr.length >= 2 && optText.includes(redStr)) {
+            detectedAns = cur.optIdx;
+            ansSource = 'red';
+            break;
+          }
+        }
+      }
+
+      opts[cur.optIdx] = cleanMathFormulas(optText);
+    }
+  } else {
+    // Dự phòng quét từng dòng nếu các phương án nằm riêng biệt
+    const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
+    let curOptIdx = -1;
+    let fallbackTextLines = [];
+
+    for (const line of lines) {
+      const lineOptMatch = line.match(/^(\*|\[x\]\s*)?([A-Da-d])[\s.:\-\/)\]]\s*(.*)/i);
+      if (lineOptMatch) {
+        const isMarked = Boolean(lineOptMatch[1]);
+        const letter = lineOptMatch[2].toUpperCase();
+        curOptIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[letter];
+        if (isMarked) {
+          detectedAns = curOptIdx;
+          ansSource = 'marker';
+        }
+        opts[curOptIdx] = cleanMathFormulas(lineOptMatch[3]);
+      } else if (curOptIdx >= 0 && curOptIdx < 4) {
+        opts[curOptIdx] += " " + cleanMathFormulas(line);
+      } else {
+        fallbackTextLines.push(line);
+      }
+    }
+
+    if (opts.filter(Boolean).length >= 2) {
+      qText = fallbackTextLines.join(' ');
+    }
+  }
+
+  // Đảm bảo đủ 4 phương án
+  for (let idx = 0; idx < 4; idx++) {
+    if (!opts[idx] || !opts[idx].trim()) {
+      opts[idx] = `(Lựa chọn ${['A', 'B', 'C', 'D'][idx]})`;
+    }
+  }
+
+  // Kiểm tra đáp án được nhắc trong lời giải (VD: "Chọn A", "Đáp án: B")
+  if (detectedAns === -1 && explain) {
+    const ansInExplain = explain.match(/(?:Ch[ọo]n|Đ[áa]p\s*[áa]n|Đ\/A|C[âa]u\s*\d+[\s:.]*)\s*([A-D])\b/i);
+    if (ansInExplain) {
+      detectedAns = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[ansInExplain[1].toUpperCase()];
+      ansSource = 'explain';
+    }
+  }
+
   return {
-    text: cleanMathFormulas(q.text.trim()),
-    opts: q.opts.map(o => cleanMathFormulas(o.trim() || "(Không có nội dung)")),
-    ans: q.ans ?? 0,
-    explain: q.explain ? cleanMathFormulas(q.explain.trim()) : ""
+    text: cleanMathFormulas(qText) || `Nội dung câu hỏi ${qNum}`,
+    opts: opts,
+    ans: detectedAns >= 0 ? detectedAns : 0,
+    explain: cleanMathFormulas(explain),
+    _ansSource: ansSource
   };
+}
+
+// Bóc tách bảng đáp án (1.A 2.B 3.C ...)
+function extractAnswerKeyTable(text) {
+  const map = {};
+  if (!text) return map;
+
+  const tableMarkers = [
+    /B[ẢAảa]NG\s*Đ[ÁAáa]P\s*[ÁAáa]N/i,
+    /Đ[ÁAáa]P\s*[ÁAáa]N\s*(?:CHI\s*TI[ẾEết]|C[ÁAác]C\s*C[ÂAâu]|Đ[ỀEề]\s*THI)?/i,
+    /ANSWER\s*KEY/i,
+    /B[ẢAảa]NG\s*TR[ẢAảa]\s*L[ỜOời]/i
+  ];
+
+  let tableText = "";
+  for (const marker of tableMarkers) {
+    const m = text.search(marker);
+    if (m !== -1) {
+      tableText = text.slice(m);
+      break;
+    }
+  }
+
+  const textToScan = tableText || text;
+
+  const itemRegex = /(?:C[âaÂA]u\s*)?(\d{1,3})[\s.:\-\/)]*([A-D])\b/gi;
+  let match;
+  while ((match = itemRegex.exec(textToScan)) !== null) {
+    const qNum = parseInt(match[1], 10);
+    const ansLetter = match[2].toUpperCase();
+    const ansIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[ansLetter];
+    if (ansIdx !== undefined && qNum > 0 && qNum <= 500) {
+      map[qNum] = ansIdx;
+    }
+  }
+  return map;
+}
+
+function fallbackExtractQuestions(text, redTextList) {
+  const blocks = text.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+  const qs = [];
+  let count = 1;
+  for (const block of blocks) {
+    if (block.length < 15) continue;
+    const q = parseSingleQuestionBlock(block, count, redTextList);
+    if (q) {
+      qs.push(q);
+      count++;
+    }
+  }
+  return qs;
 }
 
 function cleanMathFormulas(txt) {
   if (!txt) return "";
-  let s = txt
+  let s = String(txt)
+    .replace(/\r\n/g, ' ')
+    .replace(/\r/g, ' ')
+    .replace(/\n/g, ' ')
+    .replace(/\u00A0/g, ' ')
     .replace(/\s*´\s*/g, " \\times ")
     .replace(/\s*¹\s*/g, " \\neq ")
+    .replace(/\s*£\s*/g, " \\le ")
+    .replace(/\s*³\s*/g, " \\ge ")
     .replace(/–/g, "-")
+    .replace(/—/g, "-")
     .replace(/\s+/g, " ")
     .trim();
   return s;
 }
 
 // ==============================================================
-// 4. QUẢN LÝ GIAO DIỆN MODAL IMPORT PDF (STATE & EVENT HANDLERS)
+// 5. QUẢN LÝ GIAO DIỆN MODAL IMPORT PDF (STATE & EVENT HANDLERS)
 // ==============================================================
 export let currentParsedExam = null;
 
@@ -324,10 +664,8 @@ export function openPdfImportModal() {
   if (!modal) return;
   modal.style.display = 'flex';
 
-  // Khởi tạo danh mục
   populatePdfCatSelects();
   
-  // Đưa về màn hình upload ban đầu
   $('pdf-step-upload').style.display = 'block';
   $('pdf-step-loading').style.display = 'none';
   $('pdf-step-preview').style.display = 'none';
@@ -365,7 +703,6 @@ export function updatePdfSubcatSelect() {
   if (mathSub) subcatSel.value = mathSub;
 }
 
-// Bắt đầu bóc tách từ file người dùng tải lên
 export async function handlePdfFileUpload(e) {
   const file = e.target.files?.[0] || e.dataTransfer?.files?.[0];
   if (!file) return;
@@ -378,12 +715,12 @@ export async function handlePdfFileUpload(e) {
   runPdfParsingWorkflow(file);
 }
 
-// Nút bấm nhanh thử nghiệm với file mẫu 2 trang.pdf
 export async function testWithSamplePdf() {
   const sampleFakeFile = {
     name: "2 trang.pdf",
     size: 433164,
-    arrayBuffer: async () => new ArrayBuffer(8)
+    arrayBuffer: async () => new ArrayBuffer(8),
+    isSampleTest: true
   };
   runPdfParsingWorkflow(sampleFakeFile);
 }
@@ -414,8 +751,8 @@ async function runPdfParsingWorkflow(file) {
   }
 }
 
-// Render dữ liệu bóc tách ra màn hình xem trước (Step Preview)
-export function renderParsedExamPreview() {
+// Render dữ liệu bóc tách ra màn hình xem trước
+export function renderParsedExamPreview(filterKeyword = '') {
   if (!currentParsedExam) return;
 
   $('pdf-step-loading').style.display = 'none';
@@ -439,8 +776,15 @@ export function renderParsedExamPreview() {
   const container = $('pdf-questions-container');
   if (!container) return;
 
-  container.innerHTML = currentParsedExam.questions.map((q, qIdx) => {
-    const keys = ['A', 'B', 'C', 'D'];
+  const kw = filterKeyword.trim().toLowerCase();
+  const keys = ['A', 'B', 'C', 'D'];
+
+  const renderedCards = currentParsedExam.questions.map((q, qIdx) => {
+    if (kw) {
+      const matchText = [q.text, ...(q.opts || []), q.explain].join(' ').toLowerCase();
+      if (!matchText.includes(kw)) return '';
+    }
+
     return `
       <div class="pdf-q-card" id="pdf-q-card-${qIdx}" style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:12px; padding:18px 20px; margin-bottom:18px; box-shadow:0 2px 8px rgba(15,23,42,0.04);">
         
@@ -450,11 +794,12 @@ export function renderParsedExamPreview() {
             <span style="background:#2563eb; color:#ffffff; font-size:12px; padding:3px 12px; border-radius:20px; font-weight:700;">Câu ${qIdx + 1}</span>
             <span style="font-size:12px; color:#64748b; font-weight:600;">2 Trạng thái: Mã LaTeX ⇄ Live Render</span>
           </div>
-          <div style="display:flex; align-items:center; gap:6px;">
+          <div style="display:flex; align-items:center; gap:8px;">
             <span style="background:#ecfdf5; color:#059669; font-size:11.5px; font-weight:800; padding:4px 10px; border-radius:6px; border:1px solid #a7f3d0; display:flex; align-items:center; gap:5px;">
               <span>🎯 Đáp án đúng:</span>
-              <b style="color:#dc2626; font-size:13px;">Lựa chọn ${keys[q.ans]} (Chữ Đỏ)</b>
+              <b style="color:#dc2626; font-size:13px;">Lựa chọn ${keys[q.ans]}</b>
             </span>
+            <button type="button" class="btn btn-sm btn-danger" onclick="window.deleteParsedQuestion(${qIdx})" style="padding:3px 8px; font-size:11px; font-weight:700;" title="Xóa câu hỏi này">🗑 Xóa</button>
           </div>
         </div>
 
@@ -482,7 +827,7 @@ export function renderParsedExamPreview() {
             Các phương án lựa chọn (Click chọn Radio để đổi đáp án đúng):
           </label>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            ${q.opts.map((opt, optIdx) => {
+            ${(q.opts || []).map((opt, optIdx) => {
               const isCorrect = q.ans === optIdx;
               return `
                 <div style="background:${isCorrect ? '#fef2f2' : '#f8fafc'}; border:1.5px solid ${isCorrect ? '#f87171' : '#e2e8f0'}; border-radius:10px; padding:10px 12px; transition:all 0.2s;">
@@ -493,7 +838,7 @@ export function renderParsedExamPreview() {
                         Đáp án ${keys[optIdx]}
                       </label>
                     </div>
-                    ${isCorrect ? `<span style="font-size:10.5px; background:#fee2e2; color:#b91c1c; font-weight:800; padding:2px 8px; border-radius:4px; border:1px solid #fecaca;">✓ Chữ Đỏ (Đúng)</span>` : ''}
+                    ${isCorrect ? `<span style="font-size:10.5px; background:#fee2e2; color:#b91c1c; font-weight:800; padding:2px 8px; border-radius:4px; border:1px solid #fecaca;">✓ Đúng</span>` : ''}
                   </div>
 
                   <!-- Trạng thái 1: Mã nguồn -->
@@ -522,11 +867,37 @@ export function renderParsedExamPreview() {
     `;
   }).join('');
 
-  // Kích hoạt MathJax hiển thị công thức toán học
+  container.innerHTML = renderedCards || '<div class="empty" style="padding:20px; text-align:center;">Không tìm thấy câu hỏi phù hợp với từ khóa tìm kiếm.</div>';
+
   typesetMath(container);
 }
 
-// Debounce timer cho typesetMath realtime
+// Lọc câu hỏi trong preview
+export function filterParsedQuestionsPreview(keyword) {
+  renderParsedExamPreview(keyword);
+}
+
+// Xóa 1 câu hỏi khỏi danh sách bóc tách
+export function deleteParsedQuestion(idx) {
+  if (!currentParsedExam?.questions) return;
+  if (!confirm(`Bạn có chắc muốn xóa Câu ${idx + 1}?`)) return;
+  currentParsedExam.questions.splice(idx, 1);
+  renderParsedExamPreview();
+}
+
+// Thêm câu hỏi trống
+export function addBlankQuestionToParsed() {
+  if (!currentParsedExam) return;
+  if (!currentParsedExam.questions) currentParsedExam.questions = [];
+  currentParsedExam.questions.push({
+    text: "Nội dung câu hỏi mới...",
+    opts: ["Phương án A", "Phương án B", "Phương án C", "Phương án D"],
+    ans: 0,
+    explain: ""
+  });
+  renderParsedExamPreview();
+}
+
 let typesetTimeout = null;
 function scheduleTypeset(el) {
   if (typesetTimeout) clearTimeout(typesetTimeout);
@@ -535,7 +906,6 @@ function scheduleTypeset(el) {
   }, 120);
 }
 
-// Cập nhật câu hỏi khi giáo viên chỉnh sửa trực tiếp trong modal
 export function updateParsedQuestionText(idx, val) {
   if (currentParsedExam?.questions?.[idx]) {
     currentParsedExam.questions[idx].text = val;
@@ -566,7 +936,7 @@ export function setParsedQuestionAnswer(qIdx, optIdx) {
 }
 
 // ==============================================================
-// 5. LƯU VÀO CƠ SỞ DỮ LIỆU SUPABASE & TẠO ĐỀ THI
+// 6. LƯU VÀO CƠ SỞ DỮ LIỆU SUPABASE & TẠO ĐỀ THI
 // ==============================================================
 export async function saveParsedExamToSupabase() {
   if (!currentParsedExam || !currentParsedExam.questions.length) {
@@ -618,7 +988,6 @@ export async function saveParsedExamToSupabase() {
 
     if (qErr) {
       console.warn("Lỗi insert questions:", qErr);
-      // Fallback gán ID cục bộ nếu gặp lỗi RLS hoặc offline
       questionsToInsert.forEach(q => {
         const fakeId = state.nextQId++;
         q.id = fakeId;
@@ -627,7 +996,6 @@ export async function saveParsedExamToSupabase() {
       state.questions = [...questionsToInsert, ...state.questions];
     } else if (qData && qData.length > 0) {
       insertedQuestionIds = qData.map(item => Number(item.id));
-      // Đưa các câu hỏi mới lên ĐẦU danh sách state.questions
       const formattedQuestions = qData.map(q => ({
         ...q,
         id: Number(q.id),
@@ -735,3 +1103,6 @@ window.updateParsedQuestionText = updateParsedQuestionText;
 window.updateParsedQuestionOption = updateParsedQuestionOption;
 window.setParsedQuestionAnswer = setParsedQuestionAnswer;
 window.saveParsedExamToSupabase = saveParsedExamToSupabase;
+window.deleteParsedQuestion = deleteParsedQuestion;
+window.addBlankQuestionToParsed = addBlankQuestionToParsed;
+window.filterParsedQuestionsPreview = filterParsedQuestionsPreview;

@@ -22,7 +22,8 @@ import { loadAnalyticsData, renderAnalyticsDashboard } from './lms-analytics.js'
 import { loadClassPosts, renderClassStream, submitStreamPost, submitPostComment } from './class-stream.js';
 import {
   openPdfImportModal, closePdfImportModal, handlePdfFileUpload, testWithSamplePdf,
-  updateParsedQuestionText, updateParsedQuestionOption, setParsedQuestionAnswer, saveParsedExamToSupabase
+  updateParsedQuestionText, updateParsedQuestionOption, setParsedQuestionAnswer, saveParsedExamToSupabase,
+  deleteParsedQuestion, addBlankQuestionToParsed, filterParsedQuestionsPreview
 } from './pdf-parser.js';
 
 window.openPdfImportModal = openPdfImportModal;
@@ -33,6 +34,9 @@ window.updateParsedQuestionText = updateParsedQuestionText;
 window.updateParsedQuestionOption = updateParsedQuestionOption;
 window.setParsedQuestionAnswer = setParsedQuestionAnswer;
 window.saveParsedExamToSupabase = saveParsedExamToSupabase;
+window.deleteParsedQuestion = deleteParsedQuestion;
+window.addBlankQuestionToParsed = addBlankQuestionToParsed;
+window.filterParsedQuestionsPreview = filterParsedQuestionsPreview;
 
 window.loadClasses = loadClasses;
 window.renderClassesList = renderClassesList;
