@@ -16,6 +16,7 @@ export const DEFAULT_TEACHERS = [
     department: 'Quản Trị Hệ Thống',
     role: 'admin',
     is_active: true,
+    password: '123',
     teacher_code: 'T001'
   },
   {
@@ -26,6 +27,7 @@ export const DEFAULT_TEACHERS = [
     department: 'Khoa Ngoại Ngữ',
     role: 'teacher',
     is_active: true,
+    password: '123',
     teacher_code: 'T002'
   },
   {
@@ -36,6 +38,7 @@ export const DEFAULT_TEACHERS = [
     department: 'Khoa Testing',
     role: 'teacher',
     is_active: true,
+    password: '123',
     teacher_code: 'T004'
   },
   {
@@ -46,6 +49,7 @@ export const DEFAULT_TEACHERS = [
     department: 'Khoa Khoa học cơ bản/ Ngoại ngữ',
     role: 'teacher',
     is_active: true,
+    password: '123',
     teacher_code: 'T005'
   }
 ];
@@ -101,6 +105,7 @@ export async function loadTeachers() {
           name: t.teacher_name || t.name || t.full_name || t.email,
           teacher_name: t.teacher_name || t.name || t.full_name || t.email,
           email: t.email || '',
+          password: t.password || '123',
           department: t.department || 'Bộ Môn Chung',
           is_active: t.is_active !== false,
           role: t.role || 'teacher'
@@ -211,7 +216,14 @@ export function renderTeachersList() {
             </div>
           </div>
         </td>
-        <td><b>${esc(t.email)}</b></td>
+        <td>
+          <div style="font-weight:700;color:#0f172a">${esc(t.email)}</div>
+          <div style="margin-top:4px;">
+            <span style="font-family:monospace;background:#f8fafc;padding:2px 6px;border-radius:4px;border:1px solid #e2e8f0;font-size:11.5px;color:#2563eb">
+              🔑 ${esc(t.password || '••••••')}
+            </span>
+          </div>
+        </td>
         <td><span class="cat-badge" style="background:#f1f5f9;color:#334155;">${esc(t.department || 'Bộ Môn Chung')}</span></td>
         <td>
           <div style="font-size:11.5px;color:#334155;">
@@ -256,13 +268,13 @@ export function openTeacherModal(id = null) {
     if ($('t-mod-email')) { $('t-mod-email').value = t.email || ''; $('t-mod-email').disabled = true; }
     if ($('t-mod-name')) $('t-mod-name').value = t.teacher_name || t.name || t.full_name || '';
     if ($('t-mod-dept')) $('t-mod-dept').value = t.department || '';
-    if ($('t-mod-pass')) $('t-mod-pass').value = '';
+    if ($('t-mod-pass')) $('t-mod-pass').value = t.password || '';
   } else {
     if (title) title.textContent = '➕ Thêm Tài Khoản Giảng Viên Mới';
     if ($('t-mod-email')) { $('t-mod-email').value = ''; $('t-mod-email').disabled = false; }
     if ($('t-mod-name')) $('t-mod-name').value = '';
     if ($('t-mod-dept')) $('t-mod-dept').value = '';
-    if ($('t-mod-pass')) $('t-mod-pass').value = '';
+    if ($('t-mod-pass')) $('t-mod-pass').value = '123456';
   }
 
   modal.style.display = 'flex';
@@ -299,6 +311,10 @@ export async function saveTeacher() {
       department: dept || 'Khoa Ngoại Ngữ'
     };
 
+    if (password) {
+      updatePayload.password = password;
+    }
+
     try {
       if (client) {
         const { error } = await client.from('teachers').update(updatePayload).eq('id', editingTeacherId);
@@ -316,6 +332,9 @@ export async function saveTeacher() {
       t.teacher_name = name;
       t.name = name;
       t.department = dept || 'Khoa Ngoại Ngữ';
+      if (password) {
+        t.password = password;
+      }
     }
     saveTeachersToLocal();
     closeTeacherModal();
@@ -352,12 +371,13 @@ export async function saveTeacher() {
       }
     }
 
-    // 2. Chèn vào bảng teachers với đúng các cột tồn tại trong Schema
+    // 2. Chèn vào bảng teachers với đầy đủ mật khẩu
     const dbPayload = {
       id: newId,
       email: email,
       teacher_name: name,
       department: dept || 'Khoa Ngoại Ngữ',
+      password: password,
       role: isRootUser(email) ? 'admin' : 'teacher',
       is_active: true,
       teacher_code: newId
