@@ -78,9 +78,13 @@ async function showTeacherPanel(user) {
   try {
     localStorage.setItem('teacher_user', JSON.stringify({
       email: state.currentUserEmail,
-      name: state.currentUserEmail.split('@')[0],
-      role: isRoot ? 'root' : 'teacher'
+      name: (user?.name || user?.teacher_name || state.currentUserEmail.split('@')[0]),
+      role: isRoot ? 'root' : 'teacher',
+      login_timestamp: Date.now()
     }));
+
+    // Ghi nhận sự kiện Login của Giảng viên vào bảng nhật ký
+    recordAuthEvent(state.currentUserEmail, 'teacher', 'login', 0, user?.id || '', user?.name || user?.teacher_name || state.currentUserEmail, '');
   } catch(e){}
 
   if ($('current-user-email')) {
@@ -104,7 +108,7 @@ async function showTeacherPanel(user) {
 
   await initData();
 
-  const validTabs = ['dash', 'curriculum', 'q', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics'];
+  const validTabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs'];
   const hashTab = (window.location.hash || '').replace('#', '').trim();
   let savedTab = null;
   try { savedTab = localStorage.getItem('active_teacher_tab'); } catch(e){}
@@ -224,7 +228,20 @@ window.doLoginManual = doLogin;
 window.togglePasswordVisibility = togglePasswordVisibility;
 
 async function doLogout() {
+  const teacherUserRaw = localStorage.getItem('teacher_user');
+  if (teacherUserRaw) {
+    try {
+      const u = JSON.parse(teacherUserRaw);
+      const sessionStart = u.login_timestamp || Date.now();
+      const duration = Math.round((Date.now() - sessionStart) / 1000);
+      await recordAuthEvent(u.email, 'teacher', 'logout', duration, u.id || '', u.name || u.email, '');
+    } catch(e){}
+  }
+
   try { await signOut(); } catch(e){}
+
+  localStorage.removeItem('teacher_user');
+  sessionStorage.clear();
 
   if ($('t-pass')) $('t-pass').value = '';
   if ($('t-err')) $('t-err').style.display = 'none';
@@ -237,7 +254,7 @@ async function doLogout() {
 }
 
 function switchTTab(t) {
-  const tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics'];
+  const tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs'];
   if (!tabs.includes(t)) t = 'dash';
 
   try {
@@ -290,6 +307,15 @@ function switchTTab(t) {
       if (typeof window.populateCohortExams === 'function') {
           window.populateCohortExams(); 
       }
+  }
+  if (t === 'authlogs') {
+    if (typeof window.loadAuthLogs === 'function') {
+      window.loadAuthLogs().then(() => {
+        if (typeof window.renderAuthLogsAnalytics === 'function') window.renderAuthLogsAnalytics();
+        if (typeof window.renderAuthLogsTable === 'function') window.renderAuthLogsTable();
+        if (typeof window.renderUserActivitySummaryTable === 'function') window.renderUserActivitySummaryTable();
+      });
+    }
   }
 }
 

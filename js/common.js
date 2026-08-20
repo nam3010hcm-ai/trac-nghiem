@@ -68,7 +68,7 @@ export function isRootUser(email) {
   return false;
 }
 
-export async function logUserAuthEvent(userEmail, userType = 'teacher', eventType = 'login') {
+export async function logUserAuthEvent(userEmail, userType = 'teacher', eventType = 'login', durationSeconds = 0) {
   if (!userEmail) return;
   const nowStr = new Date().toISOString();
   try {
@@ -78,6 +78,7 @@ export async function logUserAuthEvent(userEmail, userType = 'teacher', eventTyp
         user_email: userEmail,
         user_type: userType,
         event_type: eventType,
+        duration_seconds: durationSeconds || 0,
         timestamp: nowStr
       }]);
 
@@ -97,14 +98,27 @@ export async function globalLogout() {
   try {
     let email = '';
     let userType = 'teacher';
+    let duration = 0;
+
     if (stUserRaw) {
-      try { email = JSON.parse(stUserRaw).email || JSON.parse(stUserRaw).sid; userType = 'student'; } catch(e){}
+      try {
+        const u = JSON.parse(stUserRaw);
+        email = u.email || u.sid || '';
+        userType = 'student';
+        const sessionStart = parseInt(sessionStorage.getItem('st_session_start') || '0', 10);
+        if (sessionStart > 0) duration = Math.round((Date.now() - sessionStart) / 1000);
+      } catch(e){}
     } else if (tcUserRaw) {
-      try { email = JSON.parse(tcUserRaw).email; userType = 'teacher'; } catch(e){}
+      try {
+        const u = JSON.parse(tcUserRaw);
+        email = u.email || '';
+        userType = 'teacher';
+        if (u.login_timestamp) duration = Math.round((Date.now() - u.login_timestamp) / 1000);
+      } catch(e){}
     }
 
     if (email) {
-      await logUserAuthEvent(email, userType, 'logout');
+      await logUserAuthEvent(email, userType, 'logout', duration);
     }
 
     if (window.supabaseClient && window.supabaseClient.auth) {

@@ -190,8 +190,16 @@ window.globalLogout = async function() {
       localStorage.setItem('teacher_user', JSON.stringify({
         email: userEmail,
         name: userEmail.split('@')[0],
-        role: isRoot ? 'root' : 'teacher'
+        role: isRoot ? 'root' : 'teacher',
+        login_timestamp: Date.now()
       }));
+
+      // Ghi nhận sự kiện đăng nhập Giảng viên
+      if (typeof window.recordAuthEvent === 'function') {
+        window.recordAuthEvent(userEmail, 'teacher', 'login', 0, authUser?.id || '', authUser?.name || userEmail, '');
+      } else if (typeof window.logUserAuthEvent === 'function') {
+        window.logUserAuthEvent(userEmail, 'teacher', 'login');
+      }
 
       document.getElementById('t-login').style.display = 'none';
       document.getElementById('t-panel').style.display = 'flex';
