@@ -62,9 +62,25 @@ window.renderClassStream = renderClassStream;
 window.submitStreamPost = submitStreamPost;
 window.submitPostComment = submitPostComment;
 
+window.loadTeachers = loadTeachers;
+window.renderTeachersList = renderTeachersList;
+window.openTeacherModal = openTeacherModal;
+window.closeTeacherModal = closeTeacherModal;
+window.saveTeacher = saveTeacher;
+window.toggleTeacherStatus = toggleTeacherStatus;
+window.deleteTeacher = deleteTeacher;
 
-
-
+window.loadStudents = loadStudents;
+window.renderStudentsList = renderStudentsList;
+window.openStudentModal = openStudentModal;
+window.closeStudentModal = closeStudentModal;
+window.saveStudent = saveStudent;
+window.toggleStudentStatus = toggleStudentStatus;
+window.deleteStudent = deleteStudent;
+window.openBulkStudentModal = openBulkStudentModal;
+window.closeBulkStudentModal = closeBulkStudentModal;
+window.saveBulkStudents = saveBulkStudents;
+window.exportStudentsCSV = exportStudentsCSV;
 
 const db = () => window.supabaseClient;
 

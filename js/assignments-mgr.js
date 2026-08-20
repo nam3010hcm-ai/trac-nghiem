@@ -482,10 +482,6 @@ export async function saveAssignmentItem(data) {
   }
 }
 
-function esc(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
 
 window.openAssignmentModal = openAssignmentModal;
 window.saveAssignmentFromModal = saveAssignmentFromModal;
