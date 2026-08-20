@@ -489,24 +489,25 @@ function initTeacherApp() {
   if ($('btn-close-eform')) $('btn-close-eform').addEventListener('click', closeEForm);
   if ($('btn-save-exam')) $('btn-save-exam').addEventListener('click', saveExam);
 
-  if ($('e-list')) {
-    $('e-list').addEventListener('click', e => {
-      const btn = e.target.closest('.e-action');
-      if (!btn) return;
+  const handleExamActionClick = e => {
+    const btn = e.target.closest('.e-action');
+    if (!btn) return;
 
-      const id = isNaN(btn.dataset.id) ? btn.dataset.id : Number(btn.dataset.id);
+    const id = isNaN(btn.dataset.id) ? btn.dataset.id : Number(btn.dataset.id);
 
-      if (btn.dataset.action === 'toggle') {
-          toggleExamVisibility(id);
-      } else if (btn.dataset.action === 'delete') {
-          deleteExam(id);
-      } else if (btn.dataset.action === 'edit') {
-          openEForm(id); 
-      } else if (btn.dataset.action === 'manage-q') {
-          window.openExamQuestionManager(id);
-      }
-    });
-  }
+    if (btn.dataset.action === 'toggle') {
+        toggleExamVisibility(id);
+    } else if (btn.dataset.action === 'delete') {
+        deleteExam(id);
+    } else if (btn.dataset.action === 'edit') {
+        openEForm(id); 
+    } else if (btn.dataset.action === 'manage-q') {
+        window.openExamQuestionManager(id);
+    }
+  };
+
+  if ($('e-list')) $('e-list').addEventListener('click', handleExamActionClick);
+  if ($('practice-e-list')) $('practice-e-list').addEventListener('click', handleExamActionClick);
 
   if ($('btn-add-parent')) $('btn-add-parent').addEventListener('click', addParentCategory);
   if ($('btn-add-sub')) $('btn-add-sub').addEventListener('click', addSubCategory);
@@ -921,9 +922,26 @@ window.openExamQuestionManager = function(examId) {
     const exam = state.exams.find(e => e.id === examId);
     if (!exam) return;
 
+    const eqm = document.getElementById('exam-q-manager');
+    if (!eqm) return;
+
+    const isPracticeTab = $('tc-practice') && $('tc-practice').style.display !== 'none';
+    if (isPracticeTab) {
+        const pList = $('practice-e-list');
+        if (pList && eqm.parentNode !== $('tc-practice')) {
+            $('tc-practice').insertBefore(eqm, pList);
+        }
+    } else {
+        const eList = $('e-list');
+        if (eList && eqm.parentNode !== $('tc-e')) {
+            $('tc-e').insertBefore(eqm, eList);
+        }
+    }
+
     const eForm = document.getElementById('eform');
     if(eForm) eForm.style.display = 'none'; 
-    document.getElementById('exam-q-manager').style.display = 'block';
+
+    eqm.style.display = 'block';
     document.getElementById('eqm-name').textContent = exam.name;
 
     if (!exam.qIds) exam.qIds = [];
@@ -932,6 +950,7 @@ window.openExamQuestionManager = function(examId) {
     document.getElementById('eqm-filter-cat').innerHTML = '<option value="">(Tất cả chủ đề)</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
 
     renderEqmLists();
+    eqm.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
 document.getElementById('btn-close-eqm')?.addEventListener('click', () => {
@@ -1007,6 +1026,7 @@ window.addQToExam = async (qId) => {
         await db().from('exams').update({ q_ids: exam.qIds, count: exam.count }).eq('id', exam.id);
         renderEqmLists();
         renderExams();
+        renderPracticeExams();
     }
 };
 
@@ -1020,6 +1040,7 @@ window.removeQFromExam = async (qId) => {
     await db().from('exams').update({ q_ids: exam.qIds, count: exam.count }).eq('id', exam.id);
     renderEqmLists();
     renderExams();
+    renderPracticeExams();
 };
 
 // ==========================================

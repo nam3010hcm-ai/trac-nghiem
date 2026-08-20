@@ -25,7 +25,24 @@ export function updateExamDesc(){
 }
 
 export function openEForm(id = null) {
-    $('eform').style.display = 'block';
+    const eForm = $('eform');
+    if (!eForm) return;
+
+    // Xác định tab đang hiển thị (tc-practice hay tc-e)
+    const isPracticeTab = $('tc-practice') && $('tc-practice').style.display !== 'none';
+    if (isPracticeTab) {
+        const pList = $('practice-e-list');
+        if (pList && eForm.parentNode !== $('tc-practice')) {
+            $('tc-practice').insertBefore(eForm, pList);
+        }
+    } else {
+        const eList = $('e-list');
+        if (eList && eForm.parentNode !== $('tc-e')) {
+            $('tc-e').insertBefore(eForm, eList);
+        }
+    }
+
+    eForm.style.display = 'block';
     
     if (id) {
         // --- TRƯỜNG HỢP: SỬA ĐỀ THI ---
@@ -43,7 +60,8 @@ export function openEForm(id = null) {
             $('ef-subcat').value = exam.subcat || '';
             
             // Đổi giao diện để giáo viên biết đang ở chế độ Sửa
-            document.querySelector('#eform .sec-title').innerText = '✏️ Sửa đề thi';
+            const titleEl = document.querySelector('#eform .sec-title');
+            if (titleEl) titleEl.innerText = isPracticeTab ? '✏️ Sửa Đề Ôn Thi & Luyện Tập' : '✏️ Sửa Đề Thi Chính Thức';
             $('btn-save-exam').innerText = '✅ Cập nhật';
             
             // Gắn ID của đề thi vào nút Lưu để lát nữa hàm saveExam biết đường cập nhật
@@ -55,19 +73,26 @@ export function openEForm(id = null) {
         $('ef-desc').value = '';
         $('ef-count').value = 10;
         $('ef-time').value = 0;
-        $('ef-cat').value = '';
+
+        const currentCat = isPracticeTab ? ($('flt-practice-cat')?.value || '') : ($('flt-e-cat')?.value || '');
+        $('ef-cat').value = currentCat;
         updateEFormSubcat();
         $('ef-subcat').value = '';
         
-        document.querySelector('#eform .sec-title').innerText = 'Tạo đề thi mới';
-        $('btn-save-exam').innerText = '✅ Tạo đề thi';
+        const titleEl = document.querySelector('#eform .sec-title');
+        if (titleEl) titleEl.innerText = isPracticeTab ? '💡 Tạo Đề Ôn Thi & Luyện Tập Mới' : '📝 Tạo Đề Thi Chính Thức Mới';
+        $('btn-save-exam').innerText = isPracticeTab ? '✅ Tạo đề ôn thi' : '✅ Tạo đề thi';
         
         // Xóa ID cũ (nếu trước đó vừa bấm sửa đề khác)
         delete $('btn-save-exam').dataset.editId; 
     }
+
+    eForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-export function closeEForm(){ $('eform').style.display='none'; }
+export function closeEForm(){ 
+  if ($('eform')) $('eform').style.display = 'none'; 
+}
 
 export async function saveExam(){
   const name = $('ef-name').value.trim();
@@ -129,6 +154,7 @@ export async function saveExam(){
 
     closeEForm();
     renderExams();
+    renderPracticeExams();
     populateExamSelect();
     if (typeof window.populateCohortExams === 'function') {
       window.populateCohortExams();
@@ -158,8 +184,9 @@ export async function deleteExam(id) {
         // 2. Xóa khỏi bộ nhớ tạm (state) của trình duyệt
         state.exams = state.exams.filter(e => e.id !== id);
         
-        // 3. Cập nhật lại giao diện danh sách đề thi
+        // 3. Cập nhật lại giao diện danh sách đề thi trên cả 2 Tab
         renderExams();
+        renderPracticeExams();
         
         // 4. Cập nhật lại danh sách đề thi trong Tab "Ca thi"
         if (typeof window.populateCohortExams === 'function') {
@@ -185,6 +212,7 @@ export async function toggleExamVisibility(id){
   const { error } = await db().from('exams').update({ is_hidden: e.isHidden }).eq('id', id);
   if(error) console.error("Lỗi cập nhật trạng thái đề thi:", error);
   renderExams();
+  renderPracticeExams();
   populateExamSelect();
 }
 

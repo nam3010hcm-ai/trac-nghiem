@@ -20,6 +20,8 @@ export function populateCategoryDropdowns(){
   setOptions('flt-cat','<option value="">(Tất cả chủ đề)</option>');
   setOptions('qf-cat');
   setOptions('ef-cat','<option value="">(Tất cả chủ đề)</option>');
+  setOptions('flt-e-cat','<option value="">(Tất cả Môn học / Chủ đề)</option>');
+  setOptions('flt-practice-cat','<option value="">(Tất cả Môn học / Chủ đề)</option>');
   setOptions('add-sub-parent');
 }
 
