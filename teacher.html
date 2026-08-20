@@ -226,7 +226,28 @@ window.globalLogout = async function() {
   };
 
   window.switchTTab = function(tabName) {
-    var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics'];
+    var userMgmtTabs = ['teachers', 'students', 'authlogs'];
+    var isRoot = false;
+    try {
+      var uRaw = localStorage.getItem('teacher_user');
+      if (uRaw) {
+        var u = JSON.parse(uRaw);
+        if (u.role === 'root' || u.role === 'admin' || (u.email && u.email.toLowerCase() === 'nam3010hcm@gmail.com')) {
+          isRoot = true;
+        }
+      }
+    } catch(e){}
+
+    if (userMgmtTabs.indexOf(tabName) !== -1 && !isRoot) {
+      if (typeof window.showToast === 'function') {
+        window.showToast('warning', 'Hạn chế quyền hạn', 'Phân hệ Quản lý Người dùng chỉ dành riêng cho tài khoản Root Admin!');
+      } else {
+        alert('⚠️ Phân hệ Quản lý Người dùng chỉ dành riêng cho tài khoản Root Admin!');
+      }
+      tabName = 'dash';
+    }
+
+    var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs'];
     if (tabs.indexOf(tabName) === -1) tabName = 'dash';
 
     try {
@@ -384,15 +405,15 @@ window.globalLogout = async function() {
           <span>🏆</span> <span>Kết quả & Bảng điểm</span>
         </a>
 
-        <!-- 5. QUẢN LÝ NGƯỜI DÙNG -->
-        <div class="sidebar-section-title">👥 QUẢN LÝ NGƯỜI DÙNG</div>
-        <a class="sidebar-item" data-tab="teachers" id="tab-btn-teachers" onclick="window.switchTTab('teachers')">
+        <!-- 5. QUẢN LÝ NGƯỜI DÙNG (CHỈ ROOT ADMIN) -->
+        <div class="sidebar-section-title user-mgmt-only" id="sidebar-sec-users">👥 QUẢN LÝ NGƯỜI DÙNG</div>
+        <a class="sidebar-item user-mgmt-only" data-tab="teachers" id="tab-btn-teachers" onclick="window.switchTTab('teachers')">
           <span>👨‍🏫</span> <span>Quản lý Người Dạy (Teachers)</span>
         </a>
-        <a class="sidebar-item" data-tab="students" id="tab-btn-students" onclick="window.switchTTab('students')">
+        <a class="sidebar-item user-mgmt-only" data-tab="students" id="tab-btn-students" onclick="window.switchTTab('students')">
           <span>🎓</span> <span>Quản lý Người Học (Students)</span>
         </a>
-        <a class="sidebar-item" data-tab="authlogs" id="tab-btn-authlogs" onclick="window.switchTTab('authlogs')">
+        <a class="sidebar-item user-mgmt-only" data-tab="authlogs" id="tab-btn-authlogs" onclick="window.switchTTab('authlogs')">
           <span>🔐</span> <span>Nhật Ký & Thống Kê Đăng Nhập</span>
           <span class="item-badge" id="logs-count-sidebar" style="background:#0284c7;color:#fff;">0</span>
         </a>
@@ -715,7 +736,7 @@ window.globalLogout = async function() {
                 <button class="btn" style="justify-content:flex-start;padding:11px 16px;font-weight:700;gap:10px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0" onclick="window.switchTTab('unit');">
                   <span style="font-size:18px">📖</span> + Thiết Kế Unit 5 Kỹ Năng
                 </button>
-                <button class="btn" style="justify-content:flex-start;padding:11px 16px;font-weight:700;gap:10px;background:#f8fafc;color:#334155;border:1px solid #cbd5e1" onclick="window.switchTTab('students'); if(window.openBulkStudentModal) window.openBulkStudentModal();">
+                <button class="btn user-mgmt-only" style="justify-content:flex-start;padding:11px 16px;font-weight:700;gap:10px;background:#f8fafc;color:#334155;border:1px solid #cbd5e1" onclick="window.switchTTab('students'); if(window.openBulkStudentModal) window.openBulkStudentModal();">
                   <span style="font-size:18px">👥</span> 📥 Nhập Danh Sách Học Viên
                 </button>
                 <button class="btn" style="justify-content:flex-start;padding:11px 16px;font-weight:700;gap:10px;background:#f8fafc;color:#334155;border:1px solid #cbd5e1" onclick="window.switchTTab('r'); if(window.exportCSV) window.exportCSV();">
@@ -2010,7 +2031,7 @@ window.globalLogout = async function() {
         <span class="cmd-item-icon">📖</span>
         <div>Thiết Kế Unit 5 Kỹ Năng</div>
       </div>
-      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('students'); if(window.openBulkStudentModal) window.openBulkStudentModal();">
+      <div class="cmd-item user-mgmt-only" onclick="window.closeCommandPalette(); window.switchTTab('students'); if(window.openBulkStudentModal) window.openBulkStudentModal();">
         <span class="cmd-item-icon">📥</span>
         <div>Nhập Danh Sách Học Viên Hàng Loạt</div>
       </div>
@@ -2052,7 +2073,7 @@ window.globalLogout = async function() {
         <span class="cmd-item-icon">📖</span>
         <div>Thiết Kế Unit / Bài Học</div>
       </div>
-      <div class="cmd-item" onclick="window.closeCommandPalette(); window.switchTTab('students');">
+      <div class="cmd-item user-mgmt-only" onclick="window.closeCommandPalette(); window.switchTTab('students');">
         <span class="cmd-item-icon">👥</span>
         <div>Quản Lý Học Viên</div>
       </div>

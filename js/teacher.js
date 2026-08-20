@@ -91,6 +91,7 @@ async function showTeacherPanel(user) {
   state.currentUserEmail = user?.email || 'nam3010hcm@gmail.com';
 
   const isRoot = isRootUser(state.currentUserEmail);
+  applyUserRolePermissions(isRoot);
   try {
     localStorage.setItem('teacher_user', JSON.stringify({
       email: state.currentUserEmail,
@@ -128,7 +129,10 @@ async function showTeacherPanel(user) {
   const hashTab = (window.location.hash || '').replace('#', '').trim();
   let savedTab = null;
   try { savedTab = localStorage.getItem('active_teacher_tab'); } catch(e){}
-  const targetTab = validTabs.includes(hashTab) ? hashTab : (validTabs.includes(savedTab) ? savedTab : 'dash');
+  let targetTab = validTabs.includes(hashTab) ? hashTab : (validTabs.includes(savedTab) ? savedTab : 'dash');
+  if (!isRoot && ['teachers', 'students', 'authlogs'].includes(targetTab)) {
+    targetTab = 'dash';
+  }
   switchTTab(targetTab);
 
   initTeacherApp();
@@ -269,7 +273,27 @@ async function doLogout() {
   }
 }
 
+export function applyUserRolePermissions(isRoot) {
+  const secUsers = document.getElementById('sidebar-sec-users');
+  if (secUsers) {
+    secUsers.style.display = isRoot ? 'block' : 'none';
+  }
+
+  const userMgmtElements = document.querySelectorAll('.user-mgmt-only, #tab-btn-teachers, #tab-btn-students, #tab-btn-authlogs');
+  userMgmtElements.forEach(el => {
+    el.style.display = isRoot ? '' : 'none';
+  });
+}
+window.applyUserRolePermissions = applyUserRolePermissions;
+
 function switchTTab(t) {
+  const userMgmtTabs = ['teachers', 'students', 'authlogs'];
+  const isRoot = isRootUser(state.currentUserEmail);
+  if (userMgmtTabs.includes(t) && !isRoot) {
+    showToast('warning', 'Hạn chế quyền', 'Phân hệ Quản Lý Người Dùng chỉ dành riêng cho tài khoản Root Admin!');
+    t = 'dash';
+  }
+
   const tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs'];
   if (!tabs.includes(t)) t = 'dash';
 
