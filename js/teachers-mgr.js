@@ -7,29 +7,42 @@
 
 import { $, esc, isRootUser, ROOT_ADMIN_EMAIL, state } from './common.js';
 
-const db = () => window.supabaseClient;
-
 export const DEFAULT_TEACHERS = [
   {
     id: 'T001',
     email: 'nam3010hcm@gmail.com',
-    teacher_name: 'Giảng Viên Quản Trị Hệ Thống (Root Admin)',
-    name: 'Giảng Viên Quản Trị Hệ Thống (Root Admin)',
+    teacher_name: 'Thầy Nam (Root Admin)',
+    name: 'Thầy Nam (Root Admin)',
     department: 'Ban Giám Hiệu & Quản Trị LMS',
     role: 'admin',
-    is_active: true,
-    created_at: new Date().toISOString()
+    is_active: true
   },
   {
     id: 'T002',
-    email: 'teacher.anhvan@k7.edu.vn',
-    teacher_name: 'Cô Emma (Giáo Viên Tiếng Anh)',
-    name: 'Cô Emma (Giáo Viên Tiếng Anh)',
+    email: 'chen.lms@k7.edu.vn',
+    teacher_name: 'Dr. Chen',
+    name: 'Dr. Chen',
     department: 'Khoa Ngoại Ngữ',
-    password: '123',
     role: 'teacher',
-    is_active: true,
-    created_at: new Date().toISOString()
+    is_active: true
+  },
+  {
+    id: 'T004',
+    email: 'alice@example.com',
+    teacher_name: 'Alice',
+    name: 'Alice',
+    department: 'Khoa Ngoại Ngữ',
+    role: 'teacher',
+    is_active: true
+  },
+  {
+    id: 'T005',
+    email: 'nam84hcm@gmail.com',
+    teacher_name: 'Lê Văn Nam',
+    name: 'Lê Văn Nam',
+    department: 'Khoa Tin Học',
+    role: 'teacher',
+    is_active: true
   }
 ];
 
@@ -65,53 +78,41 @@ function generateNextTeacherId() {
 // 1. NẠP DANH SÁCH GIẢNG VIÊN TỪ SUPABASE
 export async function loadTeachers() {
   try {
-    // 1. Nạp nhanh từ LocalStorage Cache để hiển thị ngay tức thì
-    if (!teachersList || teachersList.length === 0) {
-      teachersList = loadTeachersFromLocal();
-      renderTeachersList();
-    }
+    const client = window.supabaseClient;
+    if (client) {
+      const { data, error } = await client.from('teachers').select('*');
+      if (!error && Array.isArray(data) && data.length > 0) {
+        teachersList = data.map(t => ({
+          ...t,
+          id: t.id || 'T001',
+          name: t.teacher_name || t.name || t.full_name || t.email,
+          teacher_name: t.teacher_name || t.name || t.full_name || t.email,
+          email: t.email || '',
+          department: t.department || 'Bộ Môn Chung',
+          is_active: t.is_active !== false
+        }));
 
-    if (!db()) return teachersList;
+        // Đảm bảo Root Admin luôn có trong danh sách
+        const rootExists = teachersList.some(t => (t.email || '').toLowerCase() === ROOT_ADMIN_EMAIL.toLowerCase());
+        if (!rootExists) {
+          teachersList.unshift(DEFAULT_TEACHERS[0]);
+        }
 
-    let { data, error } = await db().from('teachers').select('*').order('created_at', { ascending: false });
-    if (error) {
-      const res = await db().from('teachers').select('*');
-      data = res.data;
-      error = res.error;
-    }
-
-    if (error) {
-      console.warn("Lỗi truy vấn bảng teachers trên Supabase, dùng dữ liệu đệm:", error);
-    } else if (data && data.length > 0) {
-      teachersList = data.map(t => ({
-        ...t,
-        name: t.teacher_name || t.name || t.full_name || t.email
-      }));
-
-      // Luôn đảm bảo tài khoản Root Admin có trong danh sách
-      const rootExists = teachersList.some(t => (t.email || '').toLowerCase() === ROOT_ADMIN_EMAIL.toLowerCase());
-      if (!rootExists) {
-        teachersList.unshift(DEFAULT_TEACHERS[0]);
+        saveTeachersToLocal();
+        renderTeachersList();
+        return teachersList;
       }
-
-      saveTeachersToLocal();
-      renderTeachersList();
-    } else {
-      // Nếu CSDL rỗng, khởi tạo với DEFAULT_TEACHERS
-      teachersList = [...DEFAULT_TEACHERS];
-      saveTeachersToLocal();
-      try {
-        await db().from('teachers').upsert(DEFAULT_TEACHERS, { onConflict: 'email' });
-      } catch(e){}
-      renderTeachersList();
+      if (error) {
+        console.warn("[Teachers] Lỗi select từ bảng teachers trên Supabase:", error);
+      }
     }
   } catch (err) {
-    console.warn("Lỗi khi loadTeachers từ Supabase:", err);
-    if (!teachersList || teachersList.length === 0) {
-      teachersList = loadTeachersFromLocal();
-      renderTeachersList();
-    }
+    console.warn("[Teachers] Exception khi loadTeachers:", err);
   }
+
+  // Fallback cache / demo teachers
+  teachersList = loadTeachersFromLocal();
+  renderTeachersList();
   return teachersList;
 }
 
@@ -122,17 +123,16 @@ export function renderTeachersList() {
   const searchInput = document.getElementById('flt-teacher-search');
   const addBtn = document.getElementById('btn-open-add-teacher');
 
-  const currentUserIsRoot = isRootUser(state?.currentUserEmail);
   if (addBtn) {
     addBtn.style.display = 'inline-flex';
   }
 
-  if (countEl) countEl.textContent = teachersList.length;
+  if (countEl) countEl.textContent = (teachersList || []).length;
   if (!container) return;
 
   const q = (searchInput?.value || '').trim().toLowerCase();
 
-  let filtered = teachersList.filter(t => {
+  let filtered = (teachersList || []).filter(t => {
     const tName = (t.teacher_name || t.name || t.full_name || '').toLowerCase();
     const tEmail = (t.email || '').toLowerCase();
     const tDept = (t.department || '').toLowerCase();
@@ -157,14 +157,14 @@ export function renderTeachersList() {
     const teacherName = t.teacher_name || t.name || t.full_name || t.email;
 
     // Tính toán tài nguyên do giảng viên này tạo ra
-    const questionsCount = (window.state?.questions || []).filter(q => (q.created_by || q.createdBy || '').toLowerCase() === (t.email || '').toLowerCase()).length;
-    const examsCount = (window.state?.exams || []).filter(e => (e.created_by || e.createdBy || '').toLowerCase() === (t.email || '').toLowerCase()).length;
-    const unitsCount = (window.state?.units || []).filter(u => (u.created_by || u.createdBy || '').toLowerCase() === (t.email || '').toLowerCase()).length;
+    const questionsCount = (state?.questions || []).filter(q => (q.created_by || q.createdBy || '').toLowerCase() === (t.email || '').toLowerCase()).length;
+    const examsCount = (state?.exams || []).filter(e => (e.created_by || e.createdBy || '').toLowerCase() === (t.email || '').toLowerCase()).length;
+    const unitsCount = (state?.units || []).filter(u => (u.created_by || u.createdBy || '').toLowerCase() === (t.email || '').toLowerCase()).length;
 
     const loginTime = t.last_login_at ? new Date(t.last_login_at).toLocaleString('vi-VN') : 'Chưa có nhật ký';
     const logoutTime = t.last_logout_at ? new Date(t.last_logout_at).toLocaleString('vi-VN') : 'Đang online / Chưa xuất';
 
-    let actionButtonsHtml = `
+    const actionButtonsHtml = `
       <button class="action-btn-sm" onclick="window.openTeacherModal('${esc(t.id)}')">✏️ Sửa</button>
       <button class="action-btn-sm" style="color:${isActive ? '#d97706' : '#16a34a'}" onclick="window.toggleTeacherStatus('${esc(t.id)}')">
         ${isActive ? '🔒 Khóa' : '🔓 Mở khóa'}
@@ -224,7 +224,7 @@ export function openTeacherModal(id = null) {
   if (!modal) return;
 
   if (id) {
-    const t = teachersList.find(item => item.id === id);
+    const t = (teachersList || []).find(item => item.id === id);
     if (!t) return;
     if (title) title.textContent = '✏️ Cập Nhật Tài Khoản Giảng Viên';
     if ($('t-mod-email')) { $('t-mod-email').value = t.email || ''; $('t-mod-email').disabled = true; }
@@ -268,7 +268,6 @@ export async function saveTeacher() {
   if (editingTeacherId) {
     const updatePayload = {
       teacher_name: name,
-      name: name,
       department: dept || 'Khoa Ngoại Ngữ'
     };
 
@@ -277,17 +276,18 @@ export async function saveTeacher() {
     }
 
     try {
-      if (db()) {
-        const { error } = await db().from('teachers').update(updatePayload).eq('id', editingTeacherId);
+      const client = window.supabaseClient;
+      if (client) {
+        const { error } = await client.from('teachers').update(updatePayload).eq('id', editingTeacherId);
         if (error) {
-          console.warn("Cập nhật Supabase trả về:", error);
+          console.warn("Cập nhật Supabase teachers error:", error);
         }
       }
     } catch(e) {
       console.warn("Lỗi sync Supabase:", e);
     }
 
-    const t = teachersList.find(item => item.id === editingTeacherId);
+    const t = (teachersList || []).find(item => item.id === editingTeacherId);
     if (t) {
       t.teacher_name = name;
       t.name = name;
@@ -299,7 +299,7 @@ export async function saveTeacher() {
     saveTeachersToLocal();
     alert("✅ Đã cập nhật thông tin Giảng viên thành công!");
   } else {
-    const exists = teachersList.some(t => (t.email || '').toLowerCase() === email.toLowerCase());
+    const exists = (teachersList || []).some(t => (t.email || '').toLowerCase() === email.toLowerCase());
     if (exists) {
       alert("❌ Email giảng viên này đã tồn tại trên hệ thống!");
       return;
@@ -310,27 +310,25 @@ export async function saveTeacher() {
       id: newId,
       email: email,
       teacher_name: name,
-      name: name,
       department: dept || 'Khoa Ngoại Ngữ',
       password: password,
       role: isRootUser(email) ? 'admin' : 'teacher',
-      is_active: true,
-      created_at: new Date().toISOString()
+      is_active: true
     };
 
     try {
-      if (db()) {
-        const { data, error } = await db().from('teachers').insert([newTeacher]).select();
+      const client = window.supabaseClient;
+      if (client) {
+        const { data, error } = await client.from('teachers').insert([newTeacher]).select();
         if (error) {
-          console.warn("Lỗi insert Supabase, lưu vào cache:", error);
-        } else if (data && data.length > 0) {
-          newTeacher.created_at = data[0].created_at || newTeacher.created_at;
+          console.warn("Lỗi insert Supabase teachers:", error);
         }
       }
     } catch(e) {
       console.warn("Lỗi sync Supabase:", e);
     }
 
+    newTeacher.name = name;
     teachersList.unshift(newTeacher);
     saveTeachersToLocal();
     alert("✅ Đã thêm tài khoản Giảng viên mới thành công!");
@@ -342,13 +340,14 @@ export async function saveTeacher() {
 
 // 5. MỞ / KHÓA TÀI KHOẢN GIẢNG VIÊN TRÊN SUPABASE
 export async function toggleTeacherStatus(id) {
-  const t = teachersList.find(item => item.id === id);
+  const t = (teachersList || []).find(item => item.id === id);
   if (!t) return;
   const nextStatus = !(t.is_active !== false);
 
   try {
-    if (db()) {
-      const { error } = await db().from('teachers').update({ is_active: nextStatus }).eq('id', id);
+    const client = window.supabaseClient;
+    if (client) {
+      const { error } = await client.from('teachers').update({ is_active: nextStatus }).eq('id', id);
       if (error) {
         console.warn("Lỗi toggle status trên Supabase:", error);
       }
@@ -367,14 +366,15 @@ export async function toggleTeacherStatus(id) {
 
 // 6. XÓA GIẢNG VIÊN TRÊN SUPABASE
 export async function deleteTeacher(id) {
-  const t = teachersList.find(item => item.id === id);
+  const t = (teachersList || []).find(item => item.id === id);
   if (!t) return;
   const teacherDisplayName = t.teacher_name || t.name || t.email;
   if (!confirm(`Bạn có chắc chắn muốn xóa tài khoản giảng viên "${teacherDisplayName}" không?`)) return;
 
   try {
-    if (db()) {
-      const { error } = await db().from('teachers').delete().eq('id', id);
+    const client = window.supabaseClient;
+    if (client) {
+      const { error } = await client.from('teachers').delete().eq('id', id);
       if (error) {
         console.warn("Lỗi xóa trên Supabase:", error);
       }
@@ -399,5 +399,3 @@ window.closeTeacherModal = closeTeacherModal;
 window.saveTeacher = saveTeacher;
 window.toggleTeacherStatus = toggleTeacherStatus;
 window.deleteTeacher = deleteTeacher;
-
-
