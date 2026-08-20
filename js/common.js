@@ -261,6 +261,9 @@ export function renderRich(txt) {
 
 export function typesetMath(root=document.body){
   if(window.MathJax?.typesetPromise){
+    if(window.MathJax.typesetClear){
+      try { window.MathJax.typesetClear([root]); } catch(e){}
+    }
     window.MathJax.typesetPromise([root]).catch(console.error);
   }
 }

@@ -110,6 +110,15 @@ function ensureQuestionTools(){
     if(t === 'fill_blank' || t === 'drag_drop') renderBlankInputs();
   });
 
+  // Gắn sự kiện cập nhật Live Render Preview 2 trạng thái cho Form câu hỏi
+  ['qf-text', 'qf-a', 'qf-b', 'qf-c', 'qf-d', 'qf-explain'].forEach(id => {
+    const el = $(id);
+    if (el && !el.dataset.liveBound) {
+      el.addEventListener('input', updateQFormPreviews);
+      el.dataset.liveBound = 'true';
+    }
+  });
+
   // --- XỬ LÝ UPLOAD AUDIO LÊN SUPABASE STORAGE ---
   const qfAudioFile = $('qf-audio-file');
   if (qfAudioFile) {
@@ -311,6 +320,7 @@ export function openQForm(id = null){
   }
   
   $('qform').style.display = 'block';
+  updateQFormPreviews();
   typesetMath($('qform'));
   
   // TỰ ĐỘNG CUỘN LÊN FORM MƯỢT MÀ
@@ -491,7 +501,8 @@ export function renderQuestions(){
           ${mediaHTML(q.image)}
           ${audioHTML(q.audio)}
         </div>
-        <div style="display:flex;gap:6px;align-items:center">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-sm" type="button" onclick="window.toggleQLatexSource('${q.id}')" style="background:#f8fafc;color:#334155;border:1.5px solid #cbd5e1;font-size:11.5px;padding:4px 8px;font-weight:700;">📝 Xem mã LaTeX</button>
           ${canEdit ? `
             <button class="btn btn-sm q-action" data-action="edit" data-id="${q.id}">Sửa</button>
             <button class="btn btn-sm btn-danger q-action" data-action="delete" data-id="${q.id}">Xóa</button>
@@ -502,6 +513,15 @@ export function renderQuestions(){
       </div>
       <div style="margin-top:8px">${answerHTML}</div>
       ${explainHTML}
+      <!-- KHUNG HIỂN THỊ TRẠNG THÁI 1: MÃ NGUỒN LATEX GỐC -->
+      <div id="q-latex-raw-${q.id}" style="display:none; margin-top:10px; background:#0f172a; color:#f8fafc; padding:12px 14px; border-radius:8px; font-family:monospace; font-size:12px; line-height:1.6; border:1.5px solid #334155; overflow-x:auto;">
+        <div style="color:#38bdf8; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+          <span>📋</span> Trạng thái 1: Mã nguồn LaTeX / Văn bản gốc của câu hỏi:
+        </div>
+        <div style="margin-bottom:4px;"><b style="color:#94a3b8;">Nội dung:</b> ${esc(q.text)}</div>
+        ${q.opts?.length ? `<div style="margin-bottom:4px;"><b style="color:#94a3b8;">Đáp án:</b> ${q.opts.map((o,i) => `<span style="${(q.type==='mcq_multi'?(q.ans||[]):[q.ans]).includes(i)?'color:#f87171;font-weight:bold;':''}">[${KEYS[i]}] ${esc(o)}</span>`).join(' | ')}</div>` : ''}
+        ${q.explain ? `<div><b style="color:#94a3b8;">Giải thích:</b> ${esc(q.explain)}</div>` : ''}
+      </div>
     </div>`;
   }).join('') || '<div class="empty">Không có câu hỏi phù hợp.</div>';
 
@@ -576,3 +596,51 @@ async function importQuestionsFromFile(e){
     alert('Không import được file. Hãy kiểm tra định dạng cột hoặc kết nối mạng để tải thư viện XLSX.');
   }
 }
+
+// ==============================================================
+// HỆ THỐNG LIVE PREVIEW 2 TRẠNG THÁI CHO FORM SOẠN CÂU HỎI
+// ==============================================================
+let qFormPrevTimeout = null;
+export function updateQFormPreviews() {
+  if (qFormPrevTimeout) clearTimeout(qFormPrevTimeout);
+  qFormPrevTimeout = setTimeout(() => {
+    const textVal = $('qf-text')?.value || '';
+    const textPrev = $('qf-text-preview');
+    if (textPrev) {
+      textPrev.innerHTML = textVal.trim() ? renderRich(textVal) : '<span style="color:#94a3b8;font-style:italic;">(Nội dung câu hỏi sau khi render sẽ xuất hiện ở đây)</span>';
+      typesetMath(textPrev);
+    }
+
+    ['a', 'b', 'c', 'd'].forEach(k => {
+      const val = $(`qf-${k}`)?.value || '';
+      const prev = $(`qf-${k}-preview`);
+      if (prev) {
+        prev.innerHTML = val.trim() ? renderRich(val) : '<span style="color:#94a3b8;font-size:11.5px;font-style:italic;">(Trống)</span>';
+        typesetMath(prev);
+      }
+    });
+
+    const expVal = $('qf-explain')?.value || '';
+    const expPrev = $('qf-explain-preview');
+    if (expPrev) {
+      if (expVal.trim()) {
+        expPrev.style.display = 'block';
+        expPrev.innerHTML = '<b>💡 Giải thích:</b> ' + renderRich(expVal);
+        typesetMath(expPrev);
+      } else {
+        expPrev.style.display = 'none';
+      }
+    }
+  }, 100);
+}
+
+export function toggleQLatexSource(qId) {
+  const el = document.getElementById('q-latex-raw-' + qId);
+  if (el) {
+    el.style.display = (el.style.display === 'none' ? 'block' : 'none');
+  }
+}
+
+window.updateQFormPreviews = updateQFormPreviews;
+window.toggleQLatexSource = toggleQLatexSource;
+

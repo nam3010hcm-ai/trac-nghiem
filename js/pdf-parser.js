@@ -442,44 +442,80 @@ export function renderParsedExamPreview() {
   container.innerHTML = currentParsedExam.questions.map((q, qIdx) => {
     const keys = ['A', 'B', 'C', 'D'];
     return `
-      <div class="pdf-q-card" id="pdf-q-card-${qIdx}" style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:12px; padding:16px 20px; margin-bottom:16px; box-shadow:0 2px 6px rgba(15,23,42,0.03);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div class="pdf-q-card" id="pdf-q-card-${qIdx}" style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:12px; padding:18px 20px; margin-bottom:18px; box-shadow:0 2px 8px rgba(15,23,42,0.04);">
+        
+        <!-- Header Câu hỏi -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
           <div style="font-weight:800; color:#1e293b; font-size:15px; display:flex; align-items:center; gap:8px;">
-            <span style="background:#3b82f6; color:#ffffff; font-size:12px; padding:3px 10px; border-radius:20px; font-weight:700;">Câu ${qIdx + 1}</span>
-            <span style="font-size:12px; color:#64748b; font-weight:500;">(Trắc nghiệm 1 đáp án)</span>
+            <span style="background:#2563eb; color:#ffffff; font-size:12px; padding:3px 12px; border-radius:20px; font-weight:700;">Câu ${qIdx + 1}</span>
+            <span style="font-size:12px; color:#64748b; font-weight:600;">2 Trạng thái: Mã LaTeX ⇄ Live Render</span>
           </div>
           <div style="display:flex; align-items:center; gap:6px;">
-            <span style="background:#ecfdf5; color:#059669; font-size:11.5px; font-weight:700; padding:3px 8px; border-radius:6px; border:1px solid #a7f3d0;">
-              ✨ Đáp án đúng: Lựa chọn ${keys[q.ans]} (Màu Đỏ)
+            <span style="background:#ecfdf5; color:#059669; font-size:11.5px; font-weight:800; padding:4px 10px; border-radius:6px; border:1px solid #a7f3d0; display:flex; align-items:center; gap:5px;">
+              <span>🎯 Đáp án đúng:</span>
+              <b style="color:#dc2626; font-size:13px;">Lựa chọn ${keys[q.ans]} (Chữ Đỏ)</b>
             </span>
           </div>
         </div>
 
-        <!-- Khung soạn thảo câu hỏi -->
-        <div class="fg" style="margin-bottom:12px;">
-          <label style="font-size:12px; font-weight:700; color:#475569;">Nội dung câu hỏi (Hỗ trợ LaTeX: $ ... $):</label>
-          <textarea class="pdf-q-text-input" data-idx="${qIdx}" style="width:100%; min-height:55px; font-size:13.5px; padding:8px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:var(--font-main);" onchange="window.updateParsedQuestionText(${qIdx}, this.value)">${esc(q.text)}</textarea>
+        <!-- 1. KHUNG NỘI DUNG CÂU HỎI (2 TRẠNG THÁI) -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+          <div>
+            <label style="font-size:11.5px; font-weight:700; color:#475569; display:flex; align-items:center; gap:4px; margin-bottom:4px;">
+              <span>📝</span> Trạng thái 1: Mã nguồn (Có hỗ trợ LaTeX):
+            </label>
+            <textarea class="pdf-q-text-input" data-idx="${qIdx}" style="width:100%; min-height:68px; font-size:13px; padding:8px 10px; border:1.5px solid #cbd5e1; border-radius:8px; font-family:monospace; background:#ffffff; color:#0f172a;" oninput="window.updateParsedQuestionText(${qIdx}, this.value)">${esc(q.text)}</textarea>
+          </div>
+          <div>
+            <label style="font-size:11.5px; font-weight:700; color:#2563eb; display:flex; align-items:center; gap:4px; margin-bottom:4px;">
+              <span>👁️</span> Trạng thái 2: Hiển thị thực tế (Rendered MathJax):
+            </label>
+            <div id="pdf-q-rendered-${qIdx}" style="background:#f8fafc; border:1.5px solid #bfdbfe; border-radius:8px; padding:8px 12px; font-size:13.5px; color:#0f172a; min-height:68px; overflow-x:auto;">
+              ${esc(q.text)}
+            </div>
+          </div>
         </div>
 
-        <!-- 4 Lựa chọn A, B, C, D -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
-          ${q.opts.map((opt, optIdx) => {
-            const isCorrect = q.ans === optIdx;
-            return `
-              <div style="display:flex; align-items:center; gap:8px; background:${isCorrect ? '#f0fdf4' : '#f8fafc'}; border:1.5px solid ${isCorrect ? '#22c55e' : '#e2e8f0'}; border-radius:8px; padding:8px 12px; transition:all 0.2s;">
-                <input type="radio" name="pdf-ans-${qIdx}" id="pdf-ans-${qIdx}-${optIdx}" value="${optIdx}" ${isCorrect ? 'checked' : ''} onchange="window.setParsedQuestionAnswer(${qIdx}, ${optIdx})" style="width:17px; height:17px; cursor:pointer; accent-color:#16a34a;">
-                <label for="pdf-ans-${qIdx}-${optIdx}" style="font-weight:800; color:${isCorrect ? '#15803d' : '#475569'}; min-width:22px; cursor:pointer; margin:0;">${keys[optIdx]}.</label>
-                <input type="text" value="${esc(opt)}" style="flex:1; border:1px solid #cbd5e1; border-radius:5px; padding:5px 8px; font-size:13px; background:#ffffff;" onchange="window.updateParsedQuestionOption(${qIdx}, ${optIdx}, this.value)">
-                ${isCorrect ? `<span style="font-size:11px; background:#dcfce7; color:#15803d; font-weight:700; padding:2px 6px; border-radius:4px;">Chữ Đỏ</span>` : ''}
-              </div>
-            `;
-          }).join('')}
+        <!-- 2. KHUNG 4 LỰA CHỌN A, B, C, D (2 TRẠNG THÁI) -->
+        <div style="margin-bottom:12px;">
+          <label style="font-size:12px; font-weight:700; color:#334155; display:block; margin-bottom:8px;">
+            Các phương án lựa chọn (Click chọn Radio để đổi đáp án đúng):
+          </label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            ${q.opts.map((opt, optIdx) => {
+              const isCorrect = q.ans === optIdx;
+              return `
+                <div style="background:${isCorrect ? '#fef2f2' : '#f8fafc'}; border:1.5px solid ${isCorrect ? '#f87171' : '#e2e8f0'}; border-radius:10px; padding:10px 12px; transition:all 0.2s;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <input type="radio" name="pdf-ans-${qIdx}" id="pdf-ans-${qIdx}-${optIdx}" value="${optIdx}" ${isCorrect ? 'checked' : ''} onchange="window.setParsedQuestionAnswer(${qIdx}, ${optIdx})" style="width:16px; height:16px; cursor:pointer; accent-color:#dc2626;">
+                      <label for="pdf-ans-${qIdx}-${optIdx}" style="font-weight:800; font-size:13px; color:${isCorrect ? '#b91c1c' : '#1e293b'}; cursor:pointer; margin:0;">
+                        Đáp án ${keys[optIdx]}
+                      </label>
+                    </div>
+                    ${isCorrect ? `<span style="font-size:10.5px; background:#fee2e2; color:#b91c1c; font-weight:800; padding:2px 8px; border-radius:4px; border:1px solid #fecaca;">✓ Chữ Đỏ (Đúng)</span>` : ''}
+                  </div>
+
+                  <!-- Trạng thái 1: Mã nguồn -->
+                  <div style="margin-bottom:6px;">
+                    <input type="text" value="${esc(opt)}" placeholder="Mã LaTeX..." style="width:100%; border:1px solid #cbd5e1; border-radius:6px; padding:5px 8px; font-size:12.5px; font-family:monospace; background:#ffffff;" oninput="window.updateParsedQuestionOption(${qIdx}, ${optIdx}, this.value)">
+                  </div>
+
+                  <!-- Trạng thái 2: Đã Render -->
+                  <div id="pdf-opt-rendered-${qIdx}-${optIdx}" style="background:#ffffff; border:1px dashed ${isCorrect ? '#fca5a5' : '#cbd5e1'}; border-radius:6px; padding:5px 8px; font-size:13px; color:${isCorrect ? '#b91c1c' : '#0f172a'}; min-height:28px; overflow-x:auto;">
+                    ${esc(opt)}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
         </div>
 
-        <!-- Lời giải thích -->
+        <!-- 3. LỜI GIẢI THÍCH (2 TRẠNG THÁI) -->
         ${q.explain ? `
-          <div style="font-size:12px; color:#0369a1; background:#f0f9ff; padding:8px 12px; border-radius:6px; border-left:3px solid #0284c7;">
-            <b>💡 Hướng dẫn giải:</b> <span class="math-render">${esc(q.explain)}</span>
+          <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:10px 12px; margin-top:8px;">
+            <div style="font-size:11.5px; font-weight:700; color:#0369a1; margin-bottom:4px;">💡 Hướng dẫn giải (Hiển thị thực tế):</div>
+            <div id="pdf-q-explain-rendered-${qIdx}" style="font-size:12.5px; color:#0c4a6e; overflow-x:auto;">${esc(q.explain)}</div>
           </div>
         ` : ''}
       </div>
@@ -490,18 +526,35 @@ export function renderParsedExamPreview() {
   typesetMath(container);
 }
 
+// Debounce timer cho typesetMath realtime
+let typesetTimeout = null;
+function scheduleTypeset(el) {
+  if (typesetTimeout) clearTimeout(typesetTimeout);
+  typesetTimeout = setTimeout(() => {
+    typesetMath(el || $('pdf-questions-container'));
+  }, 120);
+}
+
 // Cập nhật câu hỏi khi giáo viên chỉnh sửa trực tiếp trong modal
 export function updateParsedQuestionText(idx, val) {
   if (currentParsedExam?.questions?.[idx]) {
     currentParsedExam.questions[idx].text = val;
-    typesetMath($(`pdf-q-card-${idx}`));
+    const renderedBox = $(`pdf-q-rendered-${idx}`);
+    if (renderedBox) {
+      renderedBox.textContent = val;
+      scheduleTypeset(renderedBox);
+    }
   }
 }
 
 export function updateParsedQuestionOption(qIdx, optIdx, val) {
   if (currentParsedExam?.questions?.[qIdx]?.opts) {
     currentParsedExam.questions[qIdx].opts[optIdx] = val;
-    typesetMath($(`pdf-q-card-${qIdx}`));
+    const renderedBox = $(`pdf-opt-rendered-${qIdx}-${optIdx}`);
+    if (renderedBox) {
+      renderedBox.textContent = val;
+      scheduleTypeset(renderedBox);
+    }
   }
 }
 
