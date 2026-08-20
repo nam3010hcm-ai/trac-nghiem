@@ -291,22 +291,20 @@ export async function saveTeacher() {
     return;
   }
 
+  const client = window.supabaseClient;
+
   if (editingTeacherId) {
     const updatePayload = {
       teacher_name: name,
       department: dept || 'Khoa Ngoại Ngữ'
     };
 
-    if (password) {
-      updatePayload.password = password;
-    }
-
     try {
-      const client = window.supabaseClient;
       if (client) {
         const { error } = await client.from('teachers').update(updatePayload).eq('id', editingTeacherId);
         if (error) {
-          console.warn("Cập nhật Supabase teachers error:", error);
+          console.error("Cập nhật Supabase teachers error:", error);
+          alert("⚠️ Lỗi CSDL Supabase: " + (error.message || JSON.stringify(error)));
         }
       }
     } catch(e) {
@@ -318,11 +316,10 @@ export async function saveTeacher() {
       t.teacher_name = name;
       t.name = name;
       t.department = dept || 'Khoa Ngoại Ngữ';
-      if (password) {
-        t.password = password;
-      }
     }
     saveTeachersToLocal();
+    closeTeacherModal();
+    renderTeachersList();
     alert("✅ Đã cập nhật thông tin Giảng viên thành công!");
   } else {
     const exists = (teachersList || []).some(t => (t.email || '').toLowerCase() === email.toLowerCase());
@@ -332,36 +329,68 @@ export async function saveTeacher() {
     }
 
     const newId = generateNextTeacherId();
-    const newTeacher = {
+    let authUserId = null;
+
+    // 1. Tạo tài khoản Supabase Auth nếu có mật khẩu
+    if (client && password) {
+      try {
+        const { data: authData, error: authError } = await client.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: {
+              teacher_name: name,
+              role: 'teacher'
+            }
+          }
+        });
+        if (!authError && authData?.user?.id) {
+          authUserId = authData.user.id;
+        }
+      } catch (authErr) {
+        console.warn("[Teachers] SignUp error:", authErr);
+      }
+    }
+
+    // 2. Chèn vào bảng teachers với đúng các cột tồn tại trong Schema
+    const dbPayload = {
       id: newId,
       email: email,
       teacher_name: name,
       department: dept || 'Khoa Ngoại Ngữ',
-      password: password,
       role: isRootUser(email) ? 'admin' : 'teacher',
-      is_active: true
+      is_active: true,
+      teacher_code: newId
     };
 
+    if (authUserId) {
+      dbPayload.user_id = authUserId;
+    }
+
     try {
-      const client = window.supabaseClient;
       if (client) {
-        const { data, error } = await client.from('teachers').insert([newTeacher]).select();
+        const { data, error } = await client.from('teachers').insert([dbPayload]).select();
         if (error) {
-          console.warn("Lỗi insert Supabase teachers:", error);
+          console.error("Lỗi insert Supabase teachers:", error);
+          alert("⚠️ Lỗi lưu CSDL Supabase: " + (error.message || JSON.stringify(error)));
+        } else {
+          console.log("✅ Đã lưu thành công giảng viên vào Supabase:", data);
         }
       }
     } catch(e) {
       console.warn("Lỗi sync Supabase:", e);
     }
 
-    newTeacher.name = name;
-    teachersList.unshift(newTeacher);
+    const localItem = {
+      ...dbPayload,
+      name: name
+    };
+    teachersList.unshift(localItem);
     saveTeachersToLocal();
+    closeTeacherModal();
+    renderTeachersList();
     alert("✅ Đã thêm tài khoản Giảng viên mới thành công!");
   }
-
-  closeTeacherModal();
-  renderTeachersList();
 }
 
 // 5. MỞ / KHÓA TÀI KHOẢN GIẢNG VIÊN TRÊN SUPABASE
