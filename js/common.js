@@ -182,57 +182,106 @@ function normAns(s){ return String(s ?? '').trim().toLowerCase(); }
 
 // So khớp 1 câu trả lời của học viên với đáp án đúng của câu hỏi q, theo từng loại (type)
 export function isCorrect(q, userAns){
+  if (!q) return false;
   const type = q.type || 'mcq_single';
+
   if(type === 'mcq_single'){
-    return userAns === q.ans;
+    if (userAns === undefined || userAns === null || userAns === '') return false;
+    let expected = q.ans;
+    if (typeof expected === 'string' && /^[ABCDabcd]$/.test(expected.trim())) {
+      expected = ['A', 'B', 'C', 'D'].indexOf(expected.trim().toUpperCase());
+    }
+    let actual = userAns;
+    if (typeof actual === 'string' && /^[ABCDabcd]$/.test(actual.trim())) {
+      actual = ['A', 'B', 'C', 'D'].indexOf(actual.trim().toUpperCase());
+    }
+    return Number(actual) === Number(expected);
   }
+
   if(type === 'mcq_multi'){
-    const ua = Array.isArray(userAns) ? userAns.slice().sort() : [];
-    const ca = (q.ans || []).slice().sort();
+    if (!Array.isArray(userAns)) return false;
+    const normalizeAns = val => {
+      if (typeof val === 'string' && /^[ABCDabcd]$/.test(val.trim())) {
+        return ['A', 'B', 'C', 'D'].indexOf(val.trim().toUpperCase());
+      }
+      return Number(val);
+    };
+    const ua = (userAns || []).map(normalizeAns).sort((a, b) => a - b);
+    const ca = (Array.isArray(q.ans) ? q.ans : [q.ans]).map(normalizeAns).sort((a, b) => a - b);
     return ua.length === ca.length && ua.every((v,i) => v === ca[i]);
   }
+
   if(type === 'fill_blank' || type === 'drag_drop'){
     const ua = Array.isArray(userAns) ? userAns : [];
-    return (q.blanks || []).every((accepted, i) => {
+    if (!q.blanks || !q.blanks.length) return false;
+    return q.blanks.every((accepted, i) => {
       const opts = String(accepted || '').split('|').map(normAns).filter(Boolean);
       return opts.includes(normAns(ua[i]));
     });
   }
+
   if(type === 'matching'){
-    const ua = Array.isArray(userAns) ? userAns : [];
-    return (q.pairs || []).every((_, i) => ua[i] === i);
+    const ua = userAns && typeof userAns === 'object' ? userAns : {};
+    if (!q.pairs || !q.pairs.length) return false;
+    return q.pairs.every((_, i) => Number(ua[i]) === Number(i));
   }
+
   return false;
 }
 
 // Hiển thị đáp án (của học viên hoặc đáp án đúng) dạng text để show ở màn hình kết quả
 export function formatAnswer(q, userAns, showCorrect=false){
+  if (!q) return 'Chưa làm';
   const type = q.type || 'mcq_single';
+
   if(type === 'mcq_single'){
-    const i = showCorrect ? q.ans : userAns;
-    return (i === undefined || i === null || !q.opts?.[i]) ? 'Chưa chọn' : `${KEYS[i]}. ${q.opts[i]}`;
+    let target = showCorrect ? q.ans : userAns;
+    if (typeof target === 'string' && /^[ABCDabcd]$/.test(target.trim())) {
+      target = ['A', 'B', 'C', 'D'].indexOf(target.trim().toUpperCase());
+    }
+    const i = Number(target);
+    return (isNaN(i) || i < 0 || !q.opts?.[i]) ? 'Chưa chọn' : `${KEYS[i] || '?'}. ${q.opts[i]}`;
   }
+
   if(type === 'mcq_multi'){
-    const arr = showCorrect ? (q.ans || []) : (Array.isArray(userAns) ? userAns : []);
-    if(!arr.length) return 'Chưa chọn';
-    return arr.slice().sort().map(i => `${KEYS[i]}. ${q.opts[i]}`).join('; ');
+    const rawArr = showCorrect ? (Array.isArray(q.ans) ? q.ans : [q.ans]) : (Array.isArray(userAns) ? userAns : []);
+    if(!rawArr.length) return 'Chưa chọn';
+    const normalizeAns = val => {
+      if (typeof val === 'string' && /^[ABCDabcd]$/.test(val.trim())) {
+        return ['A', 'B', 'C', 'D'].indexOf(val.trim().toUpperCase());
+      }
+      return Number(val);
+    };
+    return rawArr
+      .map(normalizeAns)
+      .filter(i => !isNaN(i) && q.opts?.[i])
+      .sort((a,b)=>a-b)
+      .map(i => `${KEYS[i] || '?'}. ${q.opts[i]}`)
+      .join('; ');
   }
+
   if(type === 'fill_blank' || type === 'drag_drop'){
-    if(showCorrect) return (q.blanks || []).map(b => String(b||'').split('|')[0]).join(', ');
-    const arr = Array.isArray(userAns) ? userAns : [];
-    return arr.length ? arr.map(v => v || '(bỏ trống)').join(', ') : 'Chưa điền';
+    const arr = showCorrect ? (q.blanks || []) : (Array.isArray(userAns) ? userAns : []);
+    if(!arr.length) return 'Chưa điền';
+    return arr.map((x,i) => `#${i+1}: ${x || '___'}`).join(' | ');
   }
+
   if(type === 'matching'){
-    const pairs = q.pairs || [];
-    if(!pairs.length) return '';
-    const ua = showCorrect ? pairs.map((_,i)=>i) : (Array.isArray(userAns) ? userAns : []);
-    return pairs.map((p,i) => {
-      const r = ua[i];
-      const rightText = (r === undefined || r === null || r === -1 || !pairs[r]) ? '(chưa ghép)' : pairs[r].right;
-      return `${p.left} → ${rightText}`;
+    if(showCorrect){
+      return (q.pairs || []).map(p => `${p.left} = ${p.right}`).join('; ');
+    }
+    const map = userAns || {};
+    const keys = Object.keys(map);
+    if(!keys.length) return 'Chưa ghép';
+    return keys.map(lIdx => {
+      const rIdx = map[lIdx];
+      const leftText = q.pairs?.[lIdx]?.left || `Mục ${Number(lIdx)+1}`;
+      const rightText = q.pairs?.[rIdx]?.right || `Mục ${Number(rIdx)+1}`;
+      return `${leftText} → ${rightText}`;
     }).join('; ');
   }
-  return '';
+
+  return String(userAns || 'Chưa làm');
 }
 
 export function renderRich(txt) {

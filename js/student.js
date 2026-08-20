@@ -684,36 +684,57 @@ async function finishExam() {
 
   const { exam, student, qs, answers, parts } = qState;
 
-  // TÍNH ĐIỂM THEO PART
+  // TÍNH ĐIỂM CHUẨN XÁC
   let cor = 0;
   let autoScore = 0;
   let totalMaxScore = 0;
+  let hasPartWeight = false;
 
-  parts.forEach(part => {
-      const match = part.name.match(/\[([0-9.]+)\s*điểm\]/i);
-      const partPoints = match ? parseFloat(match[1]) : 0;
-      totalMaxScore += partPoints;
+  // 1. Kiểm tra xem đề thi có định dạng điểm riêng theo từng Part [X điểm] không
+  (parts || []).forEach(part => {
+      const match = (part.name || '').match(/\[([0-9.]+)\s*điểm\]/i);
+      if (match) {
+          hasPartWeight = true;
+          totalMaxScore += parseFloat(match[1]);
+      }
+  });
 
-      const objQuestionsInPart = part.questions.filter(q => q.type !== 'essay');
-      const totalObjInPart = objQuestionsInPart.length;
+  const objQuestions = (qs || []).filter(q => q.type !== 'essay');
+  const totalObjQs = objQuestions.length || 1;
 
-      if (totalObjInPart > 0 && partPoints > 0) {
+  if (hasPartWeight && totalMaxScore > 0) {
+      // Trường hợp đề thi có cấu hình thang điểm riêng từng phần
+      parts.forEach(part => {
+          const match = (part.name || '').match(/\[([0-9.]+)\s*điểm\]/i);
+          const partPoints = match ? parseFloat(match[1]) : 0;
+          const objQuestionsInPart = (part.questions || []).filter(q => q.type !== 'essay');
+          const totalObjInPart = objQuestionsInPart.length;
+
           let correctInPart = 0;
           objQuestionsInPart.forEach(q => {
-              if (isCorrect(q, answers[q.globalIdx])) {
+              const gIdx = q.globalIdx !== undefined ? q.globalIdx : qs.indexOf(q);
+              if (isCorrect(q, answers[gIdx])) {
                   correctInPart++;
                   cor++;
               }
           });
-          const earnedInPart = (correctInPart / totalObjInPart) * partPoints;
-          autoScore += earnedInPart;
-      }
-  });
 
-  const totalObjQs = qs.filter(q => q.type !== 'essay').length || 1;
-  if (totalMaxScore === 0) {
-      autoScore = (cor / totalObjQs) * 10;
+          if (totalObjInPart > 0 && partPoints > 0) {
+              const earnedInPart = (correctInPart / totalObjInPart) * partPoints;
+              autoScore += earnedInPart;
+          }
+      });
+  } else {
+      // Trường hợp đề thi tiêu chuẩn (thang điểm 10)
       totalMaxScore = 10;
+      objQuestions.forEach((q, idx) => {
+          const gIdx = q.globalIdx !== undefined ? q.globalIdx : qs.indexOf(q);
+          const ua = answers[gIdx];
+          if (isCorrect(q, ua)) {
+              cor++;
+          }
+      });
+      autoScore = (cor / totalObjQs) * 10;
   }
 
   const score = Math.round(autoScore * 100) / 100;
