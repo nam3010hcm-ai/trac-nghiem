@@ -5,6 +5,7 @@
 
 import { showToast, renderLMSBadge } from './ui-components.js';
 import { classesList } from './classes-mgr.js';
+import { state, esc } from './common.js';
 
 export let assignmentsList = [];
 
@@ -16,7 +17,7 @@ export const DEFAULT_ASSIGNMENTS = [
     classId: 'cls_10a1',
     className: 'Lớp 10A1 - Anh Văn Chuyên',
     contentType: 'exam',
-    contentId: 'ex_giau_ky_1',
+    contentId: '1',
     startAt: '2026-08-10T08:00',
     dueAt: '2026-08-25T23:59',
     durationMinutes: 45,
@@ -34,7 +35,7 @@ export const DEFAULT_ASSIGNMENTS = [
     classId: 'cls_11b2',
     className: 'Lớp 11B2 - Luyện Thi IELTS & B2',
     contentType: 'video_roleplay',
-    contentId: 'spk_video_1',
+    contentId: 'u1',
     startAt: '2026-08-12T00:00',
     dueAt: '2026-08-30T23:59',
     durationMinutes: 0,
@@ -145,6 +146,24 @@ export function renderAssignmentsList() {
   }).join('');
 }
 
+function getContentOptionsHTML(contentType, selectedId) {
+  if (contentType === 'exam' || contentType === 'practice') {
+    const exams = state?.exams || [];
+    if (!exams.length) return '<option value="1">Đề thi mặc định (10 câu)</option>';
+    return exams.map(e => `<option value="${e.id}" ${String(e.id) === String(selectedId) ? 'selected' : ''}>[${esc(e.cat || 'Chung')}] ${esc(e.name)} (${e.count || 0} câu)</option>`).join('');
+  }
+  if (contentType === 'unit' || contentType === 'video_roleplay') {
+    const units = [
+      { id: 'u1', title: 'Unit 1: Innovation & Future Technologies' },
+      { id: 'u2', title: 'Unit 2: Environmental Conservation & Green Living' },
+      { id: 'u3', title: 'Unit 3: Career Pathways & Workplace Dynamics' },
+      { id: 'u4', title: 'Unit 4: Global Cultures & Traditions' }
+    ];
+    return units.map(u => `<option value="${u.id}" ${String(u.id) === String(selectedId) ? 'selected' : ''}>${esc(u.title)}</option>`).join('');
+  }
+  return '<option value="essay_general">Chủ đề viết luận tổng hợp</option>';
+}
+
 /**
  * Open Modal Dialog for Create/Edit Assignment
  */
@@ -155,7 +174,7 @@ export function openAssignmentModal(assignmentId = null) {
     classId: classesList[0]?.id || 'cls_10a1',
     className: classesList[0]?.name || 'Lớp 10A1 - Anh Văn Chuyên',
     contentType: 'exam',
-    contentId: 'ex_giau_ky_1',
+    contentId: state?.exams?.[0]?.id || '1',
     startAt: new Date().toISOString().slice(0, 16),
     dueAt: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 16),
     durationMinutes: 45,
@@ -194,7 +213,7 @@ export function openAssignmentModal(assignmentId = null) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
         <div class="fg">
           <label style="font-weight:700;font-size:13px;display:block;margin-bottom:4px">Loại Nhiệm Vụ *</label>
-          <select id="asg-input-type" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px">
+          <select id="asg-input-type" onchange="window.updateAsgContentSelect(this.value)" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px">
             <option value="exam" ${asg.contentType === 'exam' ? 'selected' : ''}>📝 Đề Thi Trắc Nghiệm</option>
             <option value="video_roleplay" ${asg.contentType === 'video_roleplay' ? 'selected' : ''}>🎬 Video Roleplay A & B</option>
             <option value="unit" ${asg.contentType === 'unit' ? 'selected' : ''}>📖 Bài Học Unit 5 Kỹ Năng</option>
@@ -203,11 +222,18 @@ export function openAssignmentModal(assignmentId = null) {
         </div>
 
         <div class="fg">
-          <label style="font-weight:700;font-size:13px;display:block;margin-bottom:4px">Lớp Học Nhận Bài *</label>
-          <select id="asg-input-class" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px">
-            ${classOptionsHTML}
+          <label style="font-weight:700;font-size:13px;display:block;margin-bottom:4px">Nội Dung / Đề Gắn Kèm *</label>
+          <select id="asg-input-content" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px">
+            ${getContentOptionsHTML(asg.contentType, asg.contentId)}
           </select>
         </div>
+      </div>
+
+      <div class="fg" style="margin-bottom:12px">
+        <label style="font-weight:700;font-size:13px;display:block;margin-bottom:4px">Lớp Học Nhận Bài *</label>
+        <select id="asg-input-class" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px">
+          ${classOptionsHTML}
+        </select>
       </div>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
@@ -256,6 +282,13 @@ export function openAssignmentModal(assignmentId = null) {
   modal.style.display = 'flex';
 }
 
+window.updateAsgContentSelect = function(type) {
+  const contentSel = document.getElementById('asg-input-content');
+  if (contentSel) {
+    contentSel.innerHTML = getContentOptionsHTML(type, '');
+  }
+};
+
 /**
  * Save Assignment from Modal Inputs
  */
@@ -263,6 +296,7 @@ export async function saveAssignmentFromModal() {
   const id = document.getElementById('asg-input-id')?.value;
   const title = document.getElementById('asg-input-title')?.value?.trim();
   const contentType = document.getElementById('asg-input-type')?.value || 'exam';
+  const contentId = document.getElementById('asg-input-content')?.value || '1';
   const classSelect = document.getElementById('asg-input-class');
   const classId = classSelect?.value || 'cls_10a1';
   const className = classSelect?.options[classSelect.selectedIndex]?.text || 'Lớp 10A1';
@@ -285,7 +319,7 @@ export async function saveAssignmentFromModal() {
     classId,
     className,
     contentType,
-    contentId: 'ex_giau_ky_1',
+    contentId,
     startAt,
     dueAt,
     durationMinutes,
@@ -316,14 +350,31 @@ export async function saveAssignmentFromModal() {
   // Sync to Supabase
   try {
     const client = window.supabaseClient;
-    if (client) await client.from('assignments').upsert(asgData);
-  } catch(e){}
+    if (client) {
+      await client.from('assignments').upsert([{
+        id: asgData.id,
+        title: asgData.title,
+        class_id: asgData.classId,
+        content_type: asgData.contentType,
+        content_id: String(asgData.contentId),
+        start_at: asgData.startAt,
+        due_at: asgData.dueAt,
+        duration_minutes: asgData.durationMinutes,
+        max_attempts: asgData.maxAttempts,
+        is_shuffle_questions: asgData.isShuffleQuestions,
+        is_shuffle_options: asgData.isShuffleOptions,
+        show_answers_mode: asgData.showAnswersMode
+      }]);
+    }
+  } catch(e){
+    console.warn("Lỗi sync Supabase assignments:", e);
+  }
 }
 
 /**
  * Delete Assignment Item
  */
-export function deleteAssignmentItem(id) {
+export async function deleteAssignmentItem(id) {
   const asg = assignmentsList.find(a => a.id === id);
   if (!asg) return;
 
@@ -333,6 +384,15 @@ export function deleteAssignmentItem(id) {
   saveAssignmentsToLocal();
   renderAssignmentsList();
   showToast('info', 'Đã Xóa Nhiệm Vụ', 'Đã xóa nhiệm vụ học tập khỏi danh sách.');
+
+  try {
+    const client = window.supabaseClient;
+    if (client) {
+      await client.from('assignments').delete().eq('id', id);
+    }
+  } catch(e){
+    console.warn("Lỗi xóa assignment trên Supabase:", e);
+  }
 }
 
 /**
