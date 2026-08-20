@@ -81,6 +81,15 @@ function generateNextTeacherId() {
 
 // 1. NẠP DANH SÁCH GIẢNG VIÊN TỪ SUPABASE
 export async function loadTeachers() {
+  // 1. Render tức thì từ bộ nhớ đệm / danh sách mặc định để không bị kẹt giao diện
+  if (!teachersList || teachersList.length === 0) {
+    teachersList = loadTeachersFromLocal();
+    if (!teachersList || teachersList.length === 0) {
+      teachersList = [...DEFAULT_TEACHERS];
+    }
+  }
+  renderTeachersList();
+
   try {
     const client = window.supabaseClient;
     if (client) {
@@ -93,7 +102,8 @@ export async function loadTeachers() {
           teacher_name: t.teacher_name || t.name || t.full_name || t.email,
           email: t.email || '',
           department: t.department || 'Bộ Môn Chung',
-          is_active: t.is_active !== false
+          is_active: t.is_active !== false,
+          role: t.role || 'teacher'
         }));
 
         // Đảm bảo Root Admin luôn có trong danh sách
@@ -102,6 +112,11 @@ export async function loadTeachers() {
           teachersList.unshift(DEFAULT_TEACHERS[0]);
         }
 
+        saveTeachersToLocal();
+        renderTeachersList();
+        return teachersList;
+      } else if (!error && Array.isArray(data) && data.length === 0) {
+        teachersList = [...DEFAULT_TEACHERS];
         saveTeachersToLocal();
         renderTeachersList();
         return teachersList;
@@ -129,6 +144,13 @@ export function renderTeachersList() {
 
   if (addBtn) {
     addBtn.style.display = 'inline-flex';
+  }
+
+  if (!teachersList || teachersList.length === 0) {
+    teachersList = loadTeachersFromLocal();
+    if (!teachersList || teachersList.length === 0) {
+      teachersList = [...DEFAULT_TEACHERS];
+    }
   }
 
   if (countEl) countEl.textContent = (teachersList || []).length;

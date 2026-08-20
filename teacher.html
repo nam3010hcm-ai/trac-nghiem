@@ -290,10 +290,13 @@ window.globalLogout = async function() {
       window.renderExams();
     }
 
-    if (tabName === 'teachers' && typeof window.loadTeachers === 'function') {
-      window.loadTeachers().then(function() {
-        if (typeof window.renderTeachersList === 'function') window.renderTeachersList();
-      });
+    if (tabName === 'teachers') {
+      if (typeof window.renderTeachersList === 'function') window.renderTeachersList();
+      if (typeof window.loadTeachers === 'function') {
+        window.loadTeachers().then(function() {
+          if (typeof window.renderTeachersList === 'function') window.renderTeachersList();
+        });
+      }
     }
 
     if (typeof window._teacherModuleSwitchTab === 'function') {

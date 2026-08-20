@@ -293,8 +293,14 @@ function switchTTab(t) {
   if (t === 'unit') renderUnitsList();
   if (t === 'practice') renderPracticeExams();
   if (t === 'e') renderExams();
-  if (t === 'teachers') loadTeachers().then(renderTeachersList);
-  if (t === 'students') loadStudents().then(renderStudentsList);
+  if (t === 'teachers') {
+    renderTeachersList();
+    loadTeachers().then(renderTeachersList);
+  }
+  if (t === 'students') {
+    renderStudentsList();
+    loadStudents().then(renderStudentsList);
+  }
   if (t === 'r') {
     renderResults();
     if (typeof window.calculateAndRenderTop10 === 'function') window.calculateAndRenderTop10();
