@@ -76,13 +76,18 @@ window.globalLogout = async function() {
 <body>
 <!-- EDUCORE OBSIDIAN GLASS APP HEADER -->
 <div class="header">
-  <a href="index.html" class="logo">
-    <div class="logo-flag">⚡</div>
-    <div class="logo-text-wrap">
-      <div class="logo-title">EduCore</div>
-      <div class="logo-subtitle">Enterprise • LMS Hub</div>
-    </div>
-  </a>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <a href="index.html" class="logo">
+      <div class="logo-flag">⚡</div>
+      <div class="logo-text-wrap">
+        <div class="logo-title">EduCore</div>
+        <div class="logo-subtitle">Enterprise • LMS Hub</div>
+      </div>
+    </a>
+    <button class="btn btn-sm header-menu-toggle" id="header-btn-toggle-sidebar" onclick="window.toggleSidebar();" title="Đóng / Mở Menu Quản Trị (Sidebar)" style="background:#eff6ff; color:#1d4ed8; border:1.5px solid #bfdbfe; font-weight:800; padding:6px 12px; border-radius:8px; display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px;">
+      <span>☰</span> <span>Menu Sidebar</span>
+    </button>
+  </div>
 
   <div class="nav">
     <a class="nav-btn" href="index.html">🏠 Dashboard</a>
