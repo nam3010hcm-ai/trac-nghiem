@@ -132,6 +132,7 @@ export function canEditItem(item, currentUserEmail) {
 
 export const state = { SUBCATS:{}, questions:[], exams:[], results:[], nextQId:100, nextEId:10, currentUserEmail: '' };
 export const $ = id => document.getElementById(id);
+if (typeof window !== 'undefined') { window.$ = $; }
 export const clone = obj => JSON.parse(JSON.stringify(obj));
 export const shuffle = a => a.slice().sort(() => Math.random() - .5);
 

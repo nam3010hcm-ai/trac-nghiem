@@ -331,6 +331,7 @@ export function openPdfImportModal() {
   $('pdf-step-upload').style.display = 'block';
   $('pdf-step-loading').style.display = 'none';
   $('pdf-step-preview').style.display = 'none';
+  if ($('btn-pdf-back-upload')) $('btn-pdf-back-upload').style.display = 'none';
   $('pdf-file-input').value = '';
 }
 
@@ -419,6 +420,7 @@ export function renderParsedExamPreview() {
 
   $('pdf-step-loading').style.display = 'none';
   $('pdf-step-preview').style.display = 'block';
+  if ($('btn-pdf-back-upload')) $('btn-pdf-back-upload').style.display = 'inline-block';
 
   $('pdf-exam-name').value = currentParsedExam.examName || "Đề thi mới từ PDF";
   $('pdf-exam-desc').value = currentParsedExam.description || "";

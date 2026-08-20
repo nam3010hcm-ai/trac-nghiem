@@ -19,6 +19,7 @@ window.MathJax = {
 <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1/dist/umd/supabase.min.js"></script>
 <script>
+window.$ = function(id) { return document.getElementById(id); };
 (function() {
   var SB_URL = "https://xuioxmjufpfdblecjvuv.supabase.co";
   var SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1aW94bWp1ZnBmZGJsZWNqdnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NDk0NDIsImV4cCI6MjEwMjMyNTQ0Mn0.udJ9W9Y_6WgqENT6j2xSXGZg2pEKfvnMTWfzKR_3gfY";
@@ -2093,13 +2094,13 @@ document.addEventListener('keydown', function(e) {
       
       <!-- BƯỚC 1: TẢI FILE / CHỌN FILE -->
       <div id="pdf-step-upload">
-        <div style="background:#f8fafc; border:2px dashed #cbd5e1; border-radius:14px; padding:32px 20px; text-align:center; transition:all 0.2s;" ondragover="event.preventDefault(); this.style.borderColor='#3b82f6'; this.style.background='#eff6ff';" ondragleave="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';" ondrop="event.preventDefault(); this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc'; window.handlePdfFileUpload(event);">
+        <div style="background:#f8fafc; border:2px dashed #cbd5e1; border-radius:14px; padding:32px 20px; text-align:center; transition:all 0.2s; cursor:pointer;" onclick="if(event.target.tagName !== 'BUTTON') document.getElementById('pdf-file-input').click();" ondragover="event.preventDefault(); this.style.borderColor='#3b82f6'; this.style.background='#eff6ff';" ondragleave="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';" ondrop="event.preventDefault(); this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc'; window.handlePdfFileUpload(event);">
           <div style="font-size:44px; margin-bottom:10px;">📑</div>
           <div style="font-size:16px; font-weight:700; color:#1e293b; margin-bottom:6px;">Kéo & Thả file PDF đề thi vào đây</div>
           <div style="font-size:13px; color:#64748b; margin-bottom:18px;">Hỗ trợ file PDF xuất từ Word, MathType, LaTeX, trắc nghiệm 4 phương án</div>
           
           <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;" onchange="window.handlePdfFileUpload(event);">
-          <button type="button" class="btn btn-p" onclick="$('pdf-file-input').click();" style="padding:10px 24px; font-weight:700; font-size:14px;">
+          <button type="button" class="btn btn-p" id="btn-trigger-pdf-file" onclick="event.stopPropagation(); document.getElementById('pdf-file-input').click();" style="padding:10px 24px; font-weight:700; font-size:14px; cursor:pointer;">
             📁 Chọn file PDF từ máy tính
           </button>
         </div>
@@ -2195,7 +2196,7 @@ document.addEventListener('keydown', function(e) {
       </button>
 
       <div style="display:flex; gap:10px;">
-        <button type="button" class="btn" id="btn-pdf-back-upload" onclick="$('pdf-step-preview').style.display='none'; $('pdf-step-upload').style.display='block';" style="display:none; background:#f8fafc; border:1px solid #cbd5e1; color:#334155;">
+        <button type="button" class="btn" id="btn-pdf-back-upload" onclick="document.getElementById('pdf-step-preview').style.display='none'; document.getElementById('pdf-step-upload').style.display='block';" style="background:#f8fafc; border:1px solid #cbd5e1; color:#334155;">
           ⬅ Tải file khác
         </button>
         <button type="button" class="btn btn-p" id="btn-save-pdf-exam" onclick="window.saveParsedExamToSupabase();" style="padding:10px 24px; font-weight:700; background:linear-gradient(135deg,#16a34a,#15803d); border:none; box-shadow:0 4px 12px rgba(22,163,74,0.3);">
