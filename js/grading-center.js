@@ -179,7 +179,7 @@ export function openGradeModal(submissionId) {
 /**
  * Save Grade Result
  */
-export function saveGradeResult(submissionId, newStatus = 'graded') {
+export async function saveGradeResult(submissionId, newStatus = 'graded') {
   const scoreInput = document.getElementById('grade-score-input');
   const feedbackInput = document.getElementById('grade-feedback-input');
 
@@ -197,6 +197,19 @@ export function saveGradeResult(submissionId, newStatus = 'graded') {
 
     const modal = document.getElementById('grade-modal');
     if (modal) modal.style.display = 'none';
+
+    // Sync to Supabase submissions
+    try {
+      const client = window.supabaseClient;
+      if (client && submissionId && submissionId.includes('-')) {
+        await client.from('submissions').update({
+          score: score,
+          feedback: feedback,
+          status: newStatus,
+          graded_at: new Date().toISOString()
+        }).eq('id', submissionId);
+      }
+    } catch(e){}
 
     if (newStatus === 'resubmit_required') {
       showToast('warning', 'Yêu Cầu Làm Lại', `Đã gửi yêu cầu nộp lại bài cho học sinh ${pendingSubmissionsList[subIdx].studentName}!`);

@@ -9,12 +9,12 @@ import { state, esc } from './common.js';
 
 export let assignmentsList = [];
 
-// Default demo assignments
+// Default demo assignments matching Supabase schema
 export const DEFAULT_ASSIGNMENTS = [
   {
-    id: 'asg_1',
+    id: '00000000-0000-0000-0000-000000000101',
     title: '📝 Kiểm tra Giữa Kỳ 1 — Anh Văn 10 (Ma trận 40 câu)',
-    classId: 'cls_10a1',
+    classId: '00000000-0000-0000-0000-000000000010',
     className: 'Lớp 10A1 - Anh Văn Chuyên',
     contentType: 'exam',
     contentId: '1',
@@ -30,9 +30,9 @@ export const DEFAULT_ASSIGNMENTS = [
     totalStudents: 35
   },
   {
-    id: 'asg_2',
+    id: '00000000-0000-0000-0000-000000000102',
     title: '🎬 Video Roleplay: Hotel Check-in & Inquiry (A & B)',
-    classId: 'cls_11b2',
+    classId: '00000000-0000-0000-0000-000000000011',
     className: 'Lớp 11B2 - Luyện Thi IELTS & B2',
     contentType: 'video_roleplay',
     contentId: 'u1',
@@ -57,8 +57,31 @@ export async function loadAssignments() {
     const client = window.supabaseClient;
     if (client) {
       const { data, error } = await client.from('assignments').select('*');
-      if (!error && data && data.length > 0) {
-        assignmentsList = data;
+      if (!error && Array.isArray(data) && data.length > 0) {
+        assignmentsList = data.map(item => {
+          const matchedClass = (classesList || []).find(c => c.id === item.class_id);
+          return {
+            id: item.id,
+            title: item.title,
+            description: item.description || '',
+            classId: item.class_id,
+            className: matchedClass ? matchedClass.name : (item.className || 'Lớp 10A1'),
+            contentType: item.content_type || 'exam',
+            contentId: item.content_id || '1',
+            startAt: item.start_at || new Date().toISOString(),
+            dueAt: item.due_at || '',
+            durationMinutes: item.duration_minutes !== undefined ? item.duration_minutes : 45,
+            maxAttempts: item.max_attempts !== undefined ? item.max_attempts : 1,
+            isShuffleQuestions: !!item.is_shuffle_questions,
+            isShuffleOptions: !!item.is_shuffle_options,
+            showAnswersMode: item.show_answers_mode || 'after_due',
+            status: (item.due_at && new Date(item.due_at) < new Date()) ? 'expired' : 'active',
+            submittedCount: item.submitted_count || 0,
+            totalStudents: item.total_students || 35
+          };
+        });
+        saveAssignmentsToLocal();
+        renderAssignmentsList();
         return assignmentsList;
       }
     }
@@ -73,6 +96,7 @@ export async function loadAssignments() {
     assignmentsList = DEFAULT_ASSIGNMENTS;
     saveAssignmentsToLocal();
   }
+  renderAssignmentsList();
   return assignmentsList;
 }
 
@@ -351,20 +375,29 @@ export async function saveAssignmentFromModal() {
   try {
     const client = window.supabaseClient;
     if (client) {
-      await client.from('assignments').upsert([{
-        id: asgData.id,
+      const payload = {
         title: asgData.title,
-        class_id: asgData.classId,
+        description: asgData.description || '',
+        class_id: (asgData.classId && asgData.classId.includes('-')) ? asgData.classId : '00000000-0000-0000-0000-000000000010',
         content_type: asgData.contentType,
         content_id: String(asgData.contentId),
-        start_at: asgData.startAt,
-        due_at: asgData.dueAt,
-        duration_minutes: asgData.durationMinutes,
-        max_attempts: asgData.maxAttempts,
+        target_audience: 'all',
+        start_at: asgData.startAt ? new Date(asgData.startAt).toISOString() : new Date().toISOString(),
+        due_at: asgData.dueAt ? new Date(asgData.dueAt).toISOString() : null,
+        duration_minutes: asgData.durationMinutes || 0,
+        max_attempts: asgData.maxAttempts || 1,
         is_shuffle_questions: asgData.isShuffleQuestions,
         is_shuffle_options: asgData.isShuffleOptions,
-        show_answers_mode: asgData.showAnswersMode
-      }]);
+        show_answers_mode: asgData.showAnswersMode || 'immediate'
+      };
+      if (asgData.id && asgData.id.includes('-') && asgData.id.length >= 32) {
+        payload.id = asgData.id;
+      }
+      const { data, error } = await client.from('assignments').upsert([payload]).select();
+      if (!error && data && data.length > 0) {
+        asgData.id = data[0].id;
+        saveAssignmentsToLocal();
+      }
     }
   } catch(e){
     console.warn("Lỗi sync Supabase assignments:", e);
@@ -387,7 +420,7 @@ export async function deleteAssignmentItem(id) {
 
   try {
     const client = window.supabaseClient;
-    if (client) {
+    if (client && id && id.includes('-')) {
       await client.from('assignments').delete().eq('id', id);
     }
   } catch(e){
