@@ -508,37 +508,25 @@ window.closeAuthModal = function() {
   if (modal) modal.style.display = 'none';
 };
 
-function initDashboardInteractions() {
-  const courseSearchInput = document.getElementById('course-filter-search');
-  if (courseSearchInput) {
-    courseSearchInput.addEventListener('input', (e) => {
-      const term = e.target.value.toLowerCase().trim();
-      const rows = document.querySelectorAll('#courses-table tbody tr');
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(term) ? '' : 'none';
 // 8. VẼ VÀ ĐỒNG BỘ BIỂU ĐỒ XU HƯỚNG HỌC TẬP & LƯU LƯỢNG LMS
 const TRAFFIC_DATASETS = {
   daily: {
     labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '23:59'],
     values: [120, 60, 420, 580, 640, 920, 450],
     peakIndex: 5,
-    unit: 'Học viên',
-    tooltipPrefix: ''
+    unit: 'Học viên'
   },
   weekly: {
     labels: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'],
     values: [350, 440, 590, 520, 850, 660, 740],
     peakIndex: 4,
-    unit: 'Học viên',
-    tooltipPrefix: ''
+    unit: 'Học viên'
   },
   monthly: {
     labels: ['Tuần 1', 'Tuần 2', 'Tuần 3', 'Tuần 4'],
     values: [1850, 2460, 3280, 2920],
     peakIndex: 2,
-    unit: 'Lượt học viên',
-    tooltipPrefix: ''
+    unit: 'Lượt học viên'
   }
 };
 
