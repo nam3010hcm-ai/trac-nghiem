@@ -90,11 +90,12 @@ function ensureQuestionTools(){
       <div class="fg"><label>Tìm kiếm</label><input id="q-search" placeholder="Nhập từ khóa trong câu hỏi/đáp án..."></div>
       <div class="fg"><label>Số câu/trang</label><select id="q-page-size"><option>10</option><option>20</option><option>50</option><option>100</option></select></div>
     </div>
-    <div class="import-row">
+    <div class="import-row" style="flex-wrap:wrap;gap:8px;">
       <input id="q-import-file" type="file" accept=".xlsx,.xls,.csv" style="display:none">
       <button class="btn" id="btn-import-xlsx" type="button">⬆ Import Excel/CSV</button>
       <button class="btn" id="btn-download-template" type="button">⬇ Tải mẫu CSV</button>
-      <span class="math-note">Cột hỗ trợ: cat, subcat, text, image, A, B, C, D, ans</span>
+      <button class="btn btn-p" id="btn-open-pdf-import" type="button" onclick="if(window.openPdfImportModal) window.openPdfImportModal();" style="background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;font-weight:700;border:none;box-shadow:0 2px 6px rgba(220,38,38,0.25);">📄 Bóc Tách từ PDF (Chữ Đỏ)</button>
+      <span class="math-note">Hỗ trợ Excel/CSV và Bóc tách tự động file đề thi PDF</span>
     </div>`;
   list.parentNode.insertBefore(box, list);
   $('q-search').addEventListener('input', () => { qPage = 1; renderQuestions(); });

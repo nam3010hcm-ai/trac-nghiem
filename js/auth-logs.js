@@ -5,12 +5,13 @@
  * =========================================================================
  */
 
-import { $, esc } from './common.js';
+import { $, esc, isRootUser, state } from './common.js';
 
 const db = () => window.supabaseClient;
 
 export let authLogsList = [];
 export let weeklyStatsList = [];
+export let currentAuthLogTab = 'events'; // 'events' | 'summary'
 
 // 1. TÍNH TOÁN KHOẢNG THỜI GIAN TUẦN HIỆN TẠI (THỨ 2 ĐẾN CHỦ NHẬT)
 export function getWeeklyPeriod() {
@@ -144,7 +145,7 @@ export function formatDuration(seconds = 0) {
 }
 
 // 5. TẢI NHẬT KÝ ĐĂNG NHẬP / ĐĂNG XUẤT TỪ SUPABASE
-export async function loadAuthLogs(limit = 100) {
+export async function loadAuthLogs(limit = 500) {
   try {
     if (!db()) return [];
     const { data, error } = await db()
@@ -159,6 +160,7 @@ export async function loadAuthLogs(limit = 100) {
     } else {
       authLogsList = data || [];
     }
+    renderAuthLogsAnalytics();
     return authLogsList;
   } catch (e) {
     console.error("Lỗi loadAuthLogs:", e);
@@ -167,19 +169,87 @@ export async function loadAuthLogs(limit = 100) {
   }
 }
 
-// 6. RENDER BẢNG NHẬT KÝ ĐĂNG NHẬP / ĐĂNG XUẤT TRÊN TEACHER PANEL
+// 6. TÍNH TOÁN & RENDER BẢNG ĐIỀU KHIỂN KPI METRICS
+export function renderAuthLogsAnalytics() {
+  const totalEvents = authLogsList.length;
+  const loginEvents = authLogsList.filter(l => l.event_type === 'login');
+  const logoutEvents = authLogsList.filter(l => l.event_type === 'logout');
+  
+  const uniqueUsersSet = new Set(authLogsList.map(l => (l.user_email || '').toLowerCase()).filter(Boolean));
+  const uniqueUsers = uniqueUsersSet.size;
+
+  const teacherLogins = loginEvents.filter(l => l.user_type === 'teacher').length;
+  const studentLogins = loginEvents.filter(l => l.user_type === 'student').length;
+
+  const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+  const active24hSet = new Set(
+    authLogsList
+      .filter(l => l.timestamp && new Date(l.timestamp).getTime() >= oneDayAgo)
+      .map(l => (l.user_email || '').toLowerCase())
+      .filter(Boolean)
+  );
+  const active24h = active24hSet.size;
+
+  const sessionsWithDuration = authLogsList.filter(l => (l.duration_seconds || 0) > 0);
+  const totalDuration = sessionsWithDuration.reduce((acc, l) => acc + (l.duration_seconds || 0), 0);
+  const avgDurationSec = sessionsWithDuration.length > 0 ? Math.round(totalDuration / sessionsWithDuration.length) : 0;
+
+  // Gán vào các element giao diện nếu tồn tại
+  if ($('stat-auth-total-logins')) $('stat-auth-total-logins').textContent = loginEvents.length;
+  if ($('stat-auth-unique-users')) $('stat-auth-unique-users').textContent = uniqueUsers;
+  if ($('stat-auth-active-24h')) $('stat-auth-active-24h').textContent = active24h;
+  if ($('stat-auth-avg-duration')) $('stat-auth-avg-duration').textContent = formatDuration(avgDurationSec);
+  if ($('stat-auth-teacher-count')) $('stat-auth-teacher-count').textContent = teacherLogins;
+  if ($('stat-auth-student-count')) $('stat-auth-student-count').textContent = studentLogins;
+  if ($('logs-count-sidebar')) $('logs-count-sidebar').textContent = totalEvents;
+  if ($('auth-logs-count')) $('auth-logs-count').textContent = totalEvents;
+}
+
+// 7. LỌC VÀ RENDER BẢNG NHẬT KÝ ĐĂNG NHẬP / ĐĂNG XUẤT
 export function renderAuthLogsTable() {
   const tbody = document.getElementById('auth-logs-tbody');
   const countBadge = document.getElementById('auth-logs-count');
   if (countBadge) countBadge.textContent = authLogsList.length;
   if (!tbody) return;
 
-  if (!authLogsList.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8">📭 Chưa có nhật ký đăng nhập nào được ghi nhận.</td></tr>';
+  const q = ($('flt-auth-search')?.value || '').trim().toLowerCase();
+  const roleFlt = $('flt-auth-role')?.value || 'all';
+  const eventFlt = $('flt-auth-event')?.value || 'all';
+  const timeFlt = $('flt-auth-time')?.value || 'all';
+
+  const now = Date.now();
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  let filtered = authLogsList.filter(log => {
+    // 1. Text search (email, user_id)
+    const email = (log.user_email || '').toLowerCase();
+    const uid = (log.user_id || '').toLowerCase();
+    if (q && !email.includes(q) && !uid.includes(q)) return false;
+
+    // 2. Role filter
+    if (roleFlt !== 'all' && log.user_type !== roleFlt) return false;
+
+    // 3. Event filter
+    if (eventFlt !== 'all' && log.event_type !== eventFlt) return false;
+
+    // 4. Time filter
+    if (timeFlt !== 'all' && log.timestamp) {
+      const logTs = new Date(log.timestamp).getTime();
+      if (timeFlt === 'today' && logTs < startOfToday.getTime()) return false;
+      if (timeFlt === '7days' && logTs < now - 7 * 24 * 60 * 60 * 1000) return false;
+      if (timeFlt === '30days' && logTs < now - 30 * 24 * 60 * 60 * 1000) return false;
+    }
+
+    return true;
+  });
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:#94a3b8;">📭 Không tìm thấy nhật ký đăng nhập nào khớp với bộ lọc.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = authLogsList.map((log, idx) => {
+  tbody.innerHTML = filtered.map((log, idx) => {
     const isLogin = log.event_type === 'login';
     const isTeacher = log.user_type === 'teacher';
     const timeStr = log.timestamp ? new Date(log.timestamp).toLocaleString('vi-VN') : '—';
@@ -189,16 +259,23 @@ export function renderAuthLogsTable() {
       <tr>
         <td style="text-align:center;font-weight:700;color:#64748b">${idx + 1}</td>
         <td>
-          <div style="font-weight:700;color:#0f172a">${esc(log.user_email)}</div>
-          <div style="font-size:11px;color:#64748b">${log.user_id ? 'Mã: ' + esc(log.user_id) : ''}</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:${isTeacher ? '#fef3c7' : '#e0f2fe'};color:${isTeacher ? '#92400e' : '#0369a1'};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">
+              ${isTeacher ? '👨‍🏫' : '🎓'}
+            </div>
+            <div>
+              <div style="font-weight:700;color:#0f172a;">${esc(log.user_email)}</div>
+              ${log.user_id ? `<div style="font-size:11px;color:#64748b">Mã ID: ${esc(log.user_id)}</div>` : ''}
+            </div>
+          </div>
         </td>
         <td>
-          <span class="abadge" style="${isTeacher ? 'background:#fef3c7;color:#92400e' : 'background:#e0f2fe;color:#0369a1'}">
+          <span class="abadge" style="${isTeacher ? 'background:#fef3c7;color:#92400e;border:1px solid #fde68a;' : 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;'}">
             ${isTeacher ? '👨‍🏫 Giảng viên' : '🎓 Học viên'}
           </span>
         </td>
         <td>
-          <span class="abadge" style="${isLogin ? 'background:#ecfdf5;color:#15803d' : 'background:#fef2f2;color:#dc2626'}">
+          <span class="abadge" style="${isLogin ? 'background:#ecfdf5;color:#15803d;border:1px solid #bbf7d0;' : 'background:#fef2f2;color:#dc2626;border:1px solid #fecaca;'}">
             ${isLogin ? '🟢 Đăng nhập (Login)' : '🔴 Đăng xuất (Logout)'}
           </span>
         </td>
@@ -215,7 +292,241 @@ export function renderAuthLogsTable() {
   }).join('');
 }
 
-// 7. TÍNH TOÁN VÀ RENDER BẢNG XẾP HẠNG TOP 10 TRONG 1 TUẦN
+// 8. RENDER BẢNG TỔNG HỢP HOẠT ĐỘNG THEO TỪNG USER
+export function renderUserActivitySummaryTable() {
+  const tbody = document.getElementById('user-activity-tbody');
+  if (!tbody) return;
+
+  const q = ($('flt-auth-search')?.value || '').trim().toLowerCase();
+  const roleFlt = $('flt-auth-role')?.value || 'all';
+
+  // Gom nhóm thống kê theo Email
+  const userMap = {};
+
+  // Gom từ danh sách học viên
+  (window.studentsList || []).forEach(st => {
+    const email = (st.email || st.id || '').toLowerCase();
+    if (!email) return;
+    userMap[email] = {
+      email: st.email || st.id,
+      name: st.full_name || st.student_name || st.name || email,
+      role: 'student',
+      totalLogins: 0,
+      totalLogouts: 0,
+      totalDurationSec: 0,
+      lastLogin: st.last_login_at || null,
+      lastLogout: st.last_logout_at || null,
+      id: st.id
+    };
+  });
+
+  // Gom từ danh sách giảng viên
+  (window.teachersList || []).forEach(t => {
+    const email = (t.email || '').toLowerCase();
+    if (!email) return;
+    userMap[email] = {
+      email: t.email,
+      name: t.teacher_name || t.name || t.full_name || email,
+      role: 'teacher',
+      totalLogins: 0,
+      totalLogouts: 0,
+      totalDurationSec: 0,
+      lastLogin: t.last_login_at || null,
+      lastLogout: t.last_logout_at || null,
+      id: t.id
+    };
+  });
+
+  // Cộng dồn từ authLogsList
+  authLogsList.forEach(log => {
+    const email = (log.user_email || '').toLowerCase();
+    if (!email) return;
+
+    if (!userMap[email]) {
+      userMap[email] = {
+        email: log.user_email,
+        name: email.split('@')[0],
+        role: log.user_type || 'student',
+        totalLogins: 0,
+        totalLogouts: 0,
+        totalDurationSec: 0,
+        lastLogin: null,
+        lastLogout: null,
+        id: log.user_id || ''
+      };
+    }
+
+    if (log.event_type === 'login') {
+      userMap[email].totalLogins += 1;
+      if (!userMap[email].lastLogin || new Date(log.timestamp) > new Date(userMap[email].lastLogin)) {
+        userMap[email].lastLogin = log.timestamp;
+      }
+    } else if (log.event_type === 'logout') {
+      userMap[email].totalLogouts += 1;
+      if (!userMap[email].lastLogout || new Date(log.timestamp) > new Date(userMap[email].lastLogout)) {
+        userMap[email].lastLogout = log.timestamp;
+      }
+    }
+
+    if (log.duration_seconds > 0) {
+      userMap[email].totalDurationSec += log.duration_seconds;
+    }
+  });
+
+  let users = Object.values(userMap);
+
+  // Lọc
+  users = users.filter(u => {
+    const email = (u.email || '').toLowerCase();
+    const name = (u.name || '').toLowerCase();
+    if (q && !email.includes(q) && !name.includes(q)) return false;
+    if (roleFlt !== 'all' && u.role !== roleFlt) return false;
+    return true;
+  });
+
+  // Sắp xếp theo lần đăng nhập gần nhất
+  users.sort((a, b) => {
+    const tA = a.lastLogin ? new Date(a.lastLogin).getTime() : 0;
+    const tB = b.lastLogin ? new Date(b.lastLogin).getTime() : 0;
+    return tB - tA;
+  });
+
+  if (!users.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:#94a3b8;">Không có người dùng nào khớp với tìm kiếm.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = users.map((u, idx) => {
+    const isTeacher = u.role === 'teacher';
+    const isOnline = u.lastLogin && (!u.lastLogout || new Date(u.lastLogin) > new Date(u.lastLogout));
+    const lastLoginStr = u.lastLogin ? new Date(u.lastLogin).toLocaleString('vi-VN') : 'Chưa có';
+    const lastLogoutStr = u.lastLogout ? new Date(u.lastLogout).toLocaleString('vi-VN') : '—';
+
+    return `
+      <tr>
+        <td style="text-align:center;font-weight:700;color:#64748b">${idx + 1}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:${isTeacher ? '#fef3c7' : '#e0f2fe'};color:${isTeacher ? '#92400e' : '#0369a1'};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">
+              ${isTeacher ? '👨‍🏫' : '🎓'}
+            </div>
+            <div>
+              <div style="font-weight:700;color:#0f172a;">${esc(u.name)}</div>
+              <div style="font-size:11.5px;color:#64748b;">${esc(u.email)}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <span class="abadge" style="${isTeacher ? 'background:#fef3c7;color:#92400e;border:1px solid #fde68a;' : 'background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;'}">
+            ${isTeacher ? '👨‍🏫 Giảng viên' : '🎓 Học viên'}
+          </span>
+        </td>
+        <td style="text-align:center;font-weight:800;color:#2563eb;">
+          ${u.totalLogins}
+        </td>
+        <td style="text-align:center;font-weight:700;color:#0d9488;">
+          ${formatDuration(u.totalDurationSec)}
+        </td>
+        <td style="font-size:12px;color:#334155;">
+          ${lastLoginStr}
+        </td>
+        <td style="font-size:12px;color:#64748b;">
+          ${lastLogoutStr}
+        </td>
+        <td style="text-align:center;">
+          <span class="status-badge ${isOnline ? 'status-active' : 'status-pending'}" style="font-size:11px;">
+            ${isOnline ? '🟢 Online' : '⚪ Offline'}
+          </span>
+        </td>
+        <td style="text-align:center;">
+          ${u.role === 'student' && u.id ? `
+            <button class="action-btn-sm" onclick="window.openStudentReportModal('${esc(u.id)}')">
+              📊 Hồ sơ
+            </button>
+          ` : '—'}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// 9. CHUYỂN ĐỔI GIỮA VIEW LỊCH SỬ VÀ VIEW THỐNG KÊ USER
+export function switchAuthLogsSubTab(subTab) {
+  currentAuthLogTab = subTab;
+  const eventsView = document.getElementById('authlogs-events-view');
+  const summaryView = document.getElementById('authlogs-summary-view');
+  const btnEvents = document.getElementById('tab-auth-btn-events');
+  const btnSummary = document.getElementById('tab-auth-btn-summary');
+
+  if (subTab === 'events') {
+    if (eventsView) eventsView.style.display = 'block';
+    if (summaryView) summaryView.style.display = 'none';
+
+    if (btnEvents) {
+      btnEvents.style.background = '#ffffff';
+      btnEvents.style.color = '#0f172a';
+      btnEvents.style.fontWeight = '700';
+      btnEvents.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+    }
+    if (btnSummary) {
+      btnSummary.style.background = 'transparent';
+      btnSummary.style.color = '#64748b';
+      btnSummary.style.fontWeight = '500';
+      btnSummary.style.boxShadow = 'none';
+    }
+    renderAuthLogsTable();
+  } else {
+    if (eventsView) eventsView.style.display = 'none';
+    if (summaryView) summaryView.style.display = 'block';
+
+    if (btnSummary) {
+      btnSummary.style.background = '#ffffff';
+      btnSummary.style.color = '#0f172a';
+      btnSummary.style.fontWeight = '700';
+      btnSummary.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+    }
+    if (btnEvents) {
+      btnEvents.style.background = 'transparent';
+      btnEvents.style.color = '#64748b';
+      btnEvents.style.fontWeight = '500';
+      btnEvents.style.boxShadow = 'none';
+    }
+    renderUserActivitySummaryTable();
+  }
+}
+
+// 10. XUẤT CSV NHẬT KÝ ĐĂNG NHẬP
+export function exportAuthLogsCSV() {
+  if (!authLogsList || !authLogsList.length) {
+    alert("❌ Không có dữ liệu nhật ký để xuất CSV!");
+    return;
+  }
+
+  const headers = ["STT", "Email", "Ma ID", "Loai Tai Khoan", "Su Kien", "Thoi Gian", "Thoi Luong (Giay)", "Thoi Luong (Doc)"];
+  const rows = authLogsList.map((l, i) => [
+    i + 1,
+    `"${l.user_email || ''}"`,
+    `"${l.user_id || ''}"`,
+    `"${l.user_type === 'teacher' ? 'Giang vien' : 'Hoc vien'}"`,
+    `"${l.event_type === 'login' ? 'Dang nhap' : 'Dang xuat'}"`,
+    `"${l.timestamp || ''}"`,
+    l.duration_seconds || 0,
+    `"${formatDuration(l.duration_seconds || 0)}"`
+  ]);
+
+  const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\r\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `EduCore_Nhat_Ky_Dang_Nhap_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// 11. TÍNH TOÁN VÀ RENDER BẢNG XẾP HẠNG TOP 10 TRONG 1 TUẦN
 export async function calculateAndRenderTop10() {
   const period = getWeeklyPeriod();
   const dateLabel = document.getElementById('top10-date-label');
@@ -380,7 +691,7 @@ export async function calculateAndRenderTop10() {
   }
 }
 
-// 8. MỞ MODAL XEM BÁO CÁO HỌC TẬP CHI TIẾT CỦA 1 HỌC VIÊN
+// 12. MỞ MODAL XEM BÁO CÁO HỌC TẬP CHI TIẾT CỦA 1 HỌC VIÊN
 export function openStudentReportModal(studentId) {
   const modal = document.getElementById('modal-student-report');
   if (!modal) return;
@@ -463,8 +774,15 @@ export function closeStudentReportModal() {
   if (modal) modal.style.display = 'none';
 }
 
+// Window bindings
 window.openStudentReportModal = openStudentReportModal;
 window.closeStudentReportModal = closeStudentReportModal;
 window.calculateAndRenderTop10 = calculateAndRenderTop10;
 window.loadAuthLogs = loadAuthLogs;
 window.renderAuthLogsTable = renderAuthLogsTable;
+window.renderAuthLogsAnalytics = renderAuthLogsAnalytics;
+window.renderUserActivitySummaryTable = renderUserActivitySummaryTable;
+window.switchAuthLogsSubTab = switchAuthLogsSubTab;
+window.exportAuthLogsCSV = exportAuthLogsCSV;
+window.recordAuthEvent = recordAuthEvent;
+window.recordStudyTime = recordStudyTime;

@@ -20,6 +20,19 @@ import { loadAssignments, renderAssignmentsList, saveAssignmentItem, openAssignm
 import { loadPendingSubmissions, renderGradingQueueTable, openGradeModal, saveGradeResult } from './grading-center.js';
 import { loadAnalyticsData, renderAnalyticsDashboard } from './lms-analytics.js';
 import { loadClassPosts, renderClassStream, submitStreamPost, submitPostComment } from './class-stream.js';
+import {
+  openPdfImportModal, closePdfImportModal, handlePdfFileUpload, testWithSamplePdf,
+  updateParsedQuestionText, updateParsedQuestionOption, setParsedQuestionAnswer, saveParsedExamToSupabase
+} from './pdf-parser.js';
+
+window.openPdfImportModal = openPdfImportModal;
+window.closePdfImportModal = closePdfImportModal;
+window.handlePdfFileUpload = handlePdfFileUpload;
+window.testWithSamplePdf = testWithSamplePdf;
+window.updateParsedQuestionText = updateParsedQuestionText;
+window.updateParsedQuestionOption = updateParsedQuestionOption;
+window.setParsedQuestionAnswer = setParsedQuestionAnswer;
+window.saveParsedExamToSupabase = saveParsedExamToSupabase;
 
 window.loadClasses = loadClasses;
 window.renderClassesList = renderClassesList;

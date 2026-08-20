@@ -354,6 +354,10 @@ window.globalLogout = async function() {
         <a class="sidebar-item" data-tab="students" id="tab-btn-students" onclick="window.switchTTab('students')">
           <span>🎓</span> <span>Quản lý Người Học (Students)</span>
         </a>
+        <a class="sidebar-item" data-tab="authlogs" id="tab-btn-authlogs" onclick="window.switchTTab('authlogs')">
+          <span>🔐</span> <span>Nhật Ký & Thống Kê Đăng Nhập</span>
+          <span class="item-badge" id="logs-count-sidebar" style="background:#0284c7;color:#fff;">0</span>
+        </a>
 
         <!-- 6. LMS OPERATIONS -->
         <div class="sidebar-section-title">🏫 LMS & NHIỆM VỤ</div>
@@ -661,6 +665,9 @@ window.globalLogout = async function() {
                 <button class="btn btn-p" style="justify-content:flex-start;padding:11px 16px;font-weight:700;gap:10px" onclick="window.switchTTab('e'); if(window.openEForm) window.openEForm();">
                   <span style="font-size:18px">📝</span> + Tạo Đề Thi Mới
                 </button>
+                <button class="btn" style="justify-content:flex-start;padding:11px 16px;font-weight:700;gap:10px;background:#fef2f2;color:#b91c1c;border:1.5px solid #fecaca" onclick="if(window.openPdfImportModal) window.openPdfImportModal();">
+                  <span style="font-size:18px">📄</span> 🚀 Bóc Tách Đề Thi Từ PDF (Chữ Đỏ)
+                </button>
                 <button class="btn" style="justify-content:flex-start;padding:11px 16px;font-weight:700;gap:10px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe" onclick="window.switchTTab('q'); if(window.openQForm) window.openQForm();">
                   <span style="font-size:18px">📚</span> + Thêm Câu Hỏi Mới
                 </button>
@@ -679,9 +686,12 @@ window.globalLogout = async function() {
         </div>
 
         <div id="tc-q" class="tab-content">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <div class="sec-title" style="margin:0">Ngân hàng câu hỏi (<span id="q-count">0</span>)</div>
-        <button class="btn btn-p" id="btn-open-qform" onclick="if(window.openQForm) window.openQForm();">+ Thêm câu hỏi</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;font-weight:700;" onclick="if(window.openPdfImportModal) window.openPdfImportModal();">📄 Bóc Tách Từ PDF</button>
+          <button class="btn btn-p" id="btn-open-qform" onclick="if(window.openQForm) window.openQForm();">+ Thêm câu hỏi</button>
+        </div>
       </div>
 
       <div style="display:flex;gap:8px;margin-bottom:14px">
@@ -854,7 +864,10 @@ window.globalLogout = async function() {
           <div class="sec-title" style="margin:0">📝 Ma Trận & Đề Thi Chính Thức (<span id="e-count">0</span>)</div>
           <div style="font-size:12.5px;color:#64748b;margin-top:2px;">Quản lý ma trận đề thi chuẩn hóa, gán vào các Ca thi / Kỳ thi chính thức (Thi 1 lần, bảo mật).</div>
         </div>
-        <button class="btn btn-p" id="btn-open-eform" onclick="if(window.openEForm) window.openEForm();">+ Tạo Đề Thi Chính Thức</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;font-weight:700;" onclick="if(window.openPdfImportModal) window.openPdfImportModal();">📄 Nhập Đề Từ PDF</button>
+          <button class="btn btn-p" id="btn-open-eform" onclick="if(window.openEForm) window.openEForm();">+ Tạo Đề Thi Chính Thức</button>
+        </div>
       </div>
 
       <!-- BỘ LỌC ĐỀ THI CHÍNH THỨC -->
@@ -1084,6 +1097,152 @@ window.globalLogout = async function() {
             <tr><td colspan="9" style="text-align:center;padding:20px;color:#94a3b8">Đang tải danh sách học viên...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- 4.3. PHÂN HỆ QUẢN LÝ NHẬT KÝ & THỐNG KÊ ĐĂNG NHẬP (AUTH LOGS & SESSIONS) -->
+    <div id="tc-authlogs" class="tab-content" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:18px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px;">
+            <span>🔐</span> Quản Lý Nhật Ký & Thống Kê Đăng Nhập User
+          </div>
+          <div style="font-size:12.5px;color:#64748b;margin-top:2px;">
+            Theo dõi thời gian thực lịch sử đăng nhập/đăng xuất, thời lượng online, tần suất hoạt động của Giảng viên & Học viên.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm" onclick="if(window.loadAuthLogs) window.loadAuthLogs().then(function() { if(window.renderAuthLogsAnalytics) window.renderAuthLogsAnalytics(); if(window.renderAuthLogsTable) window.renderAuthLogsTable(); if(window.renderUserActivitySummaryTable) window.renderUserActivitySummaryTable(); });" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;">
+            🔄 Làm Mới
+          </button>
+          <button class="btn btn-sm" onclick="if(window.exportAuthLogsCSV) window.exportAuthLogsCSV();" style="background:#f8fafc;color:#0284c7;border:1px solid #bae6fd;">
+            📥 Xuất CSV Nhật Ký
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI METRICS SUMMARY CARDS -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;margin-bottom:20px;">
+        <div class="card" style="padding:16px;background:linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);border:1px solid #bfdbfe;border-radius:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:#3b82f6;text-transform:uppercase;">Tổng Lượt Login</div>
+            <div style="font-size:20px;">🟢</div>
+          </div>
+          <div style="font-size:26px;font-weight:900;color:#1e40af;margin-top:6px;" id="stat-auth-total-logins">0</div>
+          <div style="font-size:11.5px;color:#64748b;margin-top:2px;">Tổng số lần đăng nhập</div>
+        </div>
+
+        <div class="card" style="padding:16px;background:linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);border:1px solid #bbf7d0;border-radius:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:#16a34a;text-transform:uppercase;">User Hoạt Động (24h)</div>
+            <div style="font-size:20px;">⚡</div>
+          </div>
+          <div style="font-size:26px;font-weight:900;color:#15803d;margin-top:6px;" id="stat-auth-active-24h">0</div>
+          <div style="font-size:11.5px;color:#64748b;margin-top:2px;">Tài khoản online trong ngày</div>
+        </div>
+
+        <div class="card" style="padding:16px;background:linear-gradient(135deg, #fef3c7 0%, #ffffff 100%);border:1px solid #fde68a;border-radius:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:#d97706;text-transform:uppercase;">Tài Khoản Duy Nhất</div>
+            <div style="font-size:20px;">👥</div>
+          </div>
+          <div style="font-size:26px;font-weight:900;color:#b45309;margin-top:6px;" id="stat-auth-unique-users">0</div>
+          <div style="font-size:11.5px;color:#64748b;margin-top:2px;">
+            <span id="stat-auth-teacher-count">0</span> GV • <span id="stat-auth-student-count">0</span> Học viên
+          </div>
+        </div>
+
+        <div class="card" style="padding:16px;background:linear-gradient(135deg, #faf5ff 0%, #ffffff 100%);border:1px solid #e9d5ff;border-radius:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;font-weight:700;color:#9333ea;text-transform:uppercase;">Thời Lượng TB / Phiên</div>
+            <div style="font-size:20px;">⏱️</div>
+          </div>
+          <div style="font-size:24px;font-weight:900;color:#7e22ce;margin-top:6px;" id="stat-auth-avg-duration">0 phút</div>
+          <div style="font-size:11.5px;color:#64748b;margin-top:2px;">Thời gian online trung bình</div>
+        </div>
+      </div>
+
+      <!-- VIEW SELECTOR TABS -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;gap:8px;background:#f1f5f9;padding:4px;border-radius:10px;border:1px solid #e2e8f0;">
+          <button type="button" class="btn btn-sm" id="tab-auth-btn-events" onclick="window.switchAuthLogsSubTab('events');" style="background:#ffffff;color:#0f172a;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            📋 Lịch Sử Sự Kiện Đăng Nhập
+          </button>
+          <button type="button" class="btn btn-sm" id="tab-auth-btn-summary" onclick="window.switchAuthLogsSubTab('summary');" style="background:transparent;color:#64748b;border:none;">
+            👥 Thống Kê Theo Từng User
+          </button>
+        </div>
+      </div>
+
+      <!-- FILTER & SEARCH BAR -->
+      <div class="card" style="padding:14px;margin-bottom:16px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="flt-auth-search" placeholder="🔍 Tìm theo Email, Mã học viên, Tên..." style="padding:8px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;flex:1.5;min-width:220px;" oninput="window.renderAuthLogsTable(); window.renderUserActivitySummaryTable();">
+          
+          <select id="flt-auth-role" style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;background:#fff;" onchange="window.renderAuthLogsTable(); window.renderUserActivitySummaryTable();">
+            <option value="all">Tất cả vai trò</option>
+            <option value="student">🎓 Học viên</option>
+            <option value="teacher">👨‍🏫 Giảng viên</option>
+          </select>
+
+          <select id="flt-auth-event" style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;background:#fff;" onchange="window.renderAuthLogsTable();">
+            <option value="all">Tất cả sự kiện</option>
+            <option value="login">🟢 Đăng nhập (Login)</option>
+            <option value="logout">🔴 Đăng xuất (Logout)</option>
+          </select>
+
+          <select id="flt-auth-time" style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;background:#fff;" onchange="window.renderAuthLogsTable();">
+            <option value="all">Toàn bộ thời gian</option>
+            <option value="today">Hôm nay (24h)</option>
+            <option value="7days">7 ngày qua</option>
+            <option value="30days">30 ngày qua</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- VIEW 1: LỊCH SỬ SỰ KIỆN CHI TIẾT -->
+      <div id="authlogs-events-view">
+        <div class="card" style="padding:0;overflow-x:auto;border:1px solid #e2e8f0;border-radius:12px;">
+          <table class="lms-table">
+            <thead>
+              <tr>
+                <th style="width:45px;text-align:center">#</th>
+                <th>Tài Khoản / Email</th>
+                <th>Vai Trò</th>
+                <th>Sự Kiện</th>
+                <th>Thời Gian Ghi Nhận</th>
+                <th style="text-align:center">Thời Lượng Phiên</th>
+              </tr>
+            </thead>
+            <tbody id="auth-logs-tbody">
+              <tr><td colspan="6" style="text-align:center;padding:24px;color:#94a3b8">Đang tải danh sách nhật ký...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VIEW 2: BẢNG THỐNG KÊ TỔNG HỢP THEO USER -->
+      <div id="authlogs-summary-view" style="display:none;">
+        <div class="card" style="padding:0;overflow-x:auto;border:1px solid #e2e8f0;border-radius:12px;">
+          <table class="lms-table">
+            <thead>
+              <tr>
+                <th style="width:45px;text-align:center">#</th>
+                <th>Người Dùng / Email</th>
+                <th>Vai Trò</th>
+                <th style="text-align:center">Tổng Lần Login</th>
+                <th style="text-align:center">Tổng Thời Gian Online</th>
+                <th>Đăng Nhập Gần Nhất</th>
+                <th>Đăng Xuất Gần Nhất</th>
+                <th style="text-align:center">Trạng Thái</th>
+                <th style="text-align:center">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="user-activity-tbody">
+              <tr><td colspan="9" style="text-align:center;padding:24px;color:#94a3b8">Đang tổng hợp dữ liệu người dùng...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
     
@@ -1908,6 +2067,143 @@ document.addEventListener('keydown', function(e) {
     <div style="text-align:right;margin-top:20px;padding-top:14px;border-top:1px solid #e2e8f0;">
       <button class="btn" onclick="window.closeStudentReportModal();" style="background:#f1f5f9;border:1px solid #cbd5e1;color:#334155;">Đóng</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL BÓC TÁCH ĐỀ THI TỰ ĐỘNG TỪ FILE PDF (NHẬN DIỆN ĐÁP ÁN CHỮ ĐỎ & LATEX) -->
+<div id="modal-pdf-import" class="auth-modal-overlay" style="display:none; z-index:9999;" onclick="if(event.target===this) window.closePdfImportModal();">
+  <div class="auth-modal-card" style="max-width:920px; width:95%; max-height:90vh; display:flex; flex-direction:column; text-align:left; padding:24px; border-radius:16px; background:#ffffff; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
+    <!-- Header Modal -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:16px; border-bottom:1.5px solid #e2e8f0;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:42px; height:42px; background:linear-gradient(135deg,#fee2e2,#fecaca); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; color:#dc2626;">📄</div>
+        <div>
+          <h2 style="font-size:19px; font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
+            Bóc Tách & Nhận Diện Đề Thi Từ PDF
+            <span style="font-size:11.5px; font-weight:700; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; padding:2px 8px; border-radius:20px;">Đáp án Chữ Đỏ</span>
+          </h2>
+          <div style="font-size:12.5px; color:#64748b; margin-top:2px;">Tự động phân tích câu hỏi, công thức toán/ma trận LaTeX và phát hiện đáp án đúng từ màu chữ</div>
+        </div>
+      </div>
+      <button class="auth-modal-close-btn" onclick="window.closePdfImportModal();" style="font-size:18px; color:#94a3b8; cursor:pointer; background:none; border:none;">✕</button>
+    </div>
+
+    <!-- Body Modal -->
+    <div style="flex:1; overflow-y:auto; padding:16px 4px; margin-top:4px;">
+      
+      <!-- BƯỚC 1: TẢI FILE / CHỌN FILE -->
+      <div id="pdf-step-upload">
+        <div style="background:#f8fafc; border:2px dashed #cbd5e1; border-radius:14px; padding:32px 20px; text-align:center; transition:all 0.2s;" ondragover="event.preventDefault(); this.style.borderColor='#3b82f6'; this.style.background='#eff6ff';" ondragleave="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';" ondrop="event.preventDefault(); this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc'; window.handlePdfFileUpload(event);">
+          <div style="font-size:44px; margin-bottom:10px;">📑</div>
+          <div style="font-size:16px; font-weight:700; color:#1e293b; margin-bottom:6px;">Kéo & Thả file PDF đề thi vào đây</div>
+          <div style="font-size:13px; color:#64748b; margin-bottom:18px;">Hỗ trợ file PDF xuất từ Word, MathType, LaTeX, trắc nghiệm 4 phương án</div>
+          
+          <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;" onchange="window.handlePdfFileUpload(event);">
+          <button type="button" class="btn btn-p" onclick="$('pdf-file-input').click();" style="padding:10px 24px; font-weight:700; font-size:14px;">
+            📁 Chọn file PDF từ máy tính
+          </button>
+        </div>
+
+        <div style="margin-top:20px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="font-weight:700; color:#1e40af; font-size:14px; display:flex; align-items:center; gap:6px;">
+              <span>🚀</span> File mẫu kiểm thử có sẵn trong dự án: <code style="background:#dbeafe; color:#1e40af; padding:2px 6px; border-radius:4px;">upload_de/2 trang.pdf</code>
+            </div>
+            <div style="font-size:12.5px; color:#3b82f6; margin-top:2px;">11 câu hỏi ma trận & định thức, đáp án đúng màu ĐỎ, công thức LaTeX chuẩn.</div>
+          </div>
+          <button type="button" class="btn" onclick="window.testWithSamplePdf();" style="background:#2563eb; color:#ffffff; font-weight:700; border:none; padding:9px 18px; border-radius:8px; box-shadow:0 2px 6px rgba(37,99,235,0.25);">
+            ⚡ Thử nghiệm ngay với "2 trang.pdf"
+          </button>
+        </div>
+
+        <div style="margin-top:16px; padding:12px 16px; background:#fffbeb; border:1px solid #fef3c7; border-radius:10px; font-size:12.5px; color:#92400e; line-height:1.5;">
+          <b>💡 Quy tắc nhận diện tự động:</b> Hệ thống tự động quét các lựa chọn (a., b., c., d.). Lựa chọn nào có văn bản mang <b>màu ĐỎ (#ee0000)</b> sẽ được thiết lập là đáp án đúng của câu hỏi đó. Các công thức ma trận sẽ tự động định dạng MathJax.
+        </div>
+      </div>
+
+      <!-- BƯỚC 2: THANH TIẾN TRÌNH XỬ LÝ (LOADING) -->
+      <div id="pdf-step-loading" style="display:none; text-align:center; padding:40px 20px;">
+        <div style="font-size:42px; margin-bottom:14px; animation:spin 2s linear infinite;">⚙️</div>
+        <h3 style="font-size:17px; font-weight:800; color:#0f172a; margin-bottom:8px;">Đang bóc tách và phân tích dữ liệu PDF...</h3>
+        <div id="pdf-progress-desc" style="font-size:13px; color:#64748b; margin-bottom:16px;">Đang tải cấu trúc trang PDF...</div>
+        
+        <div style="width:100%; max-width:480px; height:12px; background:#e2e8f0; border-radius:20px; margin:0 auto; overflow:hidden; position:relative;">
+          <div id="pdf-progress-fill" style="height:100%; width:15%; background:linear-gradient(90deg,#ef4444,#f59e0b,#10b981); border-radius:20px; transition:width 0.3s ease;"></div>
+        </div>
+        <div id="pdf-progress-text" style="font-size:12px; font-weight:700; color:#475569; margin-top:8px;">15%</div>
+      </div>
+
+      <!-- BƯỚC 3: XEM TRƯỚC VÀ TINH CHỈNH (PREVIEW & EDIT) -->
+      <div id="pdf-step-preview" style="display:none;">
+        
+        <!-- THÔNG TIN ĐỀ THI MỚI -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; margin-bottom:16px;">
+          <div style="font-size:14px; font-weight:800; color:#0f172a; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+            <span>📝</span> CÀI ĐẶT ĐỀ THI MỚI
+          </div>
+
+          <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-bottom:10px;">
+            <div class="fg" style="margin:0;">
+              <label style="font-size:12px; font-weight:700; color:#475569;">Tên đề thi *</label>
+              <input type="text" id="pdf-exam-name" value="Đề thi mới từ PDF" style="font-weight:700; color:#1e293b;">
+            </div>
+            <div class="fg" style="margin:0;">
+              <label style="font-size:12px; font-weight:700; color:#475569;">Thời gian làm bài (phút)</label>
+              <input type="number" id="pdf-exam-time" value="45" min="5" max="180">
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px;">
+            <div class="fg" style="margin:0;">
+              <label style="font-size:12px; font-weight:700; color:#475569;">Môn học / Chủ đề (Category)</label>
+              <select id="pdf-exam-cat"></select>
+            </div>
+            <div class="fg" style="margin:0;">
+              <label style="font-size:12px; font-weight:700; color:#475569;">Phần bài thi (Sub-category)</label>
+              <select id="pdf-exam-subcat"></select>
+            </div>
+          </div>
+
+          <div class="fg" style="margin:0;">
+            <label style="font-size:12px; font-weight:700; color:#475569;">Mô tả đề thi</label>
+            <input type="text" id="pdf-exam-desc" placeholder="Mô tả ngắn gọn...">
+          </div>
+        </div>
+
+        <!-- DANH SÁCH CÂU HỎI BÓC TÁCH -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div style="font-size:14px; font-weight:800; color:#0f172a;">
+            📋 Danh Sách Câu Hỏi (<span id="pdf-q-total-count" style="color:#2563eb;">0</span> câu)
+          </div>
+          <div style="font-size:12px; color:#64748b;">
+            Kiểm tra công thức và đáp án đúng (đã tự động tích chọn theo màu đỏ)
+          </div>
+        </div>
+
+        <div id="pdf-questions-container" style="max-height:420px; overflow-y:auto; padding-right:6px;">
+          <!-- Các thẻ câu hỏi sẽ được render động từ pdf-parser.js -->
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Footer Modal -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding-top:16px; border-top:1.5px solid #e2e8f0; margin-top:8px;">
+      <button type="button" class="btn" onclick="window.closePdfImportModal();" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#475569; font-weight:600;">
+        Đóng
+      </button>
+
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="btn" id="btn-pdf-back-upload" onclick="$('pdf-step-preview').style.display='none'; $('pdf-step-upload').style.display='block';" style="display:none; background:#f8fafc; border:1px solid #cbd5e1; color:#334155;">
+          ⬅ Tải file khác
+        </button>
+        <button type="button" class="btn btn-p" id="btn-save-pdf-exam" onclick="window.saveParsedExamToSupabase();" style="padding:10px 24px; font-weight:700; background:linear-gradient(135deg,#16a34a,#15803d); border:none; box-shadow:0 4px 12px rgba(22,163,74,0.3);">
+          💾 Lưu Ngân Hàng & Tạo Đề Thi
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>
 
