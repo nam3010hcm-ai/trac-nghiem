@@ -223,6 +223,33 @@ function esc(s) {
   }[m]));
 }
 
+const TEACHER_NAME_MAP = {
+  'nam3010hcm@gmail.com': 'Thầy Nam (Root Admin)',
+  'chen.lms@k7.edu.vn': 'Dr. Chen',
+  'alice@example.com': 'Alice',
+  'nam84hcm@gmail.com': 'Lê Văn Nam'
+};
+
+function formatInstructorDisplayName(val, teachersDb = []) {
+  if (!val) return 'Thầy Nam (Root Admin)';
+  const s = String(val).trim();
+  if (TEACHER_NAME_MAP[s.toLowerCase()]) {
+    return TEACHER_NAME_MAP[s.toLowerCase()];
+  }
+  const matched = (teachersDb || []).find(t => 
+    (t.email && t.email.toLowerCase() === s.toLowerCase()) ||
+    (t.id && t.id.toLowerCase() === s.toLowerCase())
+  );
+  if (matched) {
+    return matched.teacher_name || matched.name || matched.full_name || s;
+  }
+  if (s.includes('@')) {
+    const userPart = s.split('@')[0];
+    return 'Thầy ' + userPart.charAt(0).toUpperCase() + userPart.slice(1);
+  }
+  return s;
+}
+
 // 4. TẢI VÀ RENDER DANH SÁCH KHÓA HỌC NỔI BẬT (ĐỒNG BỘ SUPABASE)
 export async function loadFeaturedCoursesCatalog() {
   const tbody = document.querySelector('#courses-table tbody');
@@ -230,18 +257,26 @@ export async function loadFeaturedCoursesCatalog() {
 
   try {
     let courses = [];
+    let teachersDb = [];
+
     if (db()) {
-      const { data: dbCourses } = await db().from('courses').select('*').order('id', { ascending: true });
-      if (dbCourses && dbCourses.length > 0) {
-        courses = dbCourses;
+      try {
+        const [cRes, tRes] = await Promise.all([
+          db().from('courses').select('*').order('id', { ascending: true }),
+          db().from('teachers').select('*')
+        ]);
+        if (cRes.data && cRes.data.length > 0) courses = cRes.data;
+        if (tRes.data && tRes.data.length > 0) teachersDb = tRes.data;
+      } catch(err) {
+        console.warn("Lỗi fetch courses/teachers:", err);
       }
     }
 
     if (!courses.length) {
       courses = [
         { title: 'Introduction to Data Science', course_code: 'DS101', department: 'Khoa KH Máy Tính', instructor_name: 'Dr. Chen', enrolled: 150, progress: 85, is_active: true, type: 'course' },
-        { title: 'Advanced Machine Learning', course_code: 'AI202', department: 'Trí Tuệ Nhân Tạo', instructor_name: 'Dr. Ramirez', enrolled: 120, progress: 70, is_active: true, type: 'course' },
-        { title: 'Web Development Fundamentals', course_code: 'WEB101', department: 'Lập Trình Web', instructor_name: 'Mr. Davis', enrolled: 180, progress: 92, is_active: true, type: 'course' },
+        { title: 'Advanced Machine Learning', course_code: 'AI202', department: 'Trí Tuệ Nhân Tạo', instructor_name: 'Thầy Nam (Root Admin)', enrolled: 120, progress: 70, is_active: true, type: 'course' },
+        { title: 'Web Development Fundamentals', course_code: 'WEB101', department: 'Lập Trình Web', instructor_name: 'Lê Văn Nam', enrolled: 180, progress: 92, is_active: true, type: 'course' },
         { title: 'Luyện 5 Kỹ Năng Tiếng Anh Unit 1–10', course_code: 'ENG-EDU', department: 'Khoa Ngoại Ngữ', instructor_name: 'Khoa Ngoại Ngữ', enrolled: 340, progress: 65, is_active: true, type: 'course' },
         { title: 'Đề Thi Trắc Nghiệm Giữa Kỳ', course_code: 'EXAM-EDU', department: 'Hệ Thống Khảo Thí', instructor_name: 'Ban Kiểm Định', enrolled: 210, progress: 40, is_active: true, type: 'exam' }
       ];
@@ -250,7 +285,7 @@ export async function loadFeaturedCoursesCatalog() {
         title: c.title,
         course_code: c.course_code || `EDU-${c.id}`,
         department: c.description || 'Khoa Chuyên Môn EduCore',
-        instructor_name: c.instructor_name || 'Giảng viên EduCore',
+        instructor_name: formatInstructorDisplayName(c.instructor_name, teachersDb),
         enrolled: 100 + ((c.id || i) * 35) % 250,
         progress: 60 + ((c.id || i) * 12) % 35,
         is_active: c.is_active !== false,

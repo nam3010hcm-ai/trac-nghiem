@@ -186,13 +186,22 @@ export async function saveSubject() {
 
   subjectsList.push(newSub);
 
+  let teacherDisplayName = 'Thầy Nam (Root Admin)';
+  try {
+    const rawUser = localStorage.getItem('teacher_user');
+    if (rawUser) {
+      const u = JSON.parse(rawUser);
+      if (u.name) teacherDisplayName = u.name;
+    }
+  } catch(e){}
+
   // Sync với Supabase bảng courses
   try {
     await db().from('courses').upsert({
       course_code: code.toUpperCase(),
       title: `${icon} ${name}`,
       description: desc || 'Môn học EduCore LMS',
-      instructor_name: state.currentUserEmail || 'Ban Quản Trị'
+      instructor_name: teacherDisplayName
     }, { onConflict: 'course_code' });
   } catch (e) {
     console.warn("Supabase course sync error:", e);
