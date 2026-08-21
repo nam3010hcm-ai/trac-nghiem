@@ -1,4 +1,4 @@
-import { state, $, esc, getPool, fillSubcatSelect, canEditItem } from './common.js';
+import { state, $, esc, getPool, fillSubcatSelect, canEditItem, getAuthorDisplayName, logTeacherActivity } from './common.js';
 
 const db = () => window.supabaseClient;
 
@@ -121,6 +121,7 @@ export async function saveExam(){
         name, description: desc, count, cat, subcat, time_limit: timeLimit
       }).eq('id', editId);
       if(error) throw error;
+      await logTeacherActivity('Cập nhật', 'Đề thi', name, editId, `Quy mô: ${count} câu, Chủ đề: ${cat || 'Chung'}`);
       alert("✅ Cập nhật đề thi thành công!");
     } else {
       const payload = {
@@ -149,6 +150,7 @@ export async function saveExam(){
         qIds: created.q_ids || [],
         created_by: created.created_by || state.currentUserEmail || 'nam3010hcm@gmail.com'
       });
+      await logTeacherActivity('Tạo mới', 'Đề thi', name, created.id, `Quy mô: ${count} câu, Chủ đề: ${cat || 'Chung'}`);
       alert("✅ Tạo đề thi mới thành công!");
     }
 
@@ -183,6 +185,7 @@ export async function deleteExam(id) {
         
         // 2. Xóa khỏi bộ nhớ tạm (state) của trình duyệt
         state.exams = state.exams.filter(e => e.id !== id);
+        await logTeacherActivity('Xóa', 'Đề thi', exam?.name || `Đề thi #${id}`, id, '');
         
         // 3. Cập nhật lại giao diện danh sách đề thi trên cả 2 Tab
         renderExams();
@@ -211,6 +214,7 @@ export async function toggleExamVisibility(id){
   e.isHidden = !e.isHidden;
   const { error } = await db().from('exams').update({ is_hidden: e.isHidden }).eq('id', id);
   if(error) console.error("Lỗi cập nhật trạng thái đề thi:", error);
+  await logTeacherActivity(e.isHidden ? 'Ẩn đề thi' : 'Mở đề thi', 'Đề thi', e.name, id, '');
   renderExams();
   renderPracticeExams();
   populateExamSelect();
@@ -243,7 +247,8 @@ export function renderPracticeExams(){
     const hideText = e.isHidden ? '🙈 Đang ẩn' : '👁️ Đang mở ôn thi';
     const statusBadge = e.isHidden ? '<span class="badge-status status-hidden">Đã ẩn</span>' : '<span class="badge-status status-active">Đang mở ôn thi</span>';
     const canEdit = canEditItem(e, state.currentUserEmail);
-    const authorBadge = e.created_by ? `<span class="cat-badge" style="background:#f1f5f9;color:#475569;margin-left:4px" title="Người tạo: ${esc(e.created_by)}">👤 ${esc(e.created_by.split('@')[0])}</span>` : '';
+    const authorName = getAuthorDisplayName(e.created_by);
+    const authorBadge = e.created_by ? `<span class="cat-badge" style="background:#f1f5f9;color:#475569;margin-left:4px" title="Người tạo: ${esc(authorName)} (${esc(e.created_by)})">👤 ${esc(authorName)}</span>` : '';
 
     return `<div class="qitem" style="border-left:4px solid #2563eb;"><div class="qrow">
       <div>
@@ -298,7 +303,8 @@ export function renderExams(){
     const hideText = e.isHidden ? '🙈 Đang ẩn' : '👁️ Đang hiện';
     const statusBadge = e.isHidden ? '<span class="badge-status status-hidden">Đã ẩn</span>' : '<span class="badge-status status-active">Đang mở</span>';
     const canEdit = canEditItem(e, state.currentUserEmail);
-    const authorBadge = e.created_by ? `<span class="cat-badge" style="background:#f1f5f9;color:#475569;margin-left:4px" title="Người tạo: ${esc(e.created_by)}">👤 ${esc(e.created_by.split('@')[0])}</span>` : '';
+    const authorName = getAuthorDisplayName(e.created_by);
+    const authorBadge = e.created_by ? `<span class="cat-badge" style="background:#f1f5f9;color:#475569;margin-left:4px" title="Người tạo: ${esc(authorName)} (${esc(e.created_by)})">👤 ${esc(authorName)}</span>` : '';
 
     return `<div class="qitem"><div class="qrow">
       <div>

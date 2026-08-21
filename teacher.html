@@ -196,26 +196,45 @@ window.globalLogout = async function() {
 
       if (err) err.style.display = 'none';
 
+      let teacherRow = null;
+      try {
+        const { data: tData } = await client.from('teachers').select('*').ilike('email', email).maybeSingle();
+        teacherRow = tData;
+      } catch(e){}
+
       const userEmail = authUser?.email || email;
       const isRoot = (userEmail.trim().toLowerCase() === 'nam3010hcm@gmail.com');
+      let teacherName = teacherRow?.teacher_name || teacherRow?.name || authUser?.name;
+      if (!teacherName && isRoot) teacherName = 'Thầy Nam (Root Admin)';
+      if (!teacherName) teacherName = userEmail.split('@')[0];
+
       localStorage.setItem('teacher_user', JSON.stringify({
+        id: teacherRow?.id || 'T001',
         email: userEmail,
-        name: userEmail.split('@')[0],
-        role: isRoot ? 'root' : 'teacher',
+        name: teacherName,
+        teacher_name: teacherName,
+        department: teacherRow?.department || (isRoot ? 'Quản Trị Hệ Thống' : 'Khoa Ngoại Ngữ'),
+        role: isRoot ? 'root' : (teacherRow?.role || 'teacher'),
         login_timestamp: Date.now()
       }));
 
-      // Ghi nhận sự kiện đăng nhập Giảng viên
+      // Ghi nhận sự kiện đăng nhập Giảng viên với Họ và Tên
       if (typeof window.recordAuthEvent === 'function') {
-        window.recordAuthEvent(userEmail, 'teacher', 'login', 0, authUser?.id || '', authUser?.name || userEmail, '');
+        window.recordAuthEvent(userEmail, 'teacher', 'login', 0, teacherRow?.id || authUser?.id || '', teacherName, '');
       } else if (typeof window.logUserAuthEvent === 'function') {
         window.logUserAuthEvent(userEmail, 'teacher', 'login');
       }
 
       document.getElementById('t-login').style.display = 'none';
       document.getElementById('t-panel').style.display = 'flex';
+      if (document.getElementById('current-user-name')) {
+        document.getElementById('current-user-name').innerText = teacherName;
+      }
       if (document.getElementById('current-user-email')) {
-        document.getElementById('current-user-email').innerText = authUser?.email || email;
+        document.getElementById('current-user-email').innerText = userEmail;
+      }
+      if (typeof window.renderGlobalHeaderProfile === 'function') {
+        window.renderGlobalHeaderProfile();
       }
 
       if (typeof window.initTeacherPanelDirect === 'function') {
@@ -460,7 +479,8 @@ window.globalLogout = async function() {
         <div class="user-profile-card">
           <div class="user-profile-avatar">⚡</div>
           <div class="user-profile-info">
-            <div class="user-profile-name" id="current-user-email">nam3010hcm@gmail.com</div>
+            <div class="user-profile-name" id="current-user-name" style="font-weight:800;font-size:13.5px;color:#0f172a;line-height:1.2;">Thầy Nam (Root Admin)</div>
+            <div style="font-size:11px;color:#64748b;margin-bottom:3px;" id="current-user-email">nam3010hcm@gmail.com</div>
             <div class="user-profile-role" id="user-role-badge">EduCore Admin</div>
           </div>
         </div>
@@ -1288,12 +1308,15 @@ window.globalLogout = async function() {
 
       <!-- VIEW SELECTOR TABS -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
-        <div style="display:flex;gap:8px;background:#f1f5f9;padding:4px;border-radius:10px;border:1px solid #e2e8f0;">
+        <div style="display:flex;gap:8px;background:#f1f5f9;padding:4px;border-radius:10px;border:1px solid #e2e8f0;flex-wrap:wrap;">
           <button type="button" class="btn btn-sm" id="tab-auth-btn-events" onclick="window.switchAuthLogsSubTab('events');" style="background:#ffffff;color:#0f172a;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-            📋 Lịch Sử Sự Kiện Đăng Nhập
+            📋 Lịch Sử Đăng Nhập
+          </button>
+          <button type="button" class="btn btn-sm" id="tab-auth-btn-crud" onclick="window.switchAuthLogsSubTab('crud');" style="background:transparent;color:#64748b;border:none;">
+            🛠️ Nhật Ký Thao Tác CRUD (Do Ai Làm)
           </button>
           <button type="button" class="btn btn-sm" id="tab-auth-btn-summary" onclick="window.switchAuthLogsSubTab('summary');" style="background:transparent;color:#64748b;border:none;">
-            👥 Thống Kê Theo Từng User
+            👥 Thống Kê Theo User
           </button>
         </div>
       </div>
@@ -1301,7 +1324,7 @@ window.globalLogout = async function() {
       <!-- FILTER & SEARCH BAR -->
       <div class="card" style="padding:14px;margin-bottom:16px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;">
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <input type="text" id="flt-auth-search" placeholder="🔍 Tìm theo Email, Mã học viên, Tên..." style="padding:8px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;flex:1.5;min-width:220px;" oninput="window.renderAuthLogsTable(); window.renderUserActivitySummaryTable();">
+          <input type="text" id="flt-auth-search" placeholder="🔍 Tìm theo Họ và Tên, Email, Mã ID, Thao tác, Đối tượng..." style="padding:8px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;flex:1.5;min-width:220px;" oninput="window.renderAuthLogsTable(); window.renderUserActivitySummaryTable(); if(window.renderTeacherActivityLogsTable) window.renderTeacherActivityLogsTable();">
           
           <select id="flt-auth-role" style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;background:#fff;" onchange="window.renderAuthLogsTable(); window.renderUserActivitySummaryTable();">
             <option value="all">Tất cả vai trò</option>
@@ -1315,7 +1338,7 @@ window.globalLogout = async function() {
             <option value="logout">🔴 Đăng xuất (Logout)</option>
           </select>
 
-          <select id="flt-auth-time" style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;background:#fff;" onchange="window.renderAuthLogsTable();">
+          <select id="flt-auth-time" style="padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;background:#fff;" onchange="window.renderAuthLogsTable(); if(window.renderTeacherActivityLogsTable) window.renderTeacherActivityLogsTable();">
             <option value="all">Toàn bộ thời gian</option>
             <option value="today">Hôm nay (24h)</option>
             <option value="7days">7 ngày qua</option>
@@ -1331,7 +1354,7 @@ window.globalLogout = async function() {
             <thead>
               <tr>
                 <th style="width:45px;text-align:center">#</th>
-                <th>Tài Khoản / Email</th>
+                <th>Người Dùng (Họ và Tên)</th>
                 <th>Vai Trò</th>
                 <th>Sự Kiện</th>
                 <th>Thời Gian Ghi Nhận</th>
@@ -1345,7 +1368,29 @@ window.globalLogout = async function() {
         </div>
       </div>
 
-      <!-- VIEW 2: BẢNG THỐNG KÊ TỔNG HỢP THEO USER -->
+      <!-- VIEW 2: BẢNG NHẬT KÝ THAO TÁC CRUD CỦA GIẢNG VIÊN -->
+      <div id="authlogs-crud-view" style="display:none;">
+        <div class="card" style="padding:0;overflow-x:auto;border:1px solid #e2e8f0;border-radius:12px;">
+          <table class="lms-table">
+            <thead>
+              <tr>
+                <th style="width:45px;text-align:center">#</th>
+                <th>Người Thực Hiện (Họ và Tên)</th>
+                <th>Vai Trò</th>
+                <th>Hành Động</th>
+                <th>Phân Hệ</th>
+                <th>Đối Tượng / Chi Tiết Thao Tác</th>
+                <th>Thời Gian Ghi Nhận</th>
+              </tr>
+            </thead>
+            <tbody id="teacher-crud-logs-tbody">
+              <tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8">Đang tải danh sách thao tác...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VIEW 3: BẢNG THỐNG KÊ TỔNG HỢP THEO USER -->
       <div id="authlogs-summary-view" style="display:none;">
         <div class="card" style="padding:0;overflow-x:auto;border:1px solid #e2e8f0;border-radius:12px;">
           <table class="lms-table">

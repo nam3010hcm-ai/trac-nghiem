@@ -6,7 +6,7 @@
  */
 
 import { DEFAULT_UNITS } from './learn-data.js';
-import { state, $, esc, clone, canEditItem, isRootUser } from './common.js';
+import { state, $, esc, clone, canEditItem, isRootUser, getAuthorDisplayName, logTeacherActivity } from './common.js';
 import { subjectsList, modulesList } from './curriculum.js';
 
 const db = () => window.supabaseClient;
@@ -298,7 +298,8 @@ export function renderUnitsList() {
     const wrtCount = (u.writing || []).length;
     const fcCount = (u.languageFocus?.flashcards || []).length;
     const canEdit = canEditItem(u, state.currentUserEmail);
-    const authorBadge = u.created_by ? `<span class="cat-badge" style="background:#f1f5f9;color:#475569" title="Người tạo: ${esc(u.created_by)}">👤 ${esc(u.created_by.split('@')[0])}</span>` : '';
+    const authorName = getAuthorDisplayName(u.created_by);
+    const authorBadge = u.created_by ? `<span class="cat-badge" style="background:#f1f5f9;color:#475569" title="Người tạo: ${esc(authorName)} (${esc(u.created_by)})">👤 ${esc(authorName)}</span>` : '';
 
     const isEng = (u.subject || '').includes('Tiếng Anh') || (u.subject || '').includes('English');
     const badge1 = isEng ? `🎧 Listening (${lisCount})` : `📖 Lý thuyết (${lisCount})`;
@@ -1161,6 +1162,8 @@ export async function saveUnit() {
       unitsState.push(clone(unit));
     }
 
+    await logTeacherActivity(existingIdx >= 0 ? 'Cập nhật' : 'Tạo mới', 'Bài học Unit', unit.title, unit.id, `Môn: ${unit.subject || ''} / ${unit.module || ''}`);
+
     closeUnitEditor();
     renderUnitsList();
     alert('✅ Đã lưu Unit bài học thành công!');
@@ -1188,6 +1191,7 @@ export async function toggleUnitVisibility(unitId) {
   try {
     const { error } = await db().from('learning_units').update({ is_hidden: u.isHidden }).eq('id', unitId);
     if (error) console.error("Lỗi toggleUnitVisibility:", error);
+    await logTeacherActivity(u.isHidden ? 'Ẩn bài học' : 'Mở bài học', 'Bài học Unit', u.title, unitId, '');
     renderUnitsList();
   } catch (e) {
     console.error(e);
@@ -1207,6 +1211,7 @@ export async function deleteUnit(unitId) {
     const { error } = await db().from('learning_units').delete().eq('id', unitId);
     if (error) throw error;
     unitsState = unitsState.filter(u => u.id !== unitId);
+    await logTeacherActivity('Xóa bài học', 'Bài học Unit', u?.title || unitId, unitId, '');
     renderUnitsList();
     alert("✅ Đã xóa Unit thành công!");
   } catch (e) {

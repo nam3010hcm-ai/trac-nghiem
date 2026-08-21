@@ -97,21 +97,42 @@ async function showTeacherPanel(user) {
   $('t-panel').style.display = 'flex';
 
   state.currentUserEmail = user?.email || 'nam3010hcm@gmail.com';
-
   const isRoot = isRootUser(state.currentUserEmail);
   applyUserRolePermissions(isRoot);
+
+  let teacherName = user?.teacher_name || user?.name;
+  if (!teacherName) {
+    try {
+      const tcRaw = localStorage.getItem('teacher_user');
+      if (tcRaw) {
+        const parsed = JSON.parse(tcRaw);
+        teacherName = parsed.teacher_name || parsed.name;
+      }
+    } catch(e){}
+  }
+  if (!teacherName && isRoot) teacherName = 'Thầy Nam (Root Admin)';
+  if (!teacherName) teacherName = state.currentUserEmail.split('@')[0];
+
+  state.currentUserName = teacherName;
+
   try {
     localStorage.setItem('teacher_user', JSON.stringify({
+      id: user?.id || 'T001',
       email: state.currentUserEmail,
-      name: (user?.name || user?.teacher_name || state.currentUserEmail.split('@')[0]),
-      role: isRoot ? 'root' : 'teacher',
+      name: teacherName,
+      teacher_name: teacherName,
+      department: user?.department || (isRoot ? 'Quản Trị Hệ Thống' : 'Khoa Ngoại Ngữ'),
+      role: isRoot ? 'root' : (user?.role || 'teacher'),
       login_timestamp: Date.now()
     }));
 
     // Ghi nhận sự kiện Login của Giảng viên vào bảng nhật ký
-    recordAuthEvent(state.currentUserEmail, 'teacher', 'login', 0, user?.id || '', user?.name || user?.teacher_name || state.currentUserEmail, '');
+    recordAuthEvent(state.currentUserEmail, 'teacher', 'login', 0, user?.id || '', teacherName, '');
   } catch(e){}
 
+  if ($('current-user-name')) {
+    $('current-user-name').innerText = teacherName;
+  }
   if ($('current-user-email')) {
     $('current-user-email').innerText = state.currentUserEmail;
   }
@@ -129,6 +150,10 @@ async function showTeacherPanel(user) {
       roleBadge.style.border = '1px solid #bae6fd';
       roleBadge.innerHTML = '👨‍🏫 Giáo viên';
     }
+  }
+
+  if (typeof window.renderGlobalHeaderProfile === 'function') {
+    window.renderGlobalHeaderProfile();
   }
 
   await initData();

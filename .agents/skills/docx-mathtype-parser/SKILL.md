@@ -148,6 +148,30 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 
 ---
 
+### 10. Hệ thống Quản lý Danh tính (Họ và Tên) & Audit Logs Lưu vết Thao tác CRUD của Giảng viên
+- **Tệp nguồn:** [`js/common.js`](file:///Users/namtp/Downloads/trac-nghiem/js/common.js), [`js/teacher.js`](file:///Users/namtp/Downloads/trac-nghiem/js/teacher.js), [`js/student.js`](file:///Users/namtp/Downloads/trac-nghiem/js/student.js), [`js/auth-logs.js`](file:///Users/namtp/Downloads/trac-nghiem/js/auth-logs.js), [`js/exams.js`](file:///Users/namtp/Downloads/trac-nghiem/js/exams.js), [`js/questions.js`](file:///Users/namtp/Downloads/trac-nghiem/js/questions.js), [`js/students-mgr.js`](file:///Users/namtp/Downloads/trac-nghiem/js/students-mgr.js), [`js/teachers-mgr.js`](file:///Users/namtp/Downloads/trac-nghiem/js/teachers-mgr.js), [`js/assignments-mgr.js`](file:///Users/namtp/Downloads/trac-nghiem/js/assignments-mgr.js), [`js/units.js`](file:///Users/namtp/Downloads/trac-nghiem/js/units.js), [`teacher.html`](file:///Users/namtp/Downloads/trac-nghiem/teacher.html), [`index.html`](file:///Users/namtp/Downloads/trac-nghiem/index.html), [`student.html`](file:///Users/namtp/Downloads/trac-nghiem/student.html), [`learn.html`](file:///Users/namtp/Downloads/trac-nghiem/learn.html)
+- **Cơ sở dữ liệu Supabase:**
+  - Bảng `public.teachers`: `id`, `email`, `teacher_name` (NOT NULL), `department`, `role`, `is_active`, `last_login_at`, `last_logout_at`, `user_id`, `teacher_code`, `password`.
+  - Bảng `public.students`: `id`, `full_name` (NOT NULL), `class_name`, `academic_year`, `email`, `password`, `is_active`, `created_by`, `last_login_at`, `last_logout_at`, `total_xp`, `user_id`, `student_code`, `role`.
+- **Kiến trúc & Tính năng hiện thực:**
+  1. **Hiển thị Họ và Tên người dùng chuẩn xác trên toàn bộ hệ thống (`renderGlobalHeaderProfile` & `getAuthorDisplayName`):**
+     - **Giảng viên / Quản trị:** Khi đăng nhập, hệ thống tự động đối soát bảng `teachers` để lấy trường `teacher_name` (Họ và Tên đầy đủ, ví dụ `Thầy Nam (Root Admin)`, `Dr. Chen`, `Lê Văn Nam`). Header Profile Badge và Sidebar Profile hiển thị rõ Họ và Tên kèm vai trò và đơn vị bộ môn.
+     - **Học viên:** Khi đăng nhập qua Cổng Thi hoặc Học Tập, hệ thống lấy trường `full_name` trong bảng `students` để hiển thị Họ và Tên trên Header, Lời chào Portal (`Xin chào, Nguyễn Văn An 👋`), phòng thi và bảng kết quả.
+     - Thay thế toàn bộ hiển thị chung chung (`email.split('@')[0]`, `Admin / Teacher`, `Học viên`) bằng Họ và Tên thực tế của người dùng.
+  2. **Lưu vết tất cả thao tác CRUD của Giảng viên (`logTeacherActivity`):**
+     - Mọi hành động Tạo mới (CREATE), Chỉnh sửa (UPDATE), Xóa (DELETE), Khóa/Mở khóa (TOGGLE), Giao bài tập (ASSIGN), Import tài liệu (IMPORT) đều được tự động lưu vết với:
+       + **Người thực hiện:** Họ và Tên Giảng viên (`actor_name`), Email (`actor_email`), Vai trò (`actor_role`).
+       + **Hành động & Phân hệ:** Tạo mới / Sửa / Xóa Đề thi, Câu hỏi, Học viên, Giảng viên, Bài học Unit, Nhiệm vụ học tập.
+       + **Đối tượng & Chi tiết:** Tên đề thi, nội dung câu hỏi, thông tin học viên, lớp học...
+       + **Thời gian thực hiện:** ISO timestamp thời gian thực.
+     - Dữ liệu lưu vết được ghi đồng thời vào Supabase (`user_auth_logs`) và bộ nhớ đệm `localStorage` (`educore_teacher_activity_logs`).
+  3. **Bảng Nhật ký Thao tác CRUD (Teacher Activity Logs) trong Quản trị LMS:**
+     - Tích hợp sub-tab chuyên dụng trong Tab `authlogs` trên `teacher.html` cho phép Root Admin và Giảng viên theo dõi toàn bộ lịch sử thay đổi: ai đã tạo đề thi nào, ai sửa câu hỏi nào, ai xóa/khóa tài khoản học viên, kèm bộ lọc theo từ khóa, vai trò và mốc thời gian (Hôm nay, 7 ngày, 30 ngày).
+  4. **Hiển thị Tác giả (Họ và Tên) trong các bảng quản lý:**
+     - Danh sách Đề thi (`exams.js`), Ngân hàng câu hỏi (`questions.js`), Bài học Unit (`units.js`), Danh sách học viên (`students-mgr.js`) đều hiển thị Họ và Tên tác giả người tạo thông qua hàm `getAuthorDisplayName(item.created_by)`.
+
+---
+
 ## 📊 Kết quả kiểm thử trên Đề thi mẫu (`BTTN - P1 - DE 30 cau SO CAU.docx`)
 - **Tổng số công thức MathType OLE:** 43/43 công thức được giải mã thành công 100%.
 - **Độ chính xác nhận diện đáp án đúng (In đậm & Bôi đỏ):** 34/34 câu (100%), nhận diện chuẩn xác các đáp án C, B, D (ví dụ Câu 4: C, Câu 7: B, Câu 11: C, Câu 14: D, Câu 15: C, Câu 18: C, Câu 20: C, Câu 24: C, Câu 28: D...).

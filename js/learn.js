@@ -6,7 +6,7 @@
  */
 
 import { LEARN_DATA, DEFAULT_UNITS } from './learn-data.js';
-import { renderRich, typesetMath } from './common.js';
+import { renderRich, typesetMath, renderGlobalHeaderProfile } from './common.js';
 
 const db = () => window.supabaseClient;
 
@@ -317,6 +317,16 @@ export async function loginLearnStudent() {
     }
 
     // Đăng nhập thành công
+    const stPayload = { 
+      sid: studentData.id, 
+      id: studentData.id, 
+      name: studentData.full_name || studentData.id, 
+      full_name: studentData.full_name || studentData.id, 
+      class_name: studentData.class_name || '', 
+      email: studentData.email || '',
+      role: 'student'
+    };
+    localStorage.setItem('st_user', JSON.stringify(stPayload));
     sessionStorage.setItem(STUDENT_AUTH_KEY, JSON.stringify(studentData));
     await initAuthenticatedLearn();
   } catch (err) {
@@ -427,6 +437,10 @@ async function initAuthenticatedLearn() {
   const classEl = document.getElementById('learn-user-class');
   if (nameEl) nameEl.textContent = userDisplayName;
   if (classEl) classEl.textContent = `Tên - Đơn vị: ${currentStudent.class_name || 'Khoa KHCB'}`;
+
+  if (typeof renderGlobalHeaderProfile === 'function') {
+    renderGlobalHeaderProfile();
+  }
 
   // Nạp ảnh đại diện từ localStorage nếu có
   const savedAvatar = localStorage.getItem(`avatar_${currentStudent.id}`);

@@ -1,4 +1,4 @@
-import { state, $, esc, KEYS, mediaHTML, audioHTML, videoHTML, renderRich, typesetMath, TYPE_LABELS, splitBlanks, countBlanks, fillSubcatSelect, canEditItem, isRootUser } from './common.js';
+import { state, $, esc, KEYS, mediaHTML, audioHTML, videoHTML, renderRich, typesetMath, TYPE_LABELS, splitBlanks, countBlanks, fillSubcatSelect, canEditItem, isRootUser, getAuthorDisplayName, logTeacherActivity } from './common.js';
 
 const db = () => window.supabaseClient;
 
@@ -583,6 +583,7 @@ export async function saveQ(){
       } else if (error) {
         throw error;
       }
+      await logTeacherActivity('Cập nhật', 'Câu hỏi', text.replace(/<[^>]*>?/gm, '').substring(0, 60), editQId, `Môn: ${cat || ''} / ${subcat || ''}`);
       alert("✅ Đã cập nhật câu hỏi thành công!");
     }else{
       const payload = { cat, subcat, text, image, audio, video, explain, created_by: state.currentUserEmail || 'nam3010hcm@gmail.com', ...fields }; 
@@ -605,6 +606,7 @@ export async function saveQ(){
         bank: created.bank || [],
         pairs: created.pairs || []
       });
+      await logTeacherActivity('Tạo mới', 'Câu hỏi', text.replace(/<[^>]*>?/gm, '').substring(0, 60), created.id, `Môn: ${cat || ''} / ${subcat || ''}`);
       alert("✅ Đã tạo câu hỏi mới thành công!");
     }
     closeQForm();
@@ -629,6 +631,7 @@ export async function deleteQ(id){
     const { error } = await db().from('questions').delete().eq('id', id);
     if(error) throw error;
     state.questions = state.questions.filter(q => Number(q.id) !== Number(id));
+    await logTeacherActivity('Xóa', 'Câu hỏi', (q?.text || `Câu hỏi #${id}`).replace(/<[^>]*>?/gm, '').substring(0, 60), id, '');
     alert('✅ Đã xóa câu hỏi!');
     renderQuestions();
   } catch(e) {
@@ -678,7 +681,8 @@ export function renderQuestions(){
     const type = q.type || 'mcq_single';
     let answerHTML = '';
     const canEdit = canEditItem(q, state.currentUserEmail);
-    const authorBadge = q.created_by ? `<div class="cat-badge" style="background:#f1f5f9;color:#475569" title="Người tạo: ${esc(q.created_by)}">👤 ${esc(q.created_by.split('@')[0])}</div>` : '';
+    const authorName = getAuthorDisplayName(q.created_by);
+    const authorBadge = q.created_by ? `<div class="cat-badge" style="background:#f1f5f9;color:#475569" title="Người tạo: ${esc(authorName)} (${esc(q.created_by)})">👤 ${esc(authorName)}</div>` : '';
     
     // Cập nhật giao diện xem đáp án có thẻ HTML (Đáp án đúng màu đỏ đậm)
     if(type === 'mcq_single' || type === 'mcq_multi'){

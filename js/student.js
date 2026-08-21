@@ -110,12 +110,20 @@ export async function loginStudent() {
     }
 
     // Đăng nhập thành công -> lưu session & ghi nhận login event
-    const stPayload = { sid: data.id, name: data.full_name || data.id, class_name: data.class_name || '', email: data.email || '' };
+    const stPayload = { 
+      sid: data.id, 
+      id: data.id,
+      name: data.full_name || data.id, 
+      full_name: data.full_name || data.id, 
+      class_name: data.class_name || '', 
+      email: data.email || '',
+      role: 'student'
+    };
     localStorage.setItem('st_user', JSON.stringify(stPayload));
     sessionStorage.setItem(STUDENT_AUTH_KEY, JSON.stringify(data));
     sessionStorage.setItem('st_session_start', Date.now().toString());
 
-    // Ghi nhận sự kiện Login vào Supabase
+    // Ghi nhận sự kiện Login vào Supabase với Họ và Tên
     recordAuthEvent(data.email, 'student', 'login', 0, data.id, data.full_name || data.id, data.class_name || '');
 
     renderStudentPortal(data);
@@ -134,6 +142,10 @@ export function renderStudentPortal(student) {
   if ($('st-auth-welcome')) $('st-auth-welcome').textContent = `Xin chào, ${student.full_name || student.id} 👋`;
   if ($('st-auth-id')) $('st-auth-id').textContent = student.id || '';
   if ($('st-auth-class')) $('st-auth-class').textContent = student.class_name || '';
+
+  if (typeof window.renderGlobalHeaderProfile === 'function') {
+    window.renderGlobalHeaderProfile();
+  }
 
   showScreen('sc-portal');
   populatePracticeCategories();

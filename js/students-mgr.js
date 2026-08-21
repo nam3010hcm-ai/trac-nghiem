@@ -5,7 +5,7 @@
  * =========================================================================
  */
 
-import { $, esc, isRootUser } from './common.js';
+import { $, esc, isRootUser, state, getAuthorDisplayName, logTeacherActivity } from './common.js';
 
 const db = () => window.supabaseClient;
 
@@ -251,7 +251,7 @@ export async function saveStudent() {
   const saveBtn = $('btn-save-student');
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Đang lưu...'; }
 
-  try {
+    const authorEmail = (state && state.currentUserEmail) || 'nam3010hcm@gmail.com';
     const payload = {
       id,
       full_name,
@@ -261,7 +261,7 @@ export async function saveStudent() {
       password,
       is_active,
       created_at: Date.now(),
-      created_by: 'nam3010hcm@gmail.com'
+      created_by: authorEmail
     };
 
     const { error } = await db().from('students').upsert([payload], { onConflict: 'id' });
@@ -273,6 +273,8 @@ export async function saveStudent() {
     } else {
       studentsList.unshift(payload);
     }
+
+    await logTeacherActivity(existingIdx >= 0 ? 'Cập nhật' : 'Tạo mới', 'Học viên', `${full_name} (${id})`, id, `Lớp: ${class_name}, Email: ${email}`);
 
     saveStudentsToLocal();
     closeStudentModal();
@@ -299,6 +301,7 @@ export async function toggleStudentStatus(studentId) {
   try {
     const { error } = await db().from('students').update({ is_active: nextStatus }).eq('id', studentId);
     if (error) throw error;
+    await logTeacherActivity(nextStatus ? 'Mở khóa tài khoản' : 'Khóa tài khoản', 'Học viên', `${st.full_name || st.id} (${studentId})`, studentId, '');
   } catch (e) {
     console.error("Lỗi toggleStudentStatus:", e);
   }
@@ -306,6 +309,7 @@ export async function toggleStudentStatus(studentId) {
 
 // 6. XÓA TÀI KHOẢN HỌC VIÊN
 export async function deleteStudent(studentId) {
+  const st = studentsList.find(s => s.id === studentId);
   if (!confirm(`⚠️ Bạn có chắc chắn muốn xóa tài khoản học viên [${studentId}]?`)) return;
 
   studentsList = studentsList.filter(s => s.id !== studentId);
@@ -315,6 +319,7 @@ export async function deleteStudent(studentId) {
   try {
     const { error } = await db().from('students').delete().eq('id', studentId);
     if (error) throw error;
+    await logTeacherActivity('Xóa tài khoản', 'Học viên', `${st?.full_name || studentId} (${studentId})`, studentId, '');
     alert("✅ Đã xóa tài khoản học viên!");
   } catch (e) {
     console.error("Lỗi xóa học viên:", e);
@@ -341,6 +346,7 @@ export async function saveBulkStudents() {
 
   const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
   const parsed = [];
+  const authorEmail = (state && state.currentUserEmail) || 'nam3010hcm@gmail.com';
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -372,7 +378,7 @@ export async function saveBulkStudents() {
           password,
           is_active: true,
           created_at: Date.now() + i,
-          created_by: 'nam3010hcm@gmail.com'
+          created_by: authorEmail
         });
       }
     }
@@ -389,6 +395,8 @@ export async function saveBulkStudents() {
   try {
     const { error } = await db().from('students').upsert(parsed, { onConflict: 'id' });
     if (error) throw error;
+
+    await logTeacherActivity('Nhập hàng loạt', 'Học viên', `Nhập ${parsed.length} tài khoản học viên`, '', `Lớp: ${parsed[0]?.class_name || ''}`);
 
     await loadStudents();
     renderStudentsList();

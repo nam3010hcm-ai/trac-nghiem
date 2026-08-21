@@ -1,4 +1,4 @@
-import { state, $, esc, typesetMath, renderRich } from './common.js';
+import { state, $, esc, typesetMath, renderRich, logTeacherActivity } from './common.js';
 import { showToast } from './ui-components.js';
 import { renderQuestions } from './questions.js';
 import { renderExams, populateExamSelect } from './exams.js';
@@ -1600,6 +1600,8 @@ export async function saveParsedExamToSupabase() {
         created_by: created.created_by || authorEmail
       });
     }
+
+    await logTeacherActivity('Import Đề thi & Câu hỏi', 'Đề thi & Câu hỏi', `${examName} (${insertedQuestionIds.length} câu)`, '', `Môn: ${cat || ''} / ${subcat || ''}`);
 
     // 4. Đồng bộ bộ lọc Tab Ngân hàng câu hỏi để hiển thị các câu hỏi mới ngay lập tức
     if ($('flt-cat')) {

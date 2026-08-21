@@ -5,7 +5,7 @@
  * =========================================================================
  */
 
-import { $, esc, isRootUser, ROOT_ADMIN_EMAIL, state } from './common.js';
+import { $, esc, isRootUser, ROOT_ADMIN_EMAIL, state, getAuthorDisplayName, logTeacherActivity } from './common.js';
 
 export const DEFAULT_TEACHERS = [
   {
@@ -336,6 +336,7 @@ export async function saveTeacher() {
         t.password = password;
       }
     }
+    await logTeacherActivity('Cập nhật', 'Giảng viên', `${name} (${editingTeacherId})`, editingTeacherId, `Bộ môn: ${dept || 'Khoa Ngoại Ngữ'}`);
     saveTeachersToLocal();
     closeTeacherModal();
     renderTeachersList();
@@ -406,6 +407,7 @@ export async function saveTeacher() {
       name: name
     };
     teachersList.unshift(localItem);
+    await logTeacherActivity('Tạo mới', 'Giảng viên', `${name} (${newId})`, newId, `Bộ môn: ${dept || 'Khoa Ngoại Ngữ'}, Email: ${email}`);
     saveTeachersToLocal();
     closeTeacherModal();
     renderTeachersList();
@@ -428,6 +430,7 @@ export async function toggleTeacherStatus(id) {
       }
     }
     t.is_active = nextStatus;
+    await logTeacherActivity(nextStatus ? 'Mở khóa tài khoản' : 'Khóa tài khoản', 'Giảng viên', `${t.teacher_name || t.name || t.email} (${id})`, id, '');
     saveTeachersToLocal();
     alert(`Đã ${nextStatus ? 'mở khóa' : 'khóa'} tài khoản giảng viên ${t.teacher_name || t.name || t.email}!`);
     renderTeachersList();
@@ -455,6 +458,7 @@ export async function deleteTeacher(id) {
       }
     }
     teachersList = teachersList.filter(item => item.id !== id);
+    await logTeacherActivity('Xóa tài khoản', 'Giảng viên', `${teacherDisplayName} (${id})`, id, '');
     saveTeachersToLocal();
     alert("✅ Đã xóa tài khoản giảng viên thành công!");
     renderTeachersList();

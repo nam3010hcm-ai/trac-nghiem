@@ -76,21 +76,26 @@ window.initHeaderAuthState = function() {
   const stUserRaw = localStorage.getItem('st_user');
   const tcUserRaw = localStorage.getItem('teacher_user');
   let userLabel = '';
+  let subLabel = '';
   let avatarIcon = '🎓';
   let isLoggedIn = false;
 
   if (stUserRaw) {
     try {
       const parsed = JSON.parse(stUserRaw);
-      userLabel = (parsed.name || parsed.student_name || parsed.sid || 'Học viên') + ' (Học viên)';
+      const fullName = parsed.full_name || parsed.name || 'Học viên';
+      userLabel = fullName;
+      subLabel = parsed.class_name ? `Lớp ${parsed.class_name}` : 'Học viên EduCore';
       avatarIcon = '🎓';
       isLoggedIn = true;
     } catch(e){}
   } else if (tcUserRaw) {
     try {
       const parsed = JSON.parse(tcUserRaw);
-      const isRoot = (parsed.email || '').toLowerCase() === 'nam3010hcm@gmail.com';
-      userLabel = (parsed.name || parsed.email || 'Giảng viên') + (isRoot ? ' (Root Admin)' : ' (Giảng viên)');
+      const isRoot = (parsed.email || '').toLowerCase() === 'nam3010hcm@gmail.com' || parsed.role === 'root' || parsed.role === 'admin';
+      const fullName = parsed.teacher_name || parsed.name || (isRoot ? 'Thầy Nam (Root Admin)' : parsed.email);
+      userLabel = fullName;
+      subLabel = isRoot ? 'Root Admin' : (parsed.department || 'Giảng viên');
       avatarIcon = isRoot ? '👑' : '👨‍🏫';
       isLoggedIn = true;
     } catch(e){}
@@ -103,9 +108,12 @@ window.initHeaderAuthState = function() {
     if (profileBadge) {
       profileBadge.innerHTML = `
         <div class="user-avatar-img">${avatarIcon}</div>
-        <span style="font-weight:700;">${userLabel}</span>
+        <div style="display:flex;flex-direction:column;line-height:1.2;text-align:left;">
+          <span style="font-weight:800;font-size:13.5px;color:#ffffff;">${userLabel}</span>
+          <span style="font-size:10.5px;color:#93c5fd;font-weight:700;text-transform:uppercase;">${subLabel}</span>
+        </div>
       `;
-      profileBadge.title = "Tài khoản đang đăng nhập";
+      profileBadge.title = `Tài khoản: ${userLabel} (${subLabel})`;
       profileBadge.onclick = null;
     }
     if (logoutBtn) {

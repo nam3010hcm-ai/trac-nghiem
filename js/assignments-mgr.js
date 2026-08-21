@@ -5,7 +5,7 @@
 
 import { showToast, renderLMSBadge } from './ui-components.js';
 import { classesList } from './classes-mgr.js';
-import { state, esc } from './common.js';
+import { state, esc, getAuthorDisplayName, logTeacherActivity } from './common.js';
 
 export let assignmentsList = [];
 
@@ -365,6 +365,8 @@ export async function saveAssignmentFromModal() {
     showToast('success', 'Giao Bài Thành Công', `Đã giao nhiệm vụ "${asgData.title}" tới ${className}!`);
   }
 
+  await logTeacherActivity(existingIdx >= 0 ? 'Cập nhật' : 'Giao bài tập', 'Nhiệm vụ', asgData.title, asgData.id, `Lớp: ${className}, Loại: ${contentType}`);
+
   saveAssignmentsToLocal();
   renderAssignmentsList();
 
@@ -414,6 +416,7 @@ export async function deleteAssignmentItem(id) {
   if (!confirm(`Bạn có chắc chắn muốn xóa nhiệm vụ "${asg.title}"?`)) return;
 
   assignmentsList = assignmentsList.filter(a => a.id !== id);
+  await logTeacherActivity('Xóa nhiệm vụ', 'Nhiệm vụ', asg.title, id, `Lớp: ${asg.className || ''}`);
   saveAssignmentsToLocal();
   renderAssignmentsList();
   showToast('info', 'Đã Xóa Nhiệm Vụ', 'Đã xóa nhiệm vụ học tập khỏi danh sách.');
