@@ -6,6 +6,16 @@ const db = () => window.supabaseClient;
 export const KEYS = ['A','B','C','D'];
 export { uploadMediaFile, showToast, renderSkeletonCards, renderSkeletonTableRows, renderLMSBadge };
 
+export const state = { SUBCATS:{}, questions:[], exams:[], results:[], teachers:[], students:[], nextQId:100, nextEId:10, currentUserEmail: '', currentUserName: '' };
+export const $ = id => document.getElementById(id);
+if (typeof window !== 'undefined') { window.$ = $; }
+export const clone = obj => JSON.parse(JSON.stringify(obj));
+export const shuffle = a => a.slice().sort(() => Math.random() - .5);
+
+export const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({
+  '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+}[m]));
+
 
 
 
@@ -324,16 +334,6 @@ export function canEditItem(item, currentUserEmail) {
   if (!creator) return false;
   return String(creator).trim().toLowerCase() === String(currentUserEmail).trim().toLowerCase();
 }
-
-export const state = { SUBCATS:{}, questions:[], exams:[], results:[], teachers:[], students:[], nextQId:100, nextEId:10, currentUserEmail: '', currentUserName: '' };
-export const $ = id => document.getElementById(id);
-if (typeof window !== 'undefined') { window.$ = $; }
-export const clone = obj => JSON.parse(JSON.stringify(obj));
-export const shuffle = a => a.slice().sort(() => Math.random() - .5);
-
-export const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({
-  '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
-}[m]));
 
 export function mediaHTML(url, cls='q-img'){
   const u = String(url || '').trim();
