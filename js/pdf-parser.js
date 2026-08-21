@@ -1,4 +1,4 @@
-import { state, $, esc, typesetMath } from './common.js';
+import { state, $, esc, typesetMath, renderRich } from './common.js';
 import { showToast } from './ui-components.js';
 import { renderQuestions } from './questions.js';
 import { renderExams, populateExamSelect } from './exams.js';
@@ -1319,7 +1319,7 @@ export function renderParsedExamPreview(filterKeyword = '') {
               <span>👁️</span> Trạng thái 2: Hiển thị thực tế (Rendered MathJax):
             </label>
             <div id="pdf-q-rendered-${qIdx}" style="background:#f8fafc; border:1.5px solid #bfdbfe; border-radius:8px; padding:8px 12px; font-size:13.5px; color:#0f172a; min-height:68px; overflow-x:auto;">
-              ${esc(q.text)}
+              ${renderRich(q.text)}
             </div>
           </div>
         </div>
@@ -1351,7 +1351,7 @@ export function renderParsedExamPreview(filterKeyword = '') {
 
                   <!-- Trạng thái 2: Đã Render -->
                   <div id="pdf-opt-rendered-${qIdx}-${optIdx}" style="background:#ffffff; border:1px dashed ${isCorrect ? '#fca5a5' : '#cbd5e1'}; border-radius:6px; padding:5px 8px; font-size:13px; color:${isCorrect ? '#b91c1c' : '#0f172a'}; min-height:28px; overflow-x:auto;">
-                    ${esc(opt)}
+                    ${renderRich(opt)}
                   </div>
                 </div>
               `;
@@ -1363,7 +1363,7 @@ export function renderParsedExamPreview(filterKeyword = '') {
         ${q.explain ? `
           <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:10px 12px; margin-top:8px;">
             <div style="font-size:11.5px; font-weight:700; color:#0369a1; margin-bottom:4px;">💡 Hướng dẫn giải (Hiển thị thực tế):</div>
-            <div id="pdf-q-explain-rendered-${qIdx}" style="font-size:12.5px; color:#0c4a6e; overflow-x:auto;">${esc(q.explain)}</div>
+            <div id="pdf-q-explain-rendered-${qIdx}" style="font-size:12.5px; color:#0c4a6e; overflow-x:auto;">${renderRich(q.explain)}</div>
           </div>
         ` : ''}
       </div>
@@ -1414,7 +1414,7 @@ export function updateParsedQuestionText(idx, val) {
     currentParsedExam.questions[idx].text = val;
     const renderedBox = $(`pdf-q-rendered-${idx}`);
     if (renderedBox) {
-      renderedBox.textContent = val;
+      renderedBox.innerHTML = renderRich(val);
       scheduleTypeset(renderedBox);
     }
   }
@@ -1425,7 +1425,7 @@ export function updateParsedQuestionOption(qIdx, optIdx, val) {
     currentParsedExam.questions[qIdx].opts[optIdx] = val;
     const renderedBox = $(`pdf-opt-rendered-${qIdx}-${optIdx}`);
     if (renderedBox) {
-      renderedBox.textContent = val;
+      renderedBox.innerHTML = renderRich(val);
       scheduleTypeset(renderedBox);
     }
   }
