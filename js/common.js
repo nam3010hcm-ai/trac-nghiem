@@ -354,8 +354,16 @@ export function formatAnswer(q, userAns, showCorrect=false){
 export function renderRich(txt) {
     if (!txt) return '';
     
-    // 1. Tự mã hóa HTML an toàn
-    let s = String(txt)
+    // 0. Bảo vệ các khối công thức Toán ($...$, $$...$$, \(...\), \[...\]) không bị escape & / < / >
+    const mathTokens = [];
+    let textWithPlaceholders = String(txt).replace(/(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\))/g, (match) => {
+      const idx = mathTokens.length;
+      mathTokens.push(match);
+      return `___MATH_TOKEN_${idx}___`;
+    });
+
+    // 1. Tự mã hóa HTML an toàn cho phần văn bản thông thường
+    let s = textWithPlaceholders
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -370,8 +378,16 @@ export function renderRich(txt) {
     // 3. Mở khóa thẻ SPAN đổi màu
     s = s.replace(/&lt;span style=(&#39;|&quot;|&apos;|"|')color:\s*([a-zA-Z0-9#]+)\1&gt;/gi, '<span style="color:$2 !important;">');
     s = s.replace(/&lt;\/span&gt;/gi, '</span>');
+
+    // 4. Mở khóa thẻ IMG hình ảnh
+    s = s.replace(/&lt;img([^&gt;]*)&gt;/gi, '<img$1>');
     
-    // 4. Trả lại thẻ xuống dòng
+    // 5. Khôi phục nguyên vẹn các khối công thức Toán học chuẩn LaTeX
+    s = s.replace(/___MATH_TOKEN_(\d+)___/g, (_, idx) => {
+      return mathTokens[parseInt(idx, 10)] || '';
+    });
+    
+    // 6. Trả lại thẻ xuống dòng
     return s.replace(/\n/g, '<br>');
 }
 

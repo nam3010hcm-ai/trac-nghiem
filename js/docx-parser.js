@@ -164,27 +164,25 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
     buf = stream.subarray(28);
   }
 
-  // 3. Tìm vị trí bắt đầu của bản ghi phương trình (LINE tag [1, 0, ...])
-  let startPos = 0;
-  for (let i = 0; i < buf.length - 8; i++) {
-    if (buf[i] === 0x44 && buf[i+1] === 0x53 && buf[i+2] === 0x4D && buf[i+3] === 0x54) { // "DSMT"
-      startPos = i + 10;
+  // 3. Tìm vị trí bắt đầu thực sự của phương trình toán học
+  let rootPos = -1;
+  for (let i = 0; i < buf.length - 3; i++) {
+    if (buf[i] === 10 && buf[i+1] === 1 && buf[i+2] === 0) {
+      rootPos = i + 1; // Nhảy qua tag 10 FULL size
       break;
     }
   }
-
-  let rootLinePos = -1;
-  for (let i = startPos; i < buf.length - 4; i++) {
-    if (buf[i] === 1 && buf[i+1] === 0) {
-      if ([2, 3, 5, 11, 12, 1, 4].includes(buf[i+2])) {
-        rootLinePos = i;
+  if (rootPos === -1) {
+    for (let i = 0; i < buf.length - 3; i++) {
+      if (buf[i] === 1 && buf[i+1] === 0 && [2, 3, 5, 11, 12].includes(buf[i+2])) {
+        rootPos = i;
         break;
       }
     }
   }
-  if (rootLinePos === -1) rootLinePos = startPos;
+  if (rootPos === -1) rootPos = 0;
 
-  let offset = rootLinePos;
+  let offset = rootPos;
 
   function readRecord() {
     if (offset >= buf.length) return '';
@@ -195,21 +193,23 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
     if (tag === 1) {
       const lineOpt = buf[offset++];
       if (lineOpt & 0x08) offset += 2; // nudge
-      let content = '';
+      let items = [];
       while (offset < buf.length) {
         if (buf[offset] === 0) {
-          offset++; // consume END tag
+          offset++; // consume END tag của LINE
           break;
         }
-        content += readRecord();
+        const val = readRecord();
+        if (val) items.push(val);
       }
-      return content;
+      return items.join('');
     }
 
     // 2: CHAR (0x02)
     if (tag === 2) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2; // nudge
+      if (opt & 0x04) offset += 2; // custom space
       const typeface = buf[offset++];
       let code = buf[offset++];
       if (opt & 0x02) { // 16-bit unicode
@@ -232,52 +232,69 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
     if (tag === 3) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2; // nudge
+      if (opt & 0x04) offset += 2; // custom space
       const tmplCode = buf[offset++];
       let variation = buf[offset++];
       offset++; // MT5 2nd byte of variation
       const tmplOpt = buf[offset++];
 
-      // Phân số (Fractions: tmplCode 0, 1)
-      if (tmplCode === 0 || tmplCode === 1) {
+      // Phân số (Fractions: tmplCode 0, 1, 11, 12, 13)
+      if (tmplCode === 0 || tmplCode === 1 || tmplCode === 11 || tmplCode === 12 || tmplCode === 13) {
         const num = readRecord();
         const den = readRecord();
-        if (offset < buf.length && buf[offset] === 0) offset++;
         return `\\frac{${num || '1'}}{${den || '1'}}`;
       }
-      // Căn thức (tmplCode 2)
-      if (tmplCode === 2) {
+      // Căn bậc 2 (tmplCode 2, 19)
+      if (tmplCode === 2 || tmplCode === 19) {
         const body = readRecord();
-        if (offset < buf.length && buf[offset] === 0) offset++;
         return `\\sqrt{${body}}`;
       }
-      // Ma trận đóng ngoặc vuông (tmplCode 3)
-      if (tmplCode === 3) {
+      // Căn bậc n (tmplCode 20)
+      if (tmplCode === 20) {
+        const deg = readRecord();
+        const body = readRecord();
+        return `\\sqrt[${deg}]{${body}}`;
+      }
+      // Ma trận đóng ngoặc vuông (tmplCode 3, 5)
+      if (tmplCode === 3 || tmplCode === 5) {
         const content = readRecord();
-        if (offset < buf.length && buf[offset] === 0) offset++;
         if (content.includes('\\begin{bmatrix}') || content.includes('\\begin{matrix}')) {
           return content;
         }
         return `\\left[${content}\\right]`;
       }
-      // Dấu ngoặc tròn, nhọn, trị tuyệt đối (tmplCode 4 đến 10)
-      if (tmplCode >= 4 && tmplCode <= 10) {
+      // Dấu ngoặc tròn (tmplCode 4)
+      if (tmplCode === 4) {
         const content = readRecord();
-        if (offset < buf.length && buf[offset] === 0) offset++;
-        if (tmplCode === 4) return `\\left(${content}\\right)`;
-        if (tmplCode === 5) return `\\left[${content}\\right]`;
-        if (tmplCode === 6) return `\\left\\{${content}\\right\\}`;
-        if (tmplCode === 7) return `\\left|${content}\\right|`;
         return `\\left(${content}\\right)`;
       }
-      // Tích phân & Tổng
-      if (tmplCode >= 11 && tmplCode <= 16) {
-        const body = readRecord();
-        if (offset < buf.length && buf[offset] === 0) offset++;
-        return `\\int{${body}}`;
+      // Dấu ngoặc nhọn (tmplCode 6)
+      if (tmplCode === 6) {
+        const content = readRecord();
+        return `\\left\\{${content}\\right\\}`;
       }
-      const body = readRecord();
-      if (offset < buf.length && buf[offset] === 0) offset++;
-      return body;
+      // Trị tuyệt đối (tmplCode 7)
+      if (tmplCode === 7) {
+        const content = readRecord();
+        return `\\left|${content}\\right|`;
+      }
+      // Chỉ số dưới (tmplCode 27)
+      if (tmplCode === 27) {
+        const body = readRecord();
+        return body ? `_{${body}}` : '';
+      }
+      // Chỉ số trên / Lũy thừa (tmplCode 28)
+      if (tmplCode === 28) {
+        const body = readRecord();
+        return body ? `^{${body}}` : '';
+      }
+      // Cả chỉ số dưới và trên (tmplCode 29)
+      if (tmplCode === 29) {
+        const sub = readRecord();
+        const sup = readRecord();
+        return `_{${sub}}^{${sup}}`;
+      }
+      return readRecord();
     }
 
     // 4: PILE (0x04)
@@ -285,12 +302,12 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2;
       offset += 2; // halign, valign
-      let res = '';
+      let items = [];
       while (offset < buf.length && buf[offset] !== 0) {
-        res += readRecord();
+        items.push(readRecord());
       }
       if (offset < buf.length && buf[offset] === 0) offset++;
-      return res;
+      return items.join('');
     }
 
     // 5: MATRIX (0x05)
@@ -302,6 +319,8 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
       const cols = buf[offset++];
       const h = buf[offset++];
       const v = buf[offset++];
+      if (offset < buf.length && buf[offset] === 0) offset++;
+
       const matrixRows = [];
       for (let r = 0; r < rows; r++) {
         const rowCells = [];
@@ -319,8 +338,7 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2;
       const body = readRecord();
-      if (offset < buf.length && buf[offset] === 0) offset++;
-      return `_{${body}}`;
+      return body ? `_{${body}}` : '';
     }
 
     // 12 & 14: SUP (Chỉ số trên / Lũy thừa)
@@ -328,8 +346,7 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2;
       const body = readRecord();
-      if (offset < buf.length && buf[offset] === 0) offset++;
-      return `^{${body}}`;
+      return body ? `^{${body}}` : '';
     }
 
     // 6: EMBELL (Dấu phẩy, mũ, vector)
@@ -347,12 +364,14 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
     return '';
   }
 
-  let result = '';
+  let out = [];
   while (offset < buf.length) {
-    result += readRecord();
+    const item = readRecord();
+    if (item) out.push(item);
   }
 
-  let cleaned = result.trim();
+  let cleaned = out.join('').trim();
+  cleaned = cleaned.replace(/\^{}/g, '').replace(/_{}/g, '').replace(/\\left\[\\right\]/g, '');
   if (cleaned) {
     return `$${cleaned}$`;
   }
