@@ -27,94 +27,171 @@ export async function loadJsZip() {
 }
 
 // ==============================================================
-// 2. BỘ GIẢI MÃ MATHTYPE (MTEF / WMF / OLE BINARY) SANG LATEX CHUẨN
+// 2. BỘ TRÍCH XUẤT STREAM "EQUATION NATIVE" TỪ TỆP OLE COMPOUND FILE
 // ==============================================================
-export function parseMathTypeBinaryToLatex(buf) {
-  if (!buf || buf.length < 10) return '';
+export function extractOleMiniFatStream(oleBytes, targetStreamName = "Equation Native") {
+  if (!oleBytes || oleBytes.length < 512) return oleBytes;
+  
+  // Kiểm tra chữ ký OLE Compound File Header: 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1
+  if (oleBytes[0] !== 0xD0 || oleBytes[1] !== 0xCF || oleBytes[2] !== 0x11 || oleBytes[3] !== 0xE0) {
+    return oleBytes;
+  }
 
-  // 1. Tìm vị trí Header MTEF
-  let mtefStart = -1;
-  let isV5 = true;
+  try {
+    const view = new DataView(oleBytes.buffer, oleBytes.byteOffset, oleBytes.byteLength);
+    const secSize = 1 << view.getUint16(30, true); // Thường là 512 byte
+    const miniSecSize = 1 << view.getUint16(32, true); // 64 byte
+    const firstDirSec = view.getUint32(48, true);
+    const firstMiniFatSec = view.getUint32(60, true);
+    const miniStreamCutoff = view.getUint32(56, true); // 4096 byte
 
-  for (let i = 0; i < buf.length - 6; i++) {
-    // Header chuẩn 28 byte của MathType: byte 0 là 0x1C (28), byte 1 là version (5 hoặc 3)
-    if (buf[i] === 0x1C && (buf[i+1] === 5 || buf[i+1] === 3 || buf[i+1] === 2)) {
-      mtefStart = i + 28;
-      isV5 = (buf[i+1] === 5);
-      break;
-    }
-    // Stream MTEF trực tiếp: [5, 1, 1, ...] hoặc [3, 1, 1, ...]
-    if ((buf[i] === 5 || buf[i] === 3 || buf[i] === 2) && buf[i+1] === 1 && buf[i+2] === 1 && (buf[i+3] >= 1 && buf[i+3] <= 9)) {
-      mtefStart = i + 5;
-      isV5 = (buf[i] === 5);
-      break;
-    }
-    // Tìm kiếm chuỗi "MathType"
-    if (buf[i] === 0x4D && buf[i+1] === 0x61 && buf[i+2] === 0x74 && buf[i+3] === 0x68 && buf[i+4] === 0x54 && buf[i+5] === 0x79) {
-      for (let j = i; j < Math.min(buf.length - 4, i + 64); j++) {
-        if (buf[j] === 0x1C && (buf[j+1] === 5 || buf[j+1] === 3 || buf[j+1] === 2)) {
-          mtefStart = j + 28;
-          isV5 = (buf[j+1] === 5);
-          break;
-        }
-        if ((buf[j] === 5 || buf[j] === 3 || buf[j] === 2) && buf[j+1] === 1 && buf[j+2] === 1) {
-          mtefStart = j + 5;
-          isV5 = (buf[j] === 5);
-          break;
+    // 1. Đọc bảng FAT chính
+    const fat = [];
+    for (let i = 0; i < 109; i++) {
+      const sid = view.getUint32(76 + i * 4, true);
+      if (sid < 0xFFFFFFFD) {
+        const off = (sid + 1) * secSize;
+        const numEntries = secSize / 4;
+        for (let j = 0; j < numEntries; j++) {
+          fat.push(view.getUint32(off + j * 4, true));
         }
       }
-      if (mtefStart !== -1) break;
+    }
+
+    // 2. Đọc các Directory Entries
+    let dirSid = firstDirSec;
+    const dirBytes = [];
+    while (dirSid < 0xFFFFFFFD && dirSid < fat.length) {
+      const off = (dirSid + 1) * secSize;
+      for (let b = 0; b < secSize; b++) {
+        dirBytes.push(oleBytes[off + b]);
+      }
+      dirSid = fat[dirSid];
+    }
+    const dirU8 = new Uint8Array(dirBytes);
+    const dirView = new DataView(dirU8.buffer);
+
+    // Root Entry là Directory Entry 0
+    const rootStartSec = dirView.getUint32(116, true);
+    const rootStreamLen = dirView.getUint32(120, true);
+
+    // Đọc Mini Stream container từ FAT chính
+    const miniContainerBytes = [];
+    let curSid = rootStartSec;
+    while (curSid < 0xFFFFFFFD && curSid < fat.length) {
+      const off = (curSid + 1) * secSize;
+      for (let b = 0; b < secSize; b++) {
+        miniContainerBytes.push(oleBytes[off + b]);
+      }
+      curSid = fat[curSid];
+    }
+    const miniContainer = new Uint8Array(miniContainerBytes.slice(0, rootStreamLen));
+
+    // Đọc Mini FAT từ FAT chính
+    const minifat = [];
+    let mfSid = firstMiniFatSec;
+    while (mfSid < 0xFFFFFFFD && mfSid < fat.length) {
+      const off = (mfSid + 1) * secSize;
+      const numEntries = secSize / 4;
+      for (let j = 0; j < numEntries; j++) {
+        minifat.push(view.getUint32(off + j * 4, true));
+      }
+      mfSid = fat[mfSid];
+    }
+
+    // 3. Tìm Directory Entry của "Equation Native"
+    for (let i = 128; i < dirU8.length; i += 128) {
+      const nameLen = dirView.getUint16(i + 64, true);
+      if (nameLen > 0) {
+        let name = '';
+        for (let c = 0; c < nameLen - 2; c += 2) {
+          name += String.fromCharCode(dirView.getUint16(i + c, true));
+        }
+        const startSec = dirView.getUint32(i + 116, true);
+        const streamLen = dirView.getUint32(i + 120, true);
+
+        if (name.includes(targetStreamName) || name.includes("Equation") || name.includes("Native")) {
+          if (streamLen < miniStreamCutoff && miniContainer.length > 0) {
+            // Đọc qua Mini FAT (Mini Stream)
+            const streamBytes = [];
+            let curMfSid = startSec;
+            while (curMfSid < 0xFFFFFFFD && curMfSid < minifat.length) {
+              const off = curMfSid * miniSecSize;
+              for (let b = 0; b < miniSecSize; b++) {
+                if (off + b < miniContainer.length) {
+                  streamBytes.push(miniContainer[off + b]);
+                }
+              }
+              curMfSid = minifat[curMfSid];
+            }
+            return new Uint8Array(streamBytes.slice(0, streamLen));
+          } else {
+            // Đọc qua FAT chính
+            const streamBytes = [];
+            let curRegSid = startSec;
+            while (curRegSid < 0xFFFFFFFD && curRegSid < fat.length) {
+              const off = (curRegSid + 1) * secSize;
+              for (let b = 0; b < secSize; b++) {
+                streamBytes.push(oleBytes[off + b]);
+              }
+              curRegSid = fat[curRegSid];
+            }
+            return new Uint8Array(streamBytes.slice(0, streamLen));
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Lỗi phân tích OLE CFB MiniFAT:", e);
+  }
+
+  return oleBytes;
+}
+
+// ==============================================================
+// 3. BỘ GIẢI MÃ MATHTYPE (MTEF / WMF / OLE BINARY) SANG LATEX CHUẨN
+// ==============================================================
+export function parseMathTypeBinaryToLatex(rawBuf) {
+  if (!rawBuf || rawBuf.length < 10) return '';
+
+  // 1. Trích xuất luồng nhị phân liên tục từ tệp OLE
+  const stream = extractOleMiniFatStream(rawBuf);
+  if (!stream || stream.length < 10) return '';
+
+  // 2. Cắt bỏ Header 28 byte của MathType nếu có
+  let buf = stream;
+  if (stream[0] === 28 && stream[1] === 0) {
+    buf = stream.subarray(28);
+  }
+
+  // 3. Tìm vị trí bắt đầu của bản ghi phương trình (LINE tag [1, 0, ...])
+  let startPos = 0;
+  for (let i = 0; i < buf.length - 8; i++) {
+    if (buf[i] === 0x44 && buf[i+1] === 0x53 && buf[i+2] === 0x4D && buf[i+3] === 0x54) { // "DSMT"
+      startPos = i + 10;
+      break;
     }
   }
 
-  if (mtefStart === -1 || mtefStart >= buf.length) {
-    return '';
+  let rootLinePos = -1;
+  for (let i = startPos; i < buf.length - 4; i++) {
+    if (buf[i] === 1 && buf[i+1] === 0) {
+      if ([2, 3, 5, 11, 12, 1, 4].includes(buf[i+2])) {
+        rootLinePos = i;
+        break;
+      }
+    }
   }
+  if (rootLinePos === -1) rootLinePos = startPos;
 
-  let offset = mtefStart;
+  let offset = rootLinePos;
 
   function readRecord() {
     if (offset >= buf.length) return '';
     const tag = buf[offset++];
     if (tag === 0) return ''; // END tag
 
-    // Tag 15: FONT_DEF
-    if (tag === 15 || tag === 0x0F) {
-      const fontIdx = buf[offset++];
-      // Đọc font_name kết thúc bằng \0
-      while (offset < buf.length && buf[offset++] !== 0);
-      // Đọc enc_name kết thúc bằng \0
-      while (offset < buf.length && buf[offset++] !== 0);
-      if (offset < buf.length) offset++; // font_style
-      return readRecord();
-    }
-
-    // Tag 8: FONT_STYLE_DEF
-    if (tag === 8 || tag === 0x08) {
-      const fontStyleIdx = buf[offset++];
-      while (offset < buf.length && buf[offset++] !== 0);
-      if (offset < buf.length) offset++;
-      return readRecord();
-    }
-
-    // Tag 9: SIZE
-    if (tag === 9 || tag === 0x09) {
-      offset += 3; // size_idx (1) + size_val (2)
-      return readRecord();
-    }
-
-    // Tag 10: FULL
-    if (tag === 10 || tag === 0x0A) {
-      return readRecord();
-    }
-
-    // Tag 16: COLOR_DEF
-    if (tag === 16 || tag === 0x10) {
-      offset += 4;
-      return readRecord();
-    }
-
-    // Tag 1: LINE (0x01)
+    // 1: LINE (0x01)
     if (tag === 1) {
       const lineOpt = buf[offset++];
       if (lineOpt & 0x08) offset += 2; // nudge
@@ -129,7 +206,7 @@ export function parseMathTypeBinaryToLatex(buf) {
       return content;
     }
 
-    // Tag 2: CHAR (0x02)
+    // 2: CHAR (0x02)
     if (tag === 2) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2; // nudge
@@ -138,38 +215,54 @@ export function parseMathTypeBinaryToLatex(buf) {
       if (opt & 0x02) { // 16-bit unicode
         code = code | (buf[offset++] << 8);
       }
+      if (offset < buf.length && buf[offset] === 0) {
+        offset++;
+      }
       let ch = String.fromCharCode(code);
       if (ch === '´') return ' \\times ';
       if (ch === '¹') return ' \\neq ';
       if (ch === '£') return ' \\le ';
       if (ch === '³') return ' \\ge ';
-      if (ch === '–' || ch === '—') return '-';
+      if (ch === '–' || ch === '—' || ch === '−') return '-';
+      if (ch === '[' || ch === ']') return ''; // Bỏ qua dấu ngoặc đơn nếu lồng trong ma trận
       return ch;
     }
 
-    // Tag 3: TMPL (0x03)
+    // 3: TMPL (0x03)
     if (tag === 3) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2; // nudge
       const tmplCode = buf[offset++];
       let variation = buf[offset++];
-      if (isV5) offset++; // variation là 2 byte trong MTEF v5
+      offset++; // MT5 2nd byte of variation
       const tmplOpt = buf[offset++];
 
-      // Phân số (Fractions: tmplCode 0, 1, 2)
-      if (tmplCode >= 0 && tmplCode <= 2) {
+      // Phân số (Fractions: tmplCode 0, 1)
+      if (tmplCode === 0 || tmplCode === 1) {
         const num = readRecord();
         const den = readRecord();
+        if (offset < buf.length && buf[offset] === 0) offset++;
         return `\\frac{${num || '1'}}{${den || '1'}}`;
       }
-      // Căn thức (tmplCode 3)
-      if (tmplCode === 3) {
+      // Căn thức (tmplCode 2)
+      if (tmplCode === 2) {
         const body = readRecord();
+        if (offset < buf.length && buf[offset] === 0) offset++;
         return `\\sqrt{${body}}`;
       }
-      // Dấu ngoặc, ma trận, định thức (tmplCode 4 đến 10)
+      // Ma trận đóng ngoặc vuông (tmplCode 3)
+      if (tmplCode === 3) {
+        const content = readRecord();
+        if (offset < buf.length && buf[offset] === 0) offset++;
+        if (content.includes('\\begin{bmatrix}') || content.includes('\\begin{matrix}')) {
+          return content;
+        }
+        return `\\left[${content}\\right]`;
+      }
+      // Dấu ngoặc tròn, nhọn, trị tuyệt đối (tmplCode 4 đến 10)
       if (tmplCode >= 4 && tmplCode <= 10) {
         const content = readRecord();
+        if (offset < buf.length && buf[offset] === 0) offset++;
         if (tmplCode === 4) return `\\left(${content}\\right)`;
         if (tmplCode === 5) return `\\left[${content}\\right]`;
         if (tmplCode === 6) return `\\left\\{${content}\\right\\}`;
@@ -179,12 +272,15 @@ export function parseMathTypeBinaryToLatex(buf) {
       // Tích phân & Tổng
       if (tmplCode >= 11 && tmplCode <= 16) {
         const body = readRecord();
+        if (offset < buf.length && buf[offset] === 0) offset++;
         return `\\int{${body}}`;
       }
-      return readRecord();
+      const body = readRecord();
+      if (offset < buf.length && buf[offset] === 0) offset++;
+      return body;
     }
 
-    // Tag 4: PILE (0x04)
+    // 4: PILE (0x04)
     if (tag === 4) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2;
@@ -193,54 +289,58 @@ export function parseMathTypeBinaryToLatex(buf) {
       while (offset < buf.length && buf[offset] !== 0) {
         res += readRecord();
       }
-      if (buf[offset] === 0) offset++;
+      if (offset < buf.length && buf[offset] === 0) offset++;
       return res;
     }
 
-    // Tag 5: MATRIX (0x05)
+    // 5: MATRIX (0x05)
     if (tag === 5) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2;
+      else offset += 3;
       const rows = buf[offset++];
       const cols = buf[offset++];
-      offset += 2; // halign, valign
-      offset += Math.ceil((rows - 1) * 2 / 8);
-      offset += Math.ceil((cols - 1) * 2 / 8);
-      let cells = [];
+      const h = buf[offset++];
+      const v = buf[offset++];
+      const matrixRows = [];
       for (let r = 0; r < rows; r++) {
-        let row = [];
+        const rowCells = [];
         for (let c = 0; c < cols; c++) {
-          row.push(readRecord());
+          rowCells.push(readRecord().trim());
         }
-        cells.push(row.join(' & '));
+        matrixRows.push(rowCells.join(' & '));
       }
-      if (buf[offset] === 0) offset++;
-      return `\\begin{bmatrix} ${cells.join(' \\\\ ')} \\end{bmatrix}`;
+      if (offset < buf.length && buf[offset] === 0) offset++;
+      return `\\begin{bmatrix} ${matrixRows.join(' \\\\ ')} \\end{bmatrix}`;
     }
 
-    // Tag 11 & Tag 13: SUB (Chỉ số dưới)
-    if (tag === 11 || tag === 0x0B || tag === 13 || tag === 0x0D) {
+    // 11 & 13: SUB (Chỉ số dưới)
+    if (tag === 11 || tag === 13) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2;
-      return `_{${readRecord()}}`;
+      const body = readRecord();
+      if (offset < buf.length && buf[offset] === 0) offset++;
+      return `_{${body}}`;
     }
 
-    // Tag 12 & Tag 14: SUP (Chỉ số trên / Lũy thừa)
-    if (tag === 12 || tag === 0x0C || tag === 14 || tag === 0x0E) {
+    // 12 & 14: SUP (Chỉ số trên / Lũy thừa)
+    if (tag === 12 || tag === 14) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2;
-      return `^{${readRecord()}}`;
+      const body = readRecord();
+      if (offset < buf.length && buf[offset] === 0) offset++;
+      return `^{${body}}`;
     }
 
-    // Tag 6: EMBELL (Dấu phẩy, mũ, vector)
-    if (tag === 6 || tag === 0x06) {
+    // 6: EMBELL (Dấu phẩy, mũ, vector)
+    if (tag === 6) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2;
-      const embCode = buf[offset++];
-      if (embCode === 1) return "'"; // prime
-      if (embCode === 2) return "''";
-      if (embCode === 3) return "'''";
-      if (embCode === 4) return "^*";
+      const emb = buf[offset++];
+      if (emb === 1) return "'";
+      if (emb === 2) return "''";
+      if (emb === 3) return "'''";
+      if (emb === 4) return "^*";
       return '';
     }
 
@@ -260,7 +360,7 @@ export function parseMathTypeBinaryToLatex(buf) {
 }
 
 // ==============================================================
-// 3. BỘ CHUYỂN ĐỔI CÔNG THỨC TOÁN OMML (WORD EQUATION) SANG LATEX
+// 4. BỘ CHUYỂN ĐỔI CÔNG THỨC TOÁN OMML (WORD EQUATION) SANG LATEX
 // ==============================================================
 export function ommlNodeToLatex(node) {
   if (!node) return '';
@@ -423,7 +523,7 @@ export function ommlNodeToLatex(node) {
 }
 
 // ==============================================================
-// 4. THUẬT TOÁN BÓC TÁCH FILE WORD (.DOCX) TOÀN DIỆN
+// 5. THUẬT TOÁN BÓC TÁCH FILE WORD (.DOCX) TOÀN DIỆN
 // ==============================================================
 export async function parseDocxDocument(file, onProgress = null) {
   if (typeof onProgress === 'function') onProgress(15, "Đang giải nén cấu trúc file Word (.docx)...");
@@ -451,16 +551,16 @@ export async function parseDocxDocument(file, onProgress = null) {
     }
   }
 
-  // 2. Nạp và chuyển đổi toàn bộ MathType WMF / OLE / Images thành LaTeX
-  if (typeof onProgress === 'function') onProgress(40, "Đang giải mã công thức MathType & hình ảnh sang LaTeX...");
+  // 2. Nạp và chuyển đổi toàn bộ MathType OLE / WMF sang LaTeX
+  if (typeof onProgress === 'function') onProgress(45, "Đang giải mã toàn bộ công thức MathType OLE sang LaTeX...");
   const mediaCache = {};
   for (const fileName of Object.keys(zip.files)) {
-    if (fileName.startsWith('word/media/') || fileName.startsWith('word/embeddings/')) {
+    if (fileName.startsWith('word/embeddings/') || fileName.startsWith('word/media/')) {
       try {
         const ext = fileName.split('.').pop().toLowerCase();
         
-        // Nếu là file WMF hoặc file nhúng OLE MathType (.bin, .wmf, .emf)
-        if (ext === 'wmf' || ext === 'emf' || ext === 'bin') {
+        // Nếu là file nhúng OLE MathType (.bin) hoặc WMF (.wmf, .emf)
+        if (ext === 'bin' || ext === 'wmf' || ext === 'emf') {
           const uint8 = await zip.file(fileName).async('uint8array');
           const latexMath = parseMathTypeBinaryToLatex(uint8);
           if (latexMath) {
@@ -486,7 +586,7 @@ export async function parseDocxDocument(file, onProgress = null) {
   }
 
   // 3. Phân tích nội dung XML của document.xml
-  if (typeof onProgress === 'function') onProgress(60, "Đang phân tích cấu trúc văn bản và thẻ Toán học OMML...");
+  if (typeof onProgress === 'function') onProgress(65, "Đang phân tích cấu trúc văn bản và thẻ Toán học...");
   const xmlContent = await docXmlFile.async("string");
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlContent, "text/xml");
@@ -503,7 +603,6 @@ export async function parseDocxDocument(file, onProgress = null) {
           rawLines.push(pResult);
         }
       } else if (elName === 'tbl' || elName === 'w:tbl') {
-        // Xử lý bảng trong Word
         const rows = el.getElementsByTagName('w:tr');
         for (let r = 0; r < rows.length; r++) {
           const cells = rows[r].getElementsByTagName('w:tc');
@@ -521,7 +620,7 @@ export async function parseDocxDocument(file, onProgress = null) {
     }
   }
 
-  if (typeof onProgress === 'function') onProgress(80, "Đang bóc tách danh sách câu hỏi, 4 phương án và đáp án đúng...");
+  if (typeof onProgress === 'function') onProgress(85, "Đang bóc tách danh sách 30 câu hỏi và phương án...");
   const questions = parseQuestionsFromDocxLines(rawLines);
 
   if (!questions.length) {
@@ -589,7 +688,7 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
       const oleData = node.querySelector('OLEObject, o\\:OLEObject');
       const imgData = node.querySelector('imagedata, v\\:imagedata');
 
-      // ƯU TIÊN 1: Kiểm tra file OLE Object (.bin) trước vì nó chứa 100% công thức MathType gốc
+      // ƯU TIÊN 1: File OLE Object (.bin) trong word/embeddings/
       let media = null;
       if (oleData) {
         const oleRId = oleData.getAttribute('r:id') || oleData.getAttribute('id');
@@ -598,7 +697,7 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
         }
       }
 
-      // ƯU TIÊN 2: Nếu OLE chưa có, kiểm tra file imagedata (.wmf, .png)
+      // ƯU TIÊN 2: File imagedata (.wmf, .png)
       if (!media && imgData) {
         const imgRId = imgData.getAttribute('r:id') || imgData.getAttribute('id') || imgData.getAttribute('r:href');
         if (imgRId && relsMap[imgRId] && mediaCache[relsMap[imgRId]] && mediaCache[relsMap[imgRId]].content) {
@@ -822,7 +921,6 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
       if (detectedAns === -1) {
         for (const line of allLines) {
           if (line.hasRed) {
-            // Kiểm tra xem dòng đỏ có chứa ký hiệu phương án này (VD: "b." hoặc "B.")
             const hasOptionLabel = line.runs && line.runs.some(r => r.isRed && (r.text.includes(cur.rawChar + '.') || r.text.includes(cur.letter + '.')));
             if (hasOptionLabel || line.text.includes(cur.rawChar + '.') || line.text.includes(cur.letter + '.') || (optText && optText.length >= 2 && line.text.includes(optText))) {
               detectedAns = cur.optIdx;
