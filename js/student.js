@@ -310,6 +310,7 @@ export async function startPracticeExam() {
   startTimer();
   showStudentBadge();
   showScreen('sc-quiz');
+  renderQuizTopbar();
   renderPart();
 }
 
@@ -346,6 +347,8 @@ window.populatePracticeCategories = populatePracticeCategories;
 window.populatePracticeExamSelect = populatePracticeExamSelect;
 window.updatePracticeExamDesc = updatePracticeExamDesc;
 window.startPracticeExam = startPracticeExam;
+window.jumpToQuestion = jumpToQuestion;
+window.toggleQuestionMatrix = toggleQuestionMatrix;
 
 function showStudentBadge(){
   const s = qState.student;
@@ -453,7 +456,7 @@ async function startExam(){
       mode: 'exam'
   };
   
-  persist(); startTimer(); showStudentBadge(); showScreen('sc-quiz'); renderPart();
+  persist(); startTimer(); showStudentBadge(); showScreen('sc-quiz'); renderQuizTopbar(); renderPart();
 }
 
 function startTimer(){
@@ -475,6 +478,195 @@ function startTimer(){
   }, 1000);
 }
 
+// KIỂM TRA MỘT CÂU HỎI ĐÃ ĐƯỢC LÀM (TRẢ LỜI) HAY CHƯA
+export function isQuestionAnswered(q, gIdx, answers) {
+  if (!answers) return false;
+  const ans = answers[gIdx];
+  if (ans === undefined || ans === null) return false;
+  const type = q ? (q.type || 'mcq_single') : 'mcq_single';
+
+  if (type === 'mcq_single') {
+    return typeof ans === 'number' || (typeof ans === 'string' && ans.trim() !== '');
+  }
+  if (type === 'mcq_multi') {
+    return Array.isArray(ans) && ans.length > 0;
+  }
+  if (type === 'fill_blank' || type === 'drag_drop') {
+    if (Array.isArray(ans)) {
+      return ans.some(v => v !== undefined && v !== null && String(v).trim() !== '');
+    }
+    return false;
+  }
+  if (type === 'matching') {
+    if (typeof ans === 'object' && ans !== null) {
+      return Object.keys(ans).length > 0;
+    }
+    return false;
+  }
+  if (type === 'essay') {
+    return typeof ans === 'string' && ans.trim().length > 0;
+  }
+  return Boolean(ans);
+}
+
+// RENDER THANH DẢI ĐIỀU HƯỚNG CÂU HỎI TRÊN TOPBAR
+export function renderQuizTopbar() {
+  const strip = $('quiz-nav-strip');
+  if (!strip || !qState.qs) return;
+
+  strip.innerHTML = '';
+  qState.qs.forEach((q, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'q-nav-btn';
+    btn.id = `q-nav-btn-${i}`;
+    btn.textContent = i + 1;
+    btn.title = `Câu ${i + 1} (${q.subcat || 'Part'})`;
+
+    btn.addEventListener('click', () => {
+      jumpToQuestion(i);
+    });
+
+    strip.appendChild(btn);
+  });
+
+  updateQuizStats();
+}
+
+// CẬP NHẬT SỐ LIỆU THỐNG KÊ (TỔNG CÂU, ĐÃ LÀM, CHƯA LÀM) & TRẠNG THÁI NÚT CÂU HỎI
+export function updateQuizStats() {
+  if (!qState.qs) return;
+  const total = qState.qs.length;
+  let answeredCount = 0;
+
+  const currentPart = qState.parts ? qState.parts[qState.partIdx] : null;
+
+  qState.qs.forEach((q, i) => {
+    const answered = isQuestionAnswered(q, i, qState.answers);
+    if (answered) answeredCount++;
+
+    const btn = $(`q-nav-btn-${i}`);
+    if (btn) {
+      btn.classList.toggle('answered', answered);
+      btn.classList.toggle('unanswered', !answered);
+
+      const isInCurrentPart = currentPart && currentPart.questions.some(pq => pq.globalIdx === i);
+      btn.classList.toggle('in-current-part', Boolean(isInCurrentPart));
+    }
+  });
+
+  const unansweredCount = total - answeredCount;
+
+  if ($('quiz-stat-total')) {
+    $('quiz-stat-total').innerHTML = `📝 Tổng: <b>${total}</b> câu`;
+  }
+  if ($('quiz-stat-answered')) {
+    $('quiz-stat-answered').innerHTML = `✅ Đã làm: <b>${answeredCount}</b>/${total}`;
+  }
+  if ($('quiz-stat-unanswered')) {
+    $('quiz-stat-unanswered').innerHTML = `⏳ Chưa làm: <b>${unansweredCount}</b>`;
+  }
+
+  // Cập nhật thanh tiến độ % câu đã trả lời
+  if ($('q-pbar')) {
+    const pct = total > 0 ? Math.round((answeredCount / total) * 100) : 0;
+    $('q-pbar').style.width = `${pct}%`;
+  }
+
+  // Cập nhật lại Modal Ma Trận nếu đang mở
+  renderQuestionMatrixBody();
+}
+
+// NHẢY TỚI CÂU HỎI BẤT KỲ ĐỂ XEM VÀ CHỌN LẠI ĐÁP ÁN
+export function jumpToQuestion(gIdx) {
+  if (!qState.parts || !qState.qs) return;
+
+  // 1. Xác định Part chứa câu hỏi
+  let targetPartIdx = -1;
+  for (let p = 0; p < qState.parts.length; p++) {
+    if (qState.parts[p].questions.some(q => q.globalIdx === gIdx)) {
+      targetPartIdx = p;
+      break;
+    }
+  }
+
+  if (targetPartIdx === -1) return;
+
+  // Đóng modal ma trận nếu đang mở
+  toggleQuestionMatrix(false);
+
+  const switchPartNeeded = (targetPartIdx !== qState.partIdx);
+  if (switchPartNeeded) {
+    qState.partIdx = targetPartIdx;
+    persist();
+    renderPart();
+  } else {
+    updateQuizStats();
+  }
+
+  // Highlight nút câu hỏi trên Topbar và cuộn vào giữa dải
+  document.querySelectorAll('.q-nav-btn').forEach(b => b.classList.remove('active-target'));
+  const navBtn = $(`q-nav-btn-${gIdx}`);
+  if (navBtn) {
+    navBtn.classList.add('active-target');
+    navBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }
+
+  // 2. Cuộn màn hình mượt mà tới thẻ câu hỏi đích
+  setTimeout(() => {
+    const cardEl = $(`q-card-${gIdx}`);
+    if (cardEl) {
+      cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      cardEl.classList.remove('q-card-highlighted');
+      void cardEl.offsetWidth; // trigger reflow
+      cardEl.classList.add('q-card-highlighted');
+    }
+  }, switchPartNeeded ? 120 : 30);
+}
+
+// ĐIỀU KHIỂN BẢNG MA TRẬN CÂU HỎI TOÀN ĐỀ THI
+export function toggleQuestionMatrix(show) {
+  const modal = $('quiz-matrix-modal');
+  if (!modal) return;
+  if (show) {
+    renderQuestionMatrixBody();
+    modal.classList.add('open');
+  } else {
+    modal.classList.remove('open');
+  }
+}
+
+export function renderQuestionMatrixBody() {
+  const body = $('quiz-matrix-body');
+  if (!body || !qState.parts) return;
+
+  body.innerHTML = qState.parts.map((part, pIdx) => {
+    const isCurrent = pIdx === qState.partIdx;
+    const partQs = part.questions || [];
+    const partAnswered = partQs.filter(q => isQuestionAnswered(q, q.globalIdx, qState.answers)).length;
+
+    return `
+      <div class="quiz-matrix-part-section">
+        <div class="quiz-matrix-part-label">
+          <span>${esc(part.name)} ${isCurrent ? '<span style="color:#6366f1;font-size:12px;font-weight:700">(Đang làm)</span>' : ''}</span>
+          <span style="font-size:12px;color:#64748b;font-weight:600">Đã làm: ${partAnswered}/${partQs.length}</span>
+        </div>
+        <div class="quiz-matrix-grid">
+          ${partQs.map(q => {
+            const gIdx = q.globalIdx;
+            const ans = isQuestionAnswered(q, gIdx, qState.answers);
+            return `
+              <button type="button" class="quiz-matrix-btn ${ans ? 'answered' : ''}" onclick="window.jumpToQuestion(${gIdx})" title="Câu ${gIdx + 1}: ${ans ? 'Đã làm' : 'Chưa làm'}">
+                ${gIdx + 1}
+              </button>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 // RENDER TOÀN BỘ CÂU HỎI TRONG PART HIỆN TẠI
 function renderPart() {
   const currentPart = qState.parts[qState.partIdx];
@@ -482,7 +674,6 @@ function renderPart() {
 
   // Cập nhật tiêu đề Part
   $('q-progress').textContent = `${currentPart.name} (${qState.partIdx + 1}/${qState.parts.length})`;
-  $('q-pbar').style.width = `${((qState.partIdx + 1) / qState.parts.length) * 100}%`;
 
   const container = $('part-container');
   container.innerHTML = ''; // Xóa nội dung Part cũ
@@ -493,6 +684,7 @@ function renderPart() {
       const type = q.type || 'mcq_single';
       const qCard = document.createElement('div');
       qCard.className = 'card';
+      qCard.id = `q-card-${gIdx}`;
       qCard.style.marginBottom = '20px';
 
       let bodyHtml = '';
@@ -532,6 +724,9 @@ function renderPart() {
       $('btn-next').style.display = 'block';
       $('btn-finish').style.display = 'none';
   }
+
+  // Cập nhật trạng thái dải câu hỏi và các badge thống kê
+  updateQuizStats();
 
   typesetMath(container);
 }
@@ -642,6 +837,7 @@ function bindEventsForQuestion(q, gIdx, type, qCard) {
               qCard.querySelectorAll('.opt').forEach(b => b.classList.remove('selected'));
               btn.classList.add('selected');
               persist();
+              updateQuizStats();
           });
       });
   } else if (type === 'mcq_multi') {
@@ -657,6 +853,7 @@ function bindEventsForQuestion(q, gIdx, type, qCard) {
               qState.answers[gIdx] = [...arr];
               btn.classList.toggle('selected');
               persist();
+              updateQuizStats();
           });
       });
   } else if (type === 'fill_blank') {
@@ -666,6 +863,59 @@ function bindEventsForQuestion(q, gIdx, type, qCard) {
               if (!qState.answers[gIdx]) qState.answers[gIdx] = [];
               qState.answers[gIdx][bIdx] = inp.value.trim();
               persist();
+              updateQuizStats();
+          });
+      });
+  } else if (type === 'drag_drop') {
+      qCard.querySelectorAll('.drop-slot').forEach(slot => {
+          slot.addEventListener('click', () => {
+              const slotIdx = parseInt(slot.dataset.slotidx);
+              if (!qState.answers[gIdx]) qState.answers[gIdx] = [];
+              if (qState.answers[gIdx][slotIdx]) {
+                  qState.answers[gIdx][slotIdx] = '';
+                  persist();
+                  renderPart();
+              }
+          });
+      });
+      qCard.querySelectorAll('.bank-chip').forEach(chip => {
+          chip.addEventListener('click', () => {
+              const word = chip.dataset.word;
+              if (!qState.answers[gIdx]) qState.answers[gIdx] = [];
+              const parts = splitBlanks(q.text);
+              const totalSlots = parts.length - 1;
+              let placed = false;
+              for (let s = 0; s < totalSlots; s++) {
+                  if (!qState.answers[gIdx][s]) {
+                      qState.answers[gIdx][s] = word;
+                      placed = true;
+                      break;
+                  }
+              }
+              if (placed) {
+                  persist();
+                  renderPart();
+              }
+          });
+      });
+  } else if (type === 'matching') {
+      let selectedLeft = null;
+      qCard.querySelectorAll('.match-item[data-side="left"]').forEach(item => {
+          item.addEventListener('click', () => {
+              qCard.querySelectorAll('.match-item[data-side="left"]').forEach(i => i.classList.remove('selected'));
+              item.classList.add('selected');
+              selectedLeft = parseInt(item.dataset.id);
+          });
+      });
+      qCard.querySelectorAll('.match-item[data-side="right"]').forEach(item => {
+          item.addEventListener('click', () => {
+              if (selectedLeft !== null) {
+                  const rightId = parseInt(item.dataset.id);
+                  if (!qState.answers[gIdx] || typeof qState.answers[gIdx] !== 'object') qState.answers[gIdx] = {};
+                  qState.answers[gIdx][selectedLeft] = rightId;
+                  persist();
+                  renderPart();
+              }
           });
       });
   } else if (type === 'essay') {
@@ -674,6 +924,7 @@ function bindEventsForQuestion(q, gIdx, type, qCard) {
           ta.addEventListener('input', () => {
               qState.answers[gIdx] = ta.value;
               persist();
+              updateQuizStats();
           });
       }
   }
@@ -838,7 +1089,7 @@ async function initStudentApp() {
     try{
       const saved = JSON.parse(raw);
       if(saved?.qs?.length && confirm('Phát hiện bài làm chưa hoàn thành. Bạn có muốn tiếp tục không?')){
-        qState = saved; startTimer(); showStudentBadge(); showScreen('sc-quiz'); renderPart();
+        qState = saved; startTimer(); showStudentBadge(); showScreen('sc-quiz'); renderQuizTopbar(); renderPart();
       }
     }catch{ clearPersist(); }
   }
@@ -879,7 +1130,7 @@ async function initStudentApp() {
   if ($('btn-retake')) {
     $('btn-retake').addEventListener('click', () => {
         qState.partIdx = 0; qState.answers = []; qState.startTime = Date.now();
-        persist(); startTimer(); showScreen('sc-quiz'); renderPart();
+        persist(); startTimer(); showScreen('sc-quiz'); renderQuizTopbar(); renderPart();
     });
   }
 }

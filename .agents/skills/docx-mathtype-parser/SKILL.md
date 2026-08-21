@@ -123,6 +123,31 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 
 ---
 
+### 9. Sticky Topbar Thống kê & Điều hướng câu hỏi phòng thi trắc nghiệm
+- **Tệp nguồn:** [`student.html`](file:///Users/namtp/Downloads/trac-nghiem/student.html), [`js/student.js`](file:///Users/namtp/Downloads/trac-nghiem/js/student.js), [`css/style.css`](file:///Users/namtp/Downloads/trac-nghiem/css/style.css)
+- **Vấn đề giải quyết:** Học viên khi làm bài thi trắc nghiệm khó theo dõi tổng số câu, số câu đã làm, số câu chưa làm và gặp khó khăn khi muốn chuyển nhanh giữa các câu để xem lại hoặc chọn lại đáp án (đặc biệt khi đề thi có nhiều phần/Part).
+- **Kiến trúc & Tính năng hiện thực:**
+  1. **Sticky Topbar cố định & Real-time Counter:**
+     - Tự động dính trên đầu khi cuộn trang (`position: sticky; top: 68px; z-index: 85;`).
+     - Badge thống kê trực quan: `Tổng: N câu` (`#quiz-stat-total`), `Đã làm: X/N` (`#quiz-stat-answered` - màu xanh lục), `Chưa làm: Y` (`#quiz-stat-unanswered` - màu cam).
+     - Đồng hồ đếm ngược `q-timer` và thanh tiến độ % câu hỏi đã hoàn thành `q-pbar`.
+  2. **Dải nút số câu hỏi (`1, 2, 3... N`):**
+     - Hiển thị trực tiếp trên Topbar với trạng thái phân biệt rõ ràng:
+       - `.answered`: Màu nền xanh lục emerald gradient, chữ trắng.
+       - `.unanswered`: Màu nền trắng, viền mảnh.
+       - `.in-current-part`: Viền màu tím indigo thể hiện câu thuộc Part đang xem.
+       - `.active-target`: Viền vàng hổ phách phát sáng khi được click.
+     - Hỗ trợ cuộn ngang mượt mà.
+  3. **Giải thuật điều hướng & Chọn lại đáp án (`jumpToQuestion`):**
+     - Tự động xác định Part chứa câu hỏi đích và chuyển Part nếu câu hỏi thuộc Part khác (`qState.partIdx = targetPartIdx`, `renderPart()`).
+     - Cuộn mượt mà (*smooth scroll*) đến đúng thẻ câu hỏi (`#q-card-${gIdx}`).
+     - Hiệu ứng phát sáng viền (`.q-card-highlighted`) trong 2 giây giúp định vị câu hỏi ngay lập tức.
+     - Học viên chọn lại đáp án -> Dữ liệu lưu `localStorage` và Topbar cập nhật tức thì.
+  4. **Bảng ma trận câu hỏi toàn đề thi (`toggleQuestionMatrix`):**
+     - Modal lưới ma trận hiển thị toàn bộ câu hỏi phân chia theo từng Part, hỗ trợ theo dõi tổng thể và nhảy câu nhanh.
+
+---
+
 ## 📊 Kết quả kiểm thử trên Đề thi mẫu (`BTTN - P1 - DE 30 cau SO CAU.docx`)
 - **Tổng số công thức MathType OLE:** 43/43 công thức được giải mã thành công 100%.
 - **Độ chính xác nhận diện đáp án đúng (In đậm & Bôi đỏ):** 34/34 câu (100%), nhận diện chuẩn xác các đáp án C, B, D (ví dụ Câu 4: C, Câu 7: B, Câu 11: C, Câu 14: D, Câu 15: C, Câu 18: C, Câu 20: C, Câu 24: C, Câu 28: D...).
@@ -132,3 +157,4 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
   - Các kích thước ma trận $3\times4, 4\times2, 4\times4, 3\times2, 2\times3$ hiển thị đúng dấu nhân $\times$.
   - Biểu thức $A^2, A^{2026}, A^T, A^{-1}, (A^*)^T, (AB^{-1}C)^{-1}$ hiển thị dạng công thức Toán học MathJax chuẩn.
 - **Tỉ lệ lỗi Math input error:** 0%.
+- **Tính năng điều hướng & Sticky Topbar phòng thi:** Hoạt động chính xác 100%, cập nhật thời gian thực khi chọn lại đáp án.

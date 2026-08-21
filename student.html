@@ -219,14 +219,51 @@ window.globalLogout = async function() {
 
   <!-- MÀN HÌNH 3: PHÒNG THI LÀM BÀI -->
   <div class="screen" id="sc-quiz">
-    <div style="font-family:var(--font-display);font-size:15px;color:#0f172a;font-weight:800;margin-bottom:10px" id="q-student"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div style="font-family:var(--font-display);font-size:17px;color:#6366f1;font-weight:800; text-transform: uppercase;" id="q-progress">Part 1</div>
-      <div class="timer-badge" id="q-timer">⏱ 00:00</div>
+    <!-- STUDENT & EXAM INFO BADGE -->
+    <div style="font-family:var(--font-display);font-size:14px;color:#0f172a;font-weight:700;margin-bottom:12px;background:#ffffff;padding:10px 16px;border-radius:12px;border:1px solid var(--border-card);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;" id="q-student-wrap">
+      <div id="q-student"></div>
     </div>
 
-    <div class="pbar" style="margin-bottom: 28px;">
-      <div class="pfill" id="q-pbar" style="width:10%"></div>
+    <!-- QUIZ STICKY TOPBAR: TIẾN ĐỘ, THỐNG KÊ, TIMER & DẢI ĐIỀU HƯỚNG CÂU HỎI -->
+    <div class="quiz-sticky-topbar" id="quiz-sticky-topbar">
+      <div class="quiz-topbar-header">
+        <div class="quiz-topbar-left">
+          <div class="quiz-part-title" id="q-progress">Part 1</div>
+          <div class="quiz-stats-group">
+            <span class="quiz-stat-pill stat-total" id="quiz-stat-total" title="Tổng số câu hỏi trong đề thi">
+              📝 Tổng: <b>0</b> câu
+            </span>
+            <span class="quiz-stat-pill stat-answered" id="quiz-stat-answered" title="Số câu đã trả lời">
+              ✅ Đã làm: <b>0</b>
+            </span>
+            <span class="quiz-stat-pill stat-unanswered" id="quiz-stat-unanswered" title="Số câu chưa trả lời">
+              ⏳ Chưa làm: <b>0</b>
+            </span>
+          </div>
+        </div>
+
+        <div class="quiz-topbar-right">
+          <button type="button" class="quiz-btn-matrix" id="btn-toggle-matrix" onclick="window.toggleQuestionMatrix(true)" title="Xem toàn bộ danh sách câu hỏi đề thi">
+            📑 Bảng câu hỏi
+          </button>
+          <div class="timer-badge" id="q-timer">⏱ 00:00</div>
+        </div>
+      </div>
+
+      <!-- PROGRESS BAR -->
+      <div class="pbar" style="margin: 4px 0 10px; height: 6px;">
+        <div class="pfill" id="q-pbar" style="width:0%"></div>
+      </div>
+
+      <!-- DẢI CÁC NÚT CÂU HỎI CUỘN NGANG (CLICK ĐỂ NHẢY TỚI CÂU VÀ CHỌN LẠI ĐÁP ÁN) -->
+      <div class="quiz-nav-strip-wrapper">
+        <div class="quiz-nav-strip-label">
+          <span>Câu hỏi:</span>
+        </div>
+        <div class="quiz-nav-strip" id="quiz-nav-strip">
+          <!-- Render các nút số câu hỏi tại đây bằng JS -->
+        </div>
+      </div>
     </div>
 
     <!-- KHUNG CHỨA TOÀN BỘ CÂU HỎI TRONG 1 PART -->
@@ -237,6 +274,28 @@ window.globalLogout = async function() {
       <div style="flex:1"></div>
       <button class="btn btn-p" id="btn-next" style="padding:11px 26px; font-weight:700;">Part tiếp theo →</button>
       <button class="btn btn-p" id="btn-finish" style="display:none; padding:11px 26px; font-weight:700; background:linear-gradient(135deg, #10b981 0%, #059669 100%);">Nộp bài thi ✓</button>
+    </div>
+  </div>
+
+  <!-- MODAL / DRAWER MA TRẬN CÂU HỎI TOÀN ĐỀ THI -->
+  <div class="quiz-matrix-modal-backdrop" id="quiz-matrix-modal" onclick="if(event.target===this) window.toggleQuestionMatrix(false);">
+    <div class="quiz-matrix-dialog">
+      <div class="quiz-matrix-header">
+        <div class="quiz-matrix-title">
+          <span>📑 Bảng Điều Hướng Toàn Bộ Đề Thi</span>
+        </div>
+        <button type="button" class="quiz-matrix-close-btn" onclick="window.toggleQuestionMatrix(false)">✕</button>
+      </div>
+      <div class="quiz-matrix-body" id="quiz-matrix-body">
+        <!-- Render danh sách câu theo Part -->
+      </div>
+      <div class="quiz-matrix-footer">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:#10b981;display:inline-block"></span> Đã làm</span>
+          <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:#ffffff;border:1px solid #cbd5e1;display:inline-block"></span> Chưa làm</span>
+        </div>
+        <button class="btn btn-sm btn-p" onclick="window.toggleQuestionMatrix(false)">Đóng bảng</button>
+      </div>
     </div>
   </div>
 
