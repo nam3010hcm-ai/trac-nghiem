@@ -77,9 +77,6 @@ export function ommlNodeToLatex(node) {
         sup = ommlNodeToLatex(child).trim();
       }
     }
-    if (base.startsWith('(') && base.endsWith(')')) {
-      return `${base}^{${sup}}`;
-    }
     return `${base}^{${sup}}`;
   }
 
@@ -193,7 +190,7 @@ export function ommlNodeToLatex(node) {
 }
 
 // ==============================================================
-// 3. THUẬT TOÁN BÓC TÁCH FILE WORD (.DOCX) TOÀN DIỆN
+// 3. THUẬT TOÁN BÓC TÁCH FILE WORD (.DOCX) TOÀN DIỆN (VĂN BẢN, OMML, ẢNH MATHTYPE)
 // ==============================================================
 export async function parseDocxDocument(file, onProgress = null) {
   if (typeof onProgress === 'function') onProgress(15, "Đang giải nén cấu trúc file Word (.docx)...");
@@ -205,23 +202,82 @@ export async function parseDocxDocument(file, onProgress = null) {
     throw new Error("Không tìm thấy nội dung văn bản (word/document.xml) trong file Word này!");
   }
 
-  if (typeof onProgress === 'function') onProgress(35, "Đang phân tích cấu trúc XML và công thức OMML...");
+  // 1. Đọc tệp liên kết Relationships (word/_rels/document.xml.rels)
+  if (typeof onProgress === 'function') onProgress(25, "Đang nạp bảng ánh xạ hình ảnh & MathType...");
+  const relsMap = {};
+  const relsFile = zip.file("word/_rels/document.xml.rels");
+  if (relsFile) {
+    const relsXml = await relsFile.async("string");
+    const relRegex = /<Relationship[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"[^>]*\/>/g;
+    let match;
+    while ((match = relRegex.exec(relsXml)) !== null) {
+      let target = match[2];
+      if (target.startsWith('/')) target = target.slice(1);
+      if (!target.startsWith('word/')) target = 'word/' + target.replace(/^\.\.\//, '');
+      relsMap[match[1]] = target;
+    }
+  }
+
+  // 2. Nạp toàn bộ hình ảnh trong file Word (word/media/*)
+  if (typeof onProgress === 'function') onProgress(35, "Đang xử lý hình ảnh và công thức đồ họa MathType...");
+  const mediaCache = {};
+  for (const fileName of Object.keys(zip.files)) {
+    if (fileName.startsWith('word/media/')) {
+      try {
+        const ext = fileName.split('.').pop().toLowerCase();
+        let mime = 'image/png';
+        if (ext === 'jpg' || ext === 'jpeg') mime = 'image/jpeg';
+        else if (ext === 'gif') mime = 'image/gif';
+        else if (ext === 'svg') mime = 'image/svg+xml';
+        else if (ext === 'wmf') mime = 'image/wmf';
+        else if (ext === 'emf') mime = 'image/emf';
+
+        const base64 = await zip.file(fileName).async('base64');
+        mediaCache[fileName] = `data:${mime};base64,${base64}`;
+      } catch (e) {
+        console.warn("Không đọc được media:", fileName, e);
+      }
+    }
+  }
+
+  // 3. Phân tích nội dung XML của document.xml
+  if (typeof onProgress === 'function') onProgress(50, "Đang phân tích cấu trúc văn bản và thẻ Toán học OMML...");
   const xmlContent = await docXmlFile.async("string");
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlContent, "text/xml");
 
-  const paragraphs = xmlDoc.getElementsByTagName("w:p");
+  const body = xmlDoc.getElementsByTagName("w:body")[0];
   const rawLines = [];
 
-  for (let i = 0; i < paragraphs.length; i++) {
-    const p = paragraphs[i];
-    const pResult = extractParagraphData(p);
-    if (pResult.text.trim()) {
-      rawLines.push(pResult);
+  if (body) {
+    // Duyệt qua tất cả các phần tử con trực tiếp của body (bao gồm paragraphs <w:p> và tables <w:tbl>)
+    for (const el of body.childNodes) {
+      const elName = el.localName || el.nodeName || '';
+      if (elName === 'p' || elName === 'w:p') {
+        const pResult = extractParagraphData(el, relsMap, mediaCache);
+        if (pResult.text.trim()) {
+          rawLines.push(pResult);
+        }
+      } else if (elName === 'tbl' || elName === 'w:tbl') {
+        // Xử lý bảng trong Word (chứa các phương án trắc nghiệm hoặc đề bài)
+        const rows = el.getElementsByTagName('w:tr');
+        for (let r = 0; r < rows.length; r++) {
+          const cells = rows[r].getElementsByTagName('w:tc');
+          for (let c = 0; c < cells.length; c++) {
+            const cellPs = cells[c].getElementsByTagName('w:p');
+            for (let cp = 0; cp < cellPs.length; cp++) {
+              const pResult = extractParagraphData(cellPs[cp], relsMap, mediaCache);
+              if (pResult.text.trim()) {
+                rawLines.push(pResult);
+              }
+            }
+          }
+        }
+      }
     }
   }
 
-  if (typeof onProgress === 'function') onProgress(75, "Đang nhận diện các câu hỏi, 4 phương án và đáp án đúng...");
+  if (typeof onProgress === 'function') onProgress(80, "Đang bóc tách danh sách câu hỏi, 4 phương án và đáp án đúng...");
   const questions = parseQuestionsFromDocxLines(rawLines);
 
   if (!questions.length) {
@@ -243,38 +299,70 @@ export async function parseDocxDocument(file, onProgress = null) {
 }
 
 // Bóc tách nội dung của 1 đoạn văn <w:p>
-function extractParagraphData(pNode) {
+function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
   let fullText = "";
   let hasRed = false;
   let hasBold = false;
   let runs = [];
 
-  for (const child of pNode.childNodes) {
-    const nodeName = child.localName || child.nodeName || '';
+  function processNode(node) {
+    const nodeName = node.localName || node.nodeName || '';
 
     // 1. Khối công thức Toán học: <m:oMath> hoặc <m:oMathPara>
     if (nodeName === 'oMath' || nodeName === 'm:oMath' || nodeName === 'oMathPara' || nodeName === 'm:oMathPara') {
-      const latex = ommlNodeToLatex(child).trim();
+      const latex = ommlNodeToLatex(node).trim();
       if (latex) {
         const mathStr = `$${latex}$`;
         fullText += (fullText.endsWith(' ') ? '' : ' ') + mathStr + ' ';
         runs.push({ text: mathStr, isRed: false, isBold: false });
       }
+      return;
     }
-    // 2. Khối văn bản thông thường: <w:r>
-    else if (nodeName === 'r' || nodeName === 'w:r') {
+
+    // 2. Khối hình ảnh / DrawingML: <w:drawing>
+    if (nodeName === 'drawing' || nodeName === 'w:drawing') {
+      const blip = node.querySelector('blip, a\\:blip, svgBlip, asvg\\:svgBlip');
+      if (blip) {
+        const rId = blip.getAttribute('r:embed') || blip.getAttribute('embed') || blip.getAttribute('r:link');
+        const targetPath = relsMap[rId];
+        if (targetPath && mediaCache[targetPath]) {
+          const imgTag = `<img src="${mediaCache[targetPath]}" class="docx-math-img" style="vertical-align:middle;max-height:48px;display:inline-block;margin:0 4px;" />`;
+          fullText += ' ' + imgTag + ' ';
+          runs.push({ text: imgTag, isRed: false, isBold: false });
+          return;
+        }
+      }
+    }
+
+    // 3. Khối hình ảnh VML / MathType OLE Object: <w:pict> hoặc <w:object>
+    if (nodeName === 'pict' || nodeName === 'w:pict' || nodeName === 'object' || nodeName === 'w:object') {
+      const imgData = node.querySelector('imagedata, v\\:imagedata');
+      if (imgData) {
+        const rId = imgData.getAttribute('r:id') || imgData.getAttribute('id') || imgData.getAttribute('r:href');
+        const targetPath = relsMap[rId];
+        if (targetPath && mediaCache[targetPath]) {
+          const imgTag = `<img src="${mediaCache[targetPath]}" class="docx-math-img" style="vertical-align:middle;max-height:48px;display:inline-block;margin:0 4px;" />`;
+          fullText += ' ' + imgTag + ' ';
+          runs.push({ text: imgTag, isRed: false, isBold: false });
+          return;
+        }
+      }
+    }
+
+    // 4. Khối văn bản thông thường: <w:r>
+    if (nodeName === 'r' || nodeName === 'w:r') {
       let rText = "";
       let rIsRed = false;
       let rIsBold = false;
 
       // Đọc thuộc tính định dạng <w:rPr>
-      const rPr = child.querySelector('rPr, w\\:rPr');
+      const rPr = node.querySelector('rPr, w\\:rPr');
       if (rPr) {
         // Kiểm tra màu chữ đỏ: <w:color w:val="FF0000"/>
         const colorNode = rPr.querySelector('color, w\\:color');
         if (colorNode) {
           const cVal = (colorNode.getAttribute('w:val') || colorNode.getAttribute('val') || '').toLowerCase();
-          if (['ff0000', 'ee0000', 'dc2626', 'c00000', 'ef4444', 'red', 'darkred'].includes(cVal) || cVal.startsWith('ff0') || cVal.startsWith('ee0') || cVal.startsWith('dc2')) {
+          if (['ff0000', 'ee0000', 'dc2626', 'c00000', 'ef4444', 'red', 'darkred'].includes(cVal) || cVal.startsWith('ff0') || cVal.startsWith('ee0') || cVal.startsWith('dc2') || cVal.startsWith('c00')) {
             rIsRed = true;
             hasRed = true;
           }
@@ -290,17 +378,33 @@ function extractParagraphData(pNode) {
         }
       }
 
-      // Đọc chữ trong thẻ <w:t>
-      const tNodes = child.querySelectorAll('t, w\\:t');
-      tNodes.forEach(t => {
-        rText += t.textContent;
-      });
+      // Kiểm tra xem bên trong <w:r> có chứa drawing/pict/oMath không
+      for (const rChild of node.childNodes) {
+        const rcName = rChild.localName || rChild.nodeName || '';
+        if (rcName === 't' || rcName === 'w:t') {
+          rText += rChild.textContent;
+        } else if (rcName === 'drawing' || rcName === 'w:drawing' || rcName === 'pict' || rcName === 'w:pict' || rcName === 'object' || rcName === 'w:object') {
+          processNode(rChild);
+        } else if (rcName === 'oMath' || rcName === 'm:oMath') {
+          processNode(rChild);
+        }
+      }
 
       if (rText) {
         fullText += rText;
         runs.push({ text: rText, isRed: rIsRed, isBold: rIsBold });
       }
+      return;
     }
+
+    // Duyệt đệ quy nếu có các thẻ con khác
+    for (const child of node.childNodes) {
+      processNode(child);
+    }
+  }
+
+  for (const child of pNode.childNodes) {
+    processNode(child);
   }
 
   return {
@@ -369,8 +473,8 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
     content = content.slice(0, explainMatch.index).trim();
   }
 
-  // Tìm 4 phương án a., b., c., d. hoặc A., B., C., D.
-  const optRegex = /(?:^|\n|\s{2,}|\t|\s)(?:\*|\[x\]\s*)?([A-Da-d])(?:[\s.:\-\/)\]]*[.:\-\/)\]]+|\s+(?=[0-9$–\-]))(?!\d)/g;
+  // Regex tìm 4 phương án a., b., c., d. hoặc A., B., C., D. (hỗ trợ cả khi phương án là thẻ <img> hoặc công thức $)
+  const optRegex = /(?:^|\n|\s{2,}|\t|\s)(?:\*|\[x\]\s*)?([A-Da-d])(?:[\s.:\-\/)\]]*[.:\-\/)\]]+|\s*(?=<img|\$|[0-9–\-]))(?!\d)/g;
   const matches = [];
   let om;
   while ((om = optRegex.exec(content)) !== null) {
@@ -388,7 +492,7 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
     });
   }
 
-  // Tìm chuỗi phương án liên tiếp
+  // Tìm chuỗi phương án liên tiếp ưu tiên cùng kiểu chữ thường hoặc hoa
   let bestSeq = [];
   for (const isLowerTarget of [true, false]) {
     const filtered = matches.filter(m => m.isLower === isLowerTarget);
@@ -399,6 +503,24 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
         for (let j = i + 1; j < filtered.length; j++) {
           if (filtered[j].optIdx === exp) {
             seq.push(filtered[j]);
+            exp++;
+            if (exp === 4) break;
+          }
+        }
+        if (seq.length > bestSeq.length) bestSeq = seq;
+      }
+    }
+  }
+
+  // Nếu chuỗi đồng nhất chưa đủ, tìm chuỗi hỗn hợp
+  if (bestSeq.length < 2) {
+    for (let i = 0; i < matches.length; i++) {
+      if (matches[i].optIdx === 0) {
+        const seq = [matches[i]];
+        let exp = 1;
+        for (let j = i + 1; j < matches.length; j++) {
+          if (matches[j].optIdx === exp) {
+            seq.push(matches[j]);
             exp++;
             if (exp === 4) break;
           }
@@ -424,13 +546,16 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
 
       opts[cur.optIdx] = optText;
 
-      // Kiểm tra màu Đỏ từ các dòng Word trùng khớp
+      // Kiểm tra màu ĐỎ từ các dòng Word trùng khớp
       if (detectedAns === -1) {
         for (const line of allLines) {
-          if (line.hasRed && (line.text.includes(optText) || line.text.includes(cur.rawChar + '.'))) {
-            detectedAns = cur.optIdx;
-            ansSource = 'red_word';
-            break;
+          if (line.hasRed) {
+            // Khớp nhãn chữ cái (VD "b.") hoặc khớp nội dung phương án
+            if (line.text.includes(cur.rawChar + '.') || (optText && optText.length >= 2 && line.text.includes(optText))) {
+              detectedAns = cur.optIdx;
+              ansSource = 'red_word';
+              break;
+            }
           }
         }
       }
