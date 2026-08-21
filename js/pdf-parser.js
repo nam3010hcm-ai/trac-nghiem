@@ -1468,38 +1468,47 @@ export async function saveParsedExamToSupabase() {
   try {
     const authorEmail = state.currentUserEmail || 'nam3010hcm@gmail.com';
 
-    // 1. Chuẩn bị payload danh sách câu hỏi
-    const questionsToInsert = currentParsedExam.questions.map(q => ({
-      cat: cat || 'Toán',
-      subcat: subcat || 'Toán/Phần 2 - Đại số',
-      text: q.text,
-      image: '',
-      audio: '',
-      explain: q.explain || '',
-      opts: q.opts,
-      ans: q.ans,
-      type: 'mcq_single',
-      created_by: authorEmail
-    }));
+    // 1. Chuẩn bị payload danh sách câu hỏi chuẩn theo schema Supabase
+    const questionsToInsert = currentParsedExam.questions.map(q => {
+      const qObj = {
+        cat: cat || 'Toán',
+        subcat: subcat || 'Toán/Phần 2 - Đại số',
+        text: String(q.text || '').trim(),
+        opts: Array.isArray(q.opts) ? q.opts : ["A", "B", "C", "D"],
+        ans: typeof q.ans === 'number' ? q.ans : (parseInt(q.ans, 10) || 0)
+      };
+      if (q.explain) qObj.explain = String(q.explain).trim();
+      return qObj;
+    });
 
     // 2. Insert câu hỏi vào bảng 'questions' trong Supabase
     let insertedQuestionIds = [];
-    const { data: qData, error: qErr } = await db()
-      .from('questions')
-      .insert(questionsToInsert)
-      .select();
+    let qResult = await db().from('questions').insert(questionsToInsert).select();
 
-    if (qErr) {
-      console.warn("Lỗi insert questions:", qErr);
+    // Nếu lỗi do cột mở rộng (explain/image), tự động thử lại với payload cốt lõi
+    if (qResult.error) {
+      console.warn("Lần 1 insert questions gặp lỗi, thử lại với payload cốt lõi:", qResult.error);
+      const minimalPayload = questionsToInsert.map(q => ({
+        cat: q.cat,
+        subcat: q.subcat,
+        text: q.text,
+        opts: q.opts,
+        ans: q.ans
+      }));
+      qResult = await db().from('questions').insert(minimalPayload).select();
+    }
+
+    if (qResult.error) {
+      console.warn("Lỗi insert questions Supabase:", qResult.error);
       questionsToInsert.forEach(q => {
         const fakeId = state.nextQId++;
         q.id = fakeId;
         insertedQuestionIds.push(fakeId);
       });
       state.questions = [...questionsToInsert, ...state.questions];
-    } else if (qData && qData.length > 0) {
-      insertedQuestionIds = qData.map(item => Number(item.id));
-      const formattedQuestions = qData.map(q => ({
+    } else if (qResult.data && qResult.data.length > 0) {
+      insertedQuestionIds = qResult.data.map(item => Number(item.id));
+      const formattedQuestions = qResult.data.map(q => ({
         ...q,
         id: Number(q.id),
         opts: q.opts || [],
@@ -1513,23 +1522,19 @@ export async function saveParsedExamToSupabase() {
     // 3. Insert Đề thi mới vào bảng 'exams'
     const examPayload = {
       name: examName,
-      description: desc,
+      description: desc || '',
       count: insertedQuestionIds.length,
       cat: cat || 'Toán',
       subcat: subcat || 'Toán/Phần 2 - Đại số',
       time_limit: timeLimit,
       is_hidden: false,
-      q_ids: insertedQuestionIds,
-      created_by: authorEmail
+      q_ids: insertedQuestionIds
     };
 
-    const { data: eData, error: eErr } = await db()
-      .from('exams')
-      .insert([examPayload])
-      .select();
+    let eResult = await db().from('exams').insert([examPayload]).select();
 
-    if (eErr) {
-      console.warn("Lỗi insert exams:", eErr);
+    if (eResult.error) {
+      console.warn("Lỗi insert exams:", eResult.error);
       const fakeExamId = state.nextEId++;
       state.exams.unshift({
         id: fakeExamId,
@@ -1538,8 +1543,8 @@ export async function saveParsedExamToSupabase() {
         isHidden: false,
         qIds: insertedQuestionIds
       });
-    } else if (eData && eData.length > 0) {
-      const created = eData[0];
+    } else if (eResult.data && eResult.data.length > 0) {
+      const created = eResult.data[0];
       state.exams.unshift({
         id: Number(created.id),
         name: created.name,
@@ -1549,8 +1554,7 @@ export async function saveParsedExamToSupabase() {
         subcat: created.subcat || subcat,
         timeLimit: created.time_limit ?? timeLimit,
         isHidden: created.is_hidden ?? false,
-        qIds: created.q_ids || insertedQuestionIds,
-        created_by: created.created_by || authorEmail
+        qIds: created.q_ids || insertedQuestionIds
       });
     }
 
