@@ -33,32 +33,31 @@ export function parseMathTypeBinaryToLatex(buf) {
   if (!buf || buf.length < 10) return '';
 
   // 1. Tìm vị trí Header MTEF
-  // MTEF Header bắt đầu bằng [0x1C, 0x05, ...] hoặc [0x1C, 0x03, ...] hoặc [0x05, 0x01, 0x01, ...]
   let mtefStart = -1;
   let isV5 = true;
 
   for (let i = 0; i < buf.length - 6; i++) {
     // Header chuẩn 28 byte của MathType: byte 0 là 0x1C (28), byte 1 là version (5 hoặc 3)
-    if (buf[i] === 0x1C && (buf[i+1] === 5 || buf[i+1] === 3)) {
+    if (buf[i] === 0x1C && (buf[i+1] === 5 || buf[i+1] === 3 || buf[i+1] === 2)) {
       mtefStart = i + 28;
       isV5 = (buf[i+1] === 5);
       break;
     }
     // Stream MTEF trực tiếp: [5, 1, 1, ...] hoặc [3, 1, 1, ...]
-    if ((buf[i] === 5 || buf[i] === 3) && buf[i+1] === 1 && buf[i+2] === 1 && (buf[i+3] >= 1 && buf[i+3] <= 9)) {
+    if ((buf[i] === 5 || buf[i] === 3 || buf[i] === 2) && buf[i+1] === 1 && buf[i+2] === 1 && (buf[i+3] >= 1 && buf[i+3] <= 9)) {
       mtefStart = i + 5;
       isV5 = (buf[i] === 5);
       break;
     }
-    // Tìm kiếm chuỗi "MathType" trong WMF MFCOMMENT record
+    // Tìm kiếm chuỗi "MathType"
     if (buf[i] === 0x4D && buf[i+1] === 0x61 && buf[i+2] === 0x74 && buf[i+3] === 0x68 && buf[i+4] === 0x54 && buf[i+5] === 0x79) {
       for (let j = i; j < Math.min(buf.length - 4, i + 64); j++) {
-        if (buf[j] === 0x1C && (buf[j+1] === 5 || buf[j+1] === 3)) {
+        if (buf[j] === 0x1C && (buf[j+1] === 5 || buf[j+1] === 3 || buf[j+1] === 2)) {
           mtefStart = j + 28;
           isV5 = (buf[j+1] === 5);
           break;
         }
-        if ((buf[j] === 5 || buf[j] === 3) && buf[j+1] === 1 && buf[j+2] === 1) {
+        if ((buf[j] === 5 || buf[j] === 3 || buf[j] === 2) && buf[j+1] === 1 && buf[j+2] === 1) {
           mtefStart = j + 5;
           isV5 = (buf[j] === 5);
           break;
@@ -79,10 +78,46 @@ export function parseMathTypeBinaryToLatex(buf) {
     const tag = buf[offset++];
     if (tag === 0) return ''; // END tag
 
-    // 1: LINE (0x01)
+    // Tag 15: FONT_DEF
+    if (tag === 15 || tag === 0x0F) {
+      const fontIdx = buf[offset++];
+      // Đọc font_name kết thúc bằng \0
+      while (offset < buf.length && buf[offset++] !== 0);
+      // Đọc enc_name kết thúc bằng \0
+      while (offset < buf.length && buf[offset++] !== 0);
+      if (offset < buf.length) offset++; // font_style
+      return readRecord();
+    }
+
+    // Tag 8: FONT_STYLE_DEF
+    if (tag === 8 || tag === 0x08) {
+      const fontStyleIdx = buf[offset++];
+      while (offset < buf.length && buf[offset++] !== 0);
+      if (offset < buf.length) offset++;
+      return readRecord();
+    }
+
+    // Tag 9: SIZE
+    if (tag === 9 || tag === 0x09) {
+      offset += 3; // size_idx (1) + size_val (2)
+      return readRecord();
+    }
+
+    // Tag 10: FULL
+    if (tag === 10 || tag === 0x0A) {
+      return readRecord();
+    }
+
+    // Tag 16: COLOR_DEF
+    if (tag === 16 || tag === 0x10) {
+      offset += 4;
+      return readRecord();
+    }
+
+    // Tag 1: LINE (0x01)
     if (tag === 1) {
       const lineOpt = buf[offset++];
-      if (lineOpt & 0x08) offset += 2; // nudge dx, dy
+      if (lineOpt & 0x08) offset += 2; // nudge
       let content = '';
       while (offset < buf.length) {
         if (buf[offset] === 0) {
@@ -94,7 +129,7 @@ export function parseMathTypeBinaryToLatex(buf) {
       return content;
     }
 
-    // 2: CHAR (0x02)
+    // Tag 2: CHAR (0x02)
     if (tag === 2) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2; // nudge
@@ -112,7 +147,7 @@ export function parseMathTypeBinaryToLatex(buf) {
       return ch;
     }
 
-    // 3: TMPL (0x03)
+    // Tag 3: TMPL (0x03)
     if (tag === 3) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2; // nudge
@@ -149,7 +184,7 @@ export function parseMathTypeBinaryToLatex(buf) {
       return readRecord();
     }
 
-    // 4: PILE (0x04)
+    // Tag 4: PILE (0x04)
     if (tag === 4) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2;
@@ -162,7 +197,7 @@ export function parseMathTypeBinaryToLatex(buf) {
       return res;
     }
 
-    // 5: MATRIX (0x05)
+    // Tag 5: MATRIX (0x05)
     if (tag === 5) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2;
@@ -183,21 +218,29 @@ export function parseMathTypeBinaryToLatex(buf) {
       return `\\begin{bmatrix} ${cells.join(' \\\\ ')} \\end{bmatrix}`;
     }
 
-    // 11: SUB (Chỉ số dưới: 0x0B)
-    if (tag === 11 || tag === 0x0B) {
+    // Tag 11 & Tag 13: SUB (Chỉ số dưới)
+    if (tag === 11 || tag === 0x0B || tag === 13 || tag === 0x0D) {
+      const opt = buf[offset++];
+      if (opt & 0x08) offset += 2;
       return `_{${readRecord()}}`;
     }
 
-    // 12: SUP (Chỉ số trên: 0x0C)
-    if (tag === 12 || tag === 0x0C) {
+    // Tag 12 & Tag 14: SUP (Chỉ số trên / Lũy thừa)
+    if (tag === 12 || tag === 0x0C || tag === 14 || tag === 0x0E) {
+      const opt = buf[offset++];
+      if (opt & 0x08) offset += 2;
       return `^{${readRecord()}}`;
     }
 
-    // Bỏ qua các tag font/size/style phụ trợ
-    if (tag === 8 || tag === 9 || tag === 10 || tag === 15 || tag === 16) {
-      while (offset < buf.length && buf[offset] > 20) {
-        offset++;
-      }
+    // Tag 6: EMBELL (Dấu phẩy, mũ, vector)
+    if (tag === 6 || tag === 0x06) {
+      const opt = buf[offset++];
+      if (opt & 0x08) offset += 2;
+      const embCode = buf[offset++];
+      if (embCode === 1) return "'"; // prime
+      if (embCode === 2) return "''";
+      if (embCode === 3) return "'''";
+      if (embCode === 4) return "^*";
       return '';
     }
 
@@ -409,7 +452,7 @@ export async function parseDocxDocument(file, onProgress = null) {
   }
 
   // 2. Nạp và chuyển đổi toàn bộ MathType WMF / OLE / Images thành LaTeX
-  if (typeof onProgress === 'function') onProgress(40, "Đang chuyển đổi công thức MathType & hình ảnh sang LaTeX...");
+  if (typeof onProgress === 'function') onProgress(40, "Đang giải mã công thức MathType & hình ảnh sang LaTeX...");
   const mediaCache = {};
   for (const fileName of Object.keys(zip.files)) {
     if (fileName.startsWith('word/media/') || fileName.startsWith('word/embeddings/')) {
@@ -527,11 +570,11 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
         const rId = blip.getAttribute('r:embed') || blip.getAttribute('embed') || blip.getAttribute('r:link');
         const targetPath = relsMap[rId];
         const media = targetPath ? mediaCache[targetPath] : null;
-        if (media) {
-          if (media.type === 'latex' && media.content) {
+        if (media && media.content) {
+          if (media.type === 'latex') {
             fullText += (fullText.endsWith(' ') ? '' : ' ') + media.content + ' ';
             runs.push({ text: media.content, isRed: false, isBold: false });
-          } else if (media.type === 'image' && media.content) {
+          } else if (media.type === 'image') {
             const imgTag = `<img src="${media.content}" class="docx-math-img" style="vertical-align:middle;max-height:48px;display:inline-block;margin:0 4px;" />`;
             fullText += ' ' + imgTag + ' ';
             runs.push({ text: imgTag, isRed: false, isBold: false });
@@ -543,17 +586,31 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
 
     // 3. Khối hình ảnh VML / MathType OLE Object: <w:pict> hoặc <w:object>
     if (nodeName === 'pict' || nodeName === 'w:pict' || nodeName === 'object' || nodeName === 'w:object') {
-      const imgData = node.querySelector('imagedata, v\\:imagedata');
       const oleData = node.querySelector('OLEObject, o\\:OLEObject');
-      const rId = (imgData && (imgData.getAttribute('r:id') || imgData.getAttribute('id') || imgData.getAttribute('r:href'))) ||
-                  (oleData && (oleData.getAttribute('r:id') || oleData.getAttribute('id')));
-      const targetPath = rId ? relsMap[rId] : null;
-      const media = targetPath ? mediaCache[targetPath] : null;
-      if (media) {
-        if (media.type === 'latex' && media.content) {
+      const imgData = node.querySelector('imagedata, v\\:imagedata');
+
+      // ƯU TIÊN 1: Kiểm tra file OLE Object (.bin) trước vì nó chứa 100% công thức MathType gốc
+      let media = null;
+      if (oleData) {
+        const oleRId = oleData.getAttribute('r:id') || oleData.getAttribute('id');
+        if (oleRId && relsMap[oleRId] && mediaCache[relsMap[oleRId]] && mediaCache[relsMap[oleRId]].content) {
+          media = mediaCache[relsMap[oleRId]];
+        }
+      }
+
+      // ƯU TIÊN 2: Nếu OLE chưa có, kiểm tra file imagedata (.wmf, .png)
+      if (!media && imgData) {
+        const imgRId = imgData.getAttribute('r:id') || imgData.getAttribute('id') || imgData.getAttribute('r:href');
+        if (imgRId && relsMap[imgRId] && mediaCache[relsMap[imgRId]] && mediaCache[relsMap[imgRId]].content) {
+          media = mediaCache[relsMap[imgRId]];
+        }
+      }
+
+      if (media && media.content) {
+        if (media.type === 'latex') {
           fullText += (fullText.endsWith(' ') ? '' : ' ') + media.content + ' ';
           runs.push({ text: media.content, isRed: false, isBold: false });
-        } else if (media.type === 'image' && media.content) {
+        } else if (media.type === 'image') {
           const imgTag = `<img src="${media.content}" class="docx-math-img" style="vertical-align:middle;max-height:48px;display:inline-block;margin:0 4px;" />`;
           fullText += ' ' + imgTag + ' ';
           runs.push({ text: imgTag, isRed: false, isBold: false });
@@ -604,7 +661,6 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
       }
 
       if (rText) {
-        // Đảm bảo có khoảng trắng trước các nhãn phương án trắc nghiệm như "a.", "b.", "c.", "d."
         const trimmed = rText.trim();
         if (/^[a-dA-D][.:\-\/)]/.test(trimmed) && fullText && !fullText.endsWith(' ')) {
           fullText += ' ';
@@ -691,7 +747,7 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
     content = content.slice(0, explainMatch.index).trim();
   }
 
-  // Regex tìm 4 phương án a., b., c., d. hoặc A., B., C., D. (cho phép đứng sau khoảng trắng, dấu *, $, ), ], v.v.)
+  // Regex tìm 4 phương án a., b., c., d. hoặc A., B., C., D.
   const optRegex = /(?:^|\n|\s{2,}|\t|\s|[*$)}\]])(?:\*|\[x\]\s*)?([A-Da-d])(?:[\s.:\-\/)\]]*[.:\-\/)\]]+|\s*(?=<img|\$|[0-9–\-]))(?!\d)/g;
   const matches = [];
   let om;
@@ -766,7 +822,9 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
       if (detectedAns === -1) {
         for (const line of allLines) {
           if (line.hasRed) {
-            if (line.text.includes(cur.rawChar + '.') || (optText && optText.length >= 2 && line.text.includes(optText))) {
+            // Kiểm tra xem dòng đỏ có chứa ký hiệu phương án này (VD: "b." hoặc "B.")
+            const hasOptionLabel = line.runs && line.runs.some(r => r.isRed && (r.text.includes(cur.rawChar + '.') || r.text.includes(cur.letter + '.')));
+            if (hasOptionLabel || line.text.includes(cur.rawChar + '.') || line.text.includes(cur.letter + '.') || (optText && optText.length >= 2 && line.text.includes(optText))) {
               detectedAns = cur.optIdx;
               ansSource = 'red_word';
               break;
