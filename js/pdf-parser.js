@@ -192,32 +192,98 @@ export function saveGeminiApiKeyFromInput() {
   showToast('success', 'Gemini AI Key', 'Đã lưu khóa API Key an toàn trong trình duyệt của bạn!');
 }
 
+export function getStoredPythonOcrUrl() {
+  return (localStorage.getItem('python_ocr_url') || 'http://127.0.0.1:8000').trim();
+}
+
+export function savePythonOcrUrl(url) {
+  const cleanUrl = String(url || 'http://127.0.0.1:8000').trim().replace(/\/+$/, '');
+  localStorage.setItem('python_ocr_url', cleanUrl);
+}
+
+export function savePythonOcrUrlFromInput() {
+  const inp = $('pdf-python-ocr-url');
+  if (!inp) return;
+  const val = inp.value.trim();
+  savePythonOcrUrl(val || 'http://127.0.0.1:8000');
+  showToast('success', 'Python LaTeX-OCR', 'Đã lưu địa chỉ Server Python thành công!');
+}
+
+export async function testPythonOcrConnection() {
+  const url = (document.getElementById('pdf-python-ocr-url')?.value || getStoredPythonOcrUrl()).trim().replace(/\/+$/, '');
+  const statusEl = document.getElementById('python-ocr-status-badge');
+  if (statusEl) statusEl.innerHTML = `<span style="color:#d97706;">⏳ Đang kiểm tra kết nối tới ${esc(url)}...</span>`;
+
+  try {
+    const res = await fetch(`${url}/api/health`, { method: 'GET', mode: 'cors' });
+    if (res.ok) {
+      const data = await res.json();
+      if (statusEl) statusEl.innerHTML = `<span style="color:#16a34a; font-weight:800;">✅ Kết nối thành công! Server sẵn sàng (${data.engine || 'LaTeX-OCR'})</span>`;
+      showToast('success', 'LaTeX-OCR Server', 'Đã kết nối thành công tới Server Python LaTeX-OCR!');
+    } else {
+      throw new Error(`Server trả về mã ${res.status}`);
+    }
+  } catch (err) {
+    console.warn("Lỗi kết nối Python OCR:", err);
+    if (statusEl) statusEl.innerHTML = `<span style="color:#dc2626; font-weight:700;">❌ Chưa kết nối được (Hãy chạy: uvicorn server:app --port 8000)</span>`;
+    alert(`❌ Không thể kết nối tới Server Python tại: ${url}\n\nHãy đảm bảo bạn đã khởi động server:\n1. Mở Terminal\n2. cd backend\n3. uvicorn server:app --host 0.0.0.0 --port 8000 --reload`);
+  }
+}
+
+export async function parseExamWithPythonOcr(file, onProgress = null) {
+  const url = getStoredPythonOcrUrl().replace(/\/+$/, '');
+  if (typeof onProgress === 'function') onProgress(15, `Đang gửi file lên Server LaTeX-OCR (${url})...`);
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  if (typeof onProgress === 'function') onProgress(45, "Server đang chạy mô hình Deep Learning LaTeX-OCR (Pix2TeX)...");
+
+  const response = await fetch(`${url}/api/parse-exam`, {
+    method: 'POST',
+    body: formData
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Server LaTeX-OCR báo lỗi (${response.status}): ${errText}`);
+  }
+
+  if (typeof onProgress === 'function') onProgress(90, "Đang đồng bộ danh sách câu hỏi và công thức LaTeX...");
+  const result = await response.json();
+
+  if (!result.questions || !result.questions.length) {
+    throw new Error("Server LaTeX-OCR không tìm thấy câu hỏi nào trong tài liệu này.");
+  }
+
+  if (typeof onProgress === 'function') onProgress(100, `Bóc tách thành công ${result.questions.length} câu hỏi chuẩn LaTeX-OCR!`);
+  return result;
+}
+
 export function togglePdfEngineMode(mode) {
-  const keyBox = $('pdf-gemini-key-box');
+  const geminiBox = $('pdf-gemini-key-box');
+  const pythonBox = $('pdf-python-ocr-box');
   const lblAi = $('lbl-engine-ai');
+  const lblPython = $('lbl-engine-python');
   const lblOffline = $('lbl-engine-offline');
 
-  if (mode === 'ai') {
-    if (keyBox) keyBox.style.display = 'flex';
-    if (lblAi) {
-      lblAi.style.borderColor = '#3b82f6';
-      lblAi.style.background = '#eff6ff';
-    }
-    if (lblOffline) {
-      lblOffline.style.borderColor = '#cbd5e1';
-      lblOffline.style.background = '#f8fafc';
-    }
+  // Reset border / background
+  if (lblAi) { lblAi.style.borderColor = '#cbd5e1'; lblAi.style.background = '#f8fafc'; }
+  if (lblPython) { lblPython.style.borderColor = '#cbd5e1'; lblPython.style.background = '#f8fafc'; }
+  if (lblOffline) { lblOffline.style.borderColor = '#cbd5e1'; lblOffline.style.background = '#f8fafc'; }
+  if (geminiBox) geminiBox.style.display = 'none';
+  if (pythonBox) pythonBox.style.display = 'none';
+
+  if (mode === 'python_ocr') {
+    if (pythonBox) pythonBox.style.display = 'flex';
+    if (lblPython) { lblPython.style.borderColor = '#16a34a'; lblPython.style.background = '#f0fdf4'; }
+    localStorage.setItem('pdf_engine_mode', 'python_ocr');
+  } else if (mode === 'ai') {
+    if (geminiBox) geminiBox.style.display = 'flex';
+    if (lblAi) { lblAi.style.borderColor = '#3b82f6'; lblAi.style.background = '#eff6ff'; }
     localStorage.setItem('pdf_engine_mode', 'ai');
   } else {
-    if (keyBox) keyBox.style.display = 'none';
-    if (lblAi) {
-      lblAi.style.borderColor = '#cbd5e1';
-      lblAi.style.background = '#f8fafc';
-    }
-    if (lblOffline) {
-      lblOffline.style.borderColor = '#3b82f6';
-      lblOffline.style.background = '#eff6ff';
-    }
+    if (lblOffline) { lblOffline.style.borderColor = '#3b82f6'; lblOffline.style.background = '#eff6ff'; }
     localStorage.setItem('pdf_engine_mode', 'offline');
   }
 }
@@ -1139,22 +1205,21 @@ export function openPdfImportModal() {
 
   populatePdfCatSelects();
   
-  // Khởi tạo trạng thái Engine và API Key từ localStorage
-  const savedMode = localStorage.getItem('pdf_engine_mode') || 'ai';
+  // Khởi tạo trạng thái Engine và Config từ localStorage
+  const savedMode = localStorage.getItem('pdf_engine_mode') || 'python_ocr';
   const savedKey = getStoredGeminiApiKey();
+  const savedPythonUrl = getStoredPythonOcrUrl();
 
-  if ($('pdf-engine-ai') && $('pdf-engine-offline')) {
-    if (savedMode === 'offline') {
-      $('pdf-engine-offline').checked = true;
-      togglePdfEngineMode('offline');
-    } else {
-      $('pdf-engine-ai').checked = true;
-      togglePdfEngineMode('ai');
-    }
+  if ($(`pdf-engine-${savedMode === 'python_ocr' ? 'python' : savedMode}`)) {
+    $(`pdf-engine-${savedMode === 'python_ocr' ? 'python' : savedMode}`).checked = true;
   }
+  togglePdfEngineMode(savedMode);
 
   if ($('pdf-gemini-api-key')) {
     $('pdf-gemini-api-key').value = savedKey;
+  }
+  if ($('pdf-python-ocr-url')) {
+    $('pdf-python-ocr-url').value = savedPythonUrl;
   }
 
   $('pdf-step-upload').style.display = 'block';
@@ -1226,17 +1291,31 @@ async function runPdfParsingWorkflow(file) {
   const progressText = $('pdf-progress-text');
   const progressDesc = $('pdf-progress-desc');
   const isDocx = (file.name || '').toLowerCase().endsWith('.docx');
+  const engineMode = localStorage.getItem('pdf_engine_mode') || ($('pdf-engine-python')?.checked ? 'python_ocr' : ($('pdf-engine-offline')?.checked ? 'offline' : 'ai'));
 
   try {
     let parsedData;
-    if (isDocx) {
+
+    // 1. Chế độ Python LaTeX-OCR Backend (Ưu tiên số 1 cho mô hình Deep Learning)
+    if (engineMode === 'python_ocr') {
+      if (progressDesc) progressDesc.textContent = "Đang gửi file lên Server LaTeX-OCR (Pix2TeX)...";
+      parsedData = await parseExamWithPythonOcr(file, (percent, msg) => {
+        if (progressFill) progressFill.style.width = `${percent}%`;
+        if (progressText) progressText.textContent = `${percent}%`;
+        if (progressDesc) progressDesc.textContent = msg;
+      });
+    }
+    // 2. Chế độ Offline hoặc Word Docx
+    else if (isDocx) {
       if (progressDesc) progressDesc.textContent = "Đang đọc cấu trúc Word (.docx) và công thức OMML...";
       parsedData = await parseDocxDocument(file, (percent, msg) => {
         if (progressFill) progressFill.style.width = `${percent}%`;
         if (progressText) progressText.textContent = `${percent}%`;
         if (progressDesc) progressDesc.textContent = msg;
       });
-    } else {
+    } 
+    // 3. Chế độ PDF (AI Vision hoặc Offline Heuristic)
+    else {
       parsedData = await parsePdfDocument(file, (percent, msg) => {
         if (progressFill) progressFill.style.width = `${percent}%`;
         if (progressText) progressText.textContent = `${percent}%`;
@@ -1612,4 +1691,7 @@ window.filterParsedQuestionsPreview = filterParsedQuestionsPreview;
 window.togglePdfEngineMode = togglePdfEngineMode;
 window.saveGeminiApiKeyFromInput = saveGeminiApiKeyFromInput;
 window.getStoredGeminiApiKey = getStoredGeminiApiKey;
+window.savePythonOcrUrlFromInput = savePythonOcrUrlFromInput;
+window.getStoredPythonOcrUrl = getStoredPythonOcrUrl;
+window.testPythonOcrConnection = testPythonOcrConnection;
 
