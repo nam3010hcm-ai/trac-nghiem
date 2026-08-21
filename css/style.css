@@ -1471,7 +1471,6 @@ textarea {
     outline: 3px solid #6366f1;
     box-shadow: 0 0 24px rgba(99, 102, 241, 0.5), 0 8px 24px rgba(15, 23, 42, 0.12);
     border-color: #6366f1;
-    transform: scale(1.008);
   }
   50% {
     outline: 3px solid rgba(99, 102, 241, 0.6);
@@ -1482,13 +1481,12 @@ textarea {
     outline: 0px solid transparent;
     box-shadow: var(--shadow-sm);
     border-color: var(--border-card);
-    transform: scale(1);
   }
 }
 
 .q-card-highlighted {
   animation: qHighlightFlash 2s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-  scroll-margin-top: 190px;
+  scroll-margin-top: 200px;
 }
 
 /* Question Matrix Drawer / Modal */

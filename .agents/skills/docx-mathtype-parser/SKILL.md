@@ -138,9 +138,9 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
        - `.in-current-part`: Viền màu tím indigo thể hiện câu thuộc Part đang xem.
        - `.active-target`: Viền vàng hổ phách phát sáng khi được click.
      - Hỗ trợ cuộn ngang mượt mà.
-  3. **Giải thuật điều hướng & Chọn lại đáp án (`jumpToQuestion`):**
+  3. **Giải thuật điều hướng & Cuộn sát mép dưới Topbar (`jumpToQuestion`):**
      - Tự động xác định Part chứa câu hỏi đích và chuyển Part nếu câu hỏi thuộc Part khác (`qState.partIdx = targetPartIdx`, `renderPart()`).
-     - Cuộn mượt mà (*smooth scroll*) đến đúng thẻ câu hỏi (`#q-card-${gIdx}`).
+     - Tính toán tọa độ cuộn tuyệt đối trừ đi tổng chiều cao của Header và Sticky Topbar (`targetScrollY = cardAbsoluteTop - (headerHeight + topbarHeight + 10)`), đảm bảo **mép trên của bounding box thẻ câu hỏi (`Câu X: ...`) nằm sát ngay dưới mép dưới của Sticky Topbar**.
      - Hiệu ứng phát sáng viền (`.q-card-highlighted`) trong 2 giây giúp định vị câu hỏi ngay lập tức.
      - Học viên chọn lại đáp án -> Dữ liệu lưu `localStorage` và Topbar cập nhật tức thì.
   4. **Bảng ma trận câu hỏi toàn đề thi (`toggleQuestionMatrix`):**

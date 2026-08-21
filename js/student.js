@@ -612,11 +612,29 @@ export function jumpToQuestion(gIdx) {
     navBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }
 
-  // 2. Cuộn màn hình mượt mà tới thẻ câu hỏi đích
+  // 2. Cuộn màn hình mượt mà sao cho mép trên bounding box của thẻ câu hỏi nằm sát ngay mép dưới của Topbar
   setTimeout(() => {
     const cardEl = $(`q-card-${gIdx}`);
     if (cardEl) {
-      cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const topbar = $('quiz-sticky-topbar');
+      const header = document.querySelector('.header');
+      
+      const headerHeight = header ? header.offsetHeight : 64;
+      const topbarHeight = topbar ? topbar.offsetHeight : 110;
+      // Khoảng cách đệm tinh tế 10px để mép trên thẻ câu hỏi nằm ngay sát dưới topbar
+      const gap = 10;
+      const totalStickyOffset = headerHeight + topbarHeight + gap;
+
+      const cardRect = cardEl.getBoundingClientRect();
+      const currentScrollY = window.pageYOffset || document.documentElement.scrollTop;
+      const cardAbsoluteTop = cardRect.top + currentScrollY;
+      const targetScrollY = Math.max(0, cardAbsoluteTop - totalStickyOffset);
+
+      window.scrollTo({
+        top: targetScrollY,
+        behavior: 'smooth'
+      });
+
       cardEl.classList.remove('q-card-highlighted');
       void cardEl.offsetWidth; // trigger reflow
       cardEl.classList.add('q-card-highlighted');
