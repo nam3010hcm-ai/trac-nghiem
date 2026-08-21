@@ -23,7 +23,8 @@ import { loadClassPosts, renderClassStream, submitStreamPost, submitPostComment 
 import {
   openPdfImportModal, closePdfImportModal, handlePdfFileUpload, testWithSamplePdf,
   updateParsedQuestionText, updateParsedQuestionOption, setParsedQuestionAnswer, saveParsedExamToSupabase,
-  deleteParsedQuestion, addBlankQuestionToParsed, filterParsedQuestionsPreview
+  deleteParsedQuestion, addBlankQuestionToParsed, filterParsedQuestionsPreview,
+  togglePdfEngineMode, saveGeminiApiKeyFromInput, getStoredGeminiApiKey
 } from './pdf-parser.js';
 
 window.openPdfImportModal = openPdfImportModal;
@@ -37,6 +38,9 @@ window.saveParsedExamToSupabase = saveParsedExamToSupabase;
 window.deleteParsedQuestion = deleteParsedQuestion;
 window.addBlankQuestionToParsed = addBlankQuestionToParsed;
 window.filterParsedQuestionsPreview = filterParsedQuestionsPreview;
+window.togglePdfEngineMode = togglePdfEngineMode;
+window.saveGeminiApiKeyFromInput = saveGeminiApiKeyFromInput;
+window.getStoredGeminiApiKey = getStoredGeminiApiKey;
 
 window.loadClasses = loadClasses;
 window.renderClassesList = renderClassesList;

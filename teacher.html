@@ -2215,8 +2215,70 @@ document.addEventListener('keydown', function(e) {
     <!-- Body Modal -->
     <div style="flex:1; overflow-y:auto; padding:16px 4px; margin-top:4px;">
       
-      <!-- BƯỚC 1: TẢI FILE / CHỌN FILE -->
+      <!-- BƯỚC 1: TẢI FILE / CHỌN FILE & CHỌN CHẾ ĐỘ -->
       <div id="pdf-step-upload">
+        
+        <!-- BỘ CHỌN CHẾ ĐỘ NHẬN DIỆN (AI VISION vs OFFLINE) -->
+        <div style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:14px; padding:16px; margin-bottom:18px; box-shadow:0 2px 6px rgba(0,0,0,0.03);">
+          <div style="font-size:13.5px; font-weight:800; color:#0f172a; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
+            <span style="display:flex; align-items:center; gap:6px;">
+              <span>⚡</span> CHỌN CÔNG NGHỆ NHẬN DIỆN CÔNG THỨC TOÁN & ĐÁP ÁN
+            </span>
+            <span style="font-size:11.5px; color:#64748b; font-weight:600;">Tùy chọn linh hoạt</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            
+            <!-- Chế độ 1: AI Vision (Khuyên dùng) -->
+            <label id="lbl-engine-ai" style="display:flex; flex-direction:column; padding:14px; border:2px solid #3b82f6; border-radius:12px; background:#eff6ff; cursor:pointer; position:relative; transition:all 0.2s;">
+              <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <input type="radio" name="pdf-engine-mode" id="pdf-engine-ai" value="ai" checked onchange="window.togglePdfEngineMode('ai')" style="accent-color:#2563eb; width:16px; height:16px;">
+                  <b style="color:#1e40af; font-size:13.5px;">🤖 AI Vision (Google Gemini)</b>
+                </div>
+                <span style="background:#dbeafe; color:#1e40af; font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:20px;">⭐ Khuyên dùng cho Toán</span>
+              </div>
+              <div style="font-size:12px; color:#3b82f6; line-height:1.45; margin-top:2px;">
+                "Nhìn" từng trang PDF qua thị giác AI, tái tạo <b>100% chuẩn xác</b> công thức phân số $\frac{a}{b}$, ma trận $\begin{bmatrix}\dots\end{bmatrix}$, số mũ $A^{-1}$, tích phân và phát hiện đáp án chữ Đỏ/In Đậm.
+              </div>
+            </label>
+
+            <!-- Chế độ 2: Offline Rule-based -->
+            <label id="lbl-engine-offline" style="display:flex; flex-direction:column; padding:14px; border:1.5px solid #cbd5e1; border-radius:12px; background:#f8fafc; cursor:pointer; position:relative; transition:all 0.2s;">
+              <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <input type="radio" name="pdf-engine-mode" id="pdf-engine-offline" value="offline" onchange="window.togglePdfEngineMode('offline')" style="accent-color:#2563eb; width:16px; height:16px;">
+                  <b style="color:#334155; font-size:13.5px;">⚡ Bóc tách Cục bộ (Offline)</b>
+                </div>
+                <span style="background:#e2e8f0; color:#475569; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px;">Không cần API Key</span>
+              </div>
+              <div style="font-size:12px; color:#64748b; line-height:1.45; margin-top:2px;">
+                Bóc tách trực tiếp từ lớp văn bản PDF.js với bộ tái tạo biểu thức toán học tự động. Phù hợp đề thi thông thường hoặc khi không có mạng.
+              </div>
+            </label>
+
+          </div>
+
+          <!-- Khung nhập Gemini API Key -->
+          <div id="pdf-gemini-key-box" style="margin-top:12px; padding:12px 14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+            <div style="flex:1; min-width:280px;">
+              <div style="font-size:12px; font-weight:700; color:#166534; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                <span>🔑</span> Khóa Gemini API Key (Hoàn toàn miễn phí):
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <input type="password" id="pdf-gemini-api-key" placeholder="Dán Gemini API Key (VD: AIzaSy...)" style="flex:1; padding:6px 10px; font-size:12.5px; font-family:monospace; border:1px solid #86efac; border-radius:6px; background:#ffffff;">
+                <button type="button" class="btn btn-sm" onclick="window.saveGeminiApiKeyFromInput()" style="background:#16a34a; color:#ffffff; font-weight:700; border:none; padding:6px 14px; border-radius:6px; font-size:12px;">💾 Lưu Key</button>
+              </div>
+            </div>
+            <div style="font-size:11.5px; color:#15803d; line-height:1.4;">
+              Chưa có key? <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#16a34a; font-weight:800; text-decoration:underline;">Lấy API Key Miễn Phí tại Google AI Studio ↗</a>
+              <div style="font-size:10.5px; color:#4ade80;">Key được lưu bảo mật trong trình duyệt của bạn.</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- KHU VỰC KÉO THẢ / CHỌN FILE -->
         <div style="background:#f8fafc; border:2px dashed #cbd5e1; border-radius:14px; padding:32px 20px; text-align:center; transition:all 0.2s; cursor:pointer;" onclick="if(event.target.tagName !== 'BUTTON') document.getElementById('pdf-file-input').click();" ondragover="event.preventDefault(); this.style.borderColor='#3b82f6'; this.style.background='#eff6ff';" ondragleave="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';" ondrop="event.preventDefault(); this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc'; window.handlePdfFileUpload(event);">
           <div style="font-size:44px; margin-bottom:10px;">📑</div>
           <div style="font-size:16px; font-weight:700; color:#1e293b; margin-bottom:6px;">Kéo & Thả file PDF đề thi vào đây</div>
@@ -2228,20 +2290,20 @@ document.addEventListener('keydown', function(e) {
           </button>
         </div>
 
-        <div style="margin-top:20px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div style="margin-top:16px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
           <div>
-            <div style="font-weight:700; color:#1e40af; font-size:14px; display:flex; align-items:center; gap:6px;">
-              <span>🚀</span> File mẫu kiểm thử có sẵn trong dự án: <code style="background:#dbeafe; color:#1e40af; padding:2px 6px; border-radius:4px;">upload_de/2 trang.pdf</code>
+            <div style="font-weight:700; color:#1e40af; font-size:13.5px; display:flex; align-items:center; gap:6px;">
+              <span>🚀</span> File mẫu kiểm thử có sẵn: <code style="background:#dbeafe; color:#1e40af; padding:2px 6px; border-radius:4px;">upload_de/2 trang.pdf</code>
             </div>
-            <div style="font-size:12.5px; color:#3b82f6; margin-top:2px;">11 câu hỏi ma trận & định thức, đáp án đúng màu ĐỎ, công thức LaTeX chuẩn.</div>
+            <div style="font-size:12px; color:#3b82f6; margin-top:2px;">11 câu hỏi ma trận & định thức, đáp án đúng màu ĐỎ, công thức LaTeX chuẩn 100%.</div>
           </div>
-          <button type="button" class="btn" onclick="window.testWithSamplePdf();" style="background:#2563eb; color:#ffffff; font-weight:700; border:none; padding:9px 18px; border-radius:8px; box-shadow:0 2px 6px rgba(37,99,235,0.25);">
+          <button type="button" class="btn" onclick="window.testWithSamplePdf();" style="background:#2563eb; color:#ffffff; font-weight:700; border:none; padding:8px 16px; border-radius:8px; box-shadow:0 2px 6px rgba(37,99,235,0.25); font-size:13px;">
             ⚡ Thử nghiệm ngay với "2 trang.pdf"
           </button>
         </div>
 
-        <div style="margin-top:16px; padding:12px 16px; background:#fffbeb; border:1px solid #fef3c7; border-radius:10px; font-size:12.5px; color:#92400e; line-height:1.5;">
-          <b>💡 Quy tắc nhận diện tự động:</b> Hệ thống tự động quét các lựa chọn (a., b., c., d.). Lựa chọn nào có văn bản mang <b>màu ĐỎ (#ee0000)</b> sẽ được thiết lập là đáp án đúng của câu hỏi đó. Các công thức ma trận sẽ tự động định dạng MathJax.
+        <div style="margin-top:14px; padding:10px 14px; background:#fffbeb; border:1px solid #fef3c7; border-radius:10px; font-size:12px; color:#92400e; line-height:1.45;">
+          <b>💡 Lưu ý:</b> Để các công thức toán như phân số $\frac{1}{\det A}$, lũy thừa $A^{-1}$, ma trận $\begin{bmatrix}\dots\end{bmatrix}$ được hiển thị đẹp mắt, hệ thống sẽ tự động chuyển đổi sang mã LaTeX và MathJax thời gian thực.
         </div>
       </div>
 

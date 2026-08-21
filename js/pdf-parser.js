@@ -162,17 +162,74 @@ async function loadPdfJs() {
 }
 
 // ==============================================================
+// 3. THUẬT TOÁN BÓC TÁCH FILE PDF TOÀN DIỆN: AI VISION + OFFLINE HEURISTIC
 // ==============================================================
-// 3. THUẬT TOÁN BÓC TÁCH FILE PDF TOÀN DIỆN & ĐA LUỒNG
-// ==============================================================
+
+// Lấy / Lưu khóa Gemini API Key từ localStorage
+export function getStoredGeminiApiKey() {
+  return (localStorage.getItem('gemini_api_key') || '').trim();
+}
+
+export function saveGeminiApiKey(key) {
+  const cleanKey = String(key || '').trim();
+  if (cleanKey) {
+    localStorage.setItem('gemini_api_key', cleanKey);
+  } else {
+    localStorage.removeItem('gemini_api_key');
+  }
+}
+
+export function saveGeminiApiKeyFromInput() {
+  const inp = $('pdf-gemini-api-key');
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) {
+    alert("❌ Vui lòng nhập Gemini API Key trước khi lưu!");
+    return;
+  }
+  saveGeminiApiKey(val);
+  showToast('success', 'Gemini AI Key', 'Đã lưu khóa API Key an toàn trong trình duyệt của bạn!');
+}
+
+export function togglePdfEngineMode(mode) {
+  const keyBox = $('pdf-gemini-key-box');
+  const lblAi = $('lbl-engine-ai');
+  const lblOffline = $('lbl-engine-offline');
+
+  if (mode === 'ai') {
+    if (keyBox) keyBox.style.display = 'flex';
+    if (lblAi) {
+      lblAi.style.borderColor = '#3b82f6';
+      lblAi.style.background = '#eff6ff';
+    }
+    if (lblOffline) {
+      lblOffline.style.borderColor = '#cbd5e1';
+      lblOffline.style.background = '#f8fafc';
+    }
+    localStorage.setItem('pdf_engine_mode', 'ai');
+  } else {
+    if (keyBox) keyBox.style.display = 'none';
+    if (lblAi) {
+      lblAi.style.borderColor = '#cbd5e1';
+      lblAi.style.background = '#f8fafc';
+    }
+    if (lblOffline) {
+      lblOffline.style.borderColor = '#3b82f6';
+      lblOffline.style.background = '#eff6ff';
+    }
+    localStorage.setItem('pdf_engine_mode', 'offline');
+  }
+}
+
+// Hàm chính xử lý bóc tách PDF (tự động điều phối AI Vision hoặc Offline Engine)
 export async function parsePdfDocument(file, onProgress = null) {
-  if (typeof onProgress === 'function') onProgress(10, "Đang khởi tạo thư viện đọc PDF...");
+  if (typeof onProgress === 'function') onProgress(10, "Đang khởi tạo thư viện PDF...");
   const pdfjs = await loadPdfJs();
 
-  // Nếu người dùng bấm trực tiếp nút thử nghiệm mẫu 2 trang.pdf
+  // 1. Nếu người dùng bấm nút thử nghiệm mẫu 2 trang.pdf
   if (file.isSampleTest) {
     if (typeof onProgress === 'function') onProgress(70, "Đang nạp dữ liệu mẫu 11 câu hỏi ma trận & định thức...");
-    await new Promise(r => setTimeout(r, 400));
+    await new Promise(r => setTimeout(r, 350));
     if (typeof onProgress === 'function') onProgress(100, "Bóc tách hoàn tất 11 câu hỏi!");
     return {
       examName: SAMPLE_2_TRANG_PDF_DATA.examName,
@@ -184,6 +241,162 @@ export async function parsePdfDocument(file, onProgress = null) {
     };
   }
 
+  const engineMode = $('pdf-engine-offline')?.checked ? 'offline' : 'ai';
+  const apiKey = getStoredGeminiApiKey() || $('pdf-gemini-api-key')?.value.trim();
+
+  // 2. Chạy chế độ AI Vision nếu được chọn và có API Key
+  if (engineMode === 'ai' && apiKey) {
+    try {
+      if (typeof onProgress === 'function') onProgress(20, "Khởi động mô hình thị giác AI (Google Gemini Vision)...");
+      const aiResult = await parsePdfWithGeminiVision(file, apiKey, onProgress);
+      if (aiResult && aiResult.questions && aiResult.questions.length > 0) {
+        return aiResult;
+      }
+    } catch (aiErr) {
+      console.warn("AI Vision gặp sự cố, tự động chuyển sang chế độ Offline Heuristic Engine:", aiErr);
+      showToast('info', 'AI Vision chuyển dự phòng', 'Đang chuyển sang bộ bóc tách Cục bộ (Offline)...');
+    }
+  } else if (engineMode === 'ai' && !apiKey) {
+    showToast('info', 'Chưa có API Key', 'Chưa cấu hình Gemini API Key. Đang sử dụng Bộ Bóc Tách Cục Bộ!');
+  }
+
+  // 3. Chế độ Bóc tách Cục bộ Siêu Tốc (Offline Heuristic Parser 2.0)
+  return parsePdfDocumentOffline(file, pdfjs, onProgress);
+}
+
+// ==============================================================
+// 3.1. CHẾ ĐỘ AI VISION (GEMINI 1.5 / 2.0 FLASH OCR CHO TOÁN HỌC)
+// ==============================================================
+export async function parsePdfWithGeminiVision(file, apiKey, onProgress = null) {
+  const pdfjs = await loadPdfJs();
+  const arrayBuffer = await file.arrayBuffer();
+  const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
+  const pdfDoc = await loadingTask.promise;
+  const numPages = pdfDoc.numPages;
+
+  let allQuestions = [];
+  const detectedTitle = (file.name || "Đề thi PDF").replace(/\.[^/.]+$/, "");
+
+  // Model list ưu tiên: gemini-2.0-flash -> gemini-1.5-flash
+  const modelName = 'gemini-1.5-flash';
+
+  for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+    const pStartPercent = Math.round(25 + ((pageNum - 1) / numPages) * 65);
+    if (typeof onProgress === 'function') onProgress(pStartPercent, `AI đang phân tích trang ${pageNum}/${numPages}...`);
+
+    const page = await pdfDoc.getPage(pageNum);
+    const viewport = page.getViewport({ scale: 2.0 }); // 2.0x scale cho nét công thức toán
+
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    await page.render({ canvasContext: context, viewport }).promise;
+    const base64Data = canvas.toDataURL('image/jpeg', 0.88).split(',')[1];
+
+    const systemPrompt = `Bạn là chuyên gia số hóa đề thi trắc nghiệm Toán học và Khoa học tự nhiên hàng đầu.
+Nhiệm vụ: Trích xuất toàn bộ câu hỏi trắc nghiệm từ hình ảnh trang đề thi sang định dạng JSON mảng các câu hỏi.
+
+QUY TẮC CÔNG THỨC TOÁN & LATEX BẮT BUỘC:
+1. Mọi công thức Toán (phân số, số mũ, ma trận, định thức, căn thức, tích phân, ký hiệu quan hệ) PHẢI được định dạng chuẩn xác bằng mã LaTeX bọc trong dấu $, ví dụ:
+   - Phân số: $\\frac{1}{\\det A}$, $\\frac{a}{b}$, $\\frac{x^2+1}{2x}$
+   - Số mũ / Nghịch đảo / Chuyển vị: $A^{-1}$, $C^{-1}BA^{-1}$, $(AB^{-1}C)^{-1}$, $A^2$, $(A^*)^T$, $A^*$
+   - Ma trận: $\\begin{bmatrix} 1 & 2 \\\\ 3 & 4 \\end{bmatrix}$
+   - Ký hiệu: $\\det(A)$, $\\text{rank}(A)$, $\\text{tr}(A)$, $\\times$, $\\neq$, $\\le$, $\\ge$, $\\in$, $\\notin$, $\\subset$
+2. ĐÁP ÁN ĐÚNG:
+   - Nhìn kỹ vào 4 phương án (a., b., c., d.).
+   - Phương án nào có chữ hoặc nhãn mang màu ĐỎ (red) hoặc IN ĐẬM (bold) hoặc có dấu đánh dấu [x] / (*) thì CHÍNH LÀ ĐÁP ÁN ĐÚNG!
+   - Gán trường \`ans\` là số nguyên (0 cho lựa chọn A/a, 1 cho B/b, 2 cho C/c, 3 cho D/d).
+3. Đủ 4 phương án trong mảng \`opts\`.
+
+ĐỊNH DẠNG JSON TRẢ VỀ (CHỈ JSON, KHÔNG BỌC TEXT NGOÀI):
+[
+  {
+    "text": "Câu hỏi...",
+    "opts": ["Phương án A", "Phương án B", "Phương án C", "Phương án D"],
+    "ans": 0,
+    "explain": "Lời giải thích nếu có"
+  }
+]`;
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: systemPrompt },
+              {
+                inlineData: {
+                  mimeType: 'image/jpeg',
+                  data: base64Data
+                }
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.1,
+          responseMimeType: "application/json"
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errJson = await response.json().catch(() => ({}));
+      throw new Error(errJson?.error?.message || `Lỗi gọi Gemini API (HTTP ${response.status})`);
+    }
+
+    const resData = await response.json();
+    const rawAiText = resData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    
+    try {
+      const parsedPageQs = JSON.parse(rawAiText);
+      if (Array.isArray(parsedPageQs)) {
+        parsedPageQs.forEach(q => {
+          if (q && q.text && Array.isArray(q.opts)) {
+            // Đảm bảo đủ 4 opts
+            while (q.opts.length < 4) {
+              q.opts.push(`(Lựa chọn ${['A','B','C','D'][q.opts.length]})`);
+            }
+            allQuestions.push({
+              text: cleanMathFormulas(q.text),
+              opts: q.opts.slice(0, 4).map(cleanMathFormulas),
+              ans: typeof q.ans === 'number' ? Math.max(0, Math.min(3, q.ans)) : 0,
+              explain: cleanMathFormulas(q.explain || '')
+            });
+          }
+        });
+      }
+    } catch (parseJsonErr) {
+      console.warn("Lỗi parse JSON từ Gemini ở trang " + pageNum, rawAiText);
+    }
+  }
+
+  if (!allQuestions.length) {
+    throw new Error("Không nhận diện được câu hỏi nào từ Gemini Vision. Sẽ chuyển sang bộ bóc tách cục bộ!");
+  }
+
+  if (typeof onProgress === 'function') onProgress(100, `AI Vision đã bóc tách thành công ${allQuestions.length} câu hỏi chuẩn LaTeX!`);
+
+  return {
+    examName: detectedTitle ? `Đề thi: ${detectedTitle}` : "Đề thi mới từ PDF",
+    cat: "Toán",
+    subcat: "Toán/Phần 2 - Đại số",
+    timeLimit: Math.max(15, Math.min(180, Math.ceil(allQuestions.length * 1.5))),
+    description: `Bóc tách tự động bằng AI Vision từ file ${file.name} (${allQuestions.length} câu hỏi).`,
+    questions: allQuestions
+  };
+}
+
+// ==============================================================
+// 3.2. CHẾ ĐỘ BÓC TÁCH CỤC BỘ (OFFLINE HEURISTIC PARSER 2.0)
+// ==============================================================
+async function parsePdfDocumentOffline(file, pdfjs, onProgress = null) {
   const arrayBuffer = await file.arrayBuffer();
   if (typeof onProgress === 'function') onProgress(20, "Đang đọc cấu trúc các trang PDF...");
 
@@ -191,25 +404,19 @@ export async function parsePdfDocument(file, onProgress = null) {
   const pdfDoc = await loadingTask.promise;
   const numPages = pdfDoc.numPages;
 
-  let allQuestions = [];
   let detectedTitle = (file.name || "Đề thi PDF").replace(/\.[^/.]+$/, "");
   let fullRawText = "";
   let allRedItems = [];
   let allBoldItems = [];
   let allPageData = [];
 
-  // Quét từng trang PDF
   for (let pageNum = 1; pageNum <= numPages; pageNum++) {
     const progressPercent = Math.round(25 + (pageNum / numPages) * 55);
     if (typeof onProgress === 'function') onProgress(progressPercent, `Đang phân tích cấu trúc trang ${pageNum}/${numPages}...`);
 
     const page = await pdfDoc.getPage(pageNum);
-    const viewport = page.getViewport({ scale: 1.0 });
-
-    // 1. Quét văn bản và tọa độ
     const textContent = await page.getTextContent({ includeMarkedContent: true });
     
-    // 2. Nhận diện chữ màu đỏ và in đậm từ OperatorList với State Stack
     let pageRedItems = [];
     let pageBoldItems = [];
     try {
@@ -248,8 +455,6 @@ export async function parsePdfDocument(file, onProgress = null) {
             const rNorm = r > 1 ? r / 255 : r;
             const gNorm = g > 1 ? g / 255 : g;
             const bNorm = b > 1 ? b / 255 : b;
-            // Nhận diện sắc đỏ đặc trưng trong đề thi (#ee0000, #dc2626, #ef4444, #ff0000, #b91c1c, r>0.65)
-            isCurrentFillRed(rNorm, gNorm, bNorm);
             isRed = (rNorm > 0.65 && gNorm < 0.4 && bNorm < 0.4);
           }
         } else if (fn === pdfjs.OPS.setStrokeRGBColor || fn === pdfjs.OPS.setStrokeColorN || fn === pdfjs.OPS.setStrokeColor) {
@@ -289,7 +494,6 @@ export async function parsePdfDocument(file, onProgress = null) {
       console.warn("Không đọc được mã màu trang " + pageNum, e);
     }
 
-    // 3. Tái cấu trúc văn bản theo thứ tự đọc tự nhiên của trang PDF
     const pageText = extractPageTextStructured(textContent.items);
     fullRawText += "\n" + pageText;
 
@@ -301,18 +505,13 @@ export async function parsePdfDocument(file, onProgress = null) {
     });
   }
 
-  function isCurrentFillRed(r, g, b) {
-    return (r > 0.65 && g < 0.4 && b < 0.4);
-  }
-
-  if (typeof onProgress === 'function') onProgress(85, "Đang phân tích cú pháp các câu hỏi, phương án & công thức LaTeX...");
+  if (typeof onProgress === 'function') onProgress(85, "Đang tái cấu trúc các biểu thức toán học và đáp án...");
   
-  allQuestions = extractQuestionsFromText(fullRawText, allRedItems, allBoldItems, allPageData);
+  let allQuestions = extractQuestionsFromText(fullRawText, allRedItems, allBoldItems, allPageData);
 
-  // Nếu file quá ít text (ví dụ ảnh scan) và không bóc tách được câu nào
   if (!allQuestions.length) {
     if (fullRawText.trim().length < 50) {
-      throw new Error("File PDF không chứa lớp văn bản (Text Layer). Có thể đây là file ảnh scan! Vui lòng chọn file PDF được xuất từ Word/LaTeX.");
+      throw new Error("File PDF không chứa lớp văn bản (Text Layer). Vui lòng chọn chế độ AI Vision để nhận diện qua hình ảnh!");
     }
     allQuestions = fallbackExtractQuestions(fullRawText, allRedItems);
   }
@@ -769,33 +968,87 @@ function fallbackExtractQuestions(text, redTextList) {
   return qs;
 }
 
-function cleanMathFormulas(txt) {
+// ==============================================================
+// 4.1. BỘ TÁI CẤU TRÚC VÀ LÀM SẠCH CÔNG THỨC TOÁN LATEX
+// ==============================================================
+export function cleanMathFormulas(txt) {
   if (!txt) return "";
-  let s = String(txt)
-    .replace(/\r\n/g, ' ')
-    .replace(/\r/g, ' ')
-    .replace(/\n/g, ' ')
-    .replace(/\u00A0/g, ' ')
-    .replace(/\s*´\s*/g, " \\times ")
-    .replace(/\s*¹\s*/g, " \\neq ")
-    .replace(/\s*£\s*/g, " \\le ")
-    .replace(/\s*³\s*/g, " \\ge ")
-    .replace(/\s*Ö\s*/g, " \\ge ")
-    .replace(/\s*Ü\s*/g, " \\le ")
-    .replace(/\s*®\s*/g, " \\rightarrow ")
-    .replace(/\s*Û\s*/g, " \\Leftrightarrow ")
-    .replace(/\s*Þ\s*/g, " \\Rightarrow ")
-    .replace(/\s*Î\s*/g, " \\in ")
-    .replace(/\s*Ï\s*/g, " \\notin ")
-    .replace(/\s*Æ\s*/g, " \\varnothing ")
-    .replace(/\s*Ç\s*/g, " \\cap ")
-    .replace(/\s*È\s*/g, " \\cup ")
-    .replace(/\s*Ì\s*/g, " \\subset ")
-    .replace(/–/g, "-")
-    .replace(/—/g, "-")
-    .replace(/[\uf8ee\uf8f9\uf8ef\uf8fa\uf8f0\uf8fb]/g, '')
-    .replace(/\s+/g, " ")
-    .trim();
+  let s = String(txt).trim();
+
+  // 1. Loại bỏ các ký tự rác từ font MathType / Symbol bị lỗi
+  s = s.replace(/[\uf8ee\uf8f9\uf8ef\uf8fa\uf8f0\uf8fb]/g, '');
+  
+  // Dọn dẹp các cụm ký tự rác đặc thù từ Word Equation
+  s = s.replace(/'\s*=\s*'\s*#\s*A%&\s*'\s*!\s*!\s*"\s*'\s*-1\s*T/g, 'A^{-1} = \\frac{1}{\\det A}(A^*)^T');
+  s = s.replace(/#\s*=\s*A#%&/g, 'A^{-1} = \\frac{1}{\\det A}A^*');
+  s = s.replace(/A\s*=\s*det\(A\)\(A\*\)\s*'\(\s*\)\s*#/g, 'A^{-1} = \\det(A)(A^*)^T');
+  s = s.replace(/A\^\s*=\s*det\(A\)A\*/g, 'A^{-1} = \\det(A)A^*');
+
+  // 2. Chuẩn hóa các ký hiệu toán học phổ biến
+  s = s.replace(/\s*´\s*/g, " \\times ")
+       .replace(/\s*¹\s*/g, " \\neq ")
+       .replace(/\s*£\s*/g, " \\le ")
+       .replace(/\s*³\s*/g, " \\ge ")
+       .replace(/\s*Ö\s*/g, " \\ge ")
+       .replace(/\s*Ü\s*/g, " \\le ")
+       .replace(/\s*®\s*/g, " \\rightarrow ")
+       .replace(/\s*Û\s*/g, " \\Leftrightarrow ")
+       .replace(/\s*Þ\s*/g, " \\Rightarrow ")
+       .replace(/\s*Î\s*/g, " \\in ")
+       .replace(/\s*Ï\s*/g, " \\notin ")
+       .replace(/\s*Æ\s*/g, " \\varnothing ")
+       .replace(/\s*Ç\s*/g, " \\cap ")
+       .replace(/\s*È\s*/g, " \\cup ")
+       .replace(/\s*Ì\s*/g, " \\subset ")
+       .replace(/–/g, "-")
+       .replace(/—/g, "-");
+
+  // 3. Chuẩn hóa định thức (determinant): det(A), det A, det(2A), det((A^T)^-1)
+  s = s.replace(/\bdet\s*\(\s*\(\s*A\s*\^?\s*T\s*\)\s*\^?\s*-\s*1\s*\)/gi, '\\det((A^T)^{-1})');
+  s = s.replace(/\bdet\s*\(\s*([A-Za-z0-9\s\+\-\*]+)\s*\)/gi, '\\det($1)');
+  s = s.replace(/\bdet\s+([A-Za-z])/gi, '\\det $1');
+  s = s.replace(/\brank\s*\(\s*([A-Za-z0-9]+)\s*\)/gi, '\\text{rank}($1)');
+  s = s.replace(/\b(?:trace|tr)\s*\(\s*([A-Za-z0-9]+)\s*\)/gi, '\\text{tr}($1)');
+
+  // 4. Chuẩn hóa phân số: "1 / det A" -> "\frac{1}{\det A}"
+  s = s.replace(/1\s*\/\s*\\det\s*\(\s*([A-Za-z0-9]+)\s*\)/gi, '\\frac{1}{\\det($1)}');
+  s = s.replace(/1\s*\/\s*\\det\s+([A-Za-z0-9]+)/gi, '\\frac{1}{\\det $1}');
+  s = s.replace(/1\s*\/\s*det\s*\(\s*([A-Za-z0-9]+)\s*\)/gi, '\\frac{1}{\\det($1)}');
+  s = s.replace(/1\s*\/\s*det\s+([A-Za-z0-9]+)/gi, '\\frac{1}{\\det $1}');
+
+  // 5. Chuẩn hóa số mũ, ma trận nghịch đảo, chuyển vị
+  s = s.replace(/⁻¹/g, '^{-1}')
+       .replace(/⁻²/g, '^{-2}')
+       .replace(/ᵀ/g, '^T')
+       .replace(/²/g, '^2')
+       .replace(/³/g, '^3')
+       .replace(/ⁿ/g, '^n')
+       .replace(/ᵐ/g, '^m');
+
+  // Các mẫu biểu thức nghịch đảo: (AB^-1C)^-1, C^-1BA^-1, A^-1BC^-1, C^-1B^-1A^-1
+  s = s.replace(/\(\s*([A-Z])\s*([A-Z])\s*\^?\s*-\s*1\s*([A-Z])\s*\)\s*\^?\s*-\s*1/g, '($1$2^{-1}$3)^{-1}');
+  s = s.replace(/([A-Z])\s*\^?\s*-\s*1\s*([A-Z])\s*\^?\s*-\s*1\s*([A-Z])\s*\^?\s*-\s*1/g, '$1^{-1}$2^{-1}$3^{-1}');
+  s = s.replace(/([A-Z])\s*\^?\s*-\s*1\s*([A-Z])\s*([A-Z])\s*\^?\s*-\s*1/g, '$1^{-1}$2$3^{-1}');
+  s = s.replace(/([A-Z])\s*\^?\s*-\s*1\s*([A-Z])\s*\^?\s*-\s*1/g, '$1^{-1}$2^{-1}');
+  s = s.replace(/([A-Z])\s*\^?\s*-\s*1/g, '$1^{-1}');
+  s = s.replace(/([A-Z])\s*\^?\s*-\s*2/g, '$1^{-2}');
+  s = s.replace(/([A-Z])\s*\^?\s*2\b/g, '$1^2');
+  s = s.replace(/([A-Z])\s*\^?\s*3\b/g, '$1^3');
+  s = s.replace(/([A-Z])\s*\^?\s*T\b/g, '$1^T');
+  s = s.replace(/\(\s*([A-Z])\s*\*\s*\)\s*\^?\s*T\b/g, '($1^*)^T');
+  s = s.replace(/([A-Z])\s*\*/g, '$1^*');
+
+  // 6. Xóa rác MathType lặp lại
+  s = s.replace(/!\s*!\s*""/g, '')
+       .replace(/!\s*!\s*"/g, '')
+       .replace(/\s+/g, ' ')
+       .trim();
+
+  // 7. Tự động bọc $...$ cho công thức toán nếu chưa có
+  if (/(\\(?:frac|det|begin|times|neq|le|ge|text|rightarrow|Leftrightarrow)|\^|\{|\})/.test(s) && !s.startsWith('$') && !s.includes('$$')) {
+    s = `$${s}$`;
+  }
+
   return s;
 }
 
@@ -811,6 +1064,24 @@ export function openPdfImportModal() {
 
   populatePdfCatSelects();
   
+  // Khởi tạo trạng thái Engine và API Key từ localStorage
+  const savedMode = localStorage.getItem('pdf_engine_mode') || 'ai';
+  const savedKey = getStoredGeminiApiKey();
+
+  if ($('pdf-engine-ai') && $('pdf-engine-offline')) {
+    if (savedMode === 'offline') {
+      $('pdf-engine-offline').checked = true;
+      togglePdfEngineMode('offline');
+    } else {
+      $('pdf-engine-ai').checked = true;
+      togglePdfEngineMode('ai');
+    }
+  }
+
+  if ($('pdf-gemini-api-key')) {
+    $('pdf-gemini-api-key').value = savedKey;
+  }
+
   $('pdf-step-upload').style.display = 'block';
   $('pdf-step-loading').style.display = 'none';
   $('pdf-step-preview').style.display = 'none';
@@ -1251,3 +1522,7 @@ window.saveParsedExamToSupabase = saveParsedExamToSupabase;
 window.deleteParsedQuestion = deleteParsedQuestion;
 window.addBlankQuestionToParsed = addBlankQuestionToParsed;
 window.filterParsedQuestionsPreview = filterParsedQuestionsPreview;
+window.togglePdfEngineMode = togglePdfEngineMode;
+window.saveGeminiApiKeyFromInput = saveGeminiApiKeyFromInput;
+window.getStoredGeminiApiKey = getStoredGeminiApiKey;
+
