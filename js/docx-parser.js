@@ -228,14 +228,30 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
       if (opt & 0x04) offset += 2; // custom space
       const tc = buf[offset++];
       const var1 = buf[offset++];
-      offset++; // MT5 2nd byte of variation
-      const topt = buf[offset++];
+      const var2 = buf[offset++]; // MT5 2nd byte of variation
 
-      // Phân số (Fractions: tmplCode 0, 1, 11, 12, 13)
+      // Phân số (Fractions: tmplCode 0, 1, 11, 12, 13) - 2 byte variation, KHÔNG có topt
       if (tc === 0 || tc === 1 || tc === 11 || tc === 12 || tc === 13) {
         const num = parseItem();
         const den = parseItem();
         return `\\frac{${num || '1'}}{${den || '1'}}`;
+      }
+      // Chỉ số trên / dưới (tmplCode 27, 28, 29) - 2 byte variation + 1 byte topt
+      if (tc === 27 || tc === 28 || tc === 29) {
+        const topt = buf[offset++]; // byte topt
+        if (tc === 27) {
+          const body = parseItem();
+          return body ? `_{${body}}` : '';
+        }
+        if (tc === 28) {
+          const body = parseItem();
+          return body ? `^{${body}}` : '';
+        }
+        if (tc === 29) {
+          const sub = parseItem();
+          const sup = parseItem();
+          return `_{${sub}}^{${sup}}`;
+        }
       }
       // Căn bậc 2 (tmplCode 2, 19)
       if (tc === 2 || tc === 19) {
@@ -262,22 +278,6 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
       if (tc === 6) return `\\left\\{${parseItem()}\\right\\}`;
       // Trị tuyệt đối (tmplCode 7)
       if (tc === 7) return `\\left|${parseItem()}\\right|`;
-      // Chỉ số dưới (tmplCode 27)
-      if (tc === 27) {
-        const body = parseItem();
-        return body ? `_{${body}}` : '';
-      }
-      // Chỉ số trên / Lũy thừa (tmplCode 28)
-      if (tc === 28) {
-        const body = parseItem();
-        return body ? `^{${body}}` : '';
-      }
-      // Cả chỉ số dưới và trên (tmplCode 29)
-      if (tc === 29) {
-        const sub = parseItem();
-        const sup = parseItem();
-        return `_{${sub}}^{${sup}}`;
-      }
       return parseItem();
     }
 
@@ -343,6 +343,10 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
 
   let clean = out.join('').trim();
   clean = clean.replace(/\^{}/g, '').replace(/_{}/g, '').replace(/\\left\[\\right\]/g, '');
+  clean = clean.replace(/det\s*([A-Za-z])/g, '\\det($1)')
+               .replace(/det\(([^)]+)\)/g, '\\det($1)')
+               .replace(/\(A\*\)/g, '(A^*)')
+               .replace(/A\*/g, 'A^*');
   if (clean) {
     return `$${clean}$`;
   }
