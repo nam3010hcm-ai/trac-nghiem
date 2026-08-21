@@ -1468,32 +1468,40 @@ export async function saveParsedExamToSupabase() {
   try {
     const authorEmail = state.currentUserEmail || 'nam3010hcm@gmail.com';
 
-    // 1. Chuẩn bị payload danh sách câu hỏi chuẩn theo schema Supabase
-    const questionsToInsert = currentParsedExam.questions.map(q => {
-      const qObj = {
-        cat: cat || 'Toán',
-        subcat: subcat || 'Toán/Phần 2 - Đại số',
-        text: String(q.text || '').trim(),
-        opts: Array.isArray(q.opts) ? q.opts : ["A", "B", "C", "D"],
-        ans: typeof q.ans === 'number' ? q.ans : (parseInt(q.ans, 10) || 0)
-      };
-      if (q.explain) qObj.explain = String(q.explain).trim();
-      return qObj;
-    });
+    // 1. Chuẩn bị payload danh sách câu hỏi khớp 100% với schema SQL của Supabase
+    const questionsToInsert = currentParsedExam.questions.map(q => ({
+      type: 'mcq_single',
+      cat: cat || 'Toán',
+      subcat: subcat || 'Toán/Phần 2 - Đại số',
+      text: String(q.text || '').trim(),
+      audio: '',
+      image: '',
+      opts: Array.isArray(q.opts) ? q.opts : ["A", "B", "C", "D"],
+      ans: typeof q.ans === 'number' ? q.ans : (parseInt(q.ans, 10) || 0),
+      blanks: [],
+      bank: [],
+      pairs: [],
+      explain: q.explain ? String(q.explain).trim() : '',
+      created_by: authorEmail,
+      difficulty: 'medium',
+      skill: 'reading'
+    }));
 
     // 2. Insert câu hỏi vào bảng 'questions' trong Supabase
     let insertedQuestionIds = [];
     let qResult = await db().from('questions').insert(questionsToInsert).select();
 
-    // Nếu lỗi do cột mở rộng (explain/image), tự động thử lại với payload cốt lõi
+    // Tự động thử lại với payload tối giản nếu gặp lỗi bất thường
     if (qResult.error) {
-      console.warn("Lần 1 insert questions gặp lỗi, thử lại với payload cốt lõi:", qResult.error);
+      console.warn("Lần 1 insert questions gặp lỗi, thử lại:", qResult.error);
       const minimalPayload = questionsToInsert.map(q => ({
         cat: q.cat,
         subcat: q.subcat,
         text: q.text,
         opts: q.opts,
-        ans: q.ans
+        ans: q.ans,
+        explain: q.explain,
+        created_by: authorEmail
       }));
       qResult = await db().from('questions').insert(minimalPayload).select();
     }
@@ -1526,9 +1534,11 @@ export async function saveParsedExamToSupabase() {
       count: insertedQuestionIds.length,
       cat: cat || 'Toán',
       subcat: subcat || 'Toán/Phần 2 - Đại số',
-      time_limit: timeLimit,
+      time_limit: parseInt(timeLimit, 10) || 45,
       is_hidden: false,
-      q_ids: insertedQuestionIds
+      q_ids: insertedQuestionIds,
+      created_by: authorEmail,
+      passing_score: 5.0
     };
 
     let eResult = await db().from('exams').insert([examPayload]).select();
@@ -1554,7 +1564,8 @@ export async function saveParsedExamToSupabase() {
         subcat: created.subcat || subcat,
         timeLimit: created.time_limit ?? timeLimit,
         isHidden: created.is_hidden ?? false,
-        qIds: created.q_ids || insertedQuestionIds
+        qIds: created.q_ids || insertedQuestionIds,
+        created_by: created.created_by || authorEmail
       });
     }
 
