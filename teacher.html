@@ -739,7 +739,7 @@ window.globalLogout = async function() {
                   <span style="font-size:18px">📝</span> + Tạo Đề Thi Mới
                 </button>
                 <button class="btn" style="justify-content:flex-start;padding:11px 16px;font-weight:700;gap:10px;background:#fef2f2;color:#b91c1c;border:1.5px solid #fecaca" onclick="if(window.openPdfImportModal) window.openPdfImportModal();">
-                  <span style="font-size:18px">📄</span> 🚀 Bóc Tách Đề Thi Từ PDF (Chữ Đỏ)
+                  <span style="font-size:18px">📑</span> 🚀 Bóc Tách Đề Thi Từ Word (.docx) & PDF
                 </button>
                 <button class="btn" style="justify-content:flex-start;padding:11px 16px;font-weight:700;gap:10px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe" onclick="window.switchTTab('q'); if(window.openQForm) window.openQForm();">
                   <span style="font-size:18px">📚</span> + Thêm Câu Hỏi Mới
@@ -762,7 +762,7 @@ window.globalLogout = async function() {
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <div class="sec-title" style="margin:0">Ngân hàng câu hỏi (<span id="q-count">0</span>)</div>
         <div style="display:flex;gap:8px;">
-          <button class="btn" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;font-weight:700;" onclick="if(window.openPdfImportModal) window.openPdfImportModal();">📄 Bóc Tách Từ PDF</button>
+          <button class="btn" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;font-weight:700;" onclick="if(window.openPdfImportModal) window.openPdfImportModal();">📑 Nhập Đề Word / PDF</button>
           <button class="btn btn-p" id="btn-open-qform" onclick="if(window.openQForm) window.openQForm();">+ Thêm câu hỏi</button>
         </div>
       </div>
@@ -989,7 +989,7 @@ window.globalLogout = async function() {
           <div style="font-size:12.5px;color:#64748b;margin-top:2px;">Quản lý ma trận đề thi chuẩn hóa, gán vào các Ca thi / Kỳ thi chính thức (Thi 1 lần, bảo mật).</div>
         </div>
         <div style="display:flex;gap:8px;">
-          <button class="btn" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;font-weight:700;" onclick="if(window.openPdfImportModal) window.openPdfImportModal();">📄 Nhập Đề Từ PDF</button>
+          <button class="btn" style="background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;font-weight:700;" onclick="if(window.openPdfImportModal) window.openPdfImportModal();">📑 Nhập Đề Word / PDF</button>
           <button class="btn btn-p" id="btn-open-eform" onclick="if(window.openEForm) window.openEForm();">+ Tạo Đề Thi Chính Thức</button>
         </div>
       </div>
@@ -2200,13 +2200,13 @@ document.addEventListener('keydown', function(e) {
     <!-- Header Modal -->
     <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:16px; border-bottom:1.5px solid #e2e8f0;">
       <div style="display:flex; align-items:center; gap:12px;">
-        <div style="width:42px; height:42px; background:linear-gradient(135deg,#fee2e2,#fecaca); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; color:#dc2626;">📄</div>
+        <div style="width:42px; height:42px; background:linear-gradient(135deg,#dbeafe,#bfdbfe); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; color:#1d4ed8;">📑</div>
         <div>
           <h2 style="font-size:19px; font-weight:800; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">
-            Bóc Tách & Nhận Diện Đề Thi Từ PDF
-            <span style="font-size:11.5px; font-weight:700; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; padding:2px 8px; border-radius:20px;">Đáp án Chữ Đỏ</span>
+            Bóc Tách Đề Thi Từ Word (.docx) & PDF
+            <span style="font-size:11.5px; font-weight:700; background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; padding:2px 8px; border-radius:20px;">⭐ Word (.docx) Chuẩn 100% Toán</span>
           </h2>
-          <div style="font-size:12.5px; color:#64748b; margin-top:2px;">Tự động phân tích câu hỏi, công thức toán/ma trận LaTeX và phát hiện đáp án đúng từ màu chữ</div>
+          <div style="font-size:12.5px; color:#64748b; margin-top:2px;">Tự động chuyển đổi công thức Toán (OMML → LaTeX), ma trận, phân số và phát hiện đáp án chữ Đỏ / In Đậm</div>
         </div>
       </div>
       <button class="auth-modal-close-btn" onclick="window.closePdfImportModal();" style="font-size:18px; color:#94a3b8; cursor:pointer; background:none; border:none;">✕</button>
@@ -2236,7 +2236,7 @@ document.addEventListener('keydown', function(e) {
                   <input type="radio" name="pdf-engine-mode" id="pdf-engine-ai" value="ai" checked onchange="window.togglePdfEngineMode('ai')" style="accent-color:#2563eb; width:16px; height:16px;">
                   <b style="color:#1e40af; font-size:13.5px;">🤖 AI Vision (Google Gemini)</b>
                 </div>
-                <span style="background:#dbeafe; color:#1e40af; font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:20px;">⭐ Khuyên dùng cho Toán</span>
+                <span style="background:#dbeafe; color:#1e40af; font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:20px;">⭐ Đa Năng Cho PDF</span>
               </div>
               <div style="font-size:12px; color:#3b82f6; line-height:1.45; margin-top:2px;">
                 "Nhìn" từng trang PDF qua thị giác AI, tái tạo <b>100% chuẩn xác</b> công thức phân số $\frac{a}{b}$, ma trận $\begin{bmatrix}\dots\end{bmatrix}$, số mũ $A^{-1}$, tích phân và phát hiện đáp án chữ Đỏ/In Đậm.
@@ -2253,7 +2253,7 @@ document.addEventListener('keydown', function(e) {
                 <span style="background:#e2e8f0; color:#475569; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px;">Không cần API Key</span>
               </div>
               <div style="font-size:12px; color:#64748b; line-height:1.45; margin-top:2px;">
-                Bóc tách trực tiếp từ lớp văn bản PDF.js với bộ tái tạo biểu thức toán học tự động. Phù hợp đề thi thông thường hoặc khi không có mạng.
+                Bóc tách trực tiếp file <b>Word (.docx)</b> chuẩn OMML và file PDF. Chạy ngay trên trình duyệt, bảo mật 100% không gửi file ra ngoài.
               </div>
             </label>
 
@@ -2263,7 +2263,7 @@ document.addEventListener('keydown', function(e) {
           <div id="pdf-gemini-key-box" style="margin-top:12px; padding:12px 14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
             <div style="flex:1; min-width:280px;">
               <div style="font-size:12px; font-weight:700; color:#166534; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
-                <span>🔑</span> Khóa Gemini API Key (Hoàn toàn miễn phí):
+                <span>🔑</span> Khóa Gemini API Key (Dành riêng cho file PDF):
               </div>
               <div style="display:flex; gap:8px; align-items:center;">
                 <input type="password" id="pdf-gemini-api-key" placeholder="Dán Gemini API Key (VD: AIzaSy...)" style="flex:1; padding:6px 10px; font-size:12.5px; font-family:monospace; border:1px solid #86efac; border-radius:6px; background:#ffffff;">
@@ -2272,21 +2272,23 @@ document.addEventListener('keydown', function(e) {
             </div>
             <div style="font-size:11.5px; color:#15803d; line-height:1.4;">
               Chưa có key? <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#16a34a; font-weight:800; text-decoration:underline;">Lấy API Key Miễn Phí tại Google AI Studio ↗</a>
-              <div style="font-size:10.5px; color:#4ade80;">Key được lưu bảo mật trong trình duyệt của bạn.</div>
+              <div style="font-size:10.5px; color:#4ade80;">Nếu upload file Word (.docx) thì không cần API Key!</div>
             </div>
           </div>
 
         </div>
 
         <!-- KHU VỰC KÉO THẢ / CHỌN FILE -->
-        <div style="background:#f8fafc; border:2px dashed #cbd5e1; border-radius:14px; padding:32px 20px; text-align:center; transition:all 0.2s; cursor:pointer;" onclick="if(event.target.tagName !== 'BUTTON') document.getElementById('pdf-file-input').click();" ondragover="event.preventDefault(); this.style.borderColor='#3b82f6'; this.style.background='#eff6ff';" ondragleave="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';" ondrop="event.preventDefault(); this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc'; window.handlePdfFileUpload(event);">
-          <div style="font-size:44px; margin-bottom:10px;">📑</div>
-          <div style="font-size:16px; font-weight:700; color:#1e293b; margin-bottom:6px;">Kéo & Thả file PDF đề thi vào đây</div>
-          <div style="font-size:13px; color:#64748b; margin-bottom:18px;">Hỗ trợ file PDF xuất từ Word, MathType, LaTeX, trắc nghiệm 4 phương án</div>
+        <div style="background:#f8fafc; border:2px dashed #3b82f6; border-radius:14px; padding:32px 20px; text-align:center; transition:all 0.2s; cursor:pointer;" onclick="if(event.target.tagName !== 'BUTTON') document.getElementById('pdf-file-input').click();" ondragover="event.preventDefault(); this.style.borderColor='#2563eb'; this.style.background='#eff6ff';" ondragleave="this.style.borderColor='#3b82f6'; this.style.background='#f8fafc';" ondrop="event.preventDefault(); this.style.borderColor='#3b82f6'; this.style.background='#f8fafc'; window.handlePdfFileUpload(event);">
+          <div style="font-size:48px; margin-bottom:10px;">📑</div>
+          <div style="font-size:17px; font-weight:800; color:#1e293b; margin-bottom:6px;">Kéo & Thả file Word (.docx) hoặc PDF đề thi vào đây</div>
+          <div style="font-size:13px; color:#2563eb; font-weight:700; margin-bottom:18px;">
+            ✨ Khuyên dùng file Word (.docx) để trích xuất chuẩn 100% công thức Toán (OMML → LaTeX) và phát hiện đáp án chữ Đỏ
+          </div>
           
-          <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;" onchange="window.handlePdfFileUpload(event);">
-          <button type="button" class="btn btn-p" id="btn-trigger-pdf-file" onclick="event.stopPropagation(); document.getElementById('pdf-file-input').click();" style="padding:10px 24px; font-weight:700; font-size:14px; cursor:pointer;">
-            📁 Chọn file PDF từ máy tính
+          <input type="file" id="pdf-file-input" accept=".docx,.doc,.pdf" style="display:none;" onchange="window.handlePdfFileUpload(event);">
+          <button type="button" class="btn btn-p" id="btn-trigger-pdf-file" onclick="event.stopPropagation(); document.getElementById('pdf-file-input').click();" style="padding:11px 26px; font-weight:700; font-size:14px; cursor:pointer; background:linear-gradient(135deg,#2563eb,#1d4ed8);">
+            📁 Chọn file Word (.docx) hoặc PDF từ máy tính
           </button>
         </div>
 

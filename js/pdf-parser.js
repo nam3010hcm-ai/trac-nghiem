@@ -2,6 +2,7 @@ import { state, $, esc, typesetMath } from './common.js';
 import { showToast } from './ui-components.js';
 import { renderQuestions } from './questions.js';
 import { renderExams, populateExamSelect } from './exams.js';
+import { parseDocxDocument } from './docx-parser.js';
 
 const db = () => window.supabaseClient;
 
@@ -1197,8 +1198,9 @@ export async function handlePdfFileUpload(e) {
   const file = e.target.files?.[0] || e.dataTransfer?.files?.[0];
   if (!file) return;
 
-  if (!file.name.toLowerCase().endsWith('.pdf')) {
-    alert("❌ Vui lòng chọn file có định dạng PDF (.pdf)!");
+  const fileName = (file.name || '').toLowerCase();
+  if (!fileName.endsWith('.docx') && !fileName.endsWith('.pdf')) {
+    alert("❌ Vui lòng chọn file có định dạng Word (.docx) hoặc PDF (.pdf)!");
     return;
   }
 
@@ -1223,19 +1225,30 @@ async function runPdfParsingWorkflow(file) {
   const progressFill = $('pdf-progress-fill');
   const progressText = $('pdf-progress-text');
   const progressDesc = $('pdf-progress-desc');
+  const isDocx = (file.name || '').toLowerCase().endsWith('.docx');
 
   try {
-    const parsedData = await parsePdfDocument(file, (percent, msg) => {
-      if (progressFill) progressFill.style.width = `${percent}%`;
-      if (progressText) progressText.textContent = `${percent}%`;
-      if (progressDesc) progressDesc.textContent = msg;
-    });
+    let parsedData;
+    if (isDocx) {
+      if (progressDesc) progressDesc.textContent = "Đang đọc cấu trúc Word (.docx) và công thức OMML...";
+      parsedData = await parseDocxDocument(file, (percent, msg) => {
+        if (progressFill) progressFill.style.width = `${percent}%`;
+        if (progressText) progressText.textContent = `${percent}%`;
+        if (progressDesc) progressDesc.textContent = msg;
+      });
+    } else {
+      parsedData = await parsePdfDocument(file, (percent, msg) => {
+        if (progressFill) progressFill.style.width = `${percent}%`;
+        if (progressText) progressText.textContent = `${percent}%`;
+        if (progressDesc) progressDesc.textContent = msg;
+      });
+    }
 
     currentParsedExam = parsedData;
     renderParsedExamPreview();
   } catch (err) {
-    console.error("Lỗi parse PDF:", err);
-    alert("❌ Lỗi khi đọc file PDF: " + (err.message || "Vui lòng thử lại"));
+    console.error("Lỗi parse file:", err);
+    alert(`❌ Lỗi khi đọc file ${isDocx ? 'Word (.docx)' : 'PDF'}: ` + (err.message || "Vui lòng thử lại"));
     $('pdf-step-upload').style.display = 'block';
     $('pdf-step-loading').style.display = 'none';
   }
