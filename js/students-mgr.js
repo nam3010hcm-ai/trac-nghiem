@@ -251,6 +251,7 @@ export async function saveStudent() {
   const saveBtn = $('btn-save-student');
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Đang lưu...'; }
 
+  try {
     const authorEmail = (state && state.currentUserEmail) || 'nam3010hcm@gmail.com';
     const payload = {
       id,
