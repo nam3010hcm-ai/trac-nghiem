@@ -712,11 +712,124 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
       }
     }
 
+// Kiểm tra mã màu hex có phải màu đỏ không (hỗ trợ mọi biến thể Word)
+export function isColorRedHex(cVal) {
+  if (!cVal) return false;
+  const c = String(cVal).toLowerCase().trim();
+  if (['ff0000', 'ee0000', 'dc2626', 'c00000', 'ef4444', 'red', 'darkred', 'crimson', 'firebrick', 'ed1c24', 'fe0000', 'e00000', 'cc0000', 'd00000', 'b91c1c', 'e11d48'].includes(c)) {
+    return true;
+  }
+  if (c.startsWith('ff0') || c.startsWith('ee0') || c.startsWith('dc2') || c.startsWith('c00') || c.startsWith('ed1') || c.startsWith('fe0') || c.startsWith('e00')) {
+    return true;
+  }
+  if (c.length === 6) {
+    try {
+      const r = parseInt(c.slice(0, 2), 16);
+      const g = parseInt(c.slice(2, 4), 16);
+      const b = parseInt(c.slice(4, 6), 16);
+      if (!isNaN(r) && !isNaN(g) && !isNaN(b)) {
+        if ((r >= 150 && g <= 120 && b <= 120) || (r >= 160 && (r - g >= 40) && (r - b >= 40))) {
+          return true;
+        }
+      }
+    } catch (e) {}
+  }
+  return false;
+}
+
+// Bóc tách nội dung của 1 đoạn văn <w:p>
+function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
+  let fullText = "";
+  let hasRed = false;
+  let hasBold = false;
+  let runs = [];
+
+  function processNode(node) {
+    const nodeName = node.localName || node.nodeName || '';
+
+    // 1. Khối công thức Toán học OMML: <m:oMath> hoặc <m:oMathPara>
+    if (nodeName === 'oMath' || nodeName === 'm:oMath' || nodeName === 'oMathPara' || nodeName === 'm:oMathPara') {
+      const latex = ommlNodeToLatex(node).trim();
+      if (latex) {
+        const mathStr = `$${latex}$`;
+        const rStart = fullText.length;
+        fullText += (fullText.endsWith(' ') ? '' : ' ') + mathStr + ' ';
+        const rEnd = fullText.length;
+        runs.push({ text: mathStr, isRed: false, isBold: false, isUnderline: false, range: [rStart, rEnd] });
+      }
+      return;
+    }
+
+    // 2. Khối hình ảnh / DrawingML: <w:drawing>
+    if (nodeName === 'drawing' || nodeName === 'w:drawing') {
+      const blip = node.querySelector('blip, a\\:blip, svgBlip, asvg\\:svgBlip');
+      if (blip) {
+        const rId = blip.getAttribute('r:embed') || blip.getAttribute('embed') || blip.getAttribute('r:link');
+        const targetPath = relsMap[rId];
+        const media = targetPath ? mediaCache[targetPath] : null;
+        if (media && media.content) {
+          if (media.type === 'latex') {
+            const rStart = fullText.length;
+            fullText += (fullText.endsWith(' ') ? '' : ' ') + media.content + ' ';
+            const rEnd = fullText.length;
+            runs.push({ text: media.content, isRed: false, isBold: false, isUnderline: false, range: [rStart, rEnd] });
+          } else if (media.type === 'image') {
+            const imgTag = `<img src="${media.content}" class="docx-math-img" style="vertical-align:middle;max-height:48px;display:inline-block;margin:0 4px;" />`;
+            const rStart = fullText.length;
+            fullText += ' ' + imgTag + ' ';
+            const rEnd = fullText.length;
+            runs.push({ text: imgTag, isRed: false, isBold: false, isUnderline: false, range: [rStart, rEnd] });
+          }
+          return;
+        }
+      }
+    }
+
+    // 3. Khối hình ảnh VML / MathType OLE Object: <w:pict> hoặc <w:object>
+    if (nodeName === 'pict' || nodeName === 'w:pict' || nodeName === 'object' || nodeName === 'w:object') {
+      const oleData = node.querySelector('OLEObject, o\\:OLEObject');
+      const imgData = node.querySelector('imagedata, v\\:imagedata');
+
+      // ƯU TIÊN 1: File OLE Object (.bin) trong word/embeddings/
+      let media = null;
+      if (oleData) {
+        const oleRId = oleData.getAttribute('r:id') || oleData.getAttribute('id');
+        if (oleRId && relsMap[oleRId] && mediaCache[relsMap[oleRId]] && mediaCache[relsMap[oleRId]].content) {
+          media = mediaCache[relsMap[oleRId]];
+        }
+      }
+
+      // ƯU TIÊN 2: File imagedata (.wmf, .png)
+      if (!media && imgData) {
+        const imgRId = imgData.getAttribute('r:id') || imgData.getAttribute('id') || imgData.getAttribute('r:href');
+        if (imgRId && relsMap[imgRId] && mediaCache[relsMap[imgRId]] && mediaCache[relsMap[imgRId]].content) {
+          media = mediaCache[relsMap[imgRId]];
+        }
+      }
+
+      if (media && media.content) {
+        if (media.type === 'latex') {
+          const rStart = fullText.length;
+          fullText += (fullText.endsWith(' ') ? '' : ' ') + media.content + ' ';
+          const rEnd = fullText.length;
+          runs.push({ text: media.content, isRed: false, isBold: false, isUnderline: false, range: [rStart, rEnd] });
+        } else if (media.type === 'image') {
+          const imgTag = `<img src="${media.content}" class="docx-math-img" style="vertical-align:middle;max-height:48px;display:inline-block;margin:0 4px;" />`;
+          const rStart = fullText.length;
+          fullText += ' ' + imgTag + ' ';
+          const rEnd = fullText.length;
+          runs.push({ text: imgTag, isRed: false, isBold: false, isUnderline: false, range: [rStart, rEnd] });
+        }
+        return;
+      }
+    }
+
     // 4. Khối văn bản thông thường: <w:r>
     if (nodeName === 'r' || nodeName === 'w:r') {
       let rText = "";
       let rIsRed = false;
       let rIsBold = false;
+      let rIsUnderline = false;
 
       // Đọc thuộc tính định dạng <w:rPr>
       let isSuperscript = false;
@@ -727,18 +840,44 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
         const colorNode = rPr.querySelector('color, w\\:color');
         if (colorNode) {
           const cVal = (colorNode.getAttribute('w:val') || colorNode.getAttribute('val') || '').toLowerCase();
-          if (['ff0000', 'ee0000', 'dc2626', 'c00000', 'ef4444', 'red', 'darkred'].includes(cVal) || cVal.startsWith('ff0') || cVal.startsWith('ee0') || cVal.startsWith('dc2') || cVal.startsWith('c00')) {
+          if (isColorRedHex(cVal)) {
             rIsRed = true;
             hasRed = true;
           }
         }
-        // Kiểm tra in đậm: <w:b/>
-        const bNode = rPr.querySelector('b, w\\:b');
+        // Kiểm tra highlight đỏ: <w:highlight w:val="red"/>
+        const hlNode = rPr.querySelector('highlight, w\\:highlight');
+        if (hlNode) {
+          const hlVal = (hlNode.getAttribute('w:val') || hlNode.getAttribute('val') || '').toLowerCase();
+          if (['red', 'darkred', 'magenta'].includes(hlVal)) {
+            rIsRed = true;
+            hasRed = true;
+          }
+        }
+        // Kiểm tra shading fill đỏ: <w:shd w:fill="FF0000"/>
+        const shdNode = rPr.querySelector('shd, w\\:shd');
+        if (shdNode) {
+          const sVal = (shdNode.getAttribute('w:fill') || shdNode.getAttribute('fill') || '').toLowerCase();
+          if (isColorRedHex(sVal)) {
+            rIsRed = true;
+            hasRed = true;
+          }
+        }
+        // Kiểm tra in đậm: <w:b/>, <w:bCs/>
+        const bNode = rPr.querySelector('b, w\\:b, bCs, w\\:bCs');
         if (bNode) {
           const bVal = bNode.getAttribute('w:val') || bNode.getAttribute('val');
           if (bVal !== 'false' && bVal !== '0') {
             rIsBold = true;
             hasBold = true;
+          }
+        }
+        // Kiểm tra gạch chân: <w:u/>
+        const uNode = rPr.querySelector('u, w\\:u');
+        if (uNode) {
+          const uVal = uNode.getAttribute('w:val') || uNode.getAttribute('val');
+          if (uVal !== 'none' && uVal !== 'false' && uVal !== '0') {
+            rIsUnderline = true;
           }
         }
         // Kiểm tra chỉ số trên / dưới của Word: <w:vertAlign w:val="superscript"/>
@@ -803,8 +942,16 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
         if (/^[a-dA-D][.:\-\/)]/.test(trimmed) && fullText && !fullText.endsWith(' ')) {
           fullText += ' ';
         }
+        const rStart = fullText.length;
         fullText += formattedRText;
-        runs.push({ text: formattedRText, isRed: rIsRed, isBold: rIsBold });
+        const rEnd = fullText.length;
+        runs.push({
+          text: formattedRText,
+          isRed: rIsRed,
+          isBold: rIsBold,
+          isUnderline: rIsUnderline,
+          range: [rStart, rEnd]
+        });
       }
       return;
     }
@@ -839,40 +986,75 @@ function parseQuestionsFromDocxLines(lines) {
   const fullDocumentText = lines.map(l => l.text).join('\n');
   const answerKeyMap = extractAnswerKeyTable(fullDocumentText);
 
-  const qHeaders = [];
-  const qRegex = /(?:^|\n)\s*(?:(?:C[âaÂA]u|B[àaÀA]i|Question|Q|Q\.)\s*(\d+)(?:\s*\([^)]*\)|\s*\[[^\]]*\])?[\s.:\-\/)]+|(\d{1,3})[\s.:\-\/)](?=\s+[A-ZÀ-Ỹa-zà-ỹ0-9$]))/gi;
+  const qRegex = /^\s*(?:(?:C[âaÂA]u|B[àaÀA]i|Question|Q|Q\.)\s*(\d+)(?:\s*\([^)]*\)|\s*\[[^\]]*\])?[\s.:\-\/)]+|(\d{1,3})[\s.:\-\/)](?=\s+[A-ZÀ-Ỹa-zà-ỹ0-9$]))/i;
 
-  let match;
-  while ((match = qRegex.exec(fullDocumentText)) !== null) {
-    const qNum = parseInt(match[1] || match[2], 10);
-    qHeaders.push({ qNum, startIdx: match.index });
+  // Gom nhóm các dòng theo từng câu hỏi
+  const qGroups = [];
+  let curGroup = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Kiểm tra xem dòng này có bắt đầu bảng đáp án không
+    if (/(?:B[ẢAảa]NG\s*Đ[ÁAáa]P\s*[ÁAáa]N|ANSWER\s*KEY)/i.test(line.text)) {
+      break;
+    }
+
+    const match = line.text.match(qRegex);
+    if (match) {
+      const qNum = parseInt(match[1] || match[2], 10);
+      if (curGroup) {
+        qGroups.push(curGroup);
+      }
+      curGroup = {
+        qNum,
+        lines: [line]
+      };
+    } else {
+      if (curGroup) {
+        curGroup.lines.push(line);
+      }
+    }
+  }
+  if (curGroup) {
+    qGroups.push(curGroup);
   }
 
-  if (!qHeaders.length) {
-    return fallbackExtractQuestionsFromLines(lines);
+  // Nếu không gom nhóm được câu hỏi theo dòng, dùng giải thuật phân đoạn văn bản
+  if (!qGroups.length) {
+    const qHeaders = [];
+    const globalQRegex = /(?:^|\n)\s*(?:(?:C[âaÂA]u|B[àaÀA]i|Question|Q|Q\.)\s*(\d+)(?:\s*\([^)]*\)|\s*\[[^\]]*\])?[\s.:\-\/)]+|(\d{1,3})[\s.:\-\/)](?=\s+[A-ZÀ-Ỹa-zà-ỹ0-9$]))/gi;
+    let match;
+    while ((match = globalQRegex.exec(fullDocumentText)) !== null) {
+      const qNum = parseInt(match[1] || match[2], 10);
+      qHeaders.push({ qNum, startIdx: match.index });
+    }
+
+    if (!qHeaders.length) {
+      return fallbackExtractQuestionsFromLines(lines);
+    }
+
+    const questions = [];
+    for (let i = 0; i < qHeaders.length; i++) {
+      const cur = qHeaders[i];
+      const nextStart = (i + 1 < qHeaders.length) ? qHeaders[i + 1].startIdx : fullDocumentText.length;
+      let blockText = fullDocumentText.slice(cur.startIdx, nextStart).trim();
+      const ansTableIdx = blockText.search(/(?:B[ẢAảa]NG\s*Đ[ÁAáa]P\s*[ÁAáa]N|ANSWER\s*KEY)/i);
+      if (ansTableIdx !== -1 && i === qHeaders.length - 1) {
+        blockText = blockText.slice(0, ansTableIdx).trim();
+      }
+      const parsedQ = parseSingleDocxQuestionBlock(blockText, cur.qNum, lines, answerKeyMap);
+      if (parsedQ) {
+        questions.push(parsedQ);
+      }
+    }
+    return questions;
   }
 
   const questions = [];
-
-  for (let i = 0; i < qHeaders.length; i++) {
-    const cur = qHeaders[i];
-    const nextStart = (i + 1 < qHeaders.length) ? qHeaders[i + 1].startIdx : fullDocumentText.length;
-    let blockText = fullDocumentText.slice(cur.startIdx, nextStart).trim();
-
-    // Cắt bỏ bảng đáp án nếu ở cuối
-    const ansTableIdx = blockText.search(/(?:B[ẢAảa]NG\s*Đ[ÁAáa]P\s*[ÁAáa]N|ANSWER\s*KEY)/i);
-    if (ansTableIdx !== -1 && i === qHeaders.length - 1) {
-      blockText = blockText.slice(0, ansTableIdx).trim();
-    }
-
-    const parsedQ = parseSingleDocxQuestionBlock(blockText, cur.qNum, lines);
+  for (const group of qGroups) {
+    const blockText = group.lines.map(l => l.text).join('\n').trim();
+    const parsedQ = parseSingleDocxQuestionBlock(blockText, group.qNum, group.lines, answerKeyMap);
     if (parsedQ) {
-      if (parsedQ.ans === null || parsedQ.ans === undefined || parsedQ._ansSource === 'default') {
-        if (answerKeyMap[cur.qNum] !== undefined) {
-          parsedQ.ans = answerKeyMap[cur.qNum];
-        }
-      }
-      delete parsedQ._ansSource;
       questions.push(parsedQ);
     }
   }
@@ -914,7 +1096,7 @@ function autoWrapMathTokens(text) {
 }
 
 // Bóc tách 1 câu hỏi từ khối văn bản Word
-function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
+function parseSingleDocxQuestionBlock(block, qNum, qLines = [], answerKeyMap = {}) {
   const headerMatch = block.match(/^\s*(?:(?:C[âaÂA]u|B[àaÀA]i|Question|Q|Q\.)\s*\d+(?:\s*\([^)]*\)|\s*\[[^\]]*\])?[\s.:\-\/)]+|\d{1,3}[\s.:\-\/)])\s*/i);
   let content = headerMatch ? block.slice(headerMatch[0].length).trim() : block;
 
@@ -928,8 +1110,8 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
     content = content.slice(0, explainMatch.index).trim();
   }
 
-  // Regex tìm 4 phương án a., b., c., d. hoặc A., B., C., D.
-  const optRegex = /(?:^|\n|\s{2,}|\t|\s|[*$)}\]])(?:\*|\[x\]\s*)?([A-Da-d])(?:[\s.:\-\/)\]]*[.:\-\/)\]]+|\s*(?=<img|\$|[0-9–\-]))(?!\d)/g;
+  // Regex tìm 4 phương án a., b., c., d. hoặc A., B., C., D. (Không nuốt khoảng trắng thừa)
+  const optRegex = /(?:^|\s+|[*$)}\]])(?:\*|\[x\]\s*)?([A-Da-d])(?:[.:\-\/)\]]+|\s*(?=[0-9–\-$]|\\begin|\\frac|det))(?!\d)/g;
   const matches = [];
   let om;
   while ((om = optRegex.exec(content)) !== null) {
@@ -943,7 +1125,8 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
       letter,
       optIdx,
       matchIndex: om.index,
-      fullMatchLength: om[0].length
+      fullMatchLength: om[0].length,
+      rawMatch: om[0]
     });
   }
 
@@ -985,8 +1168,8 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
 
   let qText = content;
   let opts = ["", "", "", ""];
-  let detectedAns = -1;
-  let ansSource = 'default';
+  const optScores = [0, 0, 0, 0];
+  let boldLabelsCount = 0;
 
   if (bestSeq.length >= 2) {
     qText = content.slice(0, bestSeq[0].matchIndex).trim();
@@ -1008,19 +1191,124 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
 
       opts[cur.optIdx] = autoWrapMathTokens(optText);
 
-      // Kiểm tra màu ĐỎ từ các dòng Word trùng khớp
-      if (detectedAns === -1) {
-        for (const line of allLines) {
-          if (line.hasRed) {
-            const hasOptionLabel = line.runs && line.runs.some(r => r.isRed && (r.text.includes(cur.rawChar + '.') || r.text.includes(cur.letter + '.')));
-            if (hasOptionLabel || line.text.includes(cur.rawChar + '.') || line.text.includes(cur.letter + '.') || (optText && optText.length >= 2 && line.text.includes(optText))) {
-              detectedAns = cur.optIdx;
-              ansSource = 'red_word';
-              break;
-            }
-          }
+      // Kiểm tra ký hiệu marker
+      if (cur.rawMatch && (cur.rawMatch.includes('*') || cur.rawMatch.includes('[x]'))) {
+        optScores[cur.optIdx] += 90;
+      }
+    }
+  }
+
+  // Tính điểm định dạng (Màu Đỏ, In Đậm, Gạch Chân) từ các dòng thuộc câu hỏi hiện tại
+  for (const line of qLines) {
+    const lText = line.text || '';
+    const lRuns = line.runs || [];
+
+    const lineOptRegex = /(?:^|\s+|[*$)}\]])(?:\*|\[x\]\s*)?([A-Da-d])(?:[.:\-\/)\]]+|\s*(?=[0-9–\-$]|\\begin|\\frac|det))(?!\d)/g;
+    const lineMatches = [];
+    let lm;
+    while ((lm = lineOptRegex.exec(lText)) !== null) {
+      const letter = lm[1].toUpperCase();
+      const optIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[letter];
+      lineMatches.push({
+        letter,
+        optIdx,
+        start: lm.index,
+        end: lm.index + lm[0].length,
+        rawMatch: lm[0]
+      });
+    }
+
+    for (let mi = 0; mi < lineMatches.length; mi++) {
+      const curMatch = lineMatches[mi];
+      const optIdx = curMatch.optIdx;
+      const labelStart = curMatch.start;
+      const labelEnd = curMatch.end;
+      const contentStart = labelEnd;
+      const contentEnd = (mi + 1 < lineMatches.length) ? lineMatches[mi + 1].start : lText.length;
+
+      // 1. Kiểm tra runs chồng lấn với Nhãn (Label)
+      let labelIsRed = false;
+      let labelIsBold = false;
+      let labelIsUnderline = false;
+
+      for (const r of lRuns) {
+        if (!r.range) continue;
+        const [rStart, rEnd] = r.range;
+        if (Math.max(labelStart, rStart) < Math.min(labelEnd, rEnd)) {
+          if (r.isRed) labelIsRed = true;
+          if (r.isBold) labelIsBold = true;
+          if (r.isUnderline) labelIsUnderline = true;
         }
       }
+
+      if (labelIsRed && labelIsBold) {
+        optScores[optIdx] += 100;
+      } else if (labelIsRed) {
+        optScores[optIdx] += 80;
+      } else if (labelIsBold) {
+        optScores[optIdx] += 30;
+        boldLabelsCount++;
+      } else if (labelIsUnderline) {
+        optScores[optIdx] += 25;
+      }
+
+      if (curMatch.rawMatch && (curMatch.rawMatch.includes('*') || curMatch.rawMatch.includes('[x]'))) {
+        optScores[optIdx] += 90;
+      }
+
+      // 2. Kiểm tra runs chồng lấn với Nội dung (Content)
+      let contentIsRed = false;
+      let contentIsBold = false;
+      for (const r of lRuns) {
+        if (!r.range) continue;
+        const [rStart, rEnd] = r.range;
+        if (Math.max(contentStart, rStart) < Math.min(contentEnd, rEnd)) {
+          if (r.isRed) contentIsRed = true;
+          if (r.isBold) contentIsBold = true;
+        }
+      }
+
+      if (contentIsRed && contentIsBold) {
+        optScores[optIdx] += 70;
+      } else if (contentIsRed) {
+        optScores[optIdx] += 60;
+      } else if (contentIsBold) {
+        optScores[optIdx] += 15;
+      }
+    }
+  }
+
+  // Khử nhiễu: Nếu cả 4 phương án đều in đậm nhãn (do style đề thi), trừ 30 điểm in đậm trung hòa
+  if (boldLabelsCount >= 4) {
+    for (let idx = 0; idx < 4; idx++) {
+      if (optScores[idx] >= 30 && optScores[idx] < 80) {
+        optScores[idx] -= 30;
+      }
+    }
+  }
+
+  // Kiểm tra đáp án được nhắc trong lời giải (VD: "Chọn C", "Đáp án: B")
+  if (explain) {
+    const ansInExplain = explain.match(/(?:Ch[ọo]n|Đ[áa]p\s*[áa]n|Đ\/A|C[âa]u\s*\d+[\s:.]*)\s*([A-D])\b/i);
+    if (ansInExplain) {
+      const expIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[ansInExplain[1].toUpperCase()];
+      if (expIdx !== undefined) {
+        optScores[expIdx] += 50;
+      }
+    }
+  }
+
+  // Xác định đáp án có điểm số cao nhất
+  let detectedAns = -1;
+  const maxScore = Math.max(...optScores);
+  if (maxScore > 0) {
+    detectedAns = optScores.indexOf(maxScore);
+  }
+
+  // Nếu chưa phát hiện hoặc có bảng đáp án chính thức, đối soát với Bảng Đáp Án
+  if (answerKeyMap && answerKeyMap[qNum] !== undefined) {
+    if (detectedAns === -1 || maxScore < 80) {
+      detectedAns = answerKeyMap[qNum];
     }
   }
 
@@ -1043,8 +1331,7 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
     text: qText || `Nội dung câu hỏi ${qNum}`,
     opts: opts.map(o => autoWrapMathTokens(o)),
     ans: detectedAns >= 0 ? detectedAns : 0,
-    explain: autoWrapMathTokens(explain),
-    _ansSource: ansSource
+    explain: autoWrapMathTokens(explain)
   };
 }
 

@@ -786,16 +786,8 @@ export function extractQuestionsFromText(rawText, allRedItems = [], allBoldItems
 
     if (!block) continue;
 
-    const parsedQ = parseSingleQuestionBlock(block, current.qNum, allRedItems, i, redOptionLetters);
+    const parsedQ = parseSingleQuestionBlock(block, current.qNum, allRedItems, allBoldItems, answerKeyMap);
     if (parsedQ) {
-      // Nếu chưa có đáp án từ màu đỏ hoặc ký hiệu, lấy từ Bảng Đáp Án
-      if (parsedQ.ans === null || parsedQ.ans === undefined || parsedQ._ansSource === 'default') {
-        if (answerKeyMap[current.qNum] !== undefined) {
-          parsedQ.ans = answerKeyMap[current.qNum];
-          parsedQ._ansSource = 'table';
-        }
-      }
-      delete parsedQ._ansSource;
       questions.push(parsedQ);
     }
   }
@@ -805,7 +797,7 @@ export function extractQuestionsFromText(rawText, allRedItems = [], allBoldItems
 
 // Nhận diện chuỗi 4 phương án lựa chọn tối ưu (ưu tiên tính nhất quán hoa/thường)
 function findBestOptionSequence(content) {
-  const optRegex = /(?:^|\n|\s{2,}|\t|\s)(?:\*|\[x\]\s*)?([A-Da-d])(?:[\s.:\-\/)\]]*[.:\-\/)\]]+|\s+(?=[0-9$–\-]))(?!\d)/g;
+  const optRegex = /(?:^|\s+|[*$)}\]])(?:\*|\[x\]\s*)?([A-Da-d])(?:[.:\-\/)\]]+|\s*(?=[0-9–\-$]|\\begin|\\frac|det))(?!\d)/g;
   const matches = [];
   let om;
   while ((om = optRegex.exec(content)) !== null) {
@@ -870,7 +862,7 @@ function findBestOptionSequence(content) {
 }
 
 // Bóc tách một block câu hỏi thành Đề bài, 4 phương án A/B/C/D, Lời giải và Đáp án đúng
-function parseSingleQuestionBlock(block, qNum, allRedItems = [], qIndex = 0, redOptionLetters = []) {
+function parseSingleQuestionBlock(block, qNum, allRedItems = [], allBoldItems = [], answerKeyMap = {}) {
   // Bỏ phần tiêu đề câu hỏi (Ví dụ "Câu 1:")
   const headerMatch = block.match(/^\s*(?:(?:C[âaÂA]u|B[àaÀA]i|Question|Q|Q\.)\s*\d+(?:\s*\([^)]*\)|\s*\[[^\]]*\])?[\s.:\-\/)]+|\d{1,3}[\s.:\-\/)])\s*/i);
   let content = headerMatch ? block.slice(headerMatch[0].length).trim() : block;
@@ -887,8 +879,8 @@ function parseSingleQuestionBlock(block, qNum, allRedItems = [], qIndex = 0, red
 
   let qText = content;
   let opts = ["", "", "", ""];
-  let detectedAns = -1;
-  let ansSource = 'default';
+  const optScores = [0, 0, 0, 0];
+  let boldLabelsCount = 0;
 
   if (bestSequence.length >= 2) {
     // Nội dung câu hỏi là đoạn trước phương án A đầu tiên
@@ -901,16 +893,32 @@ function parseSingleQuestionBlock(block, qNum, allRedItems = [], qIndex = 0, red
 
       // Kiểm tra xem phương án có dấu sao hoặc [x] không
       if (cur.rawMatch.includes('*') || cur.rawMatch.includes('[x]')) {
-        detectedAns = cur.optIdx;
-        ansSource = 'marker';
+        optScores[cur.optIdx] += 90;
       }
 
-      // Kiểm tra xem nội dung phương án có chứa từ khóa màu đỏ đặc trưng không
-      if (detectedAns === -1 && allRedItems && optText.length >= 2) {
+      // Kiểm tra xem nhãn phương án có màu ĐỎ không (ví dụ "a." hoặc "A" trong allRedItems)
+      if (allRedItems && allRedItems.length) {
         for (const red of allRedItems) {
-          if (red.text && red.text.length >= 2 && optText.includes(red.text)) {
-            detectedAns = cur.optIdx;
-            ansSource = 'red_text';
+          const rText = (red.text || '').trim();
+          if (rText === cur.rawChar + '.' || rText === cur.letter + '.' || rText === cur.rawChar || rText === cur.letter) {
+            optScores[cur.optIdx] += 80;
+            // Nếu chữ đỏ này cũng có trong allBoldItems -> Thưởng thêm +20
+            if (allBoldItems && allBoldItems.some(b => (b.text || '').trim() === rText)) {
+              optScores[cur.optIdx] += 20;
+            }
+          } else if (optText.length >= 3 && optText.includes(rText) && rText.length >= 2) {
+            optScores[cur.optIdx] += 60;
+          }
+        }
+      }
+
+      // Kiểm tra xem nhãn phương án có in đậm không
+      if (allBoldItems && allBoldItems.length) {
+        for (const bold of allBoldItems) {
+          const bText = (bold.text || '').trim();
+          if (bText === cur.rawChar + '.' || bText === cur.letter + '.' || bText === cur.rawChar || bText === cur.letter) {
+            optScores[cur.optIdx] += 30;
+            boldLabelsCount++;
             break;
           }
         }
@@ -925,14 +933,13 @@ function parseSingleQuestionBlock(block, qNum, allRedItems = [], qIndex = 0, red
     let fallbackTextLines = [];
 
     for (const line of lines) {
-      const lineOptMatch = line.match(/^(\*|\[x\]\s*)?([A-Da-d])(?:[\s.:\-\/)\]]*[.:\-\/)\]]+|\s+(?=[0-9$–\-]))\s*(.*)/i);
+      const lineOptMatch = line.match(/^(\*|\[x\]\s*)?([A-Da-d])(?:[.:\-\/)\]]+|\s*(?=[0-9–\-$]))\s*(.*)/i);
       if (lineOptMatch) {
         const isMarked = Boolean(lineOptMatch[1]);
         const letter = lineOptMatch[2].toUpperCase();
         curOptIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[letter];
         if (isMarked) {
-          detectedAns = curOptIdx;
-          ansSource = 'marker';
+          optScores[curOptIdx] += 90;
         }
         opts[curOptIdx] = cleanMathFormulas(lineOptMatch[3]);
       } else if (curOptIdx >= 0 && curOptIdx < 4) {
@@ -947,13 +954,37 @@ function parseSingleQuestionBlock(block, qNum, allRedItems = [], qIndex = 0, red
     }
   }
 
-  // Nếu chưa phát hiện đáp án từ ký hiệu marker, lấy từ ký hiệu chữ cái màu ĐỎ theo số thứ tự câu hỏi
-  if (detectedAns === -1 && redOptionLetters && redOptionLetters[qIndex] !== undefined) {
-    const letter = redOptionLetters[qIndex];
-    const letterIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[letter];
-    if (letterIdx !== undefined) {
-      detectedAns = letterIdx;
-      ansSource = 'red_letter';
+  // Khử nhiễu: Nếu cả 4 phương án đều in đậm nhãn (do style đề thi), trừ 30 điểm in đậm trung hòa
+  if (boldLabelsCount >= 4) {
+    for (let idx = 0; idx < 4; idx++) {
+      if (optScores[idx] >= 30 && optScores[idx] < 80) {
+        optScores[idx] -= 30;
+      }
+    }
+  }
+
+  // Kiểm tra đáp án được nhắc trong lời giải (VD: "Chọn A", "Đáp án: B")
+  if (explain) {
+    const ansInExplain = explain.match(/(?:Ch[ọo]n|Đ[áa]p\s*[áa]n|Đ\/A|C[âa]u\s*\d+[\s:.]*)\s*([A-D])\b/i);
+    if (ansInExplain) {
+      const expIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[ansInExplain[1].toUpperCase()];
+      if (expIdx !== undefined) {
+        optScores[expIdx] += 50;
+      }
+    }
+  }
+
+  // Xác định đáp án có điểm số cao nhất
+  let detectedAns = -1;
+  const maxScore = Math.max(...optScores);
+  if (maxScore > 0) {
+    detectedAns = optScores.indexOf(maxScore);
+  }
+
+  // Nếu có Bảng Đáp Án chính thức, đối soát
+  if (answerKeyMap && answerKeyMap[qNum] !== undefined) {
+    if (detectedAns === -1 || maxScore < 80) {
+      detectedAns = answerKeyMap[qNum];
     }
   }
 
@@ -964,21 +995,11 @@ function parseSingleQuestionBlock(block, qNum, allRedItems = [], qIndex = 0, red
     }
   }
 
-  // Kiểm tra đáp án được nhắc trong lời giải (VD: "Chọn A", "Đáp án: B")
-  if (detectedAns === -1 && explain) {
-    const ansInExplain = explain.match(/(?:Ch[ọo]n|Đ[áa]p\s*[áa]n|Đ\/A|C[âa]u\s*\d+[\s:.]*)\s*([A-D])\b/i);
-    if (ansInExplain) {
-      detectedAns = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[ansInExplain[1].toUpperCase()];
-      ansSource = 'explain';
-    }
-  }
-
   return {
     text: cleanMathFormulas(qText) || `Nội dung câu hỏi ${qNum}`,
     opts: opts,
     ans: detectedAns >= 0 ? detectedAns : 0,
-    explain: cleanMathFormulas(explain),
-    _ansSource: ansSource
+    explain: cleanMathFormulas(explain)
   };
 }
 

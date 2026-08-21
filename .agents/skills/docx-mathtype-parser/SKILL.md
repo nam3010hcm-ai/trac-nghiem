@@ -101,8 +101,31 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 
 ---
 
+### 8. Bộ nhận diện đáp án đúng Đa tiêu chí (In đậm & Bôi đỏ)
+- **Tệp nguồn:** [`js/docx-parser.js`](file:///Users/namtp/Downloads/trac-nghiem/js/docx-parser.js), [`js/pdf-parser.js`](file:///Users/namtp/Downloads/trac-nghiem/js/pdf-parser.js)
+- **Vấn đề giải quyết:**
+  - Trước đây, vòng lặp nhận diện đáp án đúng kiểm tra trên toàn bộ document, dẫn đến việc phương án `A` luôn bị gán nhầm làm đáp án đúng ngay cả khi đáp án đúng là `C`, `B`, `D` được in đậm và bôi đỏ.
+  - `optRegex` cũ nuốt khoảng trắng giữa các phương án nằm cùng dòng.
+- **Giải thuật hiện thực:**
+  1. Phân vùng dòng/đoạn văn chính xác theo từng câu hỏi (`qGroups`).
+  2. Gắn tọa độ ký tự `range: [rStart, rEnd]` cho từng `run` và đối soát vùng chồng lấn với Nhãn (Label: `c.`) và Nội dung (Content).
+  3. Hệ thống tính điểm trọng số đa tiêu chí:
+     - Nhãn In đậm + Bôi đỏ: **+100 điểm**
+     - Nhãn Bôi đỏ: **+80 điểm**
+     - Ký hiệu đánh dấu (`*`, `[x]`): **+90 điểm**
+     - Nội dung In đậm + Bôi đỏ: **+70 điểm**
+     - Nội dung Bôi đỏ: **+60 điểm**
+     - Nhãn In đậm đơn lẻ: **+30 điểm**
+     - Nhãn Gạch chân (`w:u`): **+25 điểm**
+     - Nêu trong Lời giải (`Chọn C`): **+50 điểm**
+     - Bảng đáp án (`BẢNG ĐÁP ÁN` / `ANSWER KEY`): Tự động đối soát và điền dự phòng.
+  4. Tự động khử nhiễu khi cả 4 phương án đều in đậm nhãn.
+
+---
+
 ## 📊 Kết quả kiểm thử trên Đề thi mẫu (`BTTN - P1 - DE 30 cau SO CAU.docx`)
 - **Tổng số công thức MathType OLE:** 43/43 công thức được giải mã thành công 100%.
+- **Độ chính xác nhận diện đáp án đúng (In đậm & Bôi đỏ):** 34/34 câu (100%), nhận diện chuẩn xác các đáp án C, B, D (ví dụ Câu 4: C, Câu 7: B, Câu 11: C, Câu 14: D, Câu 15: C, Câu 18: C, Câu 20: C, Câu 24: C, Câu 28: D...).
 - **Chất lượng hiển thị:**
   - Tất cả các ma trận $2\times2, 3\times3, 2\times3, 3\times2$ hiển thị dưới dạng `\begin{bmatrix}` sắc nét.
   - Các phân số $\frac{1}{k}A^{-1}$, $\frac{1}{k^n}A^{-1}$, $A^{-1} = \frac{1}{\det(A)}A^*$ hiển thị đúng tử số và mẫu số.
