@@ -265,8 +265,38 @@ export async function parsePdfDocument(file, onProgress = null) {
 }
 
 // ==============================================================
-// 3.1. CHẾ ĐỘ AI VISION (GEMINI 1.5 / 2.0 FLASH OCR CHO TOÁN HỌC)
+// 3.1. CHẾ ĐỘ AI VISION (TỰ ĐỘNG KHÁM PHÁ VÀ GỌI GEMINI VISION)
 // ==============================================================
+async function getAvailableGeminiModel(apiKey) {
+  try {
+    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    if (listRes.ok) {
+      const listData = await listRes.json();
+      if (listData && Array.isArray(listData.models)) {
+        const supported = listData.models
+          .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+          .map(m => m.name.replace(/^models\//, ''));
+        
+        const priority = [
+          'gemini-2.0-flash',
+          'gemini-1.5-flash-latest',
+          'gemini-2.0-flash-exp',
+          'gemini-1.5-flash',
+          'gemini-1.5-pro-latest',
+          'gemini-1.5-pro'
+        ];
+        for (const p of priority) {
+          if (supported.includes(p)) return p;
+        }
+        if (supported.length > 0) return supported[0];
+      }
+    }
+  } catch (e) {
+    console.warn("Không lấy được danh sách model:", e);
+  }
+  return 'gemini-2.0-flash';
+}
+
 export async function parsePdfWithGeminiVision(file, apiKey, onProgress = null) {
   const pdfjs = await loadPdfJs();
   const arrayBuffer = await file.arrayBuffer();
@@ -277,8 +307,17 @@ export async function parsePdfWithGeminiVision(file, apiKey, onProgress = null) 
   let allQuestions = [];
   const detectedTitle = (file.name || "Đề thi PDF").replace(/\.[^/.]+$/, "");
 
-  // Model list ưu tiên: gemini-2.0-flash -> gemini-1.5-flash
-  const modelName = 'gemini-1.5-flash';
+  // Tự động tìm mô hình hoạt động tốt nhất cho API Key của người dùng
+  let workingModel = await getAvailableGeminiModel(apiKey);
+  const fallbackModels = [
+    workingModel,
+    'gemini-2.0-flash',
+    'gemini-1.5-flash-latest',
+    'gemini-2.0-flash-exp',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro-latest',
+    'gemini-1.5-pro'
+  ].filter((v, i, a) => a.indexOf(v) === i);
 
   for (let pageNum = 1; pageNum <= numPages; pageNum++) {
     const pStartPercent = Math.round(25 + ((pageNum - 1) / numPages) * 65);
@@ -320,38 +359,57 @@ QUY TẮC CÔNG THỨC TOÁN & LATEX BẮT BUỘC:
   }
 ]`;
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+    let response = null;
+    let resData = null;
+    let lastErrorMsg = "";
 
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              { text: systemPrompt },
+    // Thử gọi các model trong danh sách fallback
+    for (const mName of fallbackModels) {
+      try {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${apiKey}`;
+        const tryRes = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
               {
-                inlineData: {
-                  mimeType: 'image/jpeg',
-                  data: base64Data
-                }
+                parts: [
+                  { text: systemPrompt },
+                  {
+                    inlineData: {
+                      mimeType: 'image/jpeg',
+                      data: base64Data
+                    }
+                  }
+                ]
               }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.1,
-          responseMimeType: "application/json"
-        }
-      })
-    });
+            ],
+            generationConfig: {
+              temperature: 0.1,
+              responseMimeType: "application/json"
+            }
+          })
+        });
 
-    if (!response.ok) {
-      const errJson = await response.json().catch(() => ({}));
-      throw new Error(errJson?.error?.message || `Lỗi gọi Gemini API (HTTP ${response.status})`);
+        if (tryRes.ok) {
+          response = tryRes;
+          resData = await tryRes.json();
+          workingModel = mName; // Ghi nhớ model hoạt động
+          break;
+        } else {
+          const errJson = await tryRes.json().catch(() => ({}));
+          lastErrorMsg = errJson?.error?.message || `HTTP ${tryRes.status}`;
+          console.warn(`Thử model ${mName} không thành công (${lastErrorMsg}), đang thử model kế tiếp...`);
+        }
+      } catch (callErr) {
+        lastErrorMsg = callErr.message || "Lỗi mạng";
+      }
     }
 
-    const resData = await response.json();
+    if (!resData) {
+      throw new Error(`Tất cả các model Gemini đều báo lỗi: ${lastErrorMsg}. Vui lòng kiểm tra lại API Key hoặc quyền truy cập của Key.`);
+    }
+
     const rawAiText = resData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     
     try {
@@ -359,7 +417,6 @@ QUY TẮC CÔNG THỨC TOÁN & LATEX BẮT BUỘC:
       if (Array.isArray(parsedPageQs)) {
         parsedPageQs.forEach(q => {
           if (q && q.text && Array.isArray(q.opts)) {
-            // Đảm bảo đủ 4 opts
             while (q.opts.length < 4) {
               q.opts.push(`(Lựa chọn ${['A','B','C','D'][q.opts.length]})`);
             }
