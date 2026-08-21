@@ -24,8 +24,7 @@ import {
   openPdfImportModal, closePdfImportModal, handlePdfFileUpload, testWithSamplePdf,
   updateParsedQuestionText, updateParsedQuestionOption, setParsedQuestionAnswer, saveParsedExamToSupabase,
   deleteParsedQuestion, addBlankQuestionToParsed, filterParsedQuestionsPreview,
-  togglePdfEngineMode, saveGeminiApiKeyFromInput, getStoredGeminiApiKey,
-  testPythonOcrConnection, savePythonOcrUrlFromInput, getStoredPythonOcrUrl
+  togglePdfEngineMode, saveGeminiApiKeyFromInput, getStoredGeminiApiKey
 } from './pdf-parser.js';
 
 window.openPdfImportModal = openPdfImportModal;
@@ -42,9 +41,6 @@ window.filterParsedQuestionsPreview = filterParsedQuestionsPreview;
 window.togglePdfEngineMode = togglePdfEngineMode;
 window.saveGeminiApiKeyFromInput = saveGeminiApiKeyFromInput;
 window.getStoredGeminiApiKey = getStoredGeminiApiKey;
-window.testPythonOcrConnection = testPythonOcrConnection;
-window.savePythonOcrUrlFromInput = savePythonOcrUrlFromInput;
-window.getStoredPythonOcrUrl = getStoredPythonOcrUrl;
 
 window.loadClasses = loadClasses;
 window.renderClassesList = renderClassesList;

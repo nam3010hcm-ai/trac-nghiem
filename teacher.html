@@ -2227,84 +2227,52 @@ document.addEventListener('keydown', function(e) {
             <span style="font-size:11.5px; color:#64748b; font-weight:600;">Tùy chọn linh hoạt</span>
           </div>
 
-          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
             
-            <!-- Chế độ 1: LaTeX-OCR Python Backend (Khuyên dùng cho Math OCR) -->
-            <label id="lbl-engine-python" style="display:flex; flex-direction:column; padding:12px; border:2px solid #16a34a; border-radius:12px; background:#f0fdf4; cursor:pointer; position:relative; transition:all 0.2s;">
+            <!-- Chế độ 1: AI Vision (Khuyên dùng) -->
+            <label id="lbl-engine-ai" style="display:flex; flex-direction:column; padding:14px; border:2px solid #3b82f6; border-radius:12px; background:#eff6ff; cursor:pointer; position:relative; transition:all 0.2s;">
               <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px;">
-                <div style="display:flex; align-items:center; gap:6px;">
-                  <input type="radio" name="pdf-engine-mode" id="pdf-engine-python" value="python_ocr" checked onchange="window.togglePdfEngineMode('python_ocr')" style="accent-color:#16a34a; width:16px; height:16px;">
-                  <b style="color:#166534; font-size:13px;">🐍 LaTeX-OCR (Python)</b>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <input type="radio" name="pdf-engine-mode" id="pdf-engine-ai" value="ai" checked onchange="window.togglePdfEngineMode('ai')" style="accent-color:#2563eb; width:16px; height:16px;">
+                  <b style="color:#1e40af; font-size:13.5px;">🤖 AI Vision (Google Gemini)</b>
                 </div>
-                <span style="background:#dcfce7; color:#15803d; font-size:10px; font-weight:800; padding:2px 6px; border-radius:20px;">⭐ Pix2TeX Model</span>
+                <span style="background:#dbeafe; color:#1e40af; font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:20px;">⭐ Đa Năng Cho PDF</span>
               </div>
-              <div style="font-size:11.5px; color:#166534; line-height:1.4; margin-top:2px;">
-                Mô hình Học sâu <b>LaTeX-OCR (Pix2TeX)</b> chạy trên Server Python, dịch trực tiếp mọi ảnh công thức MathType sang LaTeX `$ ... $`.
+              <div style="font-size:12px; color:#3b82f6; line-height:1.45; margin-top:2px;">
+                "Nhìn" từng trang PDF qua thị giác AI, tái tạo <b>100% chuẩn xác</b> công thức phân số $\frac{a}{b}$, ma trận $\begin{bmatrix}\dots\end{bmatrix}$, số mũ $A^{-1}$, tích phân và phát hiện đáp án chữ Đỏ/In Đậm.
               </div>
             </label>
 
-            <!-- Chế độ 2: AI Vision (Google Gemini) -->
-            <label id="lbl-engine-ai" style="display:flex; flex-direction:column; padding:12px; border:1.5px solid #cbd5e1; border-radius:12px; background:#f8fafc; cursor:pointer; position:relative; transition:all 0.2s;">
+            <!-- Chế độ 2: Offline Rule-based -->
+            <label id="lbl-engine-offline" style="display:flex; flex-direction:column; padding:14px; border:1.5px solid #cbd5e1; border-radius:12px; background:#f8fafc; cursor:pointer; position:relative; transition:all 0.2s;">
               <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px;">
-                <div style="display:flex; align-items:center; gap:6px;">
-                  <input type="radio" name="pdf-engine-mode" id="pdf-engine-ai" value="ai" onchange="window.togglePdfEngineMode('ai')" style="accent-color:#2563eb; width:16px; height:16px;">
-                  <b style="color:#1e40af; font-size:13px;">🤖 AI Vision (Gemini)</b>
-                </div>
-                <span style="background:#dbeafe; color:#1e40af; font-size:10px; font-weight:800; padding:2px 6px; border-radius:20px;">Google AI</span>
-              </div>
-              <div style="font-size:11.5px; color:#3b82f6; line-height:1.4; margin-top:2px;">
-                Quét hình ảnh đề thi qua Google Gemini 2.0 Flash, nhận diện công thức toán LaTeX và đáp án Chữ Đỏ.
-              </div>
-            </label>
-
-            <!-- Chế độ 3: Offline Rule-based -->
-            <label id="lbl-engine-offline" style="display:flex; flex-direction:column; padding:12px; border:1.5px solid #cbd5e1; border-radius:12px; background:#f8fafc; cursor:pointer; position:relative; transition:all 0.2s;">
-              <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px;">
-                <div style="display:flex; align-items:center; gap:6px;">
+                <div style="display:flex; align-items:center; gap:8px;">
                   <input type="radio" name="pdf-engine-mode" id="pdf-engine-offline" value="offline" onchange="window.togglePdfEngineMode('offline')" style="accent-color:#2563eb; width:16px; height:16px;">
-                  <b style="color:#334155; font-size:13px;">⚡ Bóc tách Cục bộ</b>
+                  <b style="color:#334155; font-size:13.5px;">⚡ Bóc tách Cục bộ (Offline)</b>
                 </div>
-                <span style="background:#e2e8f0; color:#475569; font-size:10px; font-weight:700; padding:2px 6px; border-radius:20px;">Offline</span>
+                <span style="background:#e2e8f0; color:#475569; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:20px;">Không cần API Key</span>
               </div>
-              <div style="font-size:11.5px; color:#64748b; line-height:1.4; margin-top:2px;">
-                Đọc cấu trúc Word XML (OMML) trực tiếp trên trình duyệt, không cần mạng hay server.
+              <div style="font-size:12px; color:#64748b; line-height:1.45; margin-top:2px;">
+                Bóc tách trực tiếp file <b>Word (.docx)</b> chuẩn OMML và file PDF. Chạy ngay trên trình duyệt, bảo mật 100% không gửi file ra ngoài.
               </div>
             </label>
 
-          </div>
-
-          <!-- Khung cài đặt LaTeX-OCR Python Backend -->
-          <div id="pdf-python-ocr-box" style="margin-top:12px; padding:12px 14px; background:#f0fdf4; border:1.5px solid #86efac; border-radius:10px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-            <div style="flex:1; min-width:300px;">
-              <div style="font-size:12px; font-weight:800; color:#166534; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
-                <span>🐍</span> Địa chỉ Python LaTeX-OCR Server:
-                <span id="python-ocr-status-badge" style="font-size:11px; font-weight:600;"></span>
-              </div>
-              <div style="display:flex; gap:8px; align-items:center;">
-                <input type="text" id="pdf-python-ocr-url" placeholder="http://127.0.0.1:8000" value="http://127.0.0.1:8000" style="flex:1; padding:6px 10px; font-size:12.5px; font-family:monospace; border:1px solid #86efac; border-radius:6px; background:#ffffff;">
-                <button type="button" class="btn btn-sm" onclick="window.savePythonOcrUrlFromInput()" style="background:#16a34a; color:#ffffff; font-weight:700; border:none; padding:6px 12px; border-radius:6px; font-size:12px;">💾 Lưu</button>
-                <button type="button" class="btn btn-sm" onclick="window.testPythonOcrConnection()" style="background:#0284c7; color:#ffffff; font-weight:700; border:none; padding:6px 12px; border-radius:6px; font-size:12px;">🔗 Kiểm tra Server</button>
-              </div>
-            </div>
-            <div style="font-size:11.5px; color:#15803d; line-height:1.4;">
-              <b>Chạy server trên máy:</b> <code>cd backend && uvicorn server:app --port 8000</code>
-              <div style="font-size:10.5px; color:#166534;">Hoặc dán URL Cloud API đã deploy trên Hugging Face / Railway.</div>
-            </div>
           </div>
 
           <!-- Khung nhập Gemini API Key -->
-          <div id="pdf-gemini-key-box" style="display:none; margin-top:12px; padding:12px 14px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <div id="pdf-gemini-key-box" style="margin-top:12px; padding:12px 14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
             <div style="flex:1; min-width:280px;">
-              <div style="font-size:12px; font-weight:700; color:#1e40af; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
-                <span>🔑</span> Khóa Gemini API Key (Miễn phí):
+              <div style="font-size:12px; font-weight:700; color:#166534; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                <span>🔑</span> Khóa Gemini API Key (Dành riêng cho file PDF):
               </div>
               <div style="display:flex; gap:8px; align-items:center;">
-                <input type="password" id="pdf-gemini-api-key" placeholder="Dán Gemini API Key (VD: AIzaSy...)" style="flex:1; padding:6px 10px; font-size:12.5px; font-family:monospace; border:1px solid #93c5fd; border-radius:6px; background:#ffffff;">
-                <button type="button" class="btn btn-sm" onclick="window.saveGeminiApiKeyFromInput()" style="background:#2563eb; color:#ffffff; font-weight:700; border:none; padding:6px 14px; border-radius:6px; font-size:12px;">💾 Lưu Key</button>
+                <input type="password" id="pdf-gemini-api-key" placeholder="Dán Gemini API Key (VD: AIzaSy...)" style="flex:1; padding:6px 10px; font-size:12.5px; font-family:monospace; border:1px solid #86efac; border-radius:6px; background:#ffffff;">
+                <button type="button" class="btn btn-sm" onclick="window.saveGeminiApiKeyFromInput()" style="background:#16a34a; color:#ffffff; font-weight:700; border:none; padding:6px 14px; border-radius:6px; font-size:12px;">💾 Lưu Key</button>
               </div>
             </div>
-            <div style="font-size:11.5px; color:#1e40af; line-height:1.4;">
-              <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#2563eb; font-weight:800; text-decoration:underline;">Lấy API Key Miễn Phí tại Google AI Studio ↗</a>
+            <div style="font-size:11.5px; color:#15803d; line-height:1.4;">
+              Chưa có key? <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#16a34a; font-weight:800; text-decoration:underline;">Lấy API Key Miễn Phí tại Google AI Studio ↗</a>
+              <div style="font-size:10.5px; color:#4ade80;">Nếu upload file Word (.docx) thì không cần API Key!</div>
             </div>
           </div>
 
