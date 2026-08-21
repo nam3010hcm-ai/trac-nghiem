@@ -162,6 +162,7 @@ async function loadPdfJs() {
 }
 
 // ==============================================================
+// ==============================================================
 // 3. THUẬT TOÁN BÓC TÁCH FILE PDF TOÀN DIỆN & ĐA LUỒNG
 // ==============================================================
 export async function parsePdfDocument(file, onProgress = null) {
@@ -193,7 +194,9 @@ export async function parsePdfDocument(file, onProgress = null) {
   let allQuestions = [];
   let detectedTitle = (file.name || "Đề thi PDF").replace(/\.[^/.]+$/, "");
   let fullRawText = "";
-  let allRedTexts = [];
+  let allRedItems = [];
+  let allBoldItems = [];
+  let allPageData = [];
 
   // Quét từng trang PDF
   for (let pageNum = 1; pageNum <= numPages; pageNum++) {
@@ -202,32 +205,63 @@ export async function parsePdfDocument(file, onProgress = null) {
 
     const page = await pdfDoc.getPage(pageNum);
     const viewport = page.getViewport({ scale: 1.0 });
-    const pageWidth = viewport.width || 595;
-    const pageHeight = viewport.height || 842;
 
     // 1. Quét văn bản và tọa độ
     const textContent = await page.getTextContent({ includeMarkedContent: true });
     
-    // 2. Nhận diện chữ màu đỏ từ OperatorList (nếu có)
+    // 2. Nhận diện chữ màu đỏ và in đậm từ OperatorList với State Stack
+    let pageRedItems = [];
+    let pageBoldItems = [];
     try {
       const opList = await page.getOperatorList();
-      let isCurrentFillRed = false;
-      
+      let isRed = false;
+      let isBold = false;
+      let currentTextMatrix = [1, 0, 0, 1, 0, 0];
+      let gStateStack = [];
+
       for (let i = 0; i < opList.fnArray.length; i++) {
         const fn = opList.fnArray[i];
         const args = opList.argsArray[i];
-        
-        if (fn === pdfjs.OPS.setFillRGBColor || fn === pdfjs.OPS.setFillColorN) {
+
+        if (fn === pdfjs.OPS.save) {
+          gStateStack.push({ isRed, isBold, currentTextMatrix: currentTextMatrix.slice() });
+        } else if (fn === pdfjs.OPS.restore) {
+          if (gStateStack.length > 0) {
+            const prev = gStateStack.pop();
+            isRed = prev.isRed;
+            isBold = prev.isBold;
+            currentTextMatrix = prev.currentTextMatrix;
+          }
+        } else if (fn === pdfjs.OPS.setFont) {
+          const fontName = args[0];
+          let fontObj = null;
+          if (page.commonObjs && page.commonObjs.has(fontName)) {
+            fontObj = page.commonObjs.get(fontName);
+          }
+          const fname = (fontObj?.name || fontName || '').toLowerCase();
+          isBold = fname.includes('bold') || fname.includes('black') || fname.includes('heavy') || fname.includes('w7') || fname.includes('w8');
+        } else if (fn === pdfjs.OPS.setTextMatrix) {
+          currentTextMatrix = args.slice();
+        } else if (fn === pdfjs.OPS.setFillRGBColor || fn === pdfjs.OPS.setFillColorN || fn === pdfjs.OPS.setFillColor) {
           if (args && args.length >= 3) {
             const [r, g, b] = args;
             const rNorm = r > 1 ? r / 255 : r;
             const gNorm = g > 1 ? g / 255 : g;
             const bNorm = b > 1 ? b / 255 : b;
-            // Nhận diện sắc đỏ đặc trưng trong đề thi (#dc2626, #ef4444, #ee0000, #ff0000, rgb>0.65)
-            isCurrentFillRed = (rNorm > 0.65 && gNorm < 0.35 && bNorm < 0.35);
+            // Nhận diện sắc đỏ đặc trưng trong đề thi (#ee0000, #dc2626, #ef4444, #ff0000, #b91c1c, r>0.65)
+            isCurrentFillRed(rNorm, gNorm, bNorm);
+            isRed = (rNorm > 0.65 && gNorm < 0.4 && bNorm < 0.4);
+          }
+        } else if (fn === pdfjs.OPS.setStrokeRGBColor || fn === pdfjs.OPS.setStrokeColorN || fn === pdfjs.OPS.setStrokeColor) {
+          if (args && args.length >= 3) {
+            const [r, g, b] = args;
+            const rNorm = r > 1 ? r / 255 : r;
+            const gNorm = g > 1 ? g / 255 : g;
+            const bNorm = b > 1 ? b / 255 : b;
+            isRed = (rNorm > 0.65 && gNorm < 0.4 && bNorm < 0.4);
           }
         } else if (fn === pdfjs.OPS.showText || fn === pdfjs.OPS.showSpacedText) {
-          if (isCurrentFillRed && args && args[0]) {
+          if (args && args[0]) {
             const glyphs = args[0];
             let textChunk = "";
             if (Array.isArray(glyphs)) {
@@ -235,8 +269,18 @@ export async function parsePdfDocument(file, onProgress = null) {
             } else if (typeof glyphs === 'string') {
               textChunk = glyphs;
             }
-            if (textChunk.trim().length >= 1) {
-              allRedTexts.push(textChunk.trim());
+            const trimmed = textChunk.trim();
+            if (trimmed.length >= 1) {
+              const x = currentTextMatrix[4] || 0;
+              const y = currentTextMatrix[5] || 0;
+              if (isRed) {
+                pageRedItems.push({ text: trimmed, x, y, pageNum });
+                allRedItems.push({ text: trimmed, x, y, pageNum });
+              }
+              if (isBold) {
+                pageBoldItems.push({ text: trimmed, x, y, pageNum });
+                allBoldItems.push({ text: trimmed, x, y, pageNum });
+              }
             }
           }
         }
@@ -245,22 +289,32 @@ export async function parsePdfDocument(file, onProgress = null) {
       console.warn("Không đọc được mã màu trang " + pageNum, e);
     }
 
-    // 3. Tái cấu trúc văn bản theo cột và thứ tự đọc tự nhiên
-    const pageText = extractPageTextStructured(textContent.items, pageWidth, pageHeight);
+    // 3. Tái cấu trúc văn bản theo thứ tự đọc tự nhiên của trang PDF
+    const pageText = extractPageTextStructured(textContent.items);
     fullRawText += "\n" + pageText;
+
+    allPageData.push({
+      pageNum,
+      pageText,
+      redItems: pageRedItems,
+      boldItems: pageBoldItems
+    });
+  }
+
+  function isCurrentFillRed(r, g, b) {
+    return (r > 0.65 && g < 0.4 && b < 0.4);
   }
 
   if (typeof onProgress === 'function') onProgress(85, "Đang phân tích cú pháp các câu hỏi, phương án & công thức LaTeX...");
   
-  allQuestions = extractQuestionsFromText(fullRawText, allRedTexts);
+  allQuestions = extractQuestionsFromText(fullRawText, allRedItems, allBoldItems, allPageData);
 
   // Nếu file quá ít text (ví dụ ảnh scan) và không bóc tách được câu nào
   if (!allQuestions.length) {
     if (fullRawText.trim().length < 50) {
       throw new Error("File PDF không chứa lớp văn bản (Text Layer). Có thể đây là file ảnh scan! Vui lòng chọn file PDF được xuất từ Word/LaTeX.");
     }
-    // Thử fallback lần cuối
-    allQuestions = fallbackExtractQuestions(fullRawText, allRedTexts);
+    allQuestions = fallbackExtractQuestions(fullRawText, allRedItems);
   }
 
   if (typeof onProgress === 'function') onProgress(100, `Bóc tách thành công ${allQuestions.length} câu hỏi!`);
@@ -275,8 +329,8 @@ export async function parsePdfDocument(file, onProgress = null) {
   };
 }
 
-// Hàm sắp xếp các text item theo dòng & cột tự nhiên của trang PDF
-function extractPageTextStructured(items, pageWidth, pageHeight) {
+// Hàm sắp xếp các text item theo dòng tự nhiên của trang PDF
+function extractPageTextStructured(items) {
   if (!items || !items.length) return "";
 
   // Lọc các item hợp lệ
@@ -290,36 +344,9 @@ function extractPageTextStructured(items, pageWidth, pageHeight) {
 
   if (!validItems.length) return "";
 
-  // Kiểm tra xem trang có bố cục 2 cột hay không
-  let leftCount = 0;
-  let rightCount = 0;
-  const colBoundary = pageWidth * 0.5;
-
-  validItems.forEach(it => {
-    if (it.x + it.width * 0.5 < colBoundary - 20) leftCount++;
-    else if (it.x > colBoundary + 20) rightCount++;
-  });
-
-  const isTwoColumn = (leftCount > 15 && rightCount > 15 && (leftCount / validItems.length > 0.25) && (rightCount / validItems.length > 0.25));
-
-  if (isTwoColumn) {
-    const leftItems = validItems.filter(it => it.x + it.width * 0.5 <= colBoundary);
-    const rightItems = validItems.filter(it => it.x + it.width * 0.5 > colBoundary);
-    const leftText = assembleLinesFromItems(leftItems);
-    const rightText = assembleLinesFromItems(rightItems);
-    return leftText + "\n" + rightText;
-  } else {
-    return assembleLinesFromItems(validItems);
-  }
-}
-
-// Ghép các item cùng Y thành từng dòng hoàn chỉnh
-function assembleLinesFromItems(items) {
-  if (!items.length) return "";
-
-  // Sắp xếp: Y giảm dần (từ trên xuống dưới trang PDF), X tăng dần (từ trái qua phải)
-  items.sort((a, b) => {
-    if (Math.abs(a.y - b.y) <= 3.5) {
+  // Sắp xếp: Y giảm dần (từ trên xuống dưới), X tăng dần (từ trái sang phải)
+  validItems.sort((a, b) => {
+    if (Math.abs(a.y - b.y) <= 4.0) {
       return a.x - b.x;
     }
     return b.y - a.y;
@@ -329,8 +356,8 @@ function assembleLinesFromItems(items) {
   let currentLineItems = [];
   let currentY = null;
 
-  for (const it of items) {
-    if (currentY === null || Math.abs(it.y - currentY) <= 3.5) {
+  for (const it of validItems) {
+    if (currentY === null || Math.abs(it.y - currentY) <= 4.0) {
       currentLineItems.push(it);
       currentY = it.y;
     } else {
@@ -357,7 +384,7 @@ function buildLineString(lineItems) {
 
     if (lastRight !== null) {
       const gap = it.x - lastRight;
-      if (gap > 2.5 && !lineStr.endsWith(" ") && !str.startsWith(" ")) {
+      if (gap > 3.5 && !lineStr.endsWith(" ") && !str.startsWith(" ")) {
         lineStr += " ";
       }
     }
@@ -370,13 +397,75 @@ function buildLineString(lineItems) {
   if (/^(?:Trang|Page)\s*\d+(?:\/\d+)?$/i.test(trimmed)) {
     return "";
   }
-  return trimmed;
+  return normalizeVietnameseSpacing(trimmed);
+}
+
+// Chuẩn hóa và ghép lại các phụ âm/dấu tiếng Việt bị phân mảnh trong PDF
+function normalizeVietnameseSpacing(text) {
+  if (!text) return '';
+  let s = text.normalize('NFC');
+  
+  const fixes = [
+    [/tr\s+ậ\s+n/gi, 'trận'],
+    [/đ\s*ị\s*nh/gi, 'định'],
+    [/th\s*ứ\s*c/gi, 'thức'],
+    [/c\s*ủ\s*a/gi, 'của'],
+    [/đ\s*ư\s*ợ\s*c/gi, 'được'],
+    [/ngh\s*ị\s*ch/gi, 'nghịch'],
+    [/đ\s*ả\s*o/gi, 'đảo'],
+    [/kh\s*ả/gi, 'khả'],
+    [/t\s*ồ\s*n/gi, 'tồn'],
+    [/t\s*ạ\s*i/gi, 'tại'],
+    [/chuy\s*ể\s*n/gi, 'chuyển'],
+    [/v\s*ị/gi, 'vị'],
+    [/h\s*ạ\s*ng/gi, 'hạng'],
+    [/V\s*ế\s*t/gi, 'Vết'],
+    [/v\s*ế\s*t/gi, 'vết'],
+    [/V\s*ớ\s*i/gi, 'Với'],
+    [/v\s*ớ\s*i/gi, 'với'],
+    [/m\s*ọ\s*i/gi, 'mọi'],
+    [/t\s*ứ\s*c/gi, 'tức'],
+    [/k\s*í\s*ch/gi, 'kích'],
+    [/th\s*ư\s*ớ\s*c/gi, 'thước'],
+    [/nh\s*â\s*n/gi, 'nhân'],
+    [/vu\s*ô\s*ng/gi, 'vuông'],
+    [/c\s*ấ\s*p/gi, 'cấp'],
+    [/đ\s*i\s*ề\s*u/gi, 'điều'],
+    [/ki\s*ệ\s*n/gi, 'kiện'],
+    [/đ\s*ể/gi, 'để'],
+    [/b\s*a\s*o/gi, 'bao'],
+    [/nhi\s*ê\s*u/gi, 'nhiêu'],
+    [/T\s*í\s*nh/gi, 'Tính'],
+    [/t\s*í\s*nh/gi, 'tính'],
+    [/T\s*ì\s*m/gi, 'Tìm'],
+    [/t\s*ì\s*m/gi, 'tìm'],
+    [/C\s*â\s*u/gi, 'Câu'],
+    [/c\s*â\s*u/gi, 'câu'],
+    [/B\s*à\s*i/gi, 'Bài'],
+    [/b\s*à\s*i/gi, 'bài'],
+    [/Đ\s*á\s*p/gi, 'Đáp'],
+    [/đ\s*á\s*p/gi, 'đáp'],
+    [/á\s*n/gi, 'án'],
+    [/L\s*ờ\s*i/gi, 'Lời'],
+    [/l\s*ờ\s*i/gi, 'lời'],
+    [/gi\s*ả\s*i/gi, 'giải'],
+    [/H\s*ư\s*ớ\s*n\s*g/gi, 'Hướng'],
+    [/h\s*ư\s*ớ\s*n\s*g/gi, 'hướng'],
+    [/d\s*ẫ\s*n/gi, 'dẫn'],
+    [/Kh\s*ô\s*n\s*g/gi, 'Không'],
+    [/kh\s*ô\s*n\s*g/gi, 'không'],
+    [/th\s*ể/gi, 'thể']
+  ];
+  for (const [re, rep] of fixes) {
+    s = s.replace(re, rep);
+  }
+  return s;
 }
 
 // ==============================================================
 // 4. THUẬT TOÁN BÓC TÁCH CÂU HỎI & ĐÁP ÁN UNIVERSAL
 // ==============================================================
-export function extractQuestionsFromText(rawText, redTextList = []) {
+export function extractQuestionsFromText(rawText, allRedItems = [], allBoldItems = [], allPageData = []) {
   if (!rawText || !rawText.trim()) return [];
 
   // Chuẩn hóa văn bản đầu vào
@@ -391,10 +480,6 @@ export function extractQuestionsFromText(rawText, redTextList = []) {
   const answerKeyMap = extractAnswerKeyTable(text);
 
   // 2. Tìm tất cả vị trí bắt đầu của các câu hỏi
-  // Hỗ trợ: "Câu 1:", "Câu 1.", "Câu 1-", "Câu 1/", "Câu 1 ", "Câu 01:"
-  // "CÂU 1", "Bài 1:", "Question 1:", "Q1:", "Q.1:"
-  // "Câu 1 (1.0 điểm):", "Câu 1 (NB):", "Câu 1 [Mức 1]:"
-  // Standalone "1.", "1:", "1)" khi đứng đầu dòng
   const qHeaderRegex = /(?:^|\n)\s*(?:(?:C[âaÂA]u|B[àaÀA]i|Question|Q|Q\.)\s*(\d+)(?:\s*\([^)]*\)|\s*\[[^\]]*\])?[\s.:\-\/)]+|(\d{1,3})[\s.:\-\/)](?=\s+[A-ZÀ-Ỹa-zà-ỹ0-9$]))/gi;
 
   const qMatches = [];
@@ -407,9 +492,17 @@ export function extractQuestionsFromText(rawText, redTextList = []) {
     qMatches.push({ qNum, startIdx, matchLen });
   }
 
+  // Danh sách các chữ cái đỏ theo thứ tự xuất hiện (a., b., c., d., ...)
+  const redOptionLetters = allRedItems
+    .map(r => {
+      const match = (r.text || '').match(/^([a-dA-D])[\s.:\-\/)\]]*$/);
+      return match ? match[1].toUpperCase() : null;
+    })
+    .filter(Boolean);
+
   // Nếu không tìm thấy header dạng số chuẩn, gọi fallback
   if (qMatches.length === 0) {
-    return fallbackExtractQuestions(text, redTextList);
+    return fallbackExtractQuestions(text, allRedItems);
   }
 
   const questions = [];
@@ -429,7 +522,7 @@ export function extractQuestionsFromText(rawText, redTextList = []) {
 
     if (!block) continue;
 
-    const parsedQ = parseSingleQuestionBlock(block, current.qNum, redTextList);
+    const parsedQ = parseSingleQuestionBlock(block, current.qNum, allRedItems, i, redOptionLetters);
     if (parsedQ) {
       // Nếu chưa có đáp án từ màu đỏ hoặc ký hiệu, lấy từ Bảng Đáp Án
       if (parsedQ.ans === null || parsedQ.ans === undefined || parsedQ._ansSource === 'default') {
@@ -446,8 +539,74 @@ export function extractQuestionsFromText(rawText, redTextList = []) {
   return questions;
 }
 
+// Nhận diện chuỗi 4 phương án lựa chọn tối ưu (ưu tiên tính nhất quán hoa/thường)
+function findBestOptionSequence(content) {
+  const optRegex = /(?:^|\n|\s{2,}|\t|\s)(?:\*|\[x\]\s*)?([A-Da-d])(?:[\s.:\-\/)\]]*[.:\-\/)\]]+|\s+(?=[0-9$–\-]))(?!\d)/g;
+  const matches = [];
+  let om;
+  while ((om = optRegex.exec(content)) !== null) {
+    const rawChar = om[1];
+    const isLower = (rawChar >= 'a' && rawChar <= 'd');
+    const letter = rawChar.toUpperCase();
+    const optIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[letter];
+    matches.push({
+      rawChar,
+      isLower,
+      letter,
+      optIdx,
+      matchIndex: om.index,
+      fullMatchLength: om[0].length,
+      rawMatch: om[0]
+    });
+  }
+
+  // 1. Ưu tiên tìm chuỗi cùng kiểu chữ (cùng chữ thường a->b->c->d hoặc cùng chữ hoa A->B->C->D)
+  let bestSeq = [];
+  for (const isLowerTarget of [true, false]) {
+    const filtered = matches.filter(m => m.isLower === isLowerTarget);
+    for (let i = 0; i < filtered.length; i++) {
+      if (filtered[i].optIdx === 0) {
+        const seq = [filtered[i]];
+        let expectedIdx = 1;
+        for (let j = i + 1; j < filtered.length; j++) {
+          if (filtered[j].optIdx === expectedIdx) {
+            seq.push(filtered[j]);
+            expectedIdx++;
+            if (expectedIdx === 4) break;
+          }
+        }
+        if (seq.length > bestSeq.length) {
+          bestSeq = seq;
+        }
+      }
+    }
+  }
+
+  // 2. Dự phòng tìm chuỗi hỗn hợp nếu chưa đủ
+  if (bestSeq.length < 2) {
+    for (let i = 0; i < matches.length; i++) {
+      if (matches[i].optIdx === 0) {
+        const seq = [matches[i]];
+        let expectedIdx = 1;
+        for (let j = i + 1; j < matches.length; j++) {
+          if (matches[j].optIdx === expectedIdx) {
+            seq.push(matches[j]);
+            expectedIdx++;
+            if (expectedIdx === 4) break;
+          }
+        }
+        if (seq.length > bestSeq.length) {
+          bestSeq = seq;
+        }
+      }
+    }
+  }
+
+  return bestSeq;
+}
+
 // Bóc tách một block câu hỏi thành Đề bài, 4 phương án A/B/C/D, Lời giải và Đáp án đúng
-function parseSingleQuestionBlock(block, qNum, redTextList = []) {
+function parseSingleQuestionBlock(block, qNum, allRedItems = [], qIndex = 0, redOptionLetters = []) {
   // Bỏ phần tiêu đề câu hỏi (Ví dụ "Câu 1:")
   const headerMatch = block.match(/^\s*(?:(?:C[âaÂA]u|B[àaÀA]i|Question|Q|Q\.)\s*\d+(?:\s*\([^)]*\)|\s*\[[^\]]*\])?[\s.:\-\/)]+|\d{1,3}[\s.:\-\/)])\s*/i);
   let content = headerMatch ? block.slice(headerMatch[0].length).trim() : block;
@@ -460,43 +619,7 @@ function parseSingleQuestionBlock(block, qNum, redTextList = []) {
     content = content.slice(0, explainMatch.index).trim();
   }
 
-  // Regex tìm các phương án lựa chọn A, B, C, D trên cùng dòng hoặc xuống dòng
-  // Hỗ trợ "A.", "B.", "C.", "D.", "A)", "B)", "C)", "D)", "[A]", "[B]", "(A)", "(B)", "A:", "A/"
-  // Hỗ trợ dấu sao "*A." hoặc "[x] A."
-  const optRegex = /(?:^|\n|\s{2,}|\t|\s)(?:\*|\[x\]\s*)?([A-Da-d])[\s.:\-\/)\]]+(?!\d)/g;
-
-  const optMatches = [];
-  let om;
-  while ((om = optRegex.exec(content)) !== null) {
-    const letter = om[1].toUpperCase();
-    const optIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[letter];
-    optMatches.push({
-      letter,
-      optIdx,
-      matchIndex: om.index,
-      fullMatchLength: om[0].length,
-      rawMatch: om[0]
-    });
-  }
-
-  // Tìm chuỗi phương án hợp lệ: A -> B -> C -> D hoặc A -> B -> C
-  let bestSequence = [];
-  for (let i = 0; i < optMatches.length; i++) {
-    if (optMatches[i].letter === 'A') {
-      const seq = [optMatches[i]];
-      let expectedIdx = 1; // Tìm B
-      for (let j = i + 1; j < optMatches.length; j++) {
-        if (optMatches[j].optIdx === expectedIdx) {
-          seq.push(optMatches[j]);
-          expectedIdx++;
-          if (expectedIdx === 4) break; // Đã đủ A, B, C, D
-        }
-      }
-      if (seq.length > bestSequence.length) {
-        bestSequence = seq;
-      }
-    }
-  }
+  const bestSequence = findBestOptionSequence(content);
 
   let qText = content;
   let opts = ["", "", "", ""];
@@ -518,12 +641,12 @@ function parseSingleQuestionBlock(block, qNum, redTextList = []) {
         ansSource = 'marker';
       }
 
-      // Kiểm tra xem phương án có khớp với từ màu ĐỎ từ PDF.js không
-      if (detectedAns === -1 && redTextList && redTextList.length > 0) {
-        for (const redStr of redTextList) {
-          if (redStr && redStr.length >= 2 && optText.includes(redStr)) {
+      // Kiểm tra xem nội dung phương án có chứa từ khóa màu đỏ đặc trưng không
+      if (detectedAns === -1 && allRedItems && optText.length >= 2) {
+        for (const red of allRedItems) {
+          if (red.text && red.text.length >= 2 && optText.includes(red.text)) {
             detectedAns = cur.optIdx;
-            ansSource = 'red';
+            ansSource = 'red_text';
             break;
           }
         }
@@ -538,7 +661,7 @@ function parseSingleQuestionBlock(block, qNum, redTextList = []) {
     let fallbackTextLines = [];
 
     for (const line of lines) {
-      const lineOptMatch = line.match(/^(\*|\[x\]\s*)?([A-Da-d])[\s.:\-\/)\]]\s*(.*)/i);
+      const lineOptMatch = line.match(/^(\*|\[x\]\s*)?([A-Da-d])(?:[\s.:\-\/)\]]*[.:\-\/)\]]+|\s+(?=[0-9$–\-]))\s*(.*)/i);
       if (lineOptMatch) {
         const isMarked = Boolean(lineOptMatch[1]);
         const letter = lineOptMatch[2].toUpperCase();
@@ -557,6 +680,16 @@ function parseSingleQuestionBlock(block, qNum, redTextList = []) {
 
     if (opts.filter(Boolean).length >= 2) {
       qText = fallbackTextLines.join(' ');
+    }
+  }
+
+  // Nếu chưa phát hiện đáp án từ ký hiệu marker, lấy từ ký hiệu chữ cái màu ĐỎ theo số thứ tự câu hỏi
+  if (detectedAns === -1 && redOptionLetters && redOptionLetters[qIndex] !== undefined) {
+    const letter = redOptionLetters[qIndex];
+    const letterIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[letter];
+    if (letterIdx !== undefined) {
+      detectedAns = letterIdx;
+      ansSource = 'red_letter';
     }
   }
 
@@ -627,7 +760,7 @@ function fallbackExtractQuestions(text, redTextList) {
   let count = 1;
   for (const block of blocks) {
     if (block.length < 15) continue;
-    const q = parseSingleQuestionBlock(block, count, redTextList);
+    const q = parseSingleQuestionBlock(block, count, redTextList, count - 1);
     if (q) {
       qs.push(q);
       count++;
@@ -660,6 +793,7 @@ function cleanMathFormulas(txt) {
     .replace(/\s*Ì\s*/g, " \\subset ")
     .replace(/–/g, "-")
     .replace(/—/g, "-")
+    .replace(/[\uf8ee\uf8f9\uf8ef\uf8fa\uf8f0\uf8fb]/g, '')
     .replace(/\s+/g, " ")
     .trim();
   return s;
