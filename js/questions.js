@@ -7,6 +7,70 @@ function updateQFormSubcat() { fillSubcatSelect('qf-subcat', $('qf-cat')?.value 
 let editQId = null;
 let qPage = 1;
 
+export let selectedQIds = new Set();
+
+export function updateSelectedCountLabel() {
+  const lbl = $('q-selected-count');
+  if (lbl) {
+    lbl.textContent = selectedQIds.size;
+  }
+  const selectAllCb = $('q-select-all');
+  if (selectAllCb) {
+    const pageCbs = document.querySelectorAll('.q-select-checkbox');
+    if (pageCbs.length > 0) {
+      const allChecked = Array.from(pageCbs).every(cb => cb.checked);
+      selectAllCb.checked = allChecked;
+    } else {
+      selectAllCb.checked = false;
+    }
+  }
+}
+
+export async function deleteSelectedQuestions() {
+  if (selectedQIds.size === 0) {
+    alert("⚠️ Vui lòng chọn ít nhất một câu hỏi để xóa!");
+    return;
+  }
+
+  const idsToDelete = [];
+  const unauthorizedQTexts = [];
+  for (const id of selectedQIds) {
+    const q = state.questions.find(x => Number(x.id) === Number(id));
+    if (q) {
+      if (canEditItem(q, state.currentUserEmail)) {
+        idsToDelete.push(Number(id));
+      } else {
+        unauthorizedQTexts.push(q.text);
+      }
+    }
+  }
+
+  if (idsToDelete.length === 0) {
+    alert("❌ Bạn không có quyền xóa các câu hỏi đã chọn (thuộc về giáo viên khác)!");
+    return;
+  }
+
+  let confirmMsg = `Bạn có chắc chắn muốn xóa ${idsToDelete.length} câu hỏi đã chọn không?`;
+  if (unauthorizedQTexts.length > 0) {
+    confirmMsg += `\n(Có ${unauthorizedQTexts.length} câu hỏi khác bạn không có quyền xóa và sẽ bị bỏ qua).`;
+  }
+
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const { error } = await db().from('questions').delete().in('id', idsToDelete);
+    if (error) throw error;
+
+    state.questions = state.questions.filter(q => !idsToDelete.includes(Number(q.id)));
+    selectedQIds.clear();
+    alert(`✅ Đã xóa thành công ${idsToDelete.length} câu hỏi!`);
+    renderQuestions();
+  } catch (e) {
+    console.error("Lỗi xóa nhiều câu hỏi:", e);
+    alert("❌ Lỗi khi xóa các câu hỏi: " + (e.message || ''));
+  }
+}
+
 // ==============================================================
 // HỆ THỐNG SOẠN THẢO VĂN BẢN (B, I, U, ĐỔI MÀU)
 // ==============================================================
@@ -312,6 +376,48 @@ function ensureQuestionTools(){
       });
       btnCloseGal.dataset.bound = "true";
   }
+
+  const selectAll = $('q-select-all');
+  if (selectAll && !selectAll.dataset.bound) {
+    selectAll.addEventListener('change', (e) => {
+      const checked = e.target.checked;
+      const cbs = document.querySelectorAll('.q-select-checkbox');
+      cbs.forEach(cb => {
+        cb.checked = checked;
+        const id = Number(cb.dataset.id);
+        if (checked) {
+          selectedQIds.add(id);
+        } else {
+          selectedQIds.delete(id);
+        }
+      });
+      updateSelectedCountLabel();
+    });
+    selectAll.dataset.bound = 'true';
+  }
+
+  const btnBulkDelete = $('btn-bulk-delete-q');
+  if (btnBulkDelete && !btnBulkDelete.dataset.bound) {
+    btnBulkDelete.addEventListener('click', deleteSelectedQuestions);
+    btnBulkDelete.dataset.bound = 'true';
+  }
+
+  const qList = $('q-list');
+  if (qList && !qList.dataset.selectBound) {
+    qList.addEventListener('change', (e) => {
+      const cb = e.target.closest('.q-select-checkbox');
+      if (cb) {
+        const id = Number(cb.dataset.id);
+        if (cb.checked) {
+          selectedQIds.add(id);
+        } else {
+          selectedQIds.delete(id);
+        }
+        updateSelectedCountLabel();
+      }
+    });
+    qList.dataset.selectBound = 'true';
+  }
 }
 
 export function openQForm(id = null){
@@ -548,6 +654,20 @@ export function renderQuestions(){
   ensureQuestionTools();
   if(!$('q-count')) return;
   $('q-count').textContent = state.questions.length;
+  
+  const filterCat = $('flt-cat')?.value || '';
+  const filterSC = $('flt-subcat')?.value || '';
+  const hasFilter = !!(filterCat || filterSC);
+
+  const bulkActions = $('q-bulk-actions');
+  if (bulkActions) {
+    bulkActions.style.display = hasFilter ? 'flex' : 'none';
+  }
+
+  if (!hasFilter) {
+    selectedQIds.clear();
+  }
+
   const qs = filteredQuestions();
   const pageSize = getPageSize();
   const totalPages = Math.max(1, Math.ceil(qs.length / pageSize));
@@ -581,42 +701,51 @@ export function renderQuestions(){
 
     const explainHTML = q.explain ? `<div style="margin-top:6px; font-size:12px; color:#475569; background:#f8fafc; padding:6px 10px; border-radius:4px; border-left:3px solid #059669;">💡 <b>Giải thích:</b> ${renderRich(q.explain)}</div>` : '';
 
-    return `
-    <div class="qitem">
-      <div class="qrow">
-        <div class="qtext">
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
-            <div class="cat-badge">${esc(q.subcat || q.cat || 'Chưa phân loại')}</div>
-            <div class="cat-badge" style="background:#eef2ff;color:#4338ca">${esc(TYPE_LABELS[type] || type)}</div>
-            ${authorBadge}
-            ${q.audio ? '<div class="cat-badge" style="background:#fef3c7;color:#92400e">🔊 Nghe</div>' : ''}
-            ${q.video ? '<div class="cat-badge" style="background:#fdf2f8;color:#db2777">🎬 Video</div>' : ''}
-          </div>
-          <div>${renderRich(q.text)}</div>
-          ${mediaHTML(q.image)}
-          ${audioHTML(q.audio)}
-          ${videoHTML(q.video)}
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <button class="btn btn-sm" type="button" onclick="window.toggleQLatexSource('${q.id}')" style="background:#f8fafc;color:#334155;border:1.5px solid #cbd5e1;font-size:11.5px;padding:4px 8px;font-weight:700;">📝 Xem mã LaTeX</button>
-          ${canEdit ? `
-            <button class="btn btn-sm q-action" data-action="edit" data-id="${q.id}">Sửa</button>
-            <button class="btn btn-sm btn-danger q-action" data-action="delete" data-id="${q.id}">Xóa</button>
-          ` : `
-            <span style="font-size:12px;color:#94a3b8;padding:4px 8px;background:#f1f5f9;border-radius:6px;border:1px solid #e2e8f0" title="Chỉ người tạo hoặc Root Admin mới có quyền sửa/xóa">🔒 Chỉ xem</span>
-          `}
-        </div>
+    const checkboxHTML = hasFilter ? `
+      <div class="qselect-wrap" style="padding-right:12px; display:flex; align-items:center; align-self:flex-start; margin-top:4px;">
+        <input type="checkbox" class="q-select-checkbox" data-id="${q.id}" ${selectedQIds.has(Number(q.id)) ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer;">
       </div>
-      <div style="margin-top:8px">${answerHTML}</div>
-      ${explainHTML}
-      <!-- KHUNG HIỂN THỊ TRẠNG THÁI 1: MÃ NGUỒN LATEX GỐC -->
-      <div id="q-latex-raw-${q.id}" style="display:none; margin-top:10px; background:#0f172a; color:#f8fafc; padding:12px 14px; border-radius:8px; font-family:monospace; font-size:12px; line-height:1.6; border:1.5px solid #334155; overflow-x:auto;">
-        <div style="color:#38bdf8; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-          <span>📋</span> Trạng thái 1: Mã nguồn LaTeX / Văn bản gốc của câu hỏi:
+    ` : '';
+
+    return `
+    <div class="qitem" style="display:flex; align-items:flex-start;">
+      ${checkboxHTML}
+      <div style="flex:1; min-width:0;">
+        <div class="qrow">
+          <div class="qtext">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+              <div class="cat-badge">${esc(q.subcat || q.cat || 'Chưa phân loại')}</div>
+              <div class="cat-badge" style="background:#eef2ff;color:#4338ca">${esc(TYPE_LABELS[type] || type)}</div>
+              ${authorBadge}
+              ${q.audio ? '<div class="cat-badge" style="background:#fef3c7;color:#92400e">🔊 Nghe</div>' : ''}
+              ${q.video ? '<div class="cat-badge" style="background:#fdf2f8;color:#db2777">🎬 Video</div>' : ''}
+            </div>
+            <div>${renderRich(q.text)}</div>
+            ${mediaHTML(q.image)}
+            ${audioHTML(q.audio)}
+            ${videoHTML(q.video)}
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-sm" type="button" onclick="window.toggleQLatexSource('${q.id}')" style="background:#f8fafc;color:#334155;border:1.5px solid #cbd5e1;font-size:11.5px;padding:4px 8px;font-weight:700;">📝 Xem mã LaTeX</button>
+            ${canEdit ? `
+              <button class="btn btn-sm q-action" data-action="edit" data-id="${q.id}">Sửa</button>
+              <button class="btn btn-sm btn-danger q-action" data-action="delete" data-id="${q.id}">Xóa</button>
+            ` : `
+              <span style="font-size:12px;color:#94a3b8;padding:4px 8px;background:#f1f5f9;border-radius:6px;border:1px solid #e2e8f0" title="Chỉ người tạo hoặc Root Admin mới có quyền sửa/xóa">🔒 Chỉ xem</span>
+            `}
+          </div>
         </div>
-        <div style="margin-bottom:4px;"><b style="color:#94a3b8;">Nội dung:</b> ${esc(q.text)}</div>
-        ${q.opts?.length ? `<div style="margin-bottom:4px;"><b style="color:#94a3b8;">Đáp án:</b> ${q.opts.map((o,i) => `<span style="${(q.type==='mcq_multi'?(q.ans||[]):[q.ans]).includes(i)?'color:#f87171;font-weight:bold;':''}">[${KEYS[i]}] ${esc(o)}</span>`).join(' | ')}</div>` : ''}
-        ${q.explain ? `<div><b style="color:#94a3b8;">Giải thích:</b> ${esc(q.explain)}</div>` : ''}
+        <div style="margin-top:8px">${answerHTML}</div>
+        ${explainHTML}
+        <!-- KHUNG HIỂN THỊ TRẠNG THÁI 1: MÃ NGUỒN LATEX GỐC -->
+        <div id="q-latex-raw-${q.id}" style="display:none; margin-top:10px; background:#0f172a; color:#f8fafc; padding:12px 14px; border-radius:8px; font-family:monospace; font-size:12px; line-height:1.6; border:1.5px solid #334155; overflow-x:auto;">
+          <div style="color:#38bdf8; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+            <span>📋</span> Trạng thái 1: Mã nguồn LaTeX / Văn bản gốc của câu hỏi:
+          </div>
+          <div style="margin-bottom:4px;"><b style="color:#94a3b8;">Nội dung:</b> ${esc(q.text)}</div>
+          ${q.opts?.length ? `<div style="margin-bottom:4px;"><b style="color:#94a3b8;">Đáp án:</b> ${q.opts.map((o,i) => `<span style="${(q.type==='mcq_multi'?(q.ans||[]):[q.ans]).includes(i)?'color:#f87171;font-weight:bold;':''}">[${KEYS[i]}] ${esc(o)}</span>`).join(' | ')}</div>` : ''}
+          ${q.explain ? `<div><b style="color:#94a3b8;">Giải thích:</b> ${esc(q.explain)}</div>` : ''}
+        </div>
       </div>
     </div>`;
   }).join('') || '<div class="empty">Không có câu hỏi phù hợp.</div>';
@@ -634,6 +763,7 @@ export function renderQuestions(){
     <button class="btn btn-sm" id="q-next" ${qPage>=totalPages?'disabled':''}>Sau →</button>`;
   $('q-prev').onclick = () => { qPage--; renderQuestions(); };
   $('q-next').onclick = () => { qPage++; renderQuestions(); };
+  updateSelectedCountLabel();
   typesetMath($('q-list'));
 }
 
