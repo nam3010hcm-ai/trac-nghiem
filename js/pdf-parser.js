@@ -757,16 +757,16 @@ export function extractQuestionsFromText(rawText, allRedItems = [], allBoldItems
   }
 
   // Danh sách các chữ cái đỏ theo thứ tự xuất hiện (a., b., c., d., ...)
-  const redOptionLetters = allRedItems
+  const redOptionLetters = (allRedItems || [])
     .map(r => {
-      const match = (r.text || '').match(/^([a-dA-D])[\s.:\-\/)\]]*$/);
+      const match = (r.text || '').trim().match(/^([a-dA-D])[.:\-\/)\]]*$/);
       return match ? match[1].toUpperCase() : null;
     })
     .filter(Boolean);
 
   // Nếu không tìm thấy header dạng số chuẩn, gọi fallback
   if (qMatches.length === 0) {
-    return fallbackExtractQuestions(text, allRedItems);
+    return fallbackExtractQuestions(text, allRedItems, allBoldItems);
   }
 
   const questions = [];
@@ -786,7 +786,13 @@ export function extractQuestionsFromText(rawText, allRedItems = [], allBoldItems
 
     if (!block) continue;
 
-    const parsedQ = parseSingleQuestionBlock(block, current.qNum, allRedItems, allBoldItems, answerKeyMap);
+    // Lấy ký hiệu chữ cái đỏ tương ứng của câu hỏi thứ i (nếu có)
+    const targetRedLetter = (i < redOptionLetters.length) ? redOptionLetters[i] : null;
+
+    // Lọc các mục bold xuất hiện trong chính block của câu hỏi này
+    const qBoldItems = (allBoldItems || []).filter(b => b.text && block.includes(b.text.trim()));
+
+    const parsedQ = parseSingleQuestionBlock(block, current.qNum, targetRedLetter, qBoldItems, answerKeyMap);
     if (parsedQ) {
       questions.push(parsedQ);
     }
@@ -862,10 +868,13 @@ function findBestOptionSequence(content) {
 }
 
 // Bóc tách một block câu hỏi thành Đề bài, 4 phương án A/B/C/D, Lời giải và Đáp án đúng
-function parseSingleQuestionBlock(block, qNum, allRedItems = [], allBoldItems = [], answerKeyMap = {}) {
+function parseSingleQuestionBlock(block, qNum, targetRedLetter = null, qBoldItems = [], answerKeyMap = {}) {
   // Bỏ phần tiêu đề câu hỏi (Ví dụ "Câu 1:")
   const headerMatch = block.match(/^\s*(?:(?:C[âaÂA]u|B[àaÀA]i|Question|Q|Q\.)\s*\d+(?:\s*\([^)]*\)|\s*\[[^\]]*\])?[\s.:\-\/)]+|\d{1,3}[\s.:\-\/)])\s*/i);
   let content = headerMatch ? block.slice(headerMatch[0].length).trim() : block;
+
+  // Xóa tiền tố thừa lặp lại ở đầu nội dung câu hỏi
+  content = content.replace(/^\s*(?:C[âaÂA]u|B[àaÀA]i|Question|Q)\s*\d+[\s.:\-\/)]*\s*/i, '');
 
   // Tách Lời giải / Hướng dẫn giải (nếu có)
   let explain = "";
@@ -882,6 +891,14 @@ function parseSingleQuestionBlock(block, qNum, allRedItems = [], allBoldItems = 
   const optScores = [0, 0, 0, 0];
   let boldLabelsCount = 0;
 
+  // 1. Thưởng điểm cho phương án có chữ cái màu đỏ của chính câu hỏi này
+  if (targetRedLetter) {
+    const redIdx = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[targetRedLetter.toUpperCase()];
+    if (redIdx !== undefined) {
+      optScores[redIdx] += 100;
+    }
+  }
+
   if (bestSequence.length >= 2) {
     // Nội dung câu hỏi là đoạn trước phương án A đầu tiên
     qText = content.slice(0, bestSequence[0].matchIndex).trim();
@@ -896,25 +913,9 @@ function parseSingleQuestionBlock(block, qNum, allRedItems = [], allBoldItems = 
         optScores[cur.optIdx] += 90;
       }
 
-      // Kiểm tra xem nhãn phương án có màu ĐỎ không (ví dụ "a." hoặc "A" trong allRedItems)
-      if (allRedItems && allRedItems.length) {
-        for (const red of allRedItems) {
-          const rText = (red.text || '').trim();
-          if (rText === cur.rawChar + '.' || rText === cur.letter + '.' || rText === cur.rawChar || rText === cur.letter) {
-            optScores[cur.optIdx] += 80;
-            // Nếu chữ đỏ này cũng có trong allBoldItems -> Thưởng thêm +20
-            if (allBoldItems && allBoldItems.some(b => (b.text || '').trim() === rText)) {
-              optScores[cur.optIdx] += 20;
-            }
-          } else if (optText.length >= 3 && optText.includes(rText) && rText.length >= 2) {
-            optScores[cur.optIdx] += 60;
-          }
-        }
-      }
-
-      // Kiểm tra xem nhãn phương án có in đậm không
-      if (allBoldItems && allBoldItems.length) {
-        for (const bold of allBoldItems) {
+      // Kiểm tra xem nhãn phương án có in đậm không (trong phạm vi block câu hỏi)
+      if (qBoldItems && qBoldItems.length) {
+        for (const bold of qBoldItems) {
           const bText = (bold.text || '').trim();
           if (bText === cur.rawChar + '.' || bText === cur.letter + '.' || bText === cur.rawChar || bText === cur.letter) {
             optScores[cur.optIdx] += 30;
@@ -1039,13 +1040,23 @@ function extractAnswerKeyTable(text) {
   return map;
 }
 
-function fallbackExtractQuestions(text, redTextList) {
+function fallbackExtractQuestions(text, allRedItems = [], allBoldItems = []) {
   const blocks = text.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+  const redOptionLetters = (allRedItems || [])
+    .map(r => {
+      const match = (r.text || '').trim().match(/^([a-dA-D])[.:\-\/)\]]*$/);
+      return match ? match[1].toUpperCase() : null;
+    })
+    .filter(Boolean);
+
   const qs = [];
   let count = 1;
-  for (const block of blocks) {
+  for (let bIdx = 0; bIdx < blocks.length; bIdx++) {
+    const block = blocks[bIdx];
     if (block.length < 15) continue;
-    const q = parseSingleQuestionBlock(block, count, redTextList, count - 1);
+    const targetRedLetter = (bIdx < redOptionLetters.length) ? redOptionLetters[bIdx] : null;
+    const qBoldItems = (allBoldItems || []).filter(b => b.text && block.includes(b.text.trim()));
+    const q = parseSingleQuestionBlock(block, count, targetRedLetter, qBoldItems);
     if (q) {
       qs.push(q);
       count++;

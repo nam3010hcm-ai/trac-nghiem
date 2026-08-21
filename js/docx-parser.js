@@ -1153,15 +1153,24 @@ function parseSingleDocxQuestionBlock(block, qNum, qLines = [], answerKeyMap = {
       const contentStart = labelEnd;
       const contentEnd = (mi + 1 < lineMatches.length) ? lineMatches[mi + 1].start : lText.length;
 
-      // 1. Kiểm tra runs chồng lấn với Nhãn (Label)
+      // 1. Kiểm tra runs chồng lấn hoặc khớp trực tiếp với Nhãn (Label)
       let labelIsRed = false;
       let labelIsBold = false;
       let labelIsUnderline = false;
 
       for (const r of lRuns) {
-        if (!r.range) continue;
-        const [rStart, rEnd] = r.range;
-        if (Math.max(labelStart, rStart) < Math.min(labelEnd, rEnd)) {
+        const rTextTrim = (r.text || '').trim();
+        const isDirectMatch = (rTextTrim === curMatch.letter + '.' || rTextTrim === curMatch.letter.toLowerCase() + '.' || rTextTrim === curMatch.letter || rTextTrim === curMatch.letter.toLowerCase());
+        
+        let isRangeOverlap = false;
+        if (r.range) {
+          const [rStart, rEnd] = r.range;
+          if (Math.max(labelStart, rStart) < Math.min(labelEnd, rEnd)) {
+            isRangeOverlap = true;
+          }
+        }
+
+        if (isRangeOverlap || isDirectMatch) {
           if (r.isRed) labelIsRed = true;
           if (r.isBold) labelIsBold = true;
           if (r.isUnderline) labelIsUnderline = true;
