@@ -633,84 +633,9 @@ export async function parseDocxDocument(file, onProgress = null) {
     description: `Bóc tách tự động từ file Word ${file.name} (${questions.length} câu hỏi).`,
     questions: questions
   };
-}
-
-// Bóc tách nội dung của 1 đoạn văn <w:p>
-function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
-  let fullText = "";
-  let hasRed = false;
-  let hasBold = false;
-  let runs = [];
-
-  function processNode(node) {
-    const nodeName = node.localName || node.nodeName || '';
-
-    // 1. Khối công thức Toán học OMML: <m:oMath> hoặc <m:oMathPara>
-    if (nodeName === 'oMath' || nodeName === 'm:oMath' || nodeName === 'oMathPara' || nodeName === 'm:oMathPara') {
-      const latex = ommlNodeToLatex(node).trim();
-      if (latex) {
-        const mathStr = `$${latex}$`;
-        fullText += (fullText.endsWith(' ') ? '' : ' ') + mathStr + ' ';
-        runs.push({ text: mathStr, isRed: false, isBold: false });
-      }
-      return;
-    }
-
-    // 2. Khối hình ảnh / DrawingML: <w:drawing>
-    if (nodeName === 'drawing' || nodeName === 'w:drawing') {
-      const blip = node.querySelector('blip, a\\:blip, svgBlip, asvg\\:svgBlip');
-      if (blip) {
-        const rId = blip.getAttribute('r:embed') || blip.getAttribute('embed') || blip.getAttribute('r:link');
-        const targetPath = relsMap[rId];
-        const media = targetPath ? mediaCache[targetPath] : null;
-        if (media && media.content) {
-          if (media.type === 'latex') {
-            fullText += (fullText.endsWith(' ') ? '' : ' ') + media.content + ' ';
-            runs.push({ text: media.content, isRed: false, isBold: false });
-          } else if (media.type === 'image') {
-            const imgTag = `<img src="${media.content}" class="docx-math-img" style="vertical-align:middle;max-height:48px;display:inline-block;margin:0 4px;" />`;
-            fullText += ' ' + imgTag + ' ';
-            runs.push({ text: imgTag, isRed: false, isBold: false });
-          }
-          return;
-        }
-      }
-    }
-
-    // 3. Khối hình ảnh VML / MathType OLE Object: <w:pict> hoặc <w:object>
-    if (nodeName === 'pict' || nodeName === 'w:pict' || nodeName === 'object' || nodeName === 'w:object') {
-      const oleData = node.querySelector('OLEObject, o\\:OLEObject');
-      const imgData = node.querySelector('imagedata, v\\:imagedata');
-
-      // ƯU TIÊN 1: File OLE Object (.bin) trong word/embeddings/
-      let media = null;
-      if (oleData) {
-        const oleRId = oleData.getAttribute('r:id') || oleData.getAttribute('id');
-        if (oleRId && relsMap[oleRId] && mediaCache[relsMap[oleRId]] && mediaCache[relsMap[oleRId]].content) {
-          media = mediaCache[relsMap[oleRId]];
-        }
-      }
-
-      // ƯU TIÊN 2: File imagedata (.wmf, .png)
-      if (!media && imgData) {
-        const imgRId = imgData.getAttribute('r:id') || imgData.getAttribute('id') || imgData.getAttribute('r:href');
-        if (imgRId && relsMap[imgRId] && mediaCache[relsMap[imgRId]] && mediaCache[relsMap[imgRId]].content) {
-          media = mediaCache[relsMap[imgRId]];
-        }
-      }
-
-      if (media && media.content) {
-        if (media.type === 'latex') {
-          fullText += (fullText.endsWith(' ') ? '' : ' ') + media.content + ' ';
-          runs.push({ text: media.content, isRed: false, isBold: false });
-        } else if (media.type === 'image') {
-          const imgTag = `<img src="${media.content}" class="docx-math-img" style="vertical-align:middle;max-height:48px;display:inline-block;margin:0 4px;" />`;
-          fullText += ' ' + imgTag + ' ';
-          runs.push({ text: imgTag, isRed: false, isBold: false });
-        }
-        return;
-      }
-    }
+// ==============================================================
+// 6. CÁC HÀM HỖ TRỢ BÓC TÁCH VĂN BẢN & ĐỊNH DẠNG WORD
+// ==============================================================
 
 // Kiểm tra mã màu hex có phải màu đỏ không (hỗ trợ mọi biến thể Word)
 export function isColorRedHex(cVal) {
