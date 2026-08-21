@@ -876,6 +876,39 @@ function parseQuestionsFromDocxLines(lines) {
   return questions;
 }
 
+// Tự động bao bọc các biến số toán học có số mũ / chỉ số dưới ($A^2$, $A^T$, $A^{-1}$, $A^{2026}$) vào khối $ ... $
+function autoWrapMathTokens(text) {
+  if (!text) return '';
+
+  // 1. Tạm thời lưu lại các khối toán $ ... $ và $$ ... $$ đã có sẵn
+  const existingMath = [];
+  let s = String(text).replace(/(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\))/g, (m) => {
+    const idx = existingMath.length;
+    existingMath.push(m);
+    return `\uFFF0MATH${idx}\uFFF1`;
+  });
+
+  // 2. Tự động bọc $...$ cho các biểu thức toán chứa lũy thừa / chỉ số dưới:
+  // Ví dụ: A^{2}, A^{2026}, A^{T}, A^{-1}, (A^T)^{-1}, (AB)^{-1}, (AB^{-1}C)^{-1}, C^{-1}BA^{-1}, x_{1}, A_{ij}
+  s = s.replace(/((?:\([A-Za-z0-9\s^_{}+\-*–—−]+\)|[A-Za-z0-9*–—−])+(?:\^\{[^{}]+\}|_\{[^{}]+\}|(?:\^[A-Za-z0-9*–—−]+)|(?:_[A-Za-z0-9]+))+(?:[A-Za-z0-9()^_{}+\-*–—−]|\s*[=+\-]\s*[A-Za-z0-9()^_{}+\-*–—−]+)*)/g, (match) => {
+    let clean = match.trim()
+      .replace(/–/g, '-')
+      .replace(/—/g, '-')
+      .replace(/−/g, '-');
+    return `$${clean}$`;
+  });
+
+  // 3. Khôi phục lại các khối math đã có sẵn
+  s = s.replace(/\uFFF0MATH(\d+)\uFFF1/g, (_, idx) => {
+    return existingMath[parseInt(idx, 10)] || '';
+  });
+
+  // 4. Dọn dẹp các cặp $$ lồng nhau nếu có
+  s = s.replace(/\$\$+/g, '$');
+
+  return s;
+}
+
 // Bóc tách 1 câu hỏi từ khối văn bản Word
 function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
   const headerMatch = block.match(/^\s*(?:(?:C[âaÂA]u|B[àaÀA]i|Question|Q|Q\.)\s*\d+(?:\s*\([^)]*\)|\s*\[[^\]]*\])?[\s.:\-\/)]+|\d{1,3}[\s.:\-\/)])\s*/i);
@@ -969,7 +1002,7 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
         optText = `$${cleanOpt}$`;
       }
 
-      opts[cur.optIdx] = optText;
+      opts[cur.optIdx] = autoWrapMathTokens(optText);
 
       // Kiểm tra màu ĐỎ từ các dòng Word trùng khớp
       if (detectedAns === -1) {
@@ -999,11 +1032,14 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
                .replace(/\s{2,}/g, ' ')
                .trim();
 
+  // Tự động bao bọc các biến số lũy thừa trong câu hỏi ($A^2$, $A^T$, $A^{-1}$, $A^{2026}$)
+  qText = autoWrapMathTokens(qText);
+
   return {
     text: qText || `Nội dung câu hỏi ${qNum}`,
-    opts: opts,
+    opts: opts.map(o => autoWrapMathTokens(o)),
     ans: detectedAns >= 0 ? detectedAns : 0,
-    explain: explain,
+    explain: autoWrapMathTokens(explain),
     _ansSource: ansSource
   };
 }
