@@ -715,6 +715,8 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
       let rIsBold = false;
 
       // Đọc thuộc tính định dạng <w:rPr>
+      let isSuperscript = false;
+      let isSubscript = false;
       const rPr = node.querySelector('rPr, w\\:rPr');
       if (rPr) {
         // Kiểm tra màu chữ đỏ: <w:color w:val="FF0000"/>
@@ -735,6 +737,13 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
             hasBold = true;
           }
         }
+        // Kiểm tra chỉ số trên / dưới của Word: <w:vertAlign w:val="superscript"/>
+        const vertAlignNode = rPr.querySelector('vertAlign, w\\:vertAlign');
+        if (vertAlignNode) {
+          const vVal = (vertAlignNode.getAttribute('w:val') || vertAlignNode.getAttribute('val') || '').toLowerCase();
+          if (vVal === 'superscript') isSuperscript = true;
+          if (vVal === 'subscript') isSubscript = true;
+        }
       }
 
       // Kiểm tra xem bên trong <w:r> có chứa drawing/pict/oMath không
@@ -750,12 +759,16 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
       }
 
       if (rText) {
-        const trimmed = rText.trim();
+        let formattedRText = rText;
+        if (isSuperscript) formattedRText = `^{${rText}}`;
+        else if (isSubscript) formattedRText = `_{${rText}}`;
+
+        const trimmed = formattedRText.trim();
         if (/^[a-dA-D][.:\-\/)]/.test(trimmed) && fullText && !fullText.endsWith(' ')) {
           fullText += ' ';
         }
-        fullText += rText;
-        runs.push({ text: rText, isRed: rIsRed, isBold: rIsBold });
+        fullText += formattedRText;
+        runs.push({ text: formattedRText, isRed: rIsRed, isBold: rIsBold });
       }
       return;
     }
@@ -770,8 +783,15 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
     processNode(child);
   }
 
+  let cleanedFullText = fullText.trim()
+    .replace(/–/g, '-')
+    .replace(/—/g, '-')
+    .replace(/−/g, '-')
+    .replace(/\^\{([^}]+)\}\^\{([^}]+)\}/g, '^{$1$2}')
+    .replace(/_\{([^}]+)\}_\{([^}]+)\}/g, '_{$1$2}');
+
   return {
-    text: fullText.trim(),
+    text: cleanedFullText,
     hasRed,
     hasBold,
     runs
@@ -828,6 +848,9 @@ function parseQuestionsFromDocxLines(lines) {
 function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
   const headerMatch = block.match(/^\s*(?:(?:C[âaÂA]u|B[àaÀA]i|Question|Q|Q\.)\s*\d+(?:\s*\([^)]*\)|\s*\[[^\]]*\])?[\s.:\-\/)]+|\d{1,3}[\s.:\-\/)])\s*/i);
   let content = headerMatch ? block.slice(headerMatch[0].length).trim() : block;
+
+  // Xóa bỏ các tiền tố lặp thừa như "CÂU 34 ", "Câu 1 " ở đầu nội dung câu hỏi
+  content = content.replace(/^\s*(?:C[âaÂA]u|B[àaÀA]i|Question|Q)\s*\d+[\s.:\-\/)]*\s*/i, '');
 
   let explain = "";
   const explainMatch = content.match(/(?:\n|\s{2,})(?:L[ờo]i\s*gi[ảa]i|H[ưu][ớo]ng\s*d[ẫa]n\s*gi[ảa]i|HDG|Gi[ảa]i\s*th[íi]ch|Gi[ảa]i)\s*[:.]\s*([\s\S]*)$/i);
@@ -905,6 +928,15 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
       const endIdx = (i + 1 < bestSeq.length) ? bestSeq[i + 1].matchIndex : content.length;
       let optText = content.slice(startIdx, endIdx).trim();
 
+      // Nếu chứa công thức toán hoặc lũy thừa nhưng chưa bọc $ ... $, tự động bọc $ ... $
+      if (!optText.startsWith('$') && (optText.includes('^') || optText.includes('_') || optText.includes('\\begin') || optText.includes('\\frac') || optText.includes('det(') || optText.includes('A*') || optText.includes('A-1') || optText.includes('A–1'))) {
+        let cleanOpt = optText.replace(/det\(([^)]+)\)/g, '\\det($1)')
+                              .replace(/det\s+([A-Za-z])/g, '\\det($1)')
+                              .replace(/\(A\*\)/g, '(A^*)')
+                              .replace(/A\*/g, 'A^*');
+        optText = `$${cleanOpt}$`;
+      }
+
       opts[cur.optIdx] = optText;
 
       // Kiểm tra màu ĐỎ từ các dòng Word trùng khớp
@@ -929,6 +961,9 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
       opts[idx] = `(Lựa chọn ${['A', 'B', 'C', 'D'][idx]})`;
     }
   }
+
+  // Xóa các tiền tố thừa trong nội dung câu hỏi
+  qText = qText.replace(/^\s*(?:C[âaÂA]u|B[àaÀA]i|Question|Q)\s*\d+[\s.:\-\/)]*\s*/i, '');
 
   return {
     text: qText || `Nội dung câu hỏi ${qNum}`,
