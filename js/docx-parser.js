@@ -746,11 +746,43 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
         }
       }
 
-      // Kiểm tra xem bên trong <w:r> có chứa drawing/pict/oMath không
+      // Kiểm tra xem bên trong <w:r> có chứa drawing/pict/oMath/sym không
       for (const rChild of node.childNodes) {
         const rcName = rChild.localName || rChild.nodeName || '';
         if (rcName === 't' || rcName === 'w:t') {
           rText += rChild.textContent;
+        } else if (rcName === 'sym' || rcName === 'w:sym') {
+          const charCodeHex = (rChild.getAttribute('w:char') || rChild.getAttribute('char') || '').toUpperCase();
+          const font = (rChild.getAttribute('w:font') || rChild.getAttribute('font') || '').toLowerCase();
+          const code = parseInt(charCodeHex, 16);
+          let symChar = '';
+          if (font.includes('symbol') || font.includes('wingdings') || !font) {
+            if (charCodeHex.endsWith('B4') || code === 0xF0B4 || code === 0x00B4) symChar = '×';
+            else if (charCodeHex.endsWith('B1') || code === 0xF0B1 || code === 0x00B1) symChar = '±';
+            else if (charCodeHex.endsWith('B7') || code === 0xF0B7 || code === 0x00B7) symChar = '·';
+            else if (charCodeHex.endsWith('B8') || code === 0xF0B8 || code === 0x00B8) symChar = '÷';
+            else if (charCodeHex.endsWith('A3') || code === 0xF0A3 || code === 0x00A3) symChar = '≤';
+            else if (charCodeHex.endsWith('B3') || code === 0xF0B3 || code === 0x00B3) symChar = '≥';
+            else if (charCodeHex.endsWith('B9') || code === 0xF0B9 || code === 0x00B9) symChar = '≠';
+            else if (charCodeHex.endsWith('A5') || code === 0xF0A5 || code === 0x00A5) symChar = '∞';
+            else if (charCodeHex.endsWith('DE') || code === 0xF0DE || code === 0x00DE) symChar = '→';
+            else if (charCodeHex.endsWith('D0') || code === 0xF0D0 || code === 0x00D0) symChar = '∈';
+            else if (charCodeHex.endsWith('CE') || code === 0xF0CE || code === 0x00CE) symChar = '∉';
+            else if (charCodeHex.endsWith('C7') || code === 0xF0C7 || code === 0x00C7) symChar = '∩';
+            else if (charCodeHex.endsWith('C8') || code === 0xF0C8 || code === 0x00C8) symChar = '∪';
+            else if (charCodeHex.endsWith('C0') || code === 0xF0C0 || code === 0x00C0) symChar = 'α';
+            else if (charCodeHex.endsWith('C1') || code === 0xF0C1 || code === 0x00C1) symChar = 'β';
+            else if (charCodeHex.endsWith('C4') || code === 0xF0C4 || code === 0x00C4) symChar = 'Δ';
+            else if (charCodeHex.endsWith('70') || code === 0xF070 || code === 0x0070) symChar = 'π';
+            else {
+              const base = (code & 0xFF);
+              if (base >= 32 && base <= 126) symChar = String.fromCharCode(base);
+            }
+          } else {
+            const base = (code & 0xFF);
+            if (base >= 32 && base <= 126) symChar = String.fromCharCode(base);
+          }
+          rText += symChar;
         } else if (rcName === 'drawing' || rcName === 'w:drawing' || rcName === 'pict' || rcName === 'w:pict' || rcName === 'object' || rcName === 'w:object') {
           processNode(rChild);
         } else if (rcName === 'oMath' || rcName === 'm:oMath') {
@@ -962,8 +994,10 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
     }
   }
 
-  // Xóa các tiền tố thừa trong nội dung câu hỏi
-  qText = qText.replace(/^\s*(?:C[âaÂA]u|B[àaÀA]i|Question|Q)\s*\d+[\s.:\-\/)]*\s*/i, '');
+  // Xóa các tiền tố thừa ở đầu hoặc giữa nội dung câu hỏi (ví dụ "Cho CÂU 2 hai ma trận..." -> "Cho hai ma trận...")
+  qText = qText.replace(/\b(?:C[Âaâu]|B[àaai]|Question|Q)\s*\d+[\s.:\-\/)]*/gi, '')
+               .replace(/\s{2,}/g, ' ')
+               .trim();
 
   return {
     text: qText || `Nội dung câu hỏi ${qNum}`,
