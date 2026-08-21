@@ -2573,9 +2573,10 @@ function loadWritingView(type) {
                 <input type="text" id="err-fix-${idx}" placeholder="VD: been">
               </div>
             </div>
-            <button class="btn btn-p" style="margin-top:12px" onclick="window.checkErrorFix(${idx}, '${item.errorWord}', '${item.correctWord}', '${(item.explain || '').replace(/'/g, "\\'")}')">Kiểm tra sửa lỗi</button>
+            <button class="btn btn-p" style="margin-top:12px" onclick="window.checkErrorFix(${idx}, '${item.errorWord || ''}', '${item.correctWord || ''}', '${(item.explain || '').replace(/'/g, '&#39;')}')">Kiểm tra sửa lỗi</button>
             <div id="err-fb-${idx}" class="fb" style="display:none"></div>
           </div>
+        `).join('')}
       </div>
     `;
   }

@@ -633,6 +633,8 @@ export async function parseDocxDocument(file, onProgress = null) {
     description: `Bóc tách tự động từ file Word ${file.name} (${questions.length} câu hỏi).`,
     questions: questions
   };
+}
+
 // ==============================================================
 // 6. CÁC HÀM HỖ TRỢ BÓC TÁCH VĂN BẢN & ĐỊNH DẠNG WORD
 // ==============================================================
