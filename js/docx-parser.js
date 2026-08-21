@@ -27,7 +27,191 @@ export async function loadJsZip() {
 }
 
 // ==============================================================
-// 2. BỘ CHUYỂN ĐỔI CÔNG THỨC TOÁN OMML (WORD EQUATION) SANG LATEX
+// 2. BỘ GIẢI MÃ MATHTYPE (MTEF / WMF / OLE) SANG LATEX
+// ==============================================================
+export function parseMathTypeBinaryToLatex(uint8Array) {
+  if (!uint8Array || uint8Array.length < 8) return '';
+
+  // 1. Tìm vị trí Header MTEF
+  // MTEF Header: [0x05, 0x01, 0x01] hoặc [0x03, 0x01, 0x01]
+  for (let i = 0; i < uint8Array.length - 8; i++) {
+    // Signature text "MathType"
+    if (uint8Array[i] === 0x4D && uint8Array[i+1] === 0x61 && uint8Array[i+2] === 0x74 && uint8Array[i+3] === 0x68 && uint8Array[i+4] === 0x54) {
+      for (let j = i + 8; j < Math.min(uint8Array.length - 4, i + 64); j++) {
+        if ((uint8Array[j] === 5 || uint8Array[j] === 3 || uint8Array[j] === 2) && uint8Array[j+1] === 1 && uint8Array[j+2] === 1) {
+          const res = parseMtefStream(uint8Array, j);
+          if (res) return `$${res}$`;
+        }
+      }
+    }
+    // Signature trực tiếp: version, platform (1), product (1)
+    if ((uint8Array[i] === 5 || uint8Array[i] === 3 || uint8Array[i] === 2) && uint8Array[i+1] === 1 && uint8Array[i+2] === 1 && (uint8Array[i+3] >= 1 && uint8Array[i+3] <= 9)) {
+      const res = parseMtefStream(uint8Array, i);
+      if (res) return `$${res}$`;
+    }
+  }
+
+  // 2. Fallback: Trích xuất chuỗi ký tự từ WMF META_EXTTEXTOUT / META_TEXTOUT
+  let textOuts = [];
+  for (let i = 0; i < uint8Array.length - 4; i++) {
+    const len = uint8Array[i];
+    if (len >= 1 && len <= 30 && i + 1 + len <= uint8Array.length) {
+      let isAscii = true;
+      let str = '';
+      for (let k = 0; k < len; k++) {
+        const c = uint8Array[i + 1 + k];
+        if (c >= 32 && c <= 126) {
+          str += String.fromCharCode(c);
+        } else {
+          isAscii = false;
+          break;
+        }
+      }
+      if (isAscii && str.trim().length >= 1) {
+        if (!['Times New Roman', 'Arial', 'Symbol', 'MT Extra', 'Calibri', 'Cambria Math'].includes(str)) {
+          textOuts.push(str.trim());
+        }
+      }
+    }
+  }
+
+  if (textOuts.length) {
+    let clean = textOuts.join(' ').replace(/\s+/g, ' ').trim();
+    if (clean.length >= 1) {
+      return `$${clean}$`;
+    }
+  }
+
+  return '';
+}
+
+function parseMtefStream(buf, startOffset) {
+  let offset = startOffset;
+  const version = buf[offset++]; // 3 hoặc 5
+  offset += 4; // Bỏ qua platform, product, prodVersion, prodSubVersion
+
+  function readObj() {
+    if (offset >= buf.length) return '';
+    const tag = buf[offset++];
+    if (tag === 0) return ''; // END
+
+    // 1: LINE
+    if (tag === 1) {
+      offset++; // line options
+      let res = '';
+      while (offset < buf.length) {
+        if (buf[offset] === 0) {
+          offset++;
+          break;
+        }
+        res += readObj();
+      }
+      return res;
+    }
+
+    // 2: CHAR
+    if (tag === 2) {
+      const opt = buf[offset++];
+      const typeface = buf[offset++];
+      let code = buf[offset++];
+      if (opt & 0x02) {
+        code = code | (buf[offset++] << 8);
+      }
+      let ch = String.fromCharCode(code);
+      if (ch === '´') return ' \\times ';
+      if (ch === '¹') return ' \\neq ';
+      if (ch === '£') return ' \\le ';
+      if (ch === '³') return ' \\ge ';
+      if (ch === '–' || ch === '—') return '-';
+      return ch;
+    }
+
+    // 3: TMPL (Template)
+    if (tag === 3) {
+      const opt = buf[offset++];
+      const code = buf[offset++];
+      const varCode = buf[offset++];
+
+      // Fractions (Phân số: code 0, 1, 2)
+      if (code <= 2) {
+        const num = readObj();
+        const den = readObj();
+        return `\\frac{${num || '1'}}{${den || '1'}}`;
+      }
+      // Căn thức (code 3)
+      if (code === 3) {
+        const body = readObj();
+        return `\\sqrt{${body}}`;
+      }
+      // Dấu ngoặc / Ma trận / Định thức (code 4..10)
+      if (code >= 4 && code <= 10) {
+        const content = readObj();
+        if (code === 4) return `\\left(${content}\\right)`;
+        if (code === 5) return `\\left[${content}\\right]`;
+        if (code === 6) return `\\left\\{${content}\\right\\}`;
+        if (code === 7) return `\\left|${content}\\right|`;
+        return `\\left(${content}\\right)`;
+      }
+      // Tích phân & Tổng (code 11..16)
+      if (code >= 11 && code <= 16) {
+        const body = readObj();
+        return `\\int{${body}}`;
+      }
+      return readObj();
+    }
+
+    // 4: PILE
+    if (tag === 4) {
+      offset += 3;
+      let res = '';
+      while (offset < buf.length && buf[offset] !== 0) {
+        res += readObj();
+      }
+      if (buf[offset] === 0) offset++;
+      return res;
+    }
+
+    // 5: MATRIX (Ma trận)
+    if (tag === 5) {
+      const opt = buf[offset++];
+      const rows = buf[offset++];
+      const cols = buf[offset++];
+      offset += 2;
+      let cells = [];
+      for (let r = 0; r < rows; r++) {
+        let row = [];
+        for (let c = 0; c < cols; c++) {
+          row.push(readObj());
+        }
+        cells.push(row.join(' & '));
+      }
+      if (buf[offset] === 0) offset++;
+      return `\\begin{bmatrix} ${cells.join(' \\\\ ')} \\end{bmatrix}`;
+    }
+
+    // 11: SUB (Chỉ số dưới)
+    if (tag === 11) {
+      return `_{${readObj()}}`;
+    }
+
+    // 12: SUP (Chỉ số trên / Lũy thừa)
+    if (tag === 12) {
+      return `^{${readObj()}}`;
+    }
+
+    // Bỏ qua các tag khác
+    return '';
+  }
+
+  let latex = '';
+  while (offset < buf.length) {
+    latex += readObj();
+  }
+  return latex.trim();
+}
+
+// ==============================================================
+// 3. BỘ CHUYỂN ĐỔI CÔNG THỨC TOÁN OMML (WORD EQUATION) SANG LATEX
 // ==============================================================
 export function ommlNodeToLatex(node) {
   if (!node) return '';
@@ -190,7 +374,7 @@ export function ommlNodeToLatex(node) {
 }
 
 // ==============================================================
-// 3. THUẬT TOÁN BÓC TÁCH FILE WORD (.DOCX) TOÀN DIỆN (VĂN BẢN, OMML, ẢNH MATHTYPE)
+// 4. THUẬT TOÁN BÓC TÁCH FILE WORD (.DOCX) TOÀN DIỆN
 // ==============================================================
 export async function parseDocxDocument(file, onProgress = null) {
   if (typeof onProgress === 'function') onProgress(15, "Đang giải nén cấu trúc file Word (.docx)...");
@@ -203,7 +387,7 @@ export async function parseDocxDocument(file, onProgress = null) {
   }
 
   // 1. Đọc tệp liên kết Relationships (word/_rels/document.xml.rels)
-  if (typeof onProgress === 'function') onProgress(25, "Đang nạp bảng ánh xạ hình ảnh & MathType...");
+  if (typeof onProgress === 'function') onProgress(25, "Đang nạp bảng liên kết công thức & hình ảnh...");
   const relsMap = {};
   const relsFile = zip.file("word/_rels/document.xml.rels");
   if (relsFile) {
@@ -218,30 +402,42 @@ export async function parseDocxDocument(file, onProgress = null) {
     }
   }
 
-  // 2. Nạp toàn bộ hình ảnh trong file Word (word/media/*)
-  if (typeof onProgress === 'function') onProgress(35, "Đang xử lý hình ảnh và công thức đồ họa MathType...");
+  // 2. Nạp và chuyển đổi toàn bộ MathType WMF / OLE / Images thành LaTeX
+  if (typeof onProgress === 'function') onProgress(40, "Đang chuyển đổi công thức MathType & hình ảnh sang LaTeX...");
   const mediaCache = {};
   for (const fileName of Object.keys(zip.files)) {
-    if (fileName.startsWith('word/media/')) {
+    if (fileName.startsWith('word/media/') || fileName.startsWith('word/embeddings/')) {
       try {
         const ext = fileName.split('.').pop().toLowerCase();
-        let mime = 'image/png';
-        if (ext === 'jpg' || ext === 'jpeg') mime = 'image/jpeg';
-        else if (ext === 'gif') mime = 'image/gif';
-        else if (ext === 'svg') mime = 'image/svg+xml';
-        else if (ext === 'wmf') mime = 'image/wmf';
-        else if (ext === 'emf') mime = 'image/emf';
+        
+        // Nếu là file WMF hoặc file nhúng OLE MathType (.bin, .wmf, .emf)
+        if (ext === 'wmf' || ext === 'emf' || ext === 'bin') {
+          const uint8 = await zip.file(fileName).async('uint8array');
+          const latexMath = parseMathTypeBinaryToLatex(uint8);
+          if (latexMath) {
+            mediaCache[fileName] = { type: 'latex', content: latexMath };
+          } else {
+            mediaCache[fileName] = { type: 'text', content: '' };
+          }
+        } 
+        // Nếu là file hình ảnh chuẩn (PNG, JPEG, GIF, SVG)
+        else if (['png', 'jpg', 'jpeg', 'gif', 'svg'].includes(ext)) {
+          let mime = 'image/png';
+          if (ext === 'jpg' || ext === 'jpeg') mime = 'image/jpeg';
+          else if (ext === 'gif') mime = 'image/gif';
+          else if (ext === 'svg') mime = 'image/svg+xml';
 
-        const base64 = await zip.file(fileName).async('base64');
-        mediaCache[fileName] = `data:${mime};base64,${base64}`;
+          const base64 = await zip.file(fileName).async('base64');
+          mediaCache[fileName] = { type: 'image', content: `data:${mime};base64,${base64}` };
+        }
       } catch (e) {
-        console.warn("Không đọc được media:", fileName, e);
+        console.warn("Lỗi đọc media:", fileName, e);
       }
     }
   }
 
   // 3. Phân tích nội dung XML của document.xml
-  if (typeof onProgress === 'function') onProgress(50, "Đang phân tích cấu trúc văn bản và thẻ Toán học OMML...");
+  if (typeof onProgress === 'function') onProgress(60, "Đang phân tích cấu trúc văn bản và thẻ Toán học OMML...");
   const xmlContent = await docXmlFile.async("string");
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlContent, "text/xml");
@@ -250,7 +446,6 @@ export async function parseDocxDocument(file, onProgress = null) {
   const rawLines = [];
 
   if (body) {
-    // Duyệt qua tất cả các phần tử con trực tiếp của body (bao gồm paragraphs <w:p> và tables <w:tbl>)
     for (const el of body.childNodes) {
       const elName = el.localName || el.nodeName || '';
       if (elName === 'p' || elName === 'w:p') {
@@ -259,7 +454,7 @@ export async function parseDocxDocument(file, onProgress = null) {
           rawLines.push(pResult);
         }
       } else if (elName === 'tbl' || elName === 'w:tbl') {
-        // Xử lý bảng trong Word (chứa các phương án trắc nghiệm hoặc đề bài)
+        // Xử lý bảng trong Word
         const rows = el.getElementsByTagName('w:tr');
         for (let r = 0; r < rows.length; r++) {
           const cells = rows[r].getElementsByTagName('w:tc');
@@ -308,7 +503,7 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
   function processNode(node) {
     const nodeName = node.localName || node.nodeName || '';
 
-    // 1. Khối công thức Toán học: <m:oMath> hoặc <m:oMathPara>
+    // 1. Khối công thức Toán học OMML: <m:oMath> hoặc <m:oMathPara>
     if (nodeName === 'oMath' || nodeName === 'm:oMath' || nodeName === 'oMathPara' || nodeName === 'm:oMathPara') {
       const latex = ommlNodeToLatex(node).trim();
       if (latex) {
@@ -325,10 +520,16 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
       if (blip) {
         const rId = blip.getAttribute('r:embed') || blip.getAttribute('embed') || blip.getAttribute('r:link');
         const targetPath = relsMap[rId];
-        if (targetPath && mediaCache[targetPath]) {
-          const imgTag = `<img src="${mediaCache[targetPath]}" class="docx-math-img" style="vertical-align:middle;max-height:48px;display:inline-block;margin:0 4px;" />`;
-          fullText += ' ' + imgTag + ' ';
-          runs.push({ text: imgTag, isRed: false, isBold: false });
+        const media = targetPath ? mediaCache[targetPath] : null;
+        if (media) {
+          if (media.type === 'latex') {
+            fullText += (fullText.endsWith(' ') ? '' : ' ') + media.content + ' ';
+            runs.push({ text: media.content, isRed: false, isBold: false });
+          } else if (media.type === 'image') {
+            const imgTag = `<img src="${media.content}" class="docx-math-img" style="vertical-align:middle;max-height:48px;display:inline-block;margin:0 4px;" />`;
+            fullText += ' ' + imgTag + ' ';
+            runs.push({ text: imgTag, isRed: false, isBold: false });
+          }
           return;
         }
       }
@@ -337,15 +538,21 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
     // 3. Khối hình ảnh VML / MathType OLE Object: <w:pict> hoặc <w:object>
     if (nodeName === 'pict' || nodeName === 'w:pict' || nodeName === 'object' || nodeName === 'w:object') {
       const imgData = node.querySelector('imagedata, v\\:imagedata');
-      if (imgData) {
-        const rId = imgData.getAttribute('r:id') || imgData.getAttribute('id') || imgData.getAttribute('r:href');
-        const targetPath = relsMap[rId];
-        if (targetPath && mediaCache[targetPath]) {
-          const imgTag = `<img src="${mediaCache[targetPath]}" class="docx-math-img" style="vertical-align:middle;max-height:48px;display:inline-block;margin:0 4px;" />`;
+      const oleData = node.querySelector('OLEObject, o\\:OLEObject');
+      const rId = (imgData && (imgData.getAttribute('r:id') || imgData.getAttribute('id') || imgData.getAttribute('r:href'))) ||
+                  (oleData && (oleData.getAttribute('r:id') || oleData.getAttribute('id')));
+      const targetPath = rId ? relsMap[rId] : null;
+      const media = targetPath ? mediaCache[targetPath] : null;
+      if (media) {
+        if (media.type === 'latex') {
+          fullText += (fullText.endsWith(' ') ? '' : ' ') + media.content + ' ';
+          runs.push({ text: media.content, isRed: false, isBold: false });
+        } else if (media.type === 'image') {
+          const imgTag = `<img src="${media.content}" class="docx-math-img" style="vertical-align:middle;max-height:48px;display:inline-block;margin:0 4px;" />`;
           fullText += ' ' + imgTag + ' ';
           runs.push({ text: imgTag, isRed: false, isBold: false });
-          return;
         }
+        return;
       }
     }
 
@@ -473,7 +680,7 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
     content = content.slice(0, explainMatch.index).trim();
   }
 
-  // Regex tìm 4 phương án a., b., c., d. hoặc A., B., C., D. (hỗ trợ cả khi phương án là thẻ <img> hoặc công thức $)
+  // Regex tìm 4 phương án a., b., c., d. hoặc A., B., C., D.
   const optRegex = /(?:^|\n|\s{2,}|\t|\s)(?:\*|\[x\]\s*)?([A-Da-d])(?:[\s.:\-\/)\]]*[.:\-\/)\]]+|\s*(?=<img|\$|[0-9–\-]))(?!\d)/g;
   const matches = [];
   let om;
@@ -550,7 +757,6 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
       if (detectedAns === -1) {
         for (const line of allLines) {
           if (line.hasRed) {
-            // Khớp nhãn chữ cái (VD "b.") hoặc khớp nội dung phương án
             if (line.text.includes(cur.rawChar + '.') || (optText && optText.length >= 2 && line.text.includes(optText))) {
               detectedAns = cur.optIdx;
               ansSource = 'red_word';
