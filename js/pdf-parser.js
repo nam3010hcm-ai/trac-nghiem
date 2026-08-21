@@ -583,7 +583,8 @@ function buildLineString(lineItems) {
 
     if (lastRight !== null) {
       const gap = it.x - lastRight;
-      if (gap > 3.5 && !lineStr.endsWith(" ") && !str.startsWith(" ")) {
+      // Trong PDF.js, khoảng cách giữa 2 từ thường từ 1.2pt đến 3.0pt
+      if (gap > 1.2 && !lineStr.endsWith(" ") && !str.startsWith(" ")) {
         lineStr += " ";
       }
     }
@@ -618,6 +619,44 @@ function normalizeVietnameseSpacing(text) {
     [/chuy\s*ể\s*n/gi, 'chuyển'],
     [/v\s*ị/gi, 'vị'],
     [/h\s*ạ\s*ng/gi, 'hạng'],
+    [/V\s*ế\s*t/gi, 'Vết'],
+    [/v\s*ế\s*t/gi, 'vết'],
+    [/V\s*ớ\s*i/gi, 'Với'],
+    [/v\s*ớ\s*i/gi, 'với'],
+    [/m\s*ọ\s*i/gi, 'mọi'],
+    [/t\s*ứ\s*c/gi, 'tức'],
+    [/k\s*í\s*ch/gi, 'kích'],
+    [/th\s*ư\s*ớ\s*c/gi, 'thước'],
+    [/nh\s*â\s*n/gi, 'nhân'],
+    [/vu\s*ô\s*ng/gi, 'vuông'],
+    [/c\s*ấ\s*p/gi, 'cấp'],
+    [/đ\s*i\s*ề\s*u/gi, 'điều'],
+    [/ki\s*ệ\s*n/gi, 'kiện'],
+    [/đ\s*ể/gi, 'để'],
+    [/b\s*a\s*o/gi, 'bao'],
+    [/nhi\s*ê\s*u/gi, 'nhiêu'],
+    [/T\s*í\s*nh/gi, 'Tính'],
+    [/t\s*í\s*nh/gi, 'tính'],
+    [/T\s*ì\s*m/gi, 'Tìm'],
+    [/t\s*ì\s*m/gi, 'tìm'],
+    [/C\s*â\s*u/gi, 'Câu'],
+    [/c\s*â\s*u/gi, 'câu'],
+    [/B\s*à\s*i/gi, 'Bài'],
+    [/b\s*à\s*i/gi, 'bài'],
+    [/Đ\s*á\s*p/gi, 'Đáp'],
+    [/đ\s*á\s*p/gi, 'đáp'],
+    [/á\s*n/gi, 'án'],
+    [/L\s*ờ\s*i/gi, 'Lời'],
+    [/l\s*ờ\s*i/gi, 'lời'],
+    [/gi\s*ả\s*i/gi, 'giải'],
+    [/li\s*ê\s*n\s*h\s*ệ/gi, 'liên hệ'],
+    [/m\s*ố\s*i/gi, 'mối'],
+    [/đ\s*ú\s*n\s*g/gi, 'đúng'],
+    [/gi\s*ữ\s*a/gi, 'giữa'],
+    [/đ\s*ạ\s*i\s*s\s*ố/gi, 'đại số'],
+    [/li\s*ê\s*n\s*h\s*ợ\s*p/gi, 'liên hợp'],
+    [/c\s*ô\s*n\s*g\s*t\s*h\s*ứ\s*c/gi, 'công thức']
+  ];
     [/V\s*ế\s*t/gi, 'Vết'],
     [/v\s*ế\s*t/gi, 'vết'],
     [/V\s*ớ\s*i/gi, 'Với'],
@@ -978,11 +1017,21 @@ export function cleanMathFormulas(txt) {
   // 1. Loại bỏ các ký tự rác từ font MathType / Symbol bị lỗi
   s = s.replace(/[\uf8ee\uf8f9\uf8ef\uf8fa\uf8f0\uf8fb]/g, '');
   
-  // Dọn dẹp các cụm ký tự rác đặc thù từ Word Equation
-  s = s.replace(/'\s*=\s*'\s*#\s*A%&\s*'\s*!\s*!\s*"\s*'\s*-1\s*T/g, 'A^{-1} = \\frac{1}{\\det A}(A^*)^T');
-  s = s.replace(/#\s*=\s*A#%&/g, 'A^{-1} = \\frac{1}{\\det A}A^*');
-  s = s.replace(/A\s*=\s*det\(A\)\(A\*\)\s*'\(\s*\)\s*#/g, 'A^{-1} = \\det(A)(A^*)^T');
-  s = s.replace(/A\^\s*=\s*det\(A\)A\*/g, 'A^{-1} = \\det(A)A^*');
+  // Dọn dẹp các cụm ký tự rác đặc thù từ Word Equation & MathType
+  s = s.replace(/['"]\s*=\s*['"]\s*#\s*A%&\s*['"]\s*!\s*(?:!\s*)?['"]?\s*'?\s*-\s*1\s*T/gi, 'A^{-1} = \\frac{1}{\\det A}(A^*)^T');
+  s = s.replace(/['"]\s*=\s*['"]\s*#\s*A%&\s*['"]?\s*!\s*-\s*1\s*T/gi, 'A^{-1} = \\frac{1}{\\det A}(A^*)^T');
+  s = s.replace(/['"]\s*=\s*#\s*A%&/gi, 'A^{-1} = \\frac{1}{\\det A}A^*');
+  s = s.replace(/#\s*=\s*A#%&/gi, 'A^{-1} = \\frac{1}{\\det A}A^*');
+  s = s.replace(/#\s*A%&/gi, '\\frac{1}{\\det A}A^*');
+  s = s.replace(/A\s*=\s*det\(A\)\(A\*\)\s*['"]?\(\s*\)\s*#/gi, 'A^{-1} = \\det(A)(A^*)^T');
+  s = s.replace(/A\s*=\s*\\det\(A\)\(A\*\)\s*['"]?\(\s*\)\s*#/gi, 'A^{-1} = \\det(A)(A^*)^T');
+  s = s.replace(/A\^\s*=\s*det\(A\)A\*/gi, 'A^{-1} = \\det(A)A^*');
+  s = s.replace(/A\^\s*=\s*\\det\(A\)A\*/gi, 'A^{-1} = \\det(A)A^*');
+
+  // Khắc phục lỗi chữ bị chèn số mũ ma trận ở đề bài (VD: "ma - 1 trận nghịch đảo A")
+  s = s.replace(/ma\s*-\s*1\s*trận\s*nghịch\s*đảo\s*([A-Za-z])/gi, 'ma trận nghịch đảo $1^{-1}');
+  s = s.replace(/ma\s*trận\s*nghịch\s*đảo\s*([A-Za-z])\s*-\s*1/gi, 'ma trận nghịch đảo $1^{-1}');
+  s = s.replace(/-\s*1\s*!+/g, '');
 
   // 2. Chuẩn hóa các ký hiệu toán học phổ biến
   s = s.replace(/\s*´\s*/g, " \\times ")
