@@ -159,10 +159,7 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
   if (!stream || stream.length < 10) return '';
 
   // 2. Cắt bỏ Header 28 byte của MathType nếu có
-  let buf = stream;
-  if (stream[0] === 28 && stream[1] === 0) {
-    buf = stream.subarray(28);
-  }
+  let buf = (stream[0] === 28 && stream[1] === 0) ? stream.subarray(28) : stream;
 
   // 3. Tìm vị trí bắt đầu thực sự của phương trình toán học
   let rootPos = -1;
@@ -184,7 +181,7 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
 
   let offset = rootPos;
 
-  function readRecord() {
+  function parseItem() {
     if (offset >= buf.length) return '';
     const tag = buf[offset++];
     if (tag === 0) return ''; // END tag
@@ -193,13 +190,13 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
     if (tag === 1) {
       const lineOpt = buf[offset++];
       if (lineOpt & 0x08) offset += 2; // nudge
-      let items = [];
+      const items = [];
       while (offset < buf.length) {
         if (buf[offset] === 0) {
           offset++; // consume END tag của LINE
           break;
         }
-        const val = readRecord();
+        const val = parseItem();
         if (val) items.push(val);
       }
       return items.join('');
@@ -212,12 +209,8 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
       if (opt & 0x04) offset += 2; // custom space
       const typeface = buf[offset++];
       let code = buf[offset++];
-      if (opt & 0x02) { // 16-bit unicode
-        code = code | (buf[offset++] << 8);
-      }
-      if (offset < buf.length && buf[offset] === 0) {
-        offset++;
-      }
+      if (opt & 0x02) code |= (buf[offset++] << 8); // 16-bit unicode
+      if (offset < buf.length && buf[offset] === 0) offset++;
       let ch = String.fromCharCode(code);
       if (ch === '´') return ' \\times ';
       if (ch === '¹') return ' \\neq ';
@@ -233,81 +226,59 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2; // nudge
       if (opt & 0x04) offset += 2; // custom space
-      const tmplCode = buf[offset++];
-      let variation = buf[offset++];
+      const tc = buf[offset++];
+      const var1 = buf[offset++];
       offset++; // MT5 2nd byte of variation
-      const tmplOpt = buf[offset++];
+      const topt = buf[offset++];
 
       // Phân số (Fractions: tmplCode 0, 1, 11, 12, 13)
-      if (tmplCode === 0 || tmplCode === 1 || tmplCode === 11 || tmplCode === 12 || tmplCode === 13) {
-        const num = readRecord();
-        const den = readRecord();
+      if (tc === 0 || tc === 1 || tc === 11 || tc === 12 || tc === 13) {
+        const num = parseItem();
+        const den = parseItem();
         return `\\frac{${num || '1'}}{${den || '1'}}`;
       }
       // Căn bậc 2 (tmplCode 2, 19)
-      if (tmplCode === 2 || tmplCode === 19) {
-        const body = readRecord();
+      if (tc === 2 || tc === 19) {
+        const body = parseItem();
         return `\\sqrt{${body}}`;
       }
       // Căn bậc n (tmplCode 20)
-      if (tmplCode === 20) {
-        const deg = readRecord();
-        const body = readRecord();
+      if (tc === 20) {
+        const deg = parseItem();
+        const body = parseItem();
         return `\\sqrt[${deg}]{${body}}`;
       }
       // Ma trận đóng ngoặc vuông (tmplCode 3, 5)
-      if (tmplCode === 3 || tmplCode === 5) {
-        const content = readRecord();
+      if (tc === 3 || tc === 5) {
+        const content = parseItem();
         if (content.includes('\\begin{bmatrix}') || content.includes('\\begin{matrix}')) {
           return content;
         }
         return `\\left[${content}\\right]`;
       }
       // Dấu ngoặc tròn (tmplCode 4)
-      if (tmplCode === 4) {
-        const content = readRecord();
-        return `\\left(${content}\\right)`;
-      }
+      if (tc === 4) return `\\left(${parseItem()}\\right)`;
       // Dấu ngoặc nhọn (tmplCode 6)
-      if (tmplCode === 6) {
-        const content = readRecord();
-        return `\\left\\{${content}\\right\\}`;
-      }
+      if (tc === 6) return `\\left\\{${parseItem()}\\right\\}`;
       // Trị tuyệt đối (tmplCode 7)
-      if (tmplCode === 7) {
-        const content = readRecord();
-        return `\\left|${content}\\right|`;
-      }
+      if (tc === 7) return `\\left|${parseItem()}\\right|`;
       // Chỉ số dưới (tmplCode 27)
-      if (tmplCode === 27) {
-        const body = readRecord();
+      if (tc === 27) {
+        const body = parseItem();
         return body ? `_{${body}}` : '';
       }
       // Chỉ số trên / Lũy thừa (tmplCode 28)
-      if (tmplCode === 28) {
-        const body = readRecord();
+      if (tc === 28) {
+        const body = parseItem();
         return body ? `^{${body}}` : '';
       }
       // Cả chỉ số dưới và trên (tmplCode 29)
-      if (tmplCode === 29) {
-        const sub = readRecord();
-        const sup = readRecord();
+      if (tc === 29) {
+        const sub = parseItem();
+        const sup = parseItem();
         return `_{${sub}}^{${sup}}`;
       }
-      return readRecord();
-    }
-
-    // 4: PILE (0x04)
-    if (tag === 4) {
-      const opt = buf[offset++];
-      if (opt & 0x08) offset += 2;
-      offset += 2; // halign, valign
-      let items = [];
-      while (offset < buf.length && buf[offset] !== 0) {
-        items.push(readRecord());
-      }
-      if (offset < buf.length && buf[offset] === 0) offset++;
-      return items.join('');
+      return parseItem();
     }
 
     // 5: MATRIX (0x05)
@@ -325,7 +296,7 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
       for (let r = 0; r < rows; r++) {
         const rowCells = [];
         for (let c = 0; c < cols; c++) {
-          rowCells.push(readRecord().trim());
+          rowCells.push(parseItem().trim());
         }
         matrixRows.push(rowCells.join(' & '));
       }
@@ -337,7 +308,7 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
     if (tag === 11 || tag === 13) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2;
-      const body = readRecord();
+      const body = parseItem();
       return body ? `_{${body}}` : '';
     }
 
@@ -345,7 +316,7 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
     if (tag === 12 || tag === 14) {
       const opt = buf[offset++];
       if (opt & 0x08) offset += 2;
-      const body = readRecord();
+      const body = parseItem();
       return body ? `^{${body}}` : '';
     }
 
@@ -364,16 +335,16 @@ export function parseMathTypeBinaryToLatex(rawBuf) {
     return '';
   }
 
-  let out = [];
+  const out = [];
   while (offset < buf.length) {
-    const item = readRecord();
+    const item = parseItem();
     if (item) out.push(item);
   }
 
-  let cleaned = out.join('').trim();
-  cleaned = cleaned.replace(/\^{}/g, '').replace(/_{}/g, '').replace(/\\left\[\\right\]/g, '');
-  if (cleaned) {
-    return `$${cleaned}$`;
+  let clean = out.join('').trim();
+  clean = clean.replace(/\^{}/g, '').replace(/_{}/g, '').replace(/\\left\[\\right\]/g, '');
+  if (clean) {
+    return `$${clean}$`;
   }
   return '';
 }
