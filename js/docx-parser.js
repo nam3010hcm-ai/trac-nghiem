@@ -27,94 +27,80 @@ export async function loadJsZip() {
 }
 
 // ==============================================================
-// 2. BỘ GIẢI MÃ MATHTYPE (MTEF / WMF / OLE) SANG LATEX
+// 2. BỘ GIẢI MÃ MATHTYPE (MTEF / WMF / OLE BINARY) SANG LATEX CHUẨN
 // ==============================================================
-export function parseMathTypeBinaryToLatex(uint8Array) {
-  if (!uint8Array || uint8Array.length < 8) return '';
+export function parseMathTypeBinaryToLatex(buf) {
+  if (!buf || buf.length < 10) return '';
 
   // 1. Tìm vị trí Header MTEF
-  // MTEF Header: [0x05, 0x01, 0x01] hoặc [0x03, 0x01, 0x01]
-  for (let i = 0; i < uint8Array.length - 8; i++) {
-    // Signature text "MathType"
-    if (uint8Array[i] === 0x4D && uint8Array[i+1] === 0x61 && uint8Array[i+2] === 0x74 && uint8Array[i+3] === 0x68 && uint8Array[i+4] === 0x54) {
-      for (let j = i + 8; j < Math.min(uint8Array.length - 4, i + 64); j++) {
-        if ((uint8Array[j] === 5 || uint8Array[j] === 3 || uint8Array[j] === 2) && uint8Array[j+1] === 1 && uint8Array[j+2] === 1) {
-          const res = parseMtefStream(uint8Array, j);
-          if (res) return `$${res}$`;
-        }
-      }
-    }
-    // Signature trực tiếp: version, platform (1), product (1)
-    if ((uint8Array[i] === 5 || uint8Array[i] === 3 || uint8Array[i] === 2) && uint8Array[i+1] === 1 && uint8Array[i+2] === 1 && (uint8Array[i+3] >= 1 && uint8Array[i+3] <= 9)) {
-      const res = parseMtefStream(uint8Array, i);
-      if (res) return `$${res}$`;
-    }
-  }
+  // MTEF Header bắt đầu bằng [0x1C, 0x05, ...] hoặc [0x1C, 0x03, ...] hoặc [0x05, 0x01, 0x01, ...]
+  let mtefStart = -1;
+  let isV5 = true;
 
-  // 2. Fallback: Trích xuất chuỗi ký tự từ WMF META_EXTTEXTOUT / META_TEXTOUT
-  let textOuts = [];
-  for (let i = 0; i < uint8Array.length - 4; i++) {
-    const len = uint8Array[i];
-    if (len >= 1 && len <= 30 && i + 1 + len <= uint8Array.length) {
-      let isAscii = true;
-      let str = '';
-      for (let k = 0; k < len; k++) {
-        const c = uint8Array[i + 1 + k];
-        if (c >= 32 && c <= 126) {
-          str += String.fromCharCode(c);
-        } else {
-          isAscii = false;
+  for (let i = 0; i < buf.length - 6; i++) {
+    // Header chuẩn 28 byte của MathType: byte 0 là 0x1C (28), byte 1 là version (5 hoặc 3)
+    if (buf[i] === 0x1C && (buf[i+1] === 5 || buf[i+1] === 3)) {
+      mtefStart = i + 28;
+      isV5 = (buf[i+1] === 5);
+      break;
+    }
+    // Stream MTEF trực tiếp: [5, 1, 1, ...] hoặc [3, 1, 1, ...]
+    if ((buf[i] === 5 || buf[i] === 3) && buf[i+1] === 1 && buf[i+2] === 1 && (buf[i+3] >= 1 && buf[i+3] <= 9)) {
+      mtefStart = i + 5;
+      isV5 = (buf[i] === 5);
+      break;
+    }
+    // Tìm kiếm chuỗi "MathType" trong WMF MFCOMMENT record
+    if (buf[i] === 0x4D && buf[i+1] === 0x61 && buf[i+2] === 0x74 && buf[i+3] === 0x68 && buf[i+4] === 0x54 && buf[i+5] === 0x79) {
+      for (let j = i; j < Math.min(buf.length - 4, i + 64); j++) {
+        if (buf[j] === 0x1C && (buf[j+1] === 5 || buf[j+1] === 3)) {
+          mtefStart = j + 28;
+          isV5 = (buf[j+1] === 5);
+          break;
+        }
+        if ((buf[j] === 5 || buf[j] === 3) && buf[j+1] === 1 && buf[j+2] === 1) {
+          mtefStart = j + 5;
+          isV5 = (buf[j] === 5);
           break;
         }
       }
-      if (isAscii && str.trim().length >= 1) {
-        if (!['Times New Roman', 'Arial', 'Symbol', 'MT Extra', 'Calibri', 'Cambria Math'].includes(str)) {
-          textOuts.push(str.trim());
-        }
-      }
+      if (mtefStart !== -1) break;
     }
   }
 
-  if (textOuts.length) {
-    let clean = textOuts.join(' ').replace(/\s+/g, ' ').trim();
-    if (clean.length >= 1) {
-      return `$${clean}$`;
-    }
+  if (mtefStart === -1 || mtefStart >= buf.length) {
+    return '';
   }
 
-  return '';
-}
+  let offset = mtefStart;
 
-function parseMtefStream(buf, startOffset) {
-  let offset = startOffset;
-  const version = buf[offset++]; // 3 hoặc 5
-  offset += 4; // Bỏ qua platform, product, prodVersion, prodSubVersion
-
-  function readObj() {
+  function readRecord() {
     if (offset >= buf.length) return '';
     const tag = buf[offset++];
-    if (tag === 0) return ''; // END
+    if (tag === 0) return ''; // END tag
 
-    // 1: LINE
+    // 1: LINE (0x01)
     if (tag === 1) {
-      offset++; // line options
-      let res = '';
+      const lineOpt = buf[offset++];
+      if (lineOpt & 0x08) offset += 2; // nudge dx, dy
+      let content = '';
       while (offset < buf.length) {
         if (buf[offset] === 0) {
-          offset++;
+          offset++; // consume END tag
           break;
         }
-        res += readObj();
+        content += readRecord();
       }
-      return res;
+      return content;
     }
 
-    // 2: CHAR
+    // 2: CHAR (0x02)
     if (tag === 2) {
       const opt = buf[offset++];
+      if (opt & 0x08) offset += 2; // nudge
       const typeface = buf[offset++];
       let code = buf[offset++];
-      if (opt & 0x02) {
+      if (opt & 0x02) { // 16-bit unicode
         code = code | (buf[offset++] << 8);
       }
       let ch = String.fromCharCode(code);
@@ -126,62 +112,70 @@ function parseMtefStream(buf, startOffset) {
       return ch;
     }
 
-    // 3: TMPL (Template)
+    // 3: TMPL (0x03)
     if (tag === 3) {
       const opt = buf[offset++];
-      const code = buf[offset++];
-      const varCode = buf[offset++];
+      if (opt & 0x08) offset += 2; // nudge
+      const tmplCode = buf[offset++];
+      let variation = buf[offset++];
+      if (isV5) offset++; // variation là 2 byte trong MTEF v5
+      const tmplOpt = buf[offset++];
 
-      // Fractions (Phân số: code 0, 1, 2)
-      if (code <= 2) {
-        const num = readObj();
-        const den = readObj();
+      // Phân số (Fractions: tmplCode 0, 1, 2)
+      if (tmplCode >= 0 && tmplCode <= 2) {
+        const num = readRecord();
+        const den = readRecord();
         return `\\frac{${num || '1'}}{${den || '1'}}`;
       }
-      // Căn thức (code 3)
-      if (code === 3) {
-        const body = readObj();
+      // Căn thức (tmplCode 3)
+      if (tmplCode === 3) {
+        const body = readRecord();
         return `\\sqrt{${body}}`;
       }
-      // Dấu ngoặc / Ma trận / Định thức (code 4..10)
-      if (code >= 4 && code <= 10) {
-        const content = readObj();
-        if (code === 4) return `\\left(${content}\\right)`;
-        if (code === 5) return `\\left[${content}\\right]`;
-        if (code === 6) return `\\left\\{${content}\\right\\}`;
-        if (code === 7) return `\\left|${content}\\right|`;
+      // Dấu ngoặc, ma trận, định thức (tmplCode 4 đến 10)
+      if (tmplCode >= 4 && tmplCode <= 10) {
+        const content = readRecord();
+        if (tmplCode === 4) return `\\left(${content}\\right)`;
+        if (tmplCode === 5) return `\\left[${content}\\right]`;
+        if (tmplCode === 6) return `\\left\\{${content}\\right\\}`;
+        if (tmplCode === 7) return `\\left|${content}\\right|`;
         return `\\left(${content}\\right)`;
       }
-      // Tích phân & Tổng (code 11..16)
-      if (code >= 11 && code <= 16) {
-        const body = readObj();
+      // Tích phân & Tổng
+      if (tmplCode >= 11 && tmplCode <= 16) {
+        const body = readRecord();
         return `\\int{${body}}`;
       }
-      return readObj();
+      return readRecord();
     }
 
-    // 4: PILE
+    // 4: PILE (0x04)
     if (tag === 4) {
-      offset += 3;
+      const opt = buf[offset++];
+      if (opt & 0x08) offset += 2;
+      offset += 2; // halign, valign
       let res = '';
       while (offset < buf.length && buf[offset] !== 0) {
-        res += readObj();
+        res += readRecord();
       }
       if (buf[offset] === 0) offset++;
       return res;
     }
 
-    // 5: MATRIX (Ma trận)
+    // 5: MATRIX (0x05)
     if (tag === 5) {
       const opt = buf[offset++];
+      if (opt & 0x08) offset += 2;
       const rows = buf[offset++];
       const cols = buf[offset++];
-      offset += 2;
+      offset += 2; // halign, valign
+      offset += Math.ceil((rows - 1) * 2 / 8);
+      offset += Math.ceil((cols - 1) * 2 / 8);
       let cells = [];
       for (let r = 0; r < rows; r++) {
         let row = [];
         for (let c = 0; c < cols; c++) {
-          row.push(readObj());
+          row.push(readRecord());
         }
         cells.push(row.join(' & '));
       }
@@ -189,25 +183,37 @@ function parseMtefStream(buf, startOffset) {
       return `\\begin{bmatrix} ${cells.join(' \\\\ ')} \\end{bmatrix}`;
     }
 
-    // 11: SUB (Chỉ số dưới)
-    if (tag === 11) {
-      return `_{${readObj()}}`;
+    // 11: SUB (Chỉ số dưới: 0x0B)
+    if (tag === 11 || tag === 0x0B) {
+      return `_{${readRecord()}}`;
     }
 
-    // 12: SUP (Chỉ số trên / Lũy thừa)
-    if (tag === 12) {
-      return `^{${readObj()}}`;
+    // 12: SUP (Chỉ số trên: 0x0C)
+    if (tag === 12 || tag === 0x0C) {
+      return `^{${readRecord()}}`;
     }
 
-    // Bỏ qua các tag khác
+    // Bỏ qua các tag font/size/style phụ trợ
+    if (tag === 8 || tag === 9 || tag === 10 || tag === 15 || tag === 16) {
+      while (offset < buf.length && buf[offset] > 20) {
+        offset++;
+      }
+      return '';
+    }
+
     return '';
   }
 
-  let latex = '';
+  let result = '';
   while (offset < buf.length) {
-    latex += readObj();
+    result += readRecord();
   }
-  return latex.trim();
+
+  let cleaned = result.trim();
+  if (cleaned) {
+    return `$${cleaned}$`;
+  }
+  return '';
 }
 
 // ==============================================================
@@ -522,10 +528,10 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
         const targetPath = relsMap[rId];
         const media = targetPath ? mediaCache[targetPath] : null;
         if (media) {
-          if (media.type === 'latex') {
+          if (media.type === 'latex' && media.content) {
             fullText += (fullText.endsWith(' ') ? '' : ' ') + media.content + ' ';
             runs.push({ text: media.content, isRed: false, isBold: false });
-          } else if (media.type === 'image') {
+          } else if (media.type === 'image' && media.content) {
             const imgTag = `<img src="${media.content}" class="docx-math-img" style="vertical-align:middle;max-height:48px;display:inline-block;margin:0 4px;" />`;
             fullText += ' ' + imgTag + ' ';
             runs.push({ text: imgTag, isRed: false, isBold: false });
@@ -544,10 +550,10 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
       const targetPath = rId ? relsMap[rId] : null;
       const media = targetPath ? mediaCache[targetPath] : null;
       if (media) {
-        if (media.type === 'latex') {
+        if (media.type === 'latex' && media.content) {
           fullText += (fullText.endsWith(' ') ? '' : ' ') + media.content + ' ';
           runs.push({ text: media.content, isRed: false, isBold: false });
-        } else if (media.type === 'image') {
+        } else if (media.type === 'image' && media.content) {
           const imgTag = `<img src="${media.content}" class="docx-math-img" style="vertical-align:middle;max-height:48px;display:inline-block;margin:0 4px;" />`;
           fullText += ' ' + imgTag + ' ';
           runs.push({ text: imgTag, isRed: false, isBold: false });
@@ -598,6 +604,11 @@ function extractParagraphData(pNode, relsMap = {}, mediaCache = {}) {
       }
 
       if (rText) {
+        // Đảm bảo có khoảng trắng trước các nhãn phương án trắc nghiệm như "a.", "b.", "c.", "d."
+        const trimmed = rText.trim();
+        if (/^[a-dA-D][.:\-\/)]/.test(trimmed) && fullText && !fullText.endsWith(' ')) {
+          fullText += ' ';
+        }
         fullText += rText;
         runs.push({ text: rText, isRed: rIsRed, isBold: rIsBold });
       }
@@ -680,8 +691,8 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
     content = content.slice(0, explainMatch.index).trim();
   }
 
-  // Regex tìm 4 phương án a., b., c., d. hoặc A., B., C., D.
-  const optRegex = /(?:^|\n|\s{2,}|\t|\s)(?:\*|\[x\]\s*)?([A-Da-d])(?:[\s.:\-\/)\]]*[.:\-\/)\]]+|\s*(?=<img|\$|[0-9–\-]))(?!\d)/g;
+  // Regex tìm 4 phương án a., b., c., d. hoặc A., B., C., D. (cho phép đứng sau khoảng trắng, dấu *, $, ), ], v.v.)
+  const optRegex = /(?:^|\n|\s{2,}|\t|\s|[*$)}\]])(?:\*|\[x\]\s*)?([A-Da-d])(?:[\s.:\-\/)\]]*[.:\-\/)\]]+|\s*(?=<img|\$|[0-9–\-]))(?!\d)/g;
   const matches = [];
   let om;
   while ((om = optRegex.exec(content)) !== null) {
@@ -719,21 +730,19 @@ function parseSingleDocxQuestionBlock(block, qNum, allLines = []) {
     }
   }
 
-  // Nếu chuỗi đồng nhất chưa đủ, tìm chuỗi hỗn hợp
+  // Nếu chuỗi liên tiếp không đủ, lấy toàn bộ danh sách các chữ cái khác nhau xuất hiện theo thứ tự
   if (bestSeq.length < 2) {
-    for (let i = 0; i < matches.length; i++) {
-      if (matches[i].optIdx === 0) {
-        const seq = [matches[i]];
-        let exp = 1;
-        for (let j = i + 1; j < matches.length; j++) {
-          if (matches[j].optIdx === exp) {
-            seq.push(matches[j]);
-            exp++;
-            if (exp === 4) break;
-          }
-        }
-        if (seq.length > bestSeq.length) bestSeq = seq;
+    const seen = new Set();
+    const seq = [];
+    for (const m of matches) {
+      if (!seen.has(m.optIdx)) {
+        seen.add(m.optIdx);
+        seq.push(m);
       }
+    }
+    if (seq.length >= 2) {
+      seq.sort((a, b) => a.matchIndex - b.matchIndex);
+      bestSeq = seq;
     }
   }
 
