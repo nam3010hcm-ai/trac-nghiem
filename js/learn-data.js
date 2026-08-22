@@ -17,16 +17,20 @@ export const DEFAULT_UNITS = [
     listening: [
       {
         id: 'lis_1',
-        title: 'A Conversation at the Airport',
+        title: '🎧 Audio: A Conversation at the Airport Check-in',
         topic: 'Travel & Tourism',
         level: 'A2 - B1',
+        mediaType: 'audio',
+        audioUrl: 'https://cdn.freesound.org/previews/530/530415_11861866-lq.mp3',
+        videoUrl: '',
         audioText: "Good morning. Where are you flying to today? I'm flying to London Heathrow on flight BA178. May I see your passport and ticket, please? Here you go. Would you prefer a window seat or an aisle seat? An aisle seat, please. Great, here is your boarding pass. Gate 24B starts boarding at 10:30.",
-        audioUrl: '',
+        transcript: "Agent: Good morning. Where are you flying to today?\nPassenger: I'm flying to London Heathrow on flight BA178.\nAgent: May I see your passport and ticket, please?\nPassenger: Here you go.\nAgent: Would you prefer a window seat or an aisle seat?\nPassenger: An aisle seat, please.\nAgent: Great, here is your boarding pass. Gate 24B starts boarding at 10:30.",
         image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&auto=format&fit=crop&q=80',
         speed: 1.0,
         duration: '45s',
         exercises: [
           {
+            id: 'ex_lis1_1',
             type: 'mcq',
             question: 'Where is the passenger flying to?',
             options: ['London Gatwick', 'London Heathrow', 'New York JFK', 'Paris Charles de Gaulle'],
@@ -34,6 +38,7 @@ export const DEFAULT_UNITS = [
             explain: 'The passenger says: "I\'m flying to London Heathrow on flight BA178."'
           },
           {
+            id: 'ex_lis1_2',
             type: 'mcq',
             question: 'Which type of seat did the passenger choose?',
             options: ['Window seat', 'Middle seat', 'Aisle seat', 'First class suite'],
@@ -41,12 +46,21 @@ export const DEFAULT_UNITS = [
             explain: 'The passenger specifically answered: "An aisle seat, please."'
           },
           {
+            id: 'ex_lis1_3',
+            type: 'true_false',
+            question: 'The flight number is BA178 and boarding starts at 10:30.',
+            answer: true,
+            explain: 'The agent states flight BA178 and Gate 24B boards at 10:30.'
+          },
+          {
+            id: 'ex_lis1_4',
             type: 'dictation',
-            prompt: 'Nghe và gõ lại chính xác câu bạn nghe được:',
+            prompt: 'Nghe và gõ lại chính xác câu thông báo cửa khởi hành:',
             targetSentence: 'Gate 24B starts boarding at 10:30.',
             hint: 'Bắt đầu bằng "Gate..."'
           },
           {
+            id: 'ex_lis1_5',
             type: 'gap_fill',
             sentence: 'May I see your ___ and ticket, please? Here is your ___ pass.',
             answers: ['passport', 'boarding'],
@@ -56,27 +70,39 @@ export const DEFAULT_UNITS = [
       },
       {
         id: 'lis_2',
-        title: 'Ordering Food at a Cozy Restaurant',
-        topic: 'Daily Life & Dining',
-        level: 'A1 - A2',
-        audioText: "Welcome to Bella Italia. Are you ready to order? Yes, please. I would like the grilled salmon with asparagus. And for your drink? Just a glass of sparkling water with lemon, please. Would you like any dessert later? Maybe some tiramisu afterwards. Thank you.",
+        title: '🎬 Video Comprehension: Travel Vlog & City Exploration',
+        topic: 'Travel & Lifestyle',
+        level: 'B1 - B2',
+        mediaType: 'video',
         audioUrl: '',
-        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=80',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+        audioText: "Welcome to our weekend travel journey! Today we are exploring historical landmarks, cozy coffee shops, and tasting traditional street food. Remember to keep your travel essentials packed and always check the local transport schedule.",
+        transcript: "Host: Welcome to our weekend travel journey!\nToday we are exploring historical landmarks, cozy coffee shops, and tasting traditional street food.\nRemember to keep your travel essentials packed and always check the local transport schedule.\nEnjoy every single moment of your adventure!",
+        image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop&q=80',
         speed: 1.0,
-        duration: '40s',
+        duration: '1m 15s',
         exercises: [
           {
+            id: 'ex_lis2_1',
             type: 'mcq',
-            question: 'What main dish does the customer order?',
-            options: ['Seafood pasta', 'Grilled salmon with asparagus', 'Margherita pizza', 'Beef steak'],
+            question: 'What are the travelers exploring today in the video?',
+            options: ['Modern tech factories', 'Historical landmarks and cozy coffee shops', 'Deep ocean diving', 'Mountain climbing only'],
             answer: 1,
-            explain: 'The customer ordered: "grilled salmon with asparagus".'
+            explain: 'The video mentions exploring historical landmarks, cozy coffee shops, and traditional street food.'
           },
           {
-            type: 'dictation',
-            prompt: 'Nghe và gõ lại câu gọi đồ uống:',
-            targetSentence: 'Just a glass of sparkling water with lemon, please.',
-            hint: 'Bắt đầu bằng "Just a glass..."'
+            id: 'ex_lis2_2',
+            type: 'true_false',
+            question: 'The host advises travelers to check the local transport schedule.',
+            answer: true,
+            explain: 'The host explicitly said: "always check the local transport schedule."'
+          },
+          {
+            id: 'ex_lis2_3',
+            type: 'gap_fill',
+            sentence: 'Remember to keep your travel ___ packed and check the local transport ___.',
+            answers: ['essentials', 'schedule'],
+            optionsBank: ['essentials', 'schedule', 'tickets', 'itinerary']
           }
         ]
       }

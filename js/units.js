@@ -8,6 +8,7 @@
 import { DEFAULT_UNITS } from './learn-data.js';
 import { state, $, esc, clone, canEditItem, isRootUser, getAuthorDisplayName, logTeacherActivity } from './common.js';
 import { subjectsList, modulesList } from './curriculum.js';
+import { uploadMediaFile } from './supabase.js';
 
 const db = () => window.supabaseClient;
 
@@ -578,37 +579,149 @@ export function switchDesignerSkillTab(skill) {
 
   if (skill === 'listening') {
     const lis = (unit.listening && unit.listening[0]) || { audioText: '', exercises: [] };
+    const detectedMode = lis.mediaType || (lis.videoUrl ? 'video' : (lis.audioUrl ? 'audio' : 'tts'));
+
     contentWrap.innerHTML = `
-      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
-        <div class="fg">
-          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">🎧 1. Lời Thoại Đoạn Nghe (Audio Script / Text-to-Speech) *</label>
-          <div style="font-size:12px;color:#64748b;margin-bottom:8px">Hệ thống sẽ dùng đoạn văn bản này để phát âm chuẩn giọng bản ngữ (US/UK) cho học sinh:</div>
-          <textarea id="ud-lis-text" class="designer-textarea" style="width:100%;min-height:130px;font-size:14.5px;line-height:1.6;" placeholder="Nhập đoạn hội thoại hoặc văn bản tiếng Anh...">${esc(lis.audioText || '')}</textarea>
+      <div class="card" style="margin:0;padding:20px;background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:14px">
+        <!-- HEADER PHÂN HỆ LISTENING & VIDEO -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid #e2e8f0;padding-bottom:12px;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:16px;font-weight:800;color:#0f172a">🎧 Thiết Kế Bài Luyện Nghe & Video (Listening & Video Comprehension)</div>
+            <div style="font-size:12px;color:#64748b">Tải file âm thanh/video lên máy chủ hoặc dán đường dẫn trực tiếp kèm bài tập tương tác</div>
+          </div>
+          <input type="hidden" id="ud-lis-media-type" value="${esc(detectedMode)}">
         </div>
 
-        <div class="fg" style="margin-top:14px">
-          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">🖼️ Hình ảnh minh họa đoạn nghe (Tùy chọn)</label>
-          <div style="display:flex;gap:8px;">
+        <!-- 1. BỘ CHỌN LOẠI MEDIA (AUDIO / VIDEO / TTS) -->
+        <div class="fg" style="margin-bottom:16px">
+          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:8px">1. Định dạng nguồn nội dung (Media Source Type) *</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" id="btn-mode-lis-audio" class="btn btn-sm ${detectedMode === 'audio' ? 'btn-p' : ''}" onclick="window.switchDesignerListeningMediaType('audio')" style="display:flex;align-items:center;gap:6px">
+              <span>🎵</span> 1. File Âm Thanh (Audio Upload / URL)
+            </button>
+            <button type="button" id="btn-mode-lis-video" class="btn btn-sm ${detectedMode === 'video' ? 'btn-p' : ''}" onclick="window.switchDesignerListeningMediaType('video')" style="display:flex;align-items:center;gap:6px">
+              <span>🎬</span> 2. Video Clip (.mp4 / .webm / YouTube)
+            </button>
+            <button type="button" id="btn-mode-lis-tts" class="btn btn-sm ${detectedMode === 'tts' ? 'btn-p' : ''}" onclick="window.switchDesignerListeningMediaType('tts')" style="display:flex;align-items:center;gap:6px">
+              <span>🗣️</span> 3. Giọng Đọc AI (Text-to-Speech)
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. KHUNG CẤU HÌNH MEDIA THEO TỪNG LOẠI -->
+        <!-- 2.1 SECTION AUDIO -->
+        <div id="ud-lis-sec-audio" style="display:${detectedMode === 'audio' ? 'block' : 'none'};background:#f0f9ff;padding:14px;border-radius:10px;border:1.5px solid #bae6fd;margin-bottom:16px">
+          <label style="font-size:12.5px;font-weight:700;color:#0369a1;margin-bottom:6px;display:block">🎵 Tải File Âm Thanh Lên Supabase Storage (.mp3, .wav, .m4a, .ogg)</label>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+            <input type="text" id="ud-lis-audio-url" placeholder="VD: https://.../audio.mp3 hoặc bấm Upload tải lên" value="${esc(lis.audioUrl || '')}" style="flex:1" oninput="window.updateListeningAudioPreview(this.value)">
+            <input type="file" id="ud-lis-audio-file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.aac" style="display:none" onchange="window.handleUploadListeningAudio(this)">
+            <button type="button" class="btn btn-sm btn-p" onclick="document.getElementById('ud-lis-audio-file').click()" style="white-space:nowrap;display:flex;align-items:center;gap:6px">
+              <span>📂</span> Tải Lên Audio
+            </button>
+          </div>
+          <!-- Tiến độ upload Audio -->
+          <div id="ud-lis-audio-progress-wrap" style="display:none;margin-bottom:8px">
+            <div style="font-size:11.5px;color:#0284c7;font-weight:700;margin-bottom:4px" id="ud-lis-audio-progress-pct">Đang tải lên: 0%</div>
+            <div style="height:6px;background:#e0f2fe;border-radius:4px;overflow:hidden">
+              <div id="ud-lis-audio-progress-bar" style="height:100%;width:0%;background:#0284c7;transition:width 0.3s"></div>
+            </div>
+          </div>
+          <!-- Audio Preview -->
+          <div id="ud-lis-audio-preview">
+            ${lis.audioUrl ? `
+              <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+                <audio controls src="${esc(lis.audioUrl)}" style="height:36px;flex:1"></audio>
+                <button type="button" class="btn btn-sm" onclick="window.clearListeningAudio()" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-size:11px">🗑️ Xóa</button>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- 2.2 SECTION VIDEO -->
+        <div id="ud-lis-sec-video" style="display:${detectedMode === 'video' ? 'block' : 'none'};background:#fdf2f8;padding:14px;border-radius:10px;border:1.5px solid #fbcfe8;margin-bottom:16px">
+          <label style="font-size:12.5px;font-weight:700;color:#9d174d;margin-bottom:6px;display:block">🎬 Tải File Video Lên Supabase Storage (.mp4, .webm, .mov) hoặc dán link YouTube / MP4</label>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+            <input type="text" id="ud-lis-video-url" placeholder="VD: https://.../video.mp4 hoặc https://youtube.com/watch?v=..." value="${esc(lis.videoUrl || '')}" style="flex:1" oninput="window.updateListeningVideoPreview(this.value)">
+            <input type="file" id="ud-lis-video-file" accept="video/*,.mp4,.webm,.mov" style="display:none" onchange="window.handleUploadListeningVideo(this)">
+            <button type="button" class="btn btn-sm btn-p" onclick="document.getElementById('ud-lis-video-file').click()" style="white-space:nowrap;display:flex;align-items:center;gap:6px">
+              <span>📂</span> Tải Lên Video
+            </button>
+          </div>
+          <!-- Tiến độ upload Video -->
+          <div id="ud-lis-video-progress-wrap" style="display:none;margin-bottom:8px">
+            <div style="font-size:11.5px;color:#db2777;font-weight:700;margin-bottom:4px" id="ud-lis-video-progress-pct">Đang tải video: 0%</div>
+            <div style="height:6px;background:#fce7f3;border-radius:4px;overflow:hidden">
+              <div id="ud-lis-video-progress-bar" style="height:100%;width:0%;background:#db2777;transition:width 0.3s"></div>
+            </div>
+          </div>
+          <!-- Video Preview -->
+          <div id="ud-lis-video-preview">
+            ${lis.videoUrl ? `
+              <div style="margin-top:6px">
+                <video controls playsinline src="${esc(lis.videoUrl)}" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid #cbd5e1;background:#000;display:block"></video>
+                <div style="margin-top:6px"><button type="button" class="btn btn-sm" onclick="window.clearListeningVideo()" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-size:11px">🗑️ Xóa Video</button></div>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- 2.3 SECTION TTS (GIỌNG ĐỌC AI) -->
+        <div id="ud-lis-sec-tts" style="display:${detectedMode === 'tts' ? 'block' : 'none'};background:#f5f3ff;padding:14px;border-radius:10px;border:1.5px solid #ddd6fe;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label style="font-size:12.5px;font-weight:700;color:#5b21b6">🗣️ Văn Bản Phát Âm Bằng Giọng AI (Web Speech TTS) *</label>
+            <button type="button" class="btn btn-sm" onclick="window.testListeningTTS()" style="font-size:11px;padding:3px 8px;background:#fff;border:1px solid #c4b5fd;color:#6d28d9">🔊 Nghe thử AI Voice</button>
+          </div>
+          <textarea id="ud-lis-text" class="designer-textarea" style="width:100%;min-height:110px;font-size:14px;line-height:1.6" placeholder="Nhập đoạn hội thoại hoặc văn bản tiếng Anh để AI đọc...">${esc(lis.audioText || '')}</textarea>
+        </div>
+
+        <!-- 3. THÔNG TIN BÀI HỌC, TRANSCRIPT & HÌNH ẢNH -->
+        <div class="grid2" style="margin-bottom:12px">
+          <div class="fg" style="margin:0">
+            <label style="font-size:12px;font-weight:700">Tiêu đề bài nghe / video *</label>
+            <input type="text" id="ud-lis-title" value="${esc(lis.title || '🎧 Audio: Luyện Nghe Giao Tiếp')}" placeholder="VD: 🎧 Audio: A Conversation at the Airport">
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:12px;font-weight:700">Thời lượng ước tính</label>
+            <input type="text" id="ud-lis-duration" value="${esc(lis.duration || '45s')}" placeholder="VD: 45s, 1m 30s">
+          </div>
+        </div>
+
+        <div class="fg" style="margin-bottom:12px">
+          <label style="font-size:12px;font-weight:700;color:#1e293b">📝 Kịch Bản Văn Bản / Phụ Đề Chi Tiết (Transcript) (Tùy chọn)</label>
+          <div style="font-size:11px;color:#64748b;margin-bottom:4px">Học sinh có thể nhấn nút "Hiện Transcript" để xem lại sau khi nghe/xem video:</div>
+          <textarea id="ud-lis-transcript" class="designer-textarea" style="width:100%;min-height:100px;font-size:13.5px;line-height:1.6" placeholder="Nhập lời thoại chi tiết theo từng người nói...">${esc(lis.transcript || lis.audioText || '')}</textarea>
+        </div>
+
+        <div class="fg" style="margin-bottom:16px">
+          <label style="font-size:12px;font-weight:700;color:#1e293b">🖼️ Hình ảnh minh họa (Thumbnail / Poster)</label>
+          <div style="display:flex;gap:8px">
             <input type="text" id="ud-lis-image" placeholder="VD: https://images.unsplash.com/... hoặc chọn từ thư viện" value="${esc(lis.image || '')}">
-            <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('ud-lis-image', 'ud-lis-img-preview')" style="white-space:nowrap;">📂 Thư viện ảnh</button>
+            <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('ud-lis-image', 'ud-lis-img-preview')" style="white-space:nowrap">📂 Thư viện ảnh</button>
           </div>
-          <div id="ud-lis-img-preview" style="margin-top:6px">${lis.image ? `<img src="${lis.image}" style="max-height:140px;border-radius:6px;border:1px solid #cbd5e1">` : ''}</div>
-        </div>
-        
-        <div class="fg" style="margin-top:14px">
-          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">✍️ 2. Câu Nghe Chép Chính Tả (Dictation)</label>
-          <input type="text" id="ud-lis-dictation" style="width:100%;padding:10px 14px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:14px" placeholder="VD: Gate 24B starts boarding at 10:30." value="${esc(lis.exercises?.find(e => e.type === 'dictation')?.targetSentence || '')}">
+          <div id="ud-lis-img-preview" style="margin-top:6px">${lis.image ? `<img src="${esc(lis.image)}" style="max-height:120px;border-radius:6px;border:1px solid #cbd5e1">` : ''}</div>
         </div>
 
-        <div style="margin-top:18px;padding-top:14px;border-top:1px dashed #cbd5e1">
-          <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:#1e293b">📝 3. Câu Hỏi Trắc Nghiệm Nghe Hiểu</div>
-          <div class="fg">
-            <label>Nội dung câu hỏi</label>
-            <input type="text" id="ud-lis-q" value="${esc(lis.exercises?.find(e => e.type === 'mcq')?.question || 'Where is the passenger flying to?')}">
+        <!-- 4. BỘ SOẠN CÂU HỎI TƯƠNG TÁC (INTERACTIVE EXERCISES BUILDER) -->
+        <div style="margin-top:20px;padding-top:16px;border-top:1.5px solid #e2e8f0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="font-size:14px;font-weight:800;color:#0f172a">📝 4. Danh Sách Câu Hỏi & Bài Tập Tương Tác</div>
+              <div style="font-size:11.5px;color:#64748b">Học viên sẽ trả lời các câu hỏi này sau khi nghe hoặc xem video</div>
+            </div>
           </div>
-          <div class="grid2">
-            <div class="fg" style="margin:0"><label>Đáp án A</label><input id="ud-lis-a" value="${esc(lis.exercises?.find(e => e.type === 'mcq')?.options?.[0] || 'London')}"></div>
-            <div class="fg" style="margin:0"><label>Đáp án B</label><input id="ud-lis-b" value="${esc(lis.exercises?.find(e => e.type === 'mcq')?.options?.[1] || 'New York')}"></div>
+
+          <!-- DANH SÁCH THẺ BÀI TẬP HIỆN TẠI -->
+          <div id="ud-lis-exercises-list" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
+            ${renderListeningDesignerExercises(lis.exercises || [])}
+          </div>
+
+          <!-- NÚT BỔ SUNG CÁC DẠNG BÀI TẬP -->
+          <div style="display:flex;gap:8px;flex-wrap:wrap;background:#eff6ff;padding:10px 14px;border-radius:10px;border:1px dashed #93c5fd;align-items:center">
+            <span style="font-size:12px;font-weight:700;color:#1e40af">➕ Thêm câu hỏi:</span>
+            <button type="button" class="btn btn-sm" onclick="window.addListeningDesignerExercise('mcq')" style="background:#fff;border:1px solid #93c5fd;color:#1d4ed8;font-size:12px">🔘 Trắc Nghiệm (MCQ)</button>
+            <button type="button" class="btn btn-sm" onclick="window.addListeningDesignerExercise('dictation')" style="background:#fff;border:1px solid #86efac;color:#15803d;font-size:12px">✍️ Chép Chính Tả (Dictation)</button>
+            <button type="button" class="btn btn-sm" onclick="window.addListeningDesignerExercise('gap_fill')" style="background:#fff;border:1px solid #fde68a;color:#b45309;font-size:12px">🔤 Điền Chỗ Trống (Gap Fill)</button>
+            <button type="button" class="btn btn-sm" onclick="window.addListeningDesignerExercise('true_false')" style="background:#fff;border:1px solid #fbcfe8;color:#be185d;font-size:12px">⚖️ Đúng / Sai (True/False)</button>
           </div>
         </div>
       </div>
@@ -857,6 +970,363 @@ export function switchDesignerSkillTab(skill) {
 }
 
 // -------------------------------------------------------------------------
+// HELPER METHODS CHO DESIGNER LISTENING (AUDIO/VIDEO UPLOAD & EXERCISES BUILDER)
+// -------------------------------------------------------------------------
+export function renderListeningDesignerExercises(exercises = []) {
+  if (!exercises || !exercises.length) {
+    return `<div style="text-align:center;padding:16px;color:#64748b;font-size:13px;background:#f1f5f9;border-radius:8px">📭 Chưa có câu hỏi tương tác nào. Bấm một trong các nút bên dưới để thêm câu hỏi.</div>`;
+  }
+  return exercises.map((ex, idx) => {
+    const type = ex.type || 'mcq';
+    let typeBadge = '';
+    let bodyHtml = '';
+
+    if (type === 'mcq') {
+      typeBadge = `<span class="ex-badge mcq-badge">🔘 Trắc nghiệm (MCQ)</span>`;
+      const opts = ex.options || ['Option A', 'Option B', 'Option C', 'Option D'];
+      bodyHtml = `
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700">Nội dung câu hỏi *</label>
+          <input type="text" class="lis-ex-q" value="${esc(ex.question || '')}" placeholder="VD: Where is the passenger flying to?">
+        </div>
+        <div class="grid2" style="margin-bottom:8px">
+          <div class="fg" style="margin:0"><label style="font-size:11px">Đáp án A</label><input type="text" class="lis-ex-opt-0" value="${esc(opts[0] || '')}" placeholder="Lựa chọn A"></div>
+          <div class="fg" style="margin:0"><label style="font-size:11px">Đáp án B</label><input type="text" class="lis-ex-opt-1" value="${esc(opts[1] || '')}" placeholder="Lựa chọn B"></div>
+        </div>
+        <div class="grid2" style="margin-bottom:8px">
+          <div class="fg" style="margin:0"><label style="font-size:11px">Đáp án C</label><input type="text" class="lis-ex-opt-2" value="${esc(opts[2] || '')}" placeholder="Lựa chọn C"></div>
+          <div class="fg" style="margin:0"><label style="font-size:11px">Đáp án D</label><input type="text" class="lis-ex-opt-3" value="${esc(opts[3] || '')}" placeholder="Lựa chọn D"></div>
+        </div>
+        <div class="grid2" style="margin:0">
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:700;color:#16a34a">Đáp án đúng *</label>
+            <select class="lis-ex-ans" style="padding:6px 10px;border-radius:6px;border:1.5px solid #86efac;background:#f0fdf4;font-weight:700">
+              <option value="0" ${ex.answer === 0 ? 'selected' : ''}>A. Phương án 1</option>
+              <option value="1" ${ex.answer === 1 ? 'selected' : ''}>B. Phương án 2</option>
+              <option value="2" ${ex.answer === 2 ? 'selected' : ''}>C. Phương án 3</option>
+              <option value="3" ${ex.answer === 3 ? 'selected' : ''}>D. Phương án 4</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px">Giải thích chi tiết (Explain)</label>
+            <input type="text" class="lis-ex-explain" value="${esc(ex.explain || '')}" placeholder="VD: The passenger says: I'm flying to...">
+          </div>
+        </div>
+      `;
+    } else if (type === 'dictation') {
+      typeBadge = `<span class="ex-badge dict-badge">✍️ Nghe chép chính tả (Dictation)</span>`;
+      bodyHtml = `
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700">Câu tiếng Anh chuẩn cần chép *</label>
+          <input type="text" class="lis-ex-target" value="${esc(ex.targetSentence || '')}" placeholder="VD: Gate 24B starts boarding at 10:30.">
+        </div>
+        <div class="grid2" style="margin:0">
+          <div class="fg" style="margin:0"><label style="font-size:11px">Lời nhắc / Yêu cầu</label><input type="text" class="lis-ex-prompt" value="${esc(ex.prompt || 'Nghe và gõ lại chính xác câu bạn nghe được:')}" placeholder="Lời nhắc"></div>
+          <div class="fg" style="margin:0"><label style="font-size:11px">Gợi ý từ đầu (Hint)</label><input type="text" class="lis-ex-hint" value="${esc(ex.hint || '')}" placeholder="VD: Bắt đầu bằng Gate..."></div>
+        </div>
+      `;
+    } else if (type === 'gap_fill') {
+      typeBadge = `<span class="ex-badge gap-badge">🔤 Điền từ vào chỗ trống (Gap Fill)</span>`;
+      bodyHtml = `
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700">Câu văn có chỗ trống (Dùng ___ cho mỗi vị trí điền) *</label>
+          <input type="text" class="lis-ex-sentence" value="${esc(ex.sentence || '')}" placeholder="VD: May I see your ___ and ticket, please? Here is your ___ pass.">
+        </div>
+        <div class="grid2" style="margin:0">
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:700;color:#16a34a">Các từ đáp án đúng (phân cách bằng dấu phẩy) *</label>
+            <input type="text" class="lis-ex-answers" value="${esc((ex.answers || []).join(', '))}" placeholder="VD: passport, boarding">
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px">Ngân hàng từ gợi ý (phân cách bằng dấu phẩy)</label>
+            <input type="text" class="lis-ex-bank" value="${esc((ex.optionsBank || []).join(', '))}" placeholder="VD: passport, boarding, luggage, visa">
+          </div>
+        </div>
+      `;
+    } else if (type === 'true_false') {
+      typeBadge = `<span class="ex-badge tf-badge">⚖️ Đúng / Sai (True / False)</span>`;
+      bodyHtml = `
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700">Mệnh đề khẳng định *</label>
+          <input type="text" class="lis-ex-tf-q" value="${esc(ex.question || '')}" placeholder="VD: The passenger chooses a window seat.">
+        </div>
+        <div class="grid2" style="margin:0">
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:700;color:#16a34a">Đáp án đúng *</label>
+            <select class="lis-ex-tf-ans" style="padding:6px 10px;border-radius:6px;border:1.5px solid #cbd5e1;font-weight:700">
+              <option value="true" ${ex.answer === true ? 'selected' : ''}>✅ TRUE (Đúng)</option>
+              <option value="false" ${ex.answer === false ? 'selected' : ''}>❌ FALSE (Sai)</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px">Giải thích (Explain)</label>
+            <input type="text" class="lis-ex-tf-explain" value="${esc(ex.explain || '')}" placeholder="VD: The passenger specifically asked for an aisle seat.">
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="card ud-lis-ex-card" data-type="${type}" id="ud-lis-ex-${idx}" style="margin:0;padding:14px;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px dashed #cbd5e1;padding-bottom:6px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-weight:800;font-size:12px;color:#0f172a">Câu ${idx + 1}:</span>
+            ${typeBadge}
+          </div>
+          <button type="button" class="btn btn-sm" onclick="window.deleteListeningDesignerExercise(${idx})" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-size:11px;padding:2px 8px">🗑️ Xóa</button>
+        </div>
+        ${bodyHtml}
+      </div>
+    `;
+  }).join('');
+}
+
+window.switchDesignerListeningMediaType = function(mode) {
+  const typeInp = document.getElementById('ud-lis-media-type');
+  if (typeInp) typeInp.value = mode;
+
+  const btnAudio = document.getElementById('btn-mode-lis-audio');
+  const btnVideo = document.getElementById('btn-mode-lis-video');
+  const btnTts = document.getElementById('btn-mode-lis-tts');
+
+  const secAudio = document.getElementById('ud-lis-sec-audio');
+  const secVideo = document.getElementById('ud-lis-sec-video');
+  const secTts = document.getElementById('ud-lis-sec-tts');
+
+  if (btnAudio) btnAudio.className = `btn btn-sm ${mode === 'audio' ? 'btn-p' : ''}`;
+  if (btnVideo) btnVideo.className = `btn btn-sm ${mode === 'video' ? 'btn-p' : ''}`;
+  if (btnTts) btnTts.className = `btn btn-sm ${mode === 'tts' ? 'btn-p' : ''}`;
+
+  if (secAudio) secAudio.style.display = mode === 'audio' ? 'block' : 'none';
+  if (secVideo) secVideo.style.display = mode === 'video' ? 'block' : 'none';
+  if (secTts) secTts.style.display = mode === 'tts' ? 'block' : 'none';
+};
+
+window.handleUploadListeningAudio = async function(inputEl) {
+  const file = inputEl.files?.[0];
+  if (!file) return;
+
+  const progressWrap = document.getElementById('ud-lis-audio-progress-wrap');
+  const progressBar = document.getElementById('ud-lis-audio-progress-bar');
+  const progressPct = document.getElementById('ud-lis-audio-progress-pct');
+  const urlInp = document.getElementById('ud-lis-audio-url');
+
+  if (progressWrap) progressWrap.style.display = 'block';
+  if (progressBar) progressBar.style.width = '0%';
+  if (progressPct) progressPct.textContent = 'Đang tải lên: 0%';
+
+  try {
+    const downloadURL = await uploadMediaFile(file, 'audio-bank', (pct) => {
+      if (progressBar) progressBar.style.width = `${pct}%`;
+      if (progressPct) progressPct.textContent = `Đang tải lên: ${pct}%...`;
+    });
+
+    if (urlInp) urlInp.value = downloadURL;
+    if (progressPct) progressPct.textContent = '✅ Đã tải file âm thanh lên 100%';
+    window.updateListeningAudioPreview(downloadURL);
+  } catch (err) {
+    console.error("Lỗi upload audio:", err);
+    alert("❌ Lỗi tải audio: " + (err.message || "Vui lòng kiểm tra lại kết nối."));
+    if (progressWrap) progressWrap.style.display = 'none';
+  }
+};
+
+window.handleUploadListeningVideo = async function(inputEl) {
+  const file = inputEl.files?.[0];
+  if (!file) return;
+
+  const progressWrap = document.getElementById('ud-lis-video-progress-wrap');
+  const progressBar = document.getElementById('ud-lis-video-progress-bar');
+  const progressPct = document.getElementById('ud-lis-video-progress-pct');
+  const urlInp = document.getElementById('ud-lis-video-url');
+
+  if (progressWrap) progressWrap.style.display = 'block';
+  if (progressBar) progressBar.style.width = '0%';
+  if (progressPct) progressPct.textContent = 'Đang tải video: 0%';
+
+  try {
+    const downloadURL = await uploadMediaFile(file, 'video-bank', (pct) => {
+      if (progressBar) progressBar.style.width = `${pct}%`;
+      if (progressPct) progressPct.textContent = `Đang tải video: ${pct}%...`;
+    });
+
+    if (urlInp) urlInp.value = downloadURL;
+    if (progressPct) progressPct.textContent = '✅ Đã tải video lên 100%';
+    window.updateListeningVideoPreview(downloadURL);
+  } catch (err) {
+    console.error("Lỗi upload video:", err);
+    alert("❌ Lỗi tải video: " + (err.message || "Vui lòng kiểm tra lại kết nối."));
+    if (progressWrap) progressWrap.style.display = 'none';
+  }
+};
+
+window.updateListeningAudioPreview = function(url) {
+  const preview = document.getElementById('ud-lis-audio-preview');
+  if (!preview) return;
+  const u = String(url || '').trim();
+  if (u) {
+    preview.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+        <audio controls src="${esc(u)}" style="height:36px;flex:1"></audio>
+        <button type="button" class="btn btn-sm" onclick="window.clearListeningAudio()" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-size:11px">🗑️ Xóa</button>
+      </div>
+    `;
+  } else {
+    preview.innerHTML = '';
+  }
+};
+
+window.clearListeningAudio = function() {
+  const urlInp = document.getElementById('ud-lis-audio-url');
+  const fileInp = document.getElementById('ud-lis-audio-file');
+  const preview = document.getElementById('ud-lis-audio-preview');
+  const progressWrap = document.getElementById('ud-lis-audio-progress-wrap');
+  if (urlInp) urlInp.value = '';
+  if (fileInp) fileInp.value = '';
+  if (preview) preview.innerHTML = '';
+  if (progressWrap) progressWrap.style.display = 'none';
+};
+
+window.updateListeningVideoPreview = function(url) {
+  const preview = document.getElementById('ud-lis-video-preview');
+  if (!preview) return;
+  const u = String(url || '').trim();
+  if (u) {
+    preview.innerHTML = `
+      <div style="margin-top:6px">
+        <video controls playsinline src="${esc(u)}" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid #cbd5e1;background:#000;display:block"></video>
+        <div style="margin-top:6px"><button type="button" class="btn btn-sm" onclick="window.clearListeningVideo()" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-size:11px">🗑️ Xóa Video</button></div>
+      </div>
+    `;
+  } else {
+    preview.innerHTML = '';
+  }
+};
+
+window.clearListeningVideo = function() {
+  const urlInp = document.getElementById('ud-lis-video-url');
+  const fileInp = document.getElementById('ud-lis-video-file');
+  const preview = document.getElementById('ud-lis-video-preview');
+  const progressWrap = document.getElementById('ud-lis-video-progress-wrap');
+  if (urlInp) urlInp.value = '';
+  if (fileInp) fileInp.value = '';
+  if (preview) preview.innerHTML = '';
+  if (progressWrap) progressWrap.style.display = 'none';
+};
+
+window.testListeningTTS = function() {
+  const textInp = document.getElementById('ud-lis-text');
+  const text = textInp?.value.trim();
+  if (!text) {
+    alert("Vui lòng nhập đoạn văn bản tiếng Anh trước khi nghe thử!");
+    return;
+  }
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'en-US';
+  utter.rate = 0.95;
+  window.speechSynthesis.speak(utter);
+};
+
+function extractListeningExercisesFromDOM() {
+  const cards = document.querySelectorAll('.ud-lis-ex-card');
+  const exercises = [];
+  cards.forEach((card) => {
+    const type = card.dataset.type || 'mcq';
+    if (type === 'mcq') {
+      const q = card.querySelector('.lis-ex-q')?.value.trim() || '';
+      const o0 = card.querySelector('.lis-ex-opt-0')?.value.trim() || '';
+      const o1 = card.querySelector('.lis-ex-opt-1')?.value.trim() || '';
+      const o2 = card.querySelector('.lis-ex-opt-2')?.value.trim() || '';
+      const o3 = card.querySelector('.lis-ex-opt-3')?.value.trim() || '';
+      const ans = parseInt(card.querySelector('.lis-ex-ans')?.value || '0', 10);
+      const exp = card.querySelector('.lis-ex-explain')?.value.trim() || '';
+      if (q || o0 || o1) {
+        exercises.push({
+          id: `ex_mcq_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          type: 'mcq',
+          question: q,
+          options: [o0, o1, o2, o3].filter(Boolean),
+          answer: isNaN(ans) ? 0 : ans,
+          explain: exp
+        });
+      }
+    } else if (type === 'dictation') {
+      const target = card.querySelector('.lis-ex-target')?.value.trim() || '';
+      const prompt = card.querySelector('.lis-ex-prompt')?.value.trim() || '';
+      const hint = card.querySelector('.lis-ex-hint')?.value.trim() || '';
+      if (target) {
+        exercises.push({
+          id: `ex_dict_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          type: 'dictation',
+          targetSentence: target,
+          prompt: prompt,
+          hint: hint
+        });
+      }
+    } else if (type === 'gap_fill') {
+      const sentence = card.querySelector('.lis-ex-sentence')?.value.trim() || '';
+      const answersRaw = card.querySelector('.lis-ex-answers')?.value.trim() || '';
+      const bankRaw = card.querySelector('.lis-ex-bank')?.value.trim() || '';
+      if (sentence) {
+        const answers = answersRaw.split(',').map(s => s.trim()).filter(Boolean);
+        const optionsBank = bankRaw ? bankRaw.split(',').map(s => s.trim()).filter(Boolean) : answers;
+        exercises.push({
+          id: `ex_gap_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          type: 'gap_fill',
+          sentence: sentence,
+          answers: answers,
+          optionsBank: optionsBank
+        });
+      }
+    } else if (type === 'true_false') {
+      const q = card.querySelector('.lis-ex-tf-q')?.value.trim() || '';
+      const ans = card.querySelector('.lis-ex-tf-ans')?.value === 'true';
+      const exp = card.querySelector('.lis-ex-tf-explain')?.value.trim() || '';
+      if (q) {
+        exercises.push({
+          id: `ex_tf_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          type: 'true_false',
+          question: q,
+          answer: ans,
+          explain: exp
+        });
+      }
+    }
+  });
+  return exercises;
+}
+
+window.addListeningDesignerExercise = function(type) {
+  const container = document.getElementById('ud-lis-exercises-list');
+  if (!container) return;
+
+  const currentList = extractListeningExercisesFromDOM();
+  let newEx = { type };
+  if (type === 'mcq') {
+    newEx = { type: 'mcq', question: '', options: ['', '', '', ''], answer: 0, explain: '' };
+  } else if (type === 'dictation') {
+    newEx = { type: 'dictation', targetSentence: '', prompt: 'Nghe và gõ lại chính xác câu bạn nghe được:', hint: '' };
+  } else if (type === 'gap_fill') {
+    newEx = { type: 'gap_fill', sentence: '', answers: [], optionsBank: [] };
+  } else if (type === 'true_false') {
+    newEx = { type: 'true_false', question: '', answer: true, explain: '' };
+  }
+  currentList.push(newEx);
+  container.innerHTML = renderListeningDesignerExercises(currentList);
+};
+
+window.deleteListeningDesignerExercise = function(idx) {
+  const currentList = extractListeningExercisesFromDOM();
+  if (currentList[idx] && confirm("Bạn có chắc muốn xóa câu hỏi này?")) {
+    currentList.splice(idx, 1);
+    const container = document.getElementById('ud-lis-exercises-list');
+    if (container) container.innerHTML = renderListeningDesignerExercises(currentList);
+  }
+};
+
+// -------------------------------------------------------------------------
 // HELPER METHODS CHO DESIGNER SPEAKING (ROLEPLAY TURNS & VIDEO UPLOAD)
 // -------------------------------------------------------------------------
 window.switchDesignerSpeakingMode = function(mode) {
@@ -973,31 +1443,28 @@ function syncCurrentDesignerSkillToDraft() {
   const unit = window._currentDraftUnit;
 
   if (currentDesignerSkill === 'listening') {
-    const text = $('ud-lis-text')?.value.trim();
-    const image = $('ud-lis-image')?.value.trim();
-    const dict = $('ud-lis-dictation')?.value.trim();
-    const q = $('ud-lis-q')?.value.trim();
-    const a = $('ud-lis-a')?.value.trim();
-    const b = $('ud-lis-b')?.value.trim();
+    const mediaType = $('ud-lis-media-type')?.value || 'audio';
+    const audioUrl = $('ud-lis-audio-url')?.value.trim() || '';
+    const videoUrl = $('ud-lis-video-url')?.value.trim() || '';
+    const audioText = $('ud-lis-text')?.value.trim() || '';
+    const transcript = $('ud-lis-transcript')?.value.trim() || '';
+    const title = $('ud-lis-title')?.value.trim() || '';
+    const duration = $('ud-lis-duration')?.value.trim() || '45s';
+    const image = $('ud-lis-image')?.value.trim() || '';
+    const exercises = extractListeningExercisesFromDOM();
 
     if (!unit.listening) unit.listening = [];
     if (!unit.listening[0]) unit.listening[0] = { id: 'lis_1', exercises: [] };
-    
-    if (text) unit.listening[0].audioText = text;
-    unit.listening[0].image = image || '';
-    unit.listening[0].exercises = [
-      {
-        type: 'mcq',
-        question: q || 'What is the main topic?',
-        options: [a || 'Option A', b || 'Option B', 'Option C', 'Option D'],
-        answer: 0
-      },
-      {
-        type: 'dictation',
-        prompt: 'Nghe và gõ lại chính xác câu:',
-        targetSentence: dict || 'Please listen carefully.'
-      }
-    ];
+
+    unit.listening[0].title = title || unit.listening[0].title || 'Listening Practice';
+    unit.listening[0].duration = duration;
+    unit.listening[0].mediaType = mediaType;
+    unit.listening[0].audioUrl = audioUrl;
+    unit.listening[0].videoUrl = videoUrl;
+    unit.listening[0].audioText = audioText || transcript;
+    unit.listening[0].transcript = transcript || audioText;
+    unit.listening[0].image = image;
+    unit.listening[0].exercises = exercises.length ? exercises : (unit.listening[0].exercises || []);
   } else if (currentDesignerSkill === 'reading') {
     const passage = $('ud-read-passage')?.value.trim();
     const image = $('ud-read-image')?.value.trim();

@@ -114,6 +114,28 @@ CREATE TABLE IF NOT EXISTS public.class_posts (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ----------------------------------------------------------------------------
+-- 8. LEARNING UNITS (BÀI HỌC 5 KỸ NĂNG & MEDIA BANK)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.learning_units (
+  id TEXT PRIMARY KEY,
+  subject TEXT NOT NULL DEFAULT '🇬🇧 Tiếng Anh',
+  module TEXT NOT NULL DEFAULT 'English B1 - General & Academic Skills',
+  title TEXT NOT NULL,
+  topic TEXT DEFAULT '',
+  level TEXT DEFAULT 'A2 - B1',
+  icon TEXT DEFAULT '📖',
+  description TEXT DEFAULT '',
+  is_hidden BOOLEAN DEFAULT FALSE,
+  listening JSONB DEFAULT '[]'::jsonb,
+  reading JSONB DEFAULT '[]'::jsonb,
+  speaking JSONB DEFAULT '[]'::jsonb,
+  writing JSONB DEFAULT '[]'::jsonb,
+  language_focus JSONB DEFAULT '{}'::jsonb,
+  created_by TEXT,
+  created_at BIGINT
+);
+
 -- ============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- ============================================================================
@@ -125,6 +147,7 @@ ALTER TABLE public.class_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.class_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.learning_units ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Schools public read write" ON public.schools FOR ALL USING (true);
 CREATE POLICY "Academic years public read write" ON public.academic_years FOR ALL USING (true);
@@ -133,6 +156,7 @@ CREATE POLICY "Class members public read write" ON public.class_members FOR ALL 
 CREATE POLICY "Assignments public read write" ON public.assignments FOR ALL USING (true);
 CREATE POLICY "Submissions public read write" ON public.submissions FOR ALL USING (true);
 CREATE POLICY "Class posts public read write" ON public.class_posts FOR ALL USING (true);
+CREATE POLICY "Learning units public read write" ON public.learning_units FOR ALL USING (true);
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_classes_school ON public.classes(school_id);
