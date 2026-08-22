@@ -31,36 +31,56 @@ export const DEFAULT_UNITS = [
         exercises: [
           {
             id: 'ex_lis1_1',
-            type: 'mcq',
-            question: 'Where is the passenger flying to?',
-            options: ['London Gatwick', 'London Heathrow', 'New York JFK', 'Paris Charles de Gaulle'],
-            answer: 1,
-            explain: 'The passenger says: "I\'m flying to London Heathrow on flight BA178."'
+            type: 'true_false',
+            title: 'Exercise 1. Listen and decide whether these statements are True (T) or False (F)',
+            question: 'The passenger is flying to New York JFK on flight BA178.',
+            answer: false,
+            explain: 'False. The passenger states: "I\'m flying to London Heathrow on flight BA178."'
           },
           {
             id: 'ex_lis1_2',
+            type: 'true_false',
+            title: 'Exercise 1. Listen and decide whether these statements are True (T) or False (F)',
+            question: 'Gate 24B starts boarding at 10:30.',
+            answer: true,
+            explain: 'True. The agent explicitly informs: "Gate 24B starts boarding at 10:30."'
+          },
+          {
+            id: 'ex_lis1_3',
             type: 'mcq',
+            title: 'Exercise 2. Listen again and choose the best answer',
             question: 'Which type of seat did the passenger choose?',
-            options: ['Window seat', 'Middle seat', 'Aisle seat', 'First class suite'],
+            options: ['Window seat', 'Middle seat', 'An aisle seat', 'First class suite'],
             answer: 2,
             explain: 'The passenger specifically answered: "An aisle seat, please."'
           },
           {
-            id: 'ex_lis1_3',
-            type: 'true_false',
-            question: 'The flight number is BA178 and boarding starts at 10:30.',
-            answer: true,
-            explain: 'The agent states flight BA178 and Gate 24B boards at 10:30.'
+            id: 'ex_lis1_4',
+            type: 'mcq',
+            title: 'Exercise 2. Listen again and choose the best answer',
+            question: 'What documents did the agent ask to see?',
+            options: ['Passport and visa', 'Passport and ticket', 'Identity card and driver license', 'Credit card and coupon'],
+            answer: 1,
+            explain: 'The agent asked: "May I see your passport and ticket, please?"'
           },
           {
-            id: 'ex_lis1_4',
+            id: 'ex_lis1_5',
+            type: 'short_answer',
+            title: 'Exercise 3. Listen to the text again and answer these following questions',
+            question: 'What is the flight number and the departure gate mentioned in the audio?',
+            sampleAnswer: 'Flight BA178 and Gate 24B.',
+            keywords: ['BA178', '24B', 'flight', 'gate'],
+            hint: 'Flight code BA... and Gate number 24...'
+          },
+          {
+            id: 'ex_lis1_6',
             type: 'dictation',
             prompt: 'Nghe và gõ lại chính xác câu thông báo cửa khởi hành:',
             targetSentence: 'Gate 24B starts boarding at 10:30.',
             hint: 'Bắt đầu bằng "Gate..."'
           },
           {
-            id: 'ex_lis1_5',
+            id: 'ex_lis1_7',
             type: 'gap_fill',
             sentence: 'May I see your ___ and ticket, please? Here is your ___ pass.',
             answers: ['passport', 'boarding'],
@@ -84,25 +104,29 @@ export const DEFAULT_UNITS = [
         exercises: [
           {
             id: 'ex_lis2_1',
+            type: 'true_false',
+            title: 'Exercise 1. Listen and decide whether these statements are True (T) or False (F)',
+            question: 'The host advises travelers to check the local transport schedule.',
+            answer: true,
+            explain: 'True. The host said: "always check the local transport schedule."'
+          },
+          {
+            id: 'ex_lis2_2',
             type: 'mcq',
+            title: 'Exercise 2. Listen again and choose the best answer',
             question: 'What are the travelers exploring today in the video?',
-            options: ['Modern tech factories', 'Historical landmarks and cozy coffee shops', 'Deep ocean diving', 'Mountain climbing only'],
+            options: ['Modern tech factories', 'Historical landmarks, cozy coffee shops, and traditional street food', 'Deep ocean diving', 'Mountain climbing only'],
             answer: 1,
             explain: 'The video mentions exploring historical landmarks, cozy coffee shops, and traditional street food.'
           },
           {
-            id: 'ex_lis2_2',
-            type: 'true_false',
-            question: 'The host advises travelers to check the local transport schedule.',
-            answer: true,
-            explain: 'The host explicitly said: "always check the local transport schedule."'
-          },
-          {
             id: 'ex_lis2_3',
-            type: 'gap_fill',
-            sentence: 'Remember to keep your travel ___ packed and check the local transport ___.',
-            answers: ['essentials', 'schedule'],
-            optionsBank: ['essentials', 'schedule', 'tickets', 'itinerary']
+            type: 'short_answer',
+            title: 'Exercise 3. Listen to the text again and answer these following questions',
+            question: 'What advice does the host give about travel preparations?',
+            sampleAnswer: 'Keep travel essentials packed and always check the local transport schedule.',
+            keywords: ['essentials', 'packed', 'transport', 'schedule'],
+            hint: 'Pack essentials and check schedule...'
           }
         ]
       }
@@ -131,7 +155,24 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
         },
         exercises: [
           {
+            id: 'read_match_1',
+            type: 'matching',
+            title: 'Exercise 1. Match the words/ phrases (1-8) with their definitions (a-h)',
+            pairs: [
+              { id: 1, word: 'confined', letter: 'a', definition: 'limited or restricted to a particular space or area' },
+              { id: 2, word: 'integral', letter: 'b', definition: 'essential or necessary for completeness' },
+              { id: 3, word: 'radiology', letter: 'c', definition: 'the medical science dealing with X-rays and imaging scans' },
+              { id: 4, word: 'autonomous', letter: 'd', definition: 'self-governing, operating without human intervention' },
+              { id: 5, word: 'rigorously', letter: 'e', definition: 'in an extremely thorough, careful, and strict manner' },
+              { id: 6, word: 'dilemmas', letter: 'f', definition: 'difficult situations in which a tough choice has to be made' },
+              { id: 7, word: 'displacement', letter: 'g', definition: 'the removal of someone or something from its position or job' },
+              { id: 8, word: 'scrutiny', letter: 'h', definition: 'critical observation, close examination, or surveillance' }
+            ]
+          },
+          {
+            id: 'read_mcq_1',
             type: 'mcq',
+            title: 'Exercise 2. Choose the best answer from A, B, C, or D',
             question: 'According to paragraph 1, how do streaming services like Netflix use AI?',
             options: [
               'To automatically translate movie subtitles into different languages',
@@ -143,11 +184,34 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
             explain: 'Đoạn 1 nêu: "...streaming algorithms on Spotify and Netflix that recommend songs and movies based on our preferences..."'
           },
           {
-            type: 'tfng',
-            question: 'Autonomous vehicles have already completely eliminated human-error accidents worldwide.',
-            options: ['True (Đúng)', 'False (Sai)', 'Not Given (Không đề cập)'],
+            id: 'read_mcq_2',
+            type: 'mcq',
+            title: 'Exercise 2. Choose the best answer from A, B, C, or D',
+            question: 'What is the main purpose of testing autonomous vehicles on public roads?',
+            options: [
+              'To eliminate the need for traffic lights completely',
+              'To reduce traffic accidents caused by human error',
+              'To make cars run faster than trains',
+              'To replace all public buses immediately'
+            ],
             answer: 1,
-            explain: 'False. Bài đọc nói xe tự hành đang được thử nghiệm ("are being rigorously tested") và hứa hẹn sẽ giảm thiểu ("promising to reduce"), chứ chưa hoàn toàn xóa bỏ trên toàn thế giới.'
+            explain: 'Đoạn 2 nêu: "...promising to reduce traffic accidents caused by human error."'
+          },
+          {
+            id: 'read_spell_1',
+            type: 'backward_spelling',
+            title: 'Exercise 3. Backward Spelling (Đánh vần & Giải đố từ vựng)',
+            clue: 'Operating independently and having the freedom to act (Tự hành, tự chủ)',
+            targetWord: 'AUTONOMOUS',
+            hint: '10 chữ cái • Bắt đầu bằng chữ A, kết thúc bằng S'
+          },
+          {
+            id: 'read_spell_2',
+            type: 'backward_spelling',
+            title: 'Exercise 3. Backward Spelling (Đánh vần & Giải đố từ vựng)',
+            clue: 'Essential and indispensable to form a complete whole (Thiết yếu, không thể thiếu)',
+            targetWord: 'INTEGRAL',
+            hint: '8 chữ cái • Bắt đầu bằng chữ I'
           }
         ]
       }
@@ -486,8 +550,42 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
     ],
     writing: [
       {
+        id: 'wrt_transform',
+        title: 'Exercise 3. Make these sentences a) Negative and b) Question',
+        category: 'transformation',
+        topic: 'Past Simple & Present Tenses',
+        level: 'A2 - B1',
+        items: [
+          {
+            id: 'tf_1',
+            originalSentence: 'They arrived at the airport on time yesterday.',
+            negativeAnswer: 'They did not arrive at the airport on time yesterday.',
+            negativeAlt: "They didn't arrive at the airport on time yesterday.",
+            questionAnswer: 'Did they arrive at the airport on time yesterday?',
+            hint: 'Past Simple (did / didn\'t + V_infinitive)'
+          },
+          {
+            id: 'tf_2',
+            originalSentence: 'She booked a luxury hotel room in London.',
+            negativeAnswer: 'She did not book a luxury hotel room in London.',
+            negativeAlt: "She didn't book a luxury hotel room in London.",
+            questionAnswer: 'Did she book a luxury hotel room in London?',
+            hint: 'Động từ "booked" chuyển thành "did not book" / "Did she book...?"'
+          },
+          {
+            id: 'tf_3',
+            originalSentence: 'The flight was delayed due to bad weather.',
+            negativeAnswer: 'The flight was not delayed due to bad weather.',
+            negativeAlt: "The flight wasn't delayed due to bad weather.",
+            questionAnswer: 'Was the flight delayed due to bad weather?',
+            hint: 'To be ở quá khứ: was not / wasn\'t, đảo Was lên đầu câu hỏi'
+          }
+        ]
+      },
+      {
         id: 'wrt_scramble',
-        title: 'Sentence Scramble (Sắp xếp từ thành câu đúng)',
+        title: 'Exercise 4. Reorder the words to make meaningful sentences',
+        category: 'scramble',
         topic: 'Grammar Structure',
         level: 'A2 - B1',
         items: [
@@ -502,12 +600,19 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
             words: ['The', 'more', 'you', 'practice,', 'the', 'more', 'fluent', 'you', 'become.'],
             correctSentence: 'The more you practice, the more fluent you become.',
             hint: 'Cấu trúc so sánh kép "The more..., the more..."'
+          },
+          {
+            id: 'sc_3',
+            words: ['She', 'showed', 'her', 'boarding', 'pass', 'at', 'gate', 'twenty-four.'],
+            correctSentence: 'She showed her boarding pass at gate twenty-four.',
+            hint: 'Subject + Verb + Object + Prepositional phrase'
           }
         ]
       },
       {
         id: 'wrt_error_fix',
         title: 'Find & Correct the Grammar Mistakes',
+        category: 'error_fix',
         topic: 'Error Identification',
         level: 'B1',
         items: [
@@ -523,6 +628,16 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
       }
     ],
     languageFocus: {
+      pastFormVerbs: [
+        { infinitive: 'go', past: 'went', meaning: 'đi, di chuyển' },
+        { infinitive: 'see', past: 'saw', meaning: 'nhìn thấy, trông thấy' },
+        { infinitive: 'buy', past: 'bought', meaning: 'mua sắm' },
+        { infinitive: 'take', past: 'took', meaning: 'cầm, lấy, đưa đi' },
+        { infinitive: 'write', past: 'wrote', meaning: 'viết, ghi chép' },
+        { infinitive: 'fly', past: 'flew', meaning: 'bay (bằng máy bay)' },
+        { infinitive: 'arrive', past: 'arrived', meaning: 'đến nơi (có quy tắc +ed)' },
+        { infinitive: 'book', past: 'booked', meaning: 'đặt chỗ trước (có quy tắc +ed)' }
+      ],
       flashcards: [
         {
           id: 'fc_1',
@@ -549,7 +664,9 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
         { left: 'Break a leg', right: 'Chúc may mắn (Good luck)', pairId: 1 },
         { left: 'Once in a blue moon', right: 'Rất hiếm khi xảy ra', pairId: 2 },
         { left: 'Piece of cake', right: 'Rất dễ dàng', pairId: 3 },
-        { left: 'Under the weather', right: 'Cảm thấy hơi mệt/ốm', pairId: 4 }
+        { left: 'Under the weather', right: 'Cảm thấy hơi mệt/ốm', pairId: 4 },
+        { left: 'Call it a day', right: 'Dừng công việc hôm nay', pairId: 5 },
+        { left: 'Hit the books', right: 'Bắt đầu học bài chăm chỉ', pairId: 6 }
       ],
       grammarChallenge: [
         {
@@ -558,6 +675,13 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
           options: ['have', 'had', 'will have', 'would have'],
           answer: 1,
           explain: 'Câu điều kiện loại 2 (giả định trái với hiện tại): If + S + V2/ed, S + would + V1.'
+        },
+        {
+          id: 'gm_2',
+          question: 'She ___ at the international airport when the storm started.',
+          options: ['arrives', 'was arriving', 'is arriving', 'has arrived'],
+          answer: 1,
+          explain: 'Thì Quá khứ tiếp diễn (Past Continuous) diễn tả hành động đang diễn ra thì hành động khác cắt ngang.'
         }
       ]
     }
@@ -629,11 +753,34 @@ Unfortunately, rising ocean temperatures due to climate change have triggered se
         },
         exercises: [
           {
+            id: 'read2_match_1',
+            type: 'matching',
+            title: 'Exercise 1. Match the words/ phrases (1-6) with their definitions (a-f)',
+            pairs: [
+              { id: 1, word: 'ecosystem', letter: 'a', definition: 'a biological community of interacting organisms and their environment' },
+              { id: 2, word: 'inanimate', letter: 'b', definition: 'not alive, showing no sign of life' },
+              { id: 3, word: 'polyps', letter: 'c', definition: 'tiny individual marine organisms that build coral reefs' },
+              { id: 4, word: 'bleaching', letter: 'd', definition: 'the process where corals lose their color and turn white due to thermal stress' },
+              { id: 5, word: 'expel', letter: 'e', definition: 'force out or eject something from an organism' },
+              { id: 6, word: 'restoration', letter: 'f', definition: 'the action of returning something to a former good condition' }
+            ]
+          },
+          {
+            id: 'read2_mcq_1',
             type: 'mcq',
+            title: 'Exercise 2. Choose the best answer from A, B, C, or D',
             question: 'What is the Great Barrier Reef?',
             options: ['A man-made underwater tunnel', 'The world’s largest coral reef ecosystem', 'A volcanic island', 'A marine amusement park'],
             answer: 1,
             explain: 'The first sentence states: "the Great Barrier Reef is the world\'s largest coral reef ecosystem."'
+          },
+          {
+            id: 'read2_spell_1',
+            type: 'backward_spelling',
+            title: 'Exercise 3. Backward Spelling (Đánh vần & Giải đố từ vựng)',
+            clue: 'A biological community of interacting organisms (Hệ sinh thái)',
+            targetWord: 'ECOSYSTEM',
+            hint: '9 chữ cái • Bắt đầu bằng chữ E'
           }
         ]
       }
@@ -725,8 +872,34 @@ Unfortunately, rising ocean temperatures due to climate change have triggered se
     ],
     writing: [
       {
+        id: 'wrt_transform_2',
+        title: 'Exercise 3. Make these sentences a) Negative and b) Question',
+        category: 'transformation',
+        topic: 'Environmental Grammar Drill',
+        level: 'B1',
+        items: [
+          {
+            id: 'tf_2_1',
+            originalSentence: 'Global warming caused severe coral bleaching in 2020.',
+            negativeAnswer: 'Global warming did not cause severe coral bleaching in 2020.',
+            negativeAlt: "Global warming didn't cause severe coral bleaching in 2020.",
+            questionAnswer: 'Did global warming cause severe coral bleaching in 2020?',
+            hint: 'Past Simple with did / didn\'t + cause'
+          },
+          {
+            id: 'tf_2_2',
+            originalSentence: 'Scientists discovered new species in the deep ocean.',
+            negativeAnswer: 'Scientists did not discover new species in the deep ocean.',
+            negativeAlt: "Scientists didn't discover new species in the deep ocean.",
+            questionAnswer: 'Did scientists discover new species in the deep ocean?',
+            hint: 'Động từ "discovered" -> "did not discover"'
+          }
+        ]
+      },
+      {
         id: 'wrt_scramble_2',
-        title: 'Environmental Protection Scramble',
+        title: 'Exercise 4. Reorder the words to make meaningful sentences',
+        category: 'scramble',
         topic: 'Green Living',
         level: 'B1',
         items: [
@@ -741,6 +914,13 @@ Unfortunately, rising ocean temperatures due to climate change have triggered se
       }
     ],
     languageFocus: {
+      pastFormVerbs: [
+        { infinitive: 'lead', past: 'led', meaning: 'dẫn dắt, lãnh đạo' },
+        { infinitive: 'build', past: 'built', meaning: 'xây dựng' },
+        { infinitive: 'grow', past: 'grew', meaning: 'phát triển, tăng trưởng' },
+        { infinitive: 'speak', past: 'spoke', meaning: 'nói chuyện, phát biểu' },
+        { infinitive: 'bring', past: 'brought', meaning: 'mang lại, đem đến' }
+      ],
       flashcards: [
         {
           id: 'fc_3',
@@ -765,7 +945,8 @@ Unfortunately, rising ocean temperatures due to climate change have triggered se
       ],
       matchPairs: [
         { left: 'Hit the books', right: 'Bắt đầu học chăm chỉ', pairId: 1 },
-        { left: 'Cost an arm and a leg', right: 'Rất đắt đỏ, tốn kém', pairId: 2 }
+        { left: 'Cost an arm and a leg', right: 'Rất đắt đỏ, tốn kém', pairId: 2 },
+        { left: 'See eye to eye', right: 'Đồng tình quan điểm', pairId: 3 }
       ],
       grammarChallenge: [
         {

@@ -1231,7 +1231,7 @@ function renderListeningExercises(exercises) {
       return `
         <div class="card listening-ex-card" style="margin:0;border-left:4px solid #ec4899">
           <div class="ex-header-row">
-            <span class="ex-badge tf-badge">⚖️ Câu hỏi ${idx + 1} (Đúng hay Sai - True/False):</span>
+            <span class="ex-badge tf-badge">⚖️ ${ex.title ? esc(ex.title) : `Câu hỏi ${idx + 1} (True/False):`}</span>
           </div>
           <div style="font-weight:700;margin-bottom:12px;color:#1e293b;font-size:15px">${ex.question}</div>
           <div class="tf-btn-group">
@@ -1246,10 +1246,73 @@ function renderListeningExercises(exercises) {
           ${ex.explain ? `<div id="lis-tf-exp-${idx}" style="display:none;margin-top:8px;font-size:13px;color:#475569;background:#f8fafc;padding:8px 12px;border-radius:8px;border-left:3px solid #ec4899">💡 <b>Giải thích:</b> ${esc(ex.explain)}</div>` : ''}
         </div>
       `;
+    } else if (ex.type === 'short_answer') {
+      const keywordsStr = (ex.keywords || []).join(', ');
+      return `
+        <div class="card listening-ex-card short-answer-card" style="margin:0;border-left:4px solid #0284c7">
+          <div class="ex-header-row">
+            <span class="ex-badge" style="background:#e0f2fe;color:#0369a1;font-weight:800">💬 ${ex.title ? esc(ex.title) : `Câu hỏi ${idx + 1} (Trả lời câu hỏi nghe hiểu):`}</span>
+          </div>
+          <div style="font-weight:700;margin-bottom:10px;color:#1e293b;font-size:15px">${esc(ex.question)}</div>
+          ${ex.hint ? `<div style="font-size:12.5px;color:#64748b;margin-bottom:10px">💡 Gợi ý: ${esc(ex.hint)}</div>` : ''}
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <input type="text" id="lis-sa-inp-${idx}" class="short-answer-input" placeholder="Nhập câu trả lời của bạn bằng tiếng Anh...">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <button class="btn btn-p" onclick="window.checkLisShortAnswer(${idx}, '${esc(ex.sampleAnswer || '')}', '${esc(keywordsStr)}')">Kiểm tra câu trả lời</button>
+              <button class="btn btn-sm" onclick="window.toggleLisSampleAnswer(${idx})" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1">👁️ Xem đáp án mẫu</button>
+            </div>
+          </div>
+          <div id="lis-sa-fb-${idx}" class="fb" style="display:none;margin-top:10px"></div>
+          <div id="lis-sa-sample-${idx}" class="sample-answer-reveal" style="display:none">
+            <b>📝 Đáp án mẫu (Sample Answer):</b> ${esc(ex.sampleAnswer || '')}
+            ${keywordsStr ? `<div style="font-size:12px;color:#0369a1;margin-top:4px">🔑 Từ khóa trọng tâm: <b>${esc(keywordsStr)}</b></div>` : ''}
+          </div>
+        </div>
+      `;
     }
     return '';
   }).join('');
 }
+
+window.checkLisShortAnswer = function(exIdx, sampleAnswer, keywordsStr) {
+  const input = document.getElementById(`lis-sa-inp-${exIdx}`);
+  const fb = document.getElementById(`lis-sa-fb-${exIdx}`);
+  if (!input || !fb) return;
+
+  const userVal = input.value.trim().toLowerCase();
+  if (!userVal) {
+    alert('Vui lòng nhập câu trả lời trước khi kiểm tra!');
+    return;
+  }
+
+  const keywords = keywordsStr ? keywordsStr.toLowerCase().split(',').map(k => k.trim()).filter(Boolean) : [];
+  let matchedKw = 0;
+  keywords.forEach(kw => {
+    if (userVal.includes(kw)) matchedKw++;
+  });
+
+  const isFullMatch = userVal === sampleAnswer.trim().toLowerCase();
+  const hasKeyContent = keywords.length > 0 ? (matchedKw / keywords.length >= 0.5) : (userVal.length >= 5);
+
+  fb.style.display = 'block';
+  if (isFullMatch || hasKeyContent) {
+    fb.className = 'fb fb-ok';
+    fb.innerHTML = `🎉 <b>Rất tốt!</b> Câu trả lời của bạn thể hiện đúng ý bài nghe.<br><b>Đáp án mẫu:</b> <i>"${sampleAnswer}"</i>`;
+    playSuccessSound();
+    addXP(20, 'Trả lời đúng câu hỏi nghe hiểu');
+  } else {
+    fb.className = 'fb fb-bad';
+    fb.innerHTML = `⚠️ <b>Cần bổ sung thêm thông tin!</b> Hãy đối chiếu với đáp án mẫu bên dưới.<br><b>Đáp án mẫu:</b> <i>"${sampleAnswer}"</i>`;
+    playWrongSound();
+  }
+};
+
+window.toggleLisSampleAnswer = function(exIdx) {
+  const sampleBox = document.getElementById(`lis-sa-sample-${exIdx}`);
+  if (sampleBox) {
+    sampleBox.style.display = sampleBox.style.display === 'none' ? 'block' : 'none';
+  }
+};
 
 window.checkLisMCQ = function(exIdx, chosenIdx, correctIdx) {
   const fb = document.getElementById(`lis-fb-${exIdx}`);
@@ -1519,21 +1582,237 @@ window.showVocabLookup = function(word) {
 window.speakVocab = function(word) { speakText(word, 0.9, 'en-US'); };
 
 function renderReadingExercises(exercises) {
-  return exercises.map((ex, idx) => `
-    <div class="card" style="margin:0">
-      <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#1e293b">Câu ${idx + 1}: ${ex.question}</div>
-      <div style="display:flex;flex-direction:column;gap:6px">
-        ${(ex.options || []).map((opt, oIdx) => `
-          <button class="opt" onclick="window.checkReadMCQ(${idx}, ${oIdx}, ${ex.answer})" id="read-opt-${idx}-${oIdx}">
-            <span class="okey">${String.fromCharCode(65 + oIdx)}</span>
-            <span>${opt}</span>
-          </button>
-        `).join('')}
-      </div>
-      <div id="read-fb-${idx}" class="fb" style="display:none"></div>
-    </div>
+  if (!exercises || !exercises.length) {
+    return '<div class="empty">Chưa có câu hỏi luyện tập cho bài đọc này.</div>';
+  }
+
+  return exercises.map((ex, idx) => {
+    if (ex.type === 'matching') {
+      const pairs = ex.pairs || [];
+      const letters = pairs.map(p => p.letter || String.fromCharCode(97 + pairs.indexOf(p)));
+      const defsShuffled = [...pairs].sort((a, b) => (a.letter || '').localeCompare(b.letter || ''));
+
+      return `
+        <div class="matching-exercise-card" style="margin:0">
+          <div style="font-weight:800;font-size:15px;color:#1e293b;margin-bottom:6px">
+            🧩 ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. Match the words/phrases with their definitions:`}
+          </div>
+          <div style="font-size:12.5px;color:#64748b;margin-bottom:12px">Chọn chữ cái (a, b, c...) định nghĩa tương ứng cho mỗi từ vựng:</div>
+
+          <table class="matching-grid-table">
+            <thead>
+              <tr style="font-size:12px;color:#64748b;text-align:left">
+                <th style="padding:4px 8px">STT</th>
+                <th style="padding:4px 12px">Từ vựng (Word / Phrase)</th>
+                <th style="padding:4px 8px;text-align:center">Nối với</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pairs.map((p, pIdx) => `
+                <tr class="matching-row" id="read-match-row-${idx}-${pIdx}">
+                  <td class="matching-col-num">${p.id || (pIdx + 1)}</td>
+                  <td class="matching-col-word">${esc(p.word || '')}</td>
+                  <td class="matching-col-select">
+                    <select class="matching-select" id="read-match-sel-${idx}-${pIdx}" data-correct="${esc(p.letter || '')}">
+                      <option value="">--</option>
+                      ${letters.map(l => `<option value="${l}">${l}</option>`).join('')}
+                    </select>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="matching-definitions-list">
+            <div style="font-size:12.5px;font-weight:800;color:#0369a1;margin-bottom:4px">📖 Danh Sách Định Nghĩa (Definitions):</div>
+            ${defsShuffled.map(d => `
+              <div class="matching-def-item">
+                <span class="matching-def-letter">(${d.letter})</span>
+                <span>${esc(d.definition || '')}</span>
+              </div>
+            `).join('')}
+          </div>
+
+          <div style="margin-top:14px">
+            <button class="btn btn-p" onclick="window.checkReadingMatching(${idx})">✅ Kiểm tra nối từ</button>
+          </div>
+          <div id="read-match-fb-${idx}" class="fb" style="display:none;margin-top:10px"></div>
+        </div>
+      `;
+    } else if (ex.type === 'backward_spelling') {
+      const target = (ex.targetWord || '').toUpperCase();
+      const chars = target.split('');
+      const shuffledTiles = [...chars].map((c, i) => ({ id: i, char: c })).sort(() => Math.random() - 0.5);
+
+      return `
+        <div class="spelling-puzzle-card" style="margin:0">
+          <div style="font-weight:800;font-size:15px;color:#1e40af;margin-bottom:6px">
+            🔤 ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. Backward Spelling & Word Puzzle:`}
+          </div>
+          <div style="font-size:14px;color:#1e293b;font-weight:600;margin-bottom:4px">
+            💡 Gợi ý/Định nghĩa: <span style="color:#0369a1">${esc(ex.clue || '')}</span>
+          </div>
+          ${ex.hint ? `<div style="font-size:12px;color:#64748b;margin-bottom:10px">🔑 ${esc(ex.hint)}</div>` : ''}
+
+          <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:4px;text-align:center">Các chữ cái bạn đã chọn:</div>
+          <div class="spelling-assembled-row" id="spelling-assembled-${idx}">
+            <span style="color:#94a3b8;font-size:13px" id="spelling-ph-${idx}">(Bấm các ô chữ cái bên dưới để ghép từ)</span>
+          </div>
+
+          <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:4px;text-align:center">Ngân hàng chữ cái:</div>
+          <div class="spelling-tiles-container" id="spelling-pool-${idx}">
+            ${shuffledTiles.map(tile => `
+              <button type="button" class="spelling-char-tile" id="sp-tile-${idx}-${tile.id}" onclick="window.placeSpellingTile(${idx}, ${tile.id}, '${tile.char}')">${tile.char}</button>
+            `).join('')}
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:center;margin-top:14px">
+            <button class="btn btn-p" onclick="window.checkSpellingPuzzle(${idx}, '${target}')">✅ Kiểm tra từ vựng</button>
+            <button class="btn btn-sm" onclick="window.resetSpellingPuzzle(${idx})">🔄 Xếp lại</button>
+            <button class="btn btn-sm" onclick="window.speakVocab('${target}')" style="background:#fff;border:1px solid #cbd5e1">🔊 Nghe phát âm</button>
+          </div>
+          <div id="spelling-fb-${idx}" class="fb" style="display:none;margin-top:10px"></div>
+        </div>
+      `;
+    } else if (ex.type === 'mcq' || ex.type === 'tfng') {
+      return `
+        <div class="card" style="margin:0">
+          <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#1e293b">
+            ${ex.title ? `<b>${esc(ex.title)}</b><br>` : ''}Câu ${idx + 1}: ${ex.question}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            ${(ex.options || []).map((opt, oIdx) => `
+              <button class="opt" onclick="window.checkReadMCQ(${idx}, ${oIdx}, ${ex.answer})" id="read-opt-${idx}-${oIdx}">
+                <span class="okey">${String.fromCharCode(65 + oIdx)}</span>
+                <span>${opt}</span>
+              </button>
+            `).join('')}
+          </div>
+          <div id="read-fb-${idx}" class="fb" style="display:none"></div>
+        </div>
+      `;
+    }
+    return '';
+  }).join('');
+}
+
+window.checkReadingMatching = function(exIdx) {
+  const selects = document.querySelectorAll(`[id^="read-match-sel-${exIdx}-"]`);
+  const fb = document.getElementById(`read-match-fb-${exIdx}`);
+  if (!selects.length || !fb) return;
+
+  let correctCount = 0;
+  let hasUnselected = false;
+
+  selects.forEach((sel, i) => {
+    const row = document.getElementById(`read-match-row-${exIdx}-${i}`);
+    const userVal = (sel.value || '').trim().toLowerCase();
+    const correctVal = (sel.dataset.correct || '').trim().toLowerCase();
+
+    if (!userVal) hasUnselected = true;
+
+    if (userVal && userVal === correctVal) {
+      correctCount++;
+      if (row) {
+        row.className = 'matching-row correct';
+      }
+    } else if (userVal) {
+      if (row) {
+        row.className = 'matching-row wrong';
+      }
+    } else {
+      if (row) row.className = 'matching-row';
+    }
+  });
+
+  if (hasUnselected) {
+    alert('Vui lòng chọn đầy đủ các định nghĩa trước khi kiểm tra!');
+    return;
+  }
+
+  fb.style.display = 'block';
+  if (correctCount === selects.length) {
+    fb.className = 'fb fb-ok';
+    fb.innerHTML = `🎉 <b>Hoàn hảo!</b> Bạn đã nối chính xác toàn bộ ${correctCount}/${selects.length} từ vựng với định nghĩa.`;
+    playSuccessSound();
+    addXP(25, 'Nối từ vựng đọc hiểu chính xác');
+  } else {
+    fb.className = 'fb fb-bad';
+    fb.innerHTML = `⚠️ <b>Kết quả:</b> Bạn đã nối đúng ${correctCount}/${selects.length} cặp. Hãy xem các dòng màu đỏ để chỉnh lại nhé!`;
+    playWrongSound();
+  }
+};
+
+window.spellingAssembledState = {};
+
+window.placeSpellingTile = function(exIdx, tileId, char) {
+  if (!window.spellingAssembledState[exIdx]) window.spellingAssembledState[exIdx] = [];
+  window.spellingAssembledState[exIdx].push({ tileId, char });
+
+  const btn = document.getElementById(`sp-tile-${exIdx}-${tileId}`);
+  if (btn) btn.classList.add('used');
+
+  renderAssembledSpelling(exIdx);
+};
+
+function renderAssembledSpelling(exIdx) {
+  const box = document.getElementById(`spelling-assembled-${exIdx}`);
+  const list = window.spellingAssembledState[exIdx] || [];
+  if (!box) return;
+
+  if (!list.length) {
+    box.innerHTML = `<span style="color:#94a3b8;font-size:13px">(Bấm các ô chữ cái bên dưới để ghép từ)</span>`;
+    return;
+  }
+
+  box.innerHTML = list.map((item, i) => `
+    <button type="button" class="spelling-char-tile" style="background:#2563eb;color:#fff;border-color:#1d4ed8" onclick="window.removeSpellingTile(${exIdx}, ${i})">
+      ${item.char}
+    </button>
   `).join('');
 }
+
+window.removeSpellingTile = function(exIdx, itemIndex) {
+  const list = window.spellingAssembledState[exIdx] || [];
+  const removed = list.splice(itemIndex, 1)[0];
+  if (removed) {
+    const btn = document.getElementById(`sp-tile-${exIdx}-${removed.tileId}`);
+    if (btn) btn.classList.remove('used');
+  }
+  renderAssembledSpelling(exIdx);
+};
+
+window.resetSpellingPuzzle = function(exIdx) {
+  window.spellingAssembledState[exIdx] = [];
+  const pool = document.getElementById(`spelling-pool-${exIdx}`);
+  if (pool) {
+    pool.querySelectorAll('.spelling-char-tile').forEach(b => b.classList.remove('used'));
+  }
+  renderAssembledSpelling(exIdx);
+  const fb = document.getElementById(`spelling-fb-${exIdx}`);
+  if (fb) fb.style.display = 'none';
+};
+
+window.checkSpellingPuzzle = function(exIdx, targetWord) {
+  const list = window.spellingAssembledState[exIdx] || [];
+  const assembled = list.map(item => item.char).join('').toUpperCase();
+  const fb = document.getElementById(`spelling-fb-${exIdx}`);
+  if (!fb) return;
+
+  const target = targetWord.trim().toUpperCase();
+
+  fb.style.display = 'block';
+  if (assembled === target) {
+    fb.className = 'fb fb-ok';
+    fb.innerHTML = `🎉 <b>Chính xác!</b> Từ vựng đúng: <b>${target}</b>`;
+    playSuccessSound();
+    addXP(20, 'Giải đố đánh vần từ vựng');
+  } else {
+    fb.className = 'fb fb-bad';
+    fb.innerHTML = `❌ <b>Chưa đúng chính tả!</b> Từ bạn ghép là "${assembled}". Hãy thử lại!`;
+    playWrongSound();
+  }
+};
 
 window.checkReadMCQ = function(exIdx, chosenIdx, correctIdx) {
   const fb = document.getElementById(`read-fb-${exIdx}`);
@@ -2793,6 +3072,7 @@ function renderPhrasePlaybackBtn(idx) {
 // =========================================================================
 
 function initWriting() {
+  if (!currentWrtCategory) currentWrtCategory = 'transformation';
   loadWritingView(currentWrtCategory);
 }
 
@@ -2806,12 +3086,60 @@ function loadWritingView(type) {
   if (!workspace || !currentUnit) return;
 
   const wrtData = getUnitSkillList(currentUnit, 'writing');
+  if (!type) type = 'transformation';
+  currentWrtCategory = type;
 
-  if (type === 'scramble') {
-    const scrambleGroup = wrtData.find(w => w.id?.includes('scramble')) || wrtData[0] || { items: [] };
-    workspace.innerHTML = `
+  const transformGroup = wrtData.find(w => w.category === 'transformation' || w.id?.includes('transform')) || wrtData[0];
+  const scrambleGroup = wrtData.find(w => w.category === 'scramble' || w.id?.includes('scramble')) || wrtData[1];
+  const errorGroup = wrtData.find(w => w.category === 'error_fix' || w.id?.includes('error_fix')) || wrtData[2];
+
+  let subviewHtml = '';
+
+  if (type === 'transformation') {
+    const items = transformGroup?.items || [];
+    subviewHtml = `
       <div style="display:flex;flex-direction:column;gap:18px">
-        ${(scrambleGroup.items || []).map((item, idx) => {
+        <div style="font-size:14px;color:#475569;margin-bottom:2px">
+          💡 Hãy chuyển đổi các câu khẳng định sau sang: <b>a) Thể Phủ định (-)</b> và <b>b) Thể Nghi vấn (?)</b>.
+        </div>
+        ${items.map((item, idx) => `
+          <div class="sentence-transform-card" id="transform-card-${idx}">
+            <div class="transform-orig-sentence">
+              <span style="color:#7c3aed;font-weight:800">Câu ${idx + 1}:</span> "${esc(item.originalSentence || '')}"
+            </div>
+            ${item.hint ? `<div style="font-size:12px;color:#64748b;margin-bottom:10px">💡 Gợi ý: ${esc(item.hint)}</div>` : ''}
+
+            <!-- a) PHỦ ĐỊNH (-) -->
+            <div class="transform-sub-row">
+              <label class="transform-badge-neg">a) Phủ định (-)</label>
+              <input type="text" id="tf-neg-inp-${idx}" class="transform-input" placeholder="VD: They did not arrive...">
+            </div>
+
+            <!-- b) NGHI VẤN (?) -->
+            <div class="transform-sub-row">
+              <label class="transform-badge-ques">b) Nghi vấn / Câu hỏi (?)</label>
+              <input type="text" id="tf-ques-inp-${idx}" class="transform-input" placeholder="VD: Did they arrive...?">
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap">
+              <button class="btn btn-p" onclick="window.checkSentenceTransformation(${idx}, '${esc(item.negativeAnswer || '')}', '${esc(item.negativeAlt || '')}', '${esc(item.questionAnswer || '')}')">✅ Kiểm tra câu</button>
+              <button class="btn btn-sm" onclick="window.toggleTransformAnswer(${idx})" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1">👁️ Xem đáp án chuẩn</button>
+            </div>
+
+            <div id="tf-fb-${idx}" class="fb" style="display:none;margin-top:10px"></div>
+            <div id="tf-ans-box-${idx}" class="sample-answer-reveal" style="display:none">
+              <div><b>a) Phủ định (-):</b> ${esc(item.negativeAnswer || '')} ${item.negativeAlt ? `<i>(hoặc: ${esc(item.negativeAlt)})</i>` : ''}</div>
+              <div style="margin-top:4px"><b>b) Nghi vấn (?):</b> ${esc(item.questionAnswer || '')}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } else if (type === 'scramble') {
+    const items = scrambleGroup?.items || [];
+    subviewHtml = `
+      <div style="display:flex;flex-direction:column;gap:18px">
+        ${items.map((item, idx) => {
           const wordsList = item.words || item.correctSentence?.split(/\s+/) || [];
           const shuffled = [...wordsList].sort(() => Math.random() - 0.5);
           return `
@@ -2840,10 +3168,10 @@ function loadWritingView(type) {
       </div>
     `;
   } else if (type === 'error_fix') {
-    const errorGroup = wrtData.find(w => w.id?.includes('error_fix')) || { items: [] };
-    workspace.innerHTML = `
+    const items = errorGroup?.items || [];
+    subviewHtml = `
       <div style="display:flex;flex-direction:column;gap:18px">
-        ${(errorGroup.items || []).map((item, idx) => `
+        ${items.map((item, idx) => `
           <div class="card" style="margin:0;border-left:4px solid #f59e0b">
             <div style="font-weight:700;font-size:15px;margin-bottom:6px;color:#1e293b">Câu ${idx + 1}: Tìm và sửa lỗi sai trong câu</div>
             <div style="font-size:16px;color:#1e293b;padding:12px;background:#fffbeb;border-radius:8px;margin-bottom:12px;border:1px solid #fef3c7">
@@ -2866,8 +3194,71 @@ function loadWritingView(type) {
       </div>
     `;
   }
+
+  workspace.innerHTML = `
+    <div class="skill-subnav-bar">
+      <button class="skill-subnav-btn ${type === 'transformation' ? 'active' : ''}" onclick="window.selectWritingTab('transformation')">🔄 Ex 3. Chuyển Đổi Câu (Negative & Question)</button>
+      <button class="skill-subnav-btn ${type === 'scramble' ? 'active' : ''}" onclick="window.selectWritingTab('scramble')">🧩 Ex 4. Sắp Xếp Từ (Reorder Words)</button>
+      <button class="skill-subnav-btn ${type === 'error_fix' ? 'active' : ''}" onclick="window.selectWritingTab('error_fix')">🔍 Sửa Lỗi Ngữ Pháp</button>
+    </div>
+
+    <div>
+      ${subviewHtml}
+    </div>
+  `;
   typesetMath(workspace);
 }
+
+function cleanSentenceText(text) {
+  return String(text || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[.,/#!$%^&*;:{}=\-_`~()?]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+window.checkSentenceTransformation = function(idx, negAns, negAlt, quesAns) {
+  const negInp = document.getElementById(`tf-neg-inp-${idx}`);
+  const quesInp = document.getElementById(`tf-ques-inp-${idx}`);
+  const fb = document.getElementById(`tf-fb-${idx}`);
+  if (!negInp || !quesInp || !fb) return;
+
+  const userNeg = cleanSentenceText(negInp.value);
+  const userQues = cleanSentenceText(quesInp.value);
+
+  const cleanNeg1 = cleanSentenceText(negAns);
+  const cleanNeg2 = cleanSentenceText(negAlt);
+  const cleanQues = cleanSentenceText(quesAns);
+
+  const isNegCorrect = (userNeg && (userNeg === cleanNeg1 || userNeg === cleanNeg2 || userNeg.replace("n't", " not") === cleanNeg1.replace("n't", " not")));
+  const isQuesCorrect = (userQues && userQues === cleanQues);
+
+  negInp.className = `transform-input ${isNegCorrect ? 'correct' : 'wrong'}`;
+  quesInp.className = `transform-input ${isQuesCorrect ? 'correct' : 'wrong'}`;
+
+  fb.style.display = 'block';
+  if (isNegCorrect && isQuesCorrect) {
+    fb.className = 'fb fb-ok';
+    fb.innerHTML = '🎉 <b>Xuất sắc!</b> Cả 2 câu phủ định và nghi vấn đều chuyển đổi chính xác.';
+    playSuccessSound();
+    addXP(20, 'Chuyển đổi câu đúng ngữ pháp');
+  } else if (isNegCorrect || isQuesCorrect) {
+    fb.className = 'fb fb-bad';
+    fb.innerHTML = `⚠️ <b>Đúng 1 phần:</b> Bạn đã làm đúng ${isNegCorrect ? 'câu Phủ định (-)' : 'câu Nghi vấn (?)'}. Hãy kiểm tra lại câu còn lại nhé!`;
+    playWrongSound();
+  } else {
+    fb.className = 'fb fb-bad';
+    fb.innerHTML = '❌ <b>Chưa chính xác.</b> Hãy kiểm tra lại trợ động từ (did/was/were...) hoặc bấm "Xem đáp án chuẩn".';
+    playWrongSound();
+  }
+};
+
+window.toggleTransformAnswer = function(idx) {
+  const box = document.getElementById(`tf-ans-box-${idx}`);
+  if (box) {
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  }
+};
 
 window.placedWordsState = {};
 
@@ -2965,6 +3356,7 @@ window.checkErrorFix = function(idx, errorWord, correctWord, explain) {
 
 function initLanguageFocus() {
   currentCardIdx = 0;
+  if (!window._langTab) window._langTab = 'past_form';
   loadLanguageFocusView();
 }
 
@@ -2972,19 +3364,37 @@ function loadLanguageFocusView() {
   const workspace = document.getElementById('lang-workspace');
   if (!workspace || !currentUnit) return;
 
+  const tab = window._langTab || 'past_form';
   const langObj = getUnitSkillObj(currentUnit, 'languageFocus');
-  const fCards = safeArray(langObj?.flashcards, []);
-  const currentCard = fCards[currentCardIdx] || { word: 'Practice', meaning: 'Luyện tập', ipa: '/ˈpræk.tɪs/', pos: 'noun' };
+
+  let bodyContent = '';
+  if (tab === 'past_form') {
+    const verbs = langObj?.pastFormVerbs || [
+      { infinitive: 'go', past: 'went', meaning: 'đi' },
+      { infinitive: 'see', past: 'saw', meaning: 'thấy' },
+      { infinitive: 'buy', past: 'bought', meaning: 'mua' }
+    ];
+    bodyContent = renderPastFormVerbsView(verbs);
+  } else if (tab === 'cards') {
+    const fCards = safeArray(langObj?.flashcards, []);
+    const currentCard = fCards[currentCardIdx] || fCards[0] || { word: 'Practice', meaning: 'Luyện tập', ipa: '/ˈpræk.tɪs/', pos: 'noun' };
+    bodyContent = renderFlashcardsView(currentCard, fCards.length || 1);
+  } else if (tab === 'match') {
+    bodyContent = renderMatchPuzzleView();
+  } else if (tab === 'quiz') {
+    bodyContent = renderGrammarQuizView();
+  }
 
   workspace.innerHTML = `
-    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px">
-      <button class="btn ${window._langTab === 'cards' || !window._langTab ? 'btn-p' : ''}" onclick="window.switchLangSubTab('cards')">🎴 Thẻ Từ Vựng 3D</button>
-      <button class="btn ${window._langTab === 'match' ? 'btn-p' : ''}" onclick="window.switchLangSubTab('match')">🧩 Nối Từ & Thành Ngữ</button>
-      <button class="btn ${window._langTab === 'quiz' ? 'btn-p' : ''}" onclick="window.switchLangSubTab('quiz')">⚡ Thử Thách Ngữ Pháp</button>
+    <div class="skill-subnav-bar" style="justify-content:center">
+      <button class="skill-subnav-btn ${tab === 'past_form' ? 'active' : ''}" onclick="window.switchLangSubTab('past_form')">📝 Ex 1. Bảng Động Từ Quá Khứ (Past Form)</button>
+      <button class="skill-subnav-btn ${tab === 'quiz' ? 'active' : ''}" onclick="window.switchLangSubTab('quiz')">⚡ Ex 2. Thử Thách Ngữ Pháp (Grammar Quiz)</button>
+      <button class="skill-subnav-btn ${tab === 'match' ? 'active' : ''}" onclick="window.switchLangSubTab('match')">🧩 Nối Từ & Thành Ngữ</button>
+      <button class="skill-subnav-btn ${tab === 'cards' ? 'active' : ''}" onclick="window.switchLangSubTab('cards')">🎴 Thẻ Từ Vựng 3D</button>
     </div>
 
     <div id="lang-subtab-container">
-      ${renderFlashcardsView(currentCard, fCards.length || 1)}
+      ${bodyContent}
     </div>
   `;
   typesetMath(workspace);
@@ -2992,18 +3402,81 @@ function loadLanguageFocusView() {
 
 window.switchLangSubTab = function(tab) {
   window._langTab = tab;
-  const container = document.getElementById('lang-subtab-container');
-  if (!container || !currentUnit) return;
+  loadLanguageFocusView();
+};
 
-  if (tab === 'cards') {
-    const fCards = currentUnit.languageFocus?.flashcards || [];
-    container.innerHTML = renderFlashcardsView(fCards[currentCardIdx] || fCards[0], fCards.length);
-  } else if (tab === 'match') {
-    container.innerHTML = renderMatchPuzzleView();
-  } else if (tab === 'quiz') {
-    container.innerHTML = renderGrammarQuizView();
+function renderPastFormVerbsView(verbs) {
+  if (!verbs || !verbs.length) return '<div class="empty">Chưa có bảng động từ quá khứ trong Unit này.</div>';
+
+  return `
+    <div class="past-form-table-wrap" style="max-width:800px;margin:0 auto">
+      <div style="padding:16px 20px;background:#f8fafc;border-bottom:1.5px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-weight:800;font-size:16px;color:#1e293b">📝 Exercise 1. Fill in the Past Form (Điền dạng Quá khứ của Động từ)</div>
+          <div style="font-size:12.5px;color:#64748b">Gõ dạng Quá khứ đơn (Past Simple V2) cho mỗi động từ nguyên thể bên dưới:</div>
+        </div>
+        <button class="btn btn-p" onclick="window.checkAllPastFormVerbs()">✅ Kiểm tra toàn bảng</button>
+      </div>
+
+      <table class="past-form-table">
+        <thead>
+          <tr>
+            <th style="width:50px;text-align:center">#</th>
+            <th>Động từ nguyên thể (Infinitive)</th>
+            <th>Dạng quá khứ (Past Form V2)</th>
+            <th>Nghĩa tiếng Việt</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${verbs.map((v, idx) => `
+            <tr id="verb-row-${idx}">
+              <td style="text-align:center;font-weight:800;color:#6366f1">${idx + 1}</td>
+              <td style="font-weight:700;color:#1e293b;font-size:15px"><b>${esc(v.infinitive || '')}</b></td>
+              <td>
+                <input type="text" class="verb-input-cell" id="verb-inp-${idx}" data-correct="${esc(v.past || '')}" placeholder="Nhập dạng V2...">
+              </td>
+              <td style="color:#475569;font-size:13.5px">${esc(v.meaning || '')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div style="padding:16px 20px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <button class="btn btn-p" onclick="window.checkAllPastFormVerbs()">✅ Kiểm tra toàn bảng</button>
+        <div id="verbs-table-fb" class="fb" style="display:none;margin:0"></div>
+      </div>
+    </div>
+  `;
+}
+
+window.checkAllPastFormVerbs = function() {
+  const inputs = document.querySelectorAll('[id^="verb-inp-"]');
+  const fb = document.getElementById('verbs-table-fb');
+  if (!inputs.length || !fb) return;
+
+  let correctCount = 0;
+  inputs.forEach((inp) => {
+    const val = inp.value.trim().toLowerCase();
+    const correct = (inp.dataset.correct || '').trim().toLowerCase();
+    if (val && val === correct) {
+      inp.className = 'verb-input-cell correct';
+      correctCount++;
+    } else {
+      inp.className = 'verb-input-cell wrong';
+    }
+  });
+
+  fb.style.display = 'block';
+  if (correctCount === inputs.length) {
+    fb.className = 'fb fb-ok';
+    fb.innerHTML = `🎉 <b>Hoàn hảo!</b> Bạn đã điền chính xác toàn bộ ${correctCount}/${inputs.length} động từ thì quá khứ.`;
+    playSuccessSound();
+    addXP(25, 'Điền đúng bảng động từ quá khứ');
+  } else {
+    fb.className = 'fb fb-bad';
+    fb.innerHTML = `⚠️ <b>Kết quả:</b> Bạn đã điền đúng ${correctCount}/${inputs.length} động từ. Hãy xem các ô màu đỏ để sửa lại nhé!`;
+    playWrongSound();
   }
-  typesetMath(container);
 };
 
 function renderFlashcardsView(card, total) {

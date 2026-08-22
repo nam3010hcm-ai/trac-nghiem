@@ -722,12 +722,15 @@ export function switchDesignerSkillTab(skill) {
             <button type="button" class="btn btn-sm" onclick="window.addListeningDesignerExercise('dictation')" style="background:#fff;border:1px solid #86efac;color:#15803d;font-size:12px">✍️ Chép Chính Tả (Dictation)</button>
             <button type="button" class="btn btn-sm" onclick="window.addListeningDesignerExercise('gap_fill')" style="background:#fff;border:1px solid #fde68a;color:#b45309;font-size:12px">🔤 Điền Chỗ Trống (Gap Fill)</button>
             <button type="button" class="btn btn-sm" onclick="window.addListeningDesignerExercise('true_false')" style="background:#fff;border:1px solid #fbcfe8;color:#be185d;font-size:12px">⚖️ Đúng / Sai (True/False)</button>
+            <button type="button" class="btn btn-sm" onclick="window.addListeningDesignerExercise('short_answer')" style="background:#fff;border:1px solid #7dd3fc;color:#0284c7;font-size:12px">💬 Trả Lời Câu Hỏi (Short Answer)</button>
           </div>
         </div>
       </div>
     `;
   } else if (skill === 'reading') {
-    const read = (unit.reading && unit.reading[0]) || { passage: '', vocabulary: {}, image: '' };
+    const read = (unit.reading && unit.reading[0]) || { passage: '', vocabulary: {}, image: '', exercises: [] };
+    const exercises = read.exercises || [];
+
     contentWrap.innerHTML = `
       <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
         <div class="fg">
@@ -748,6 +751,25 @@ export function switchDesignerSkillTab(skill) {
         <div class="fg" style="margin-top:14px">
           <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">🔤 2. Danh Mục Tra Từ Nhanh (JSON Dictionary)</label>
           <textarea id="ud-read-vocab" class="designer-textarea" style="width:100%;min-height:100px;font-family:monospace;font-size:13px">${esc(JSON.stringify(read.vocabulary || {}, null, 2))}</textarea>
+        </div>
+
+        <!-- BÀI TẬP ĐỌC HIỂU TƯƠNG TÁC (MATCHING, MCQ, BACKWARD SPELLING) -->
+        <div style="margin-top:20px;border-top:1.5px solid #cbd5e1;padding-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+            <div>
+              <div style="font-size:14px;font-weight:800;color:#1e293b">🧩 3. Bài Tập Đọc Hiểu Tương Tác (Interactive Exercises)</div>
+              <div style="font-size:12px;color:#64748b">Bao gồm Nối từ 1-8 với định nghĩa a-h, Trắc nghiệm MCQ, và Backward Spelling</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('matching')" style="background:#fff;border:1px solid #818cf8;color:#4338ca;font-size:12px;font-weight:700">🧩 1. Nối Từ (Matching)</button>
+              <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('mcq')" style="background:#fff;border:1px solid #93c5fd;color:#1d4ed8;font-size:12px;font-weight:700">🔘 2. Trắc Nghiệm (MCQ)</button>
+              <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('backward_spelling')" style="background:#fff;border:1px solid #c084fc;color:#7e22ce;font-size:12px;font-weight:700">🔤 3. Backward Spelling</button>
+            </div>
+          </div>
+
+          <div id="ud-read-exercises-list" style="display:flex;flex-direction:column;gap:14px">
+            ${renderReadingDesignerExercises(exercises)}
+          </div>
         </div>
       </div>
     `;
@@ -912,58 +934,101 @@ export function switchDesignerSkillTab(skill) {
       </div>
     `;
   } else if (skill === 'writing') {
-    const wrt = (unit.writing && unit.writing[0]) || { items: [] };
-    const it1 = wrt.items?.[0] || { correctSentence: 'Learning English is fun and useful.', hint: 'Bắt đầu bằng Learning...', image: '' };
+    const wrtList = unit.writing || [];
+    const transformObj = wrtList.find(w => w.category === 'transformation' || w.id?.includes('transform')) || { items: [] };
+    const tf1 = transformObj.items?.[0] || { originalSentence: 'They arrived on time yesterday.', negativeAnswer: 'They did not arrive on time yesterday.', questionAnswer: 'Did they arrive on time yesterday?', hint: 'Past simple' };
+
+    const scrambleObj = wrtList.find(w => w.category === 'scramble' || w.id?.includes('scramble')) || wrtList[0] || { items: [] };
+    const sc1 = scrambleObj.items?.[0] || { correctSentence: 'Although it rained heavily, we decided to go camping.', hint: 'Bắt đầu bằng Although...', image: '' };
+
     contentWrap.innerHTML = `
-      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
-        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:#1e293b">✍️ Bài Tập Xếp Từ Thành Câu (Sentence Scramble)</div>
-        <div class="fg">
-          <label>Câu hoàn chỉnh (Hệ thống sẽ tự động xáo trộn từ cho học sinh) *</label>
-          <input type="text" id="ud-wrt-sentence" style="font-size:15px" value="${esc(it1.correctSentence || '')}">
-        </div>
-        <div class="fg">
-          <label>Gợi ý cấu trúc</label>
-          <input type="text" id="ud-wrt-hint" value="${esc(it1.hint || '')}">
-        </div>
-        <div class="fg">
-          <label>🖼️ Hình ảnh minh họa bài tập (Tùy chọn)</label>
-          <div style="display:flex;gap:8px;">
-            <input type="text" id="ud-wrt-image" placeholder="VD: https://... hoặc chọn từ thư viện" value="${esc(it1.image || '')}">
-            <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('ud-wrt-image', 'ud-wrt-img-preview')" style="white-space:nowrap;">📂 Thư viện ảnh</button>
+      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column;gap:18px">
+        <!-- 1. EXERCISE 3: MAKE SENTENCES NEGATIVE AND QUESTION -->
+        <div style="padding:14px;background:#ffffff;border:1.5px solid #ddd6fe;border-radius:10px">
+          <div style="font-size:14px;font-weight:800;color:#6d28d9;margin-bottom:6px">🔄 Exercise 3. Chuyển Đổi Câu (Make Sentences Negative & Question)</div>
+          <div class="fg" style="margin-bottom:8px">
+            <label style="font-size:12px;font-weight:700">Câu gốc khẳng định (+)</label>
+            <input type="text" id="ud-wrt-tf-orig" value="${esc(tf1.originalSentence || '')}" placeholder="VD: They arrived at the airport on time yesterday.">
           </div>
-          <div id="ud-wrt-img-preview" style="margin-top:6px">${it1.image ? `<img src="${it1.image}" style="max-height:140px;border-radius:6px;border:1px solid #cbd5e1">` : ''}</div>
+          <div class="grid2" style="margin-bottom:8px">
+            <div class="fg" style="margin:0">
+              <label style="font-size:11px;font-weight:700;color:#dc2626">a) Đáp án Phủ định (-)</label>
+              <input type="text" id="ud-wrt-tf-neg" value="${esc(tf1.negativeAnswer || '')}" placeholder="VD: They did not arrive...">
+            </div>
+            <div class="fg" style="margin:0">
+              <label style="font-size:11px;font-weight:700;color:#2563eb">b) Đáp án Nghi vấn (?)</label>
+              <input type="text" id="ud-wrt-tf-ques" value="${esc(tf1.questionAnswer || '')}" placeholder="VD: Did they arrive...?">
+            </div>
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px">Gợi ý làm bài (Hint)</label>
+            <input type="text" id="ud-wrt-tf-hint" value="${esc(tf1.hint || '')}" placeholder="VD: Past Simple with did / didn't">
+          </div>
+        </div>
+
+        <!-- 2. EXERCISE 4: REORDER WORDS TO MAKE MEANINGFUL SENTENCES -->
+        <div style="padding:14px;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:10px">
+          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:6px">🧩 Exercise 4. Sắp Xếp Từ Thành Câu (Reorder the Words)</div>
+          <div class="fg" style="margin-bottom:8px">
+            <label style="font-size:12px;font-weight:700">Câu hoàn chỉnh chuẩn (Hệ thống sẽ tự xáo trộn từ) *</label>
+            <input type="text" id="ud-wrt-scramble-sentence" style="font-size:14px" value="${esc(sc1.correctSentence || '')}" placeholder="VD: Although it rained heavily, we decided to go camping.">
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px">Gợi ý cấu trúc (Hint)</label>
+            <input type="text" id="ud-wrt-scramble-hint" value="${esc(sc1.hint || '')}" placeholder="VD: Mệnh đề nhượng bộ bắt đầu bằng Although...">
+          </div>
         </div>
       </div>
     `;
   } else if (skill === 'languageFocus') {
-    const lf = unit.languageFocus || { flashcards: [] };
+    const lf = unit.languageFocus || { pastFormVerbs: [], flashcards: [], matchPairs: [], grammarChallenge: [] };
+    const verbs = lf.pastFormVerbs || [
+      { infinitive: 'go', past: 'went', meaning: 'đi' },
+      { infinitive: 'see', past: 'saw', meaning: 'thấy' },
+      { infinitive: 'buy', past: 'bought', meaning: 'mua' }
+    ];
     const fc = lf.flashcards?.[0] || { word: 'Sustainable', pos: 'adjective', ipa: '/səˈsteɪ.nə.bəl/', meaning: 'Bền vững', example: 'Solar energy is sustainable.', image: '' };
+
     contentWrap.innerHTML = `
-      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
-        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:#1e293b">🎴 Thẻ Từ Vựng 3D (3D Flashcard với Hình Ảnh Minh Họa)</div>
-        <div class="grid2">
-          <div class="fg" style="margin:0"><label>Từ vựng (Word) *</label><input id="ud-fc-word" value="${esc(fc.word || '')}"></div>
-          <div class="fg" style="margin:0"><label>Từ loại (noun/verb/adj)</label><input id="ud-fc-pos" value="${esc(fc.pos || '')}"></div>
+      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column;gap:18px">
+        <!-- 1. EXERCISE 1: PAST FORM VERBS TABLE -->
+        <div style="padding:14px;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:10px">
+          <div style="font-size:14px;font-weight:800;color:#1e40af;margin-bottom:4px">📝 Exercise 1. Fill in the Past Form (Bảng Động Từ Quá Khứ)</div>
+          <div style="font-size:12px;color:#64748b;margin-bottom:8px">Định dạng JSON danh sách động từ nguyên thể, quá khứ (V2) và ý nghĩa:</div>
+          <textarea id="ud-lf-past-verbs" class="designer-textarea" style="width:100%;min-height:110px;font-family:monospace;font-size:13px">${esc(JSON.stringify(verbs, null, 2))}</textarea>
         </div>
-        <div class="grid2" style="margin-top:10px">
-          <div class="fg" style="margin:0"><label>Phiên âm IPA</label><input id="ud-fc-ipa" value="${esc(fc.ipa || '')}"></div>
-          <div class="fg" style="margin:0"><label>Nghĩa tiếng Việt *</label><input id="ud-fc-meaning" value="${esc(fc.meaning || '')}"></div>
-        </div>
-        <div class="fg" style="margin-top:10px">
-          <label>🖼️ URL Hình ảnh minh họa cho thẻ 3D</label>
-          <div style="display:flex;gap:8px;">
-            <input id="ud-fc-image" placeholder="VD: https://images.unsplash.com/photo-... hoặc chọn từ thư viện" value="${esc(fc.image || '')}">
-            <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('ud-fc-image', 'ud-fc-img-preview')" style="white-space:nowrap;">📂 Thư viện ảnh</button>
+
+        <!-- 2. 3D FLASHCARDS -->
+        <div style="padding:14px;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:10px">
+          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:8px">🎴 Thẻ Từ Vựng 3D (Flashcard Minh Họa)</div>
+          <div class="grid2">
+            <div class="fg" style="margin:0"><label>Từ vựng (Word) *</label><input id="ud-fc-word" value="${esc(fc.word || '')}"></div>
+            <div class="fg" style="margin:0"><label>Từ loại (noun/verb/adj)</label><input id="ud-fc-pos" value="${esc(fc.pos || '')}"></div>
           </div>
-          <div id="ud-fc-img-preview" style="margin-top:6px">${fc.image ? `<img src="${fc.image}" style="max-height:140px;border-radius:6px;border:1px solid #cbd5e1">` : ''}</div>
-        </div>
-        <div class="fg" style="margin-top:10px">
-          <label>Ví dụ thực tế (Example)</label>
-          <input id="ud-fc-example" value="${esc(fc.example || '')}">
+          <div class="grid2" style="margin-top:8px">
+            <div class="fg" style="margin:0"><label>Phiên âm IPA</label><input id="ud-fc-ipa" value="${esc(fc.ipa || '')}"></div>
+            <div class="fg" style="margin:0"><label>Nghĩa tiếng Việt *</label><input id="ud-fc-meaning" value="${esc(fc.meaning || '')}"></div>
+          </div>
+          <div class="fg" style="margin-top:8px">
+            <label>🖼️ URL Hình ảnh minh họa cho thẻ 3D</label>
+            <div style="display:flex;gap:8px;">
+              <input id="ud-fc-image" placeholder="VD: https://images.unsplash.com/... hoặc chọn từ thư viện" value="${esc(fc.image || '')}">
+              <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('ud-fc-image', 'ud-fc-img-preview')" style="white-space:nowrap;">📂 Thư viện ảnh</button>
+            </div>
+            <div id="ud-fc-img-preview" style="margin-top:6px">${fc.image ? `<img src="${fc.image}" style="max-height:120px;border-radius:6px;border:1px solid #cbd5e1">` : ''}</div>
+          </div>
+          <div class="fg" style="margin-top:8px">
+            <label>Ví dụ câu thực tế (Example)</label>
+            <input id="ud-fc-example" value="${esc(fc.example || '')}">
+          </div>
         </div>
       </div>
     `;
   }
+
+  // Tự động căn chỉnh chiều cao textareas để hiển thị toàn bộ nội dung
+  autoFitAllDesignerTextareas();
+}
 
   // Tự động căn chỉnh chiều cao textareas để hiển thị toàn bộ nội dung
   autoFitAllDesignerTextareas();
@@ -1004,11 +1069,7 @@ export function renderListeningDesignerExercises(exercises = []) {
               <option value="0" ${ex.answer === 0 ? 'selected' : ''}>A. Phương án 1</option>
               <option value="1" ${ex.answer === 1 ? 'selected' : ''}>B. Phương án 2</option>
               <option value="2" ${ex.answer === 2 ? 'selected' : ''}>C. Phương án 3</option>
-              <option value="3" ${ex.answer === 3 ? 'selected' : ''}>D. Phương án 4</option>
-            </select>
-          </div>
-          <div class="fg" style="margin:0">
-            <label style="font-size:11px">Giải thích chi tiết (Explain)</label>
+<label style="font-size:11px">Giải thích chi tiết (Explain)</label>
             <input type="text" class="lis-ex-explain" value="${esc(ex.explain || '')}" placeholder="VD: The passenger says: I'm flying to...">
           </div>
         </div>
@@ -1061,6 +1122,28 @@ export function renderListeningDesignerExercises(exercises = []) {
           <div class="fg" style="margin:0">
             <label style="font-size:11px">Giải thích (Explain)</label>
             <input type="text" class="lis-ex-tf-explain" value="${esc(ex.explain || '')}" placeholder="VD: The passenger specifically asked for an aisle seat.">
+          </div>
+        </div>
+      `;
+    } else if (type === 'short_answer') {
+      typeBadge = `<span class="ex-badge" style="background:#e0f2fe;color:#0369a1;font-weight:800">💬 Trả lời câu hỏi (Short Answer)</span>`;
+      bodyHtml = `
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700">Câu hỏi nghe hiểu *</label>
+          <input type="text" class="lis-ex-sa-q" value="${esc(ex.question || '')}" placeholder="VD: What time does flight BA178 depart?">
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:11px;font-weight:700;color:#16a34a">Đáp án mẫu (Sample Answer) *</label>
+          <input type="text" class="lis-ex-sa-sample" value="${esc(ex.sampleAnswer || '')}" placeholder="VD: Flight BA178 departs at 10:30.">
+        </div>
+        <div class="grid2" style="margin:0">
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px">Từ khóa trọng tâm (phân cách bằng dấu phẩy)</label>
+            <input type="text" class="lis-ex-sa-keywords" value="${esc((ex.keywords || []).join(', '))}" placeholder="VD: BA178, 10:30">
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px">Gợi ý trả lời (Hint)</label>
+            <input type="text" class="lis-ex-sa-hint" value="${esc(ex.hint || '')}" placeholder="VD: Chú ý nghe thông tin giờ khởi hành">
           </div>
         </div>
       `;
@@ -1161,18 +1244,16 @@ window.handleUploadListeningVideo = async function(inputEl) {
 };
 
 window.updateListeningAudioPreview = function(url) {
-  const preview = document.getElementById('ud-lis-audio-preview');
-  if (!preview) return;
-  const u = String(url || '').trim();
-  if (u) {
-    preview.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
-        <audio controls src="${esc(u)}" style="height:36px;flex:1"></audio>
-        <button type="button" class="btn btn-sm" onclick="window.clearListeningAudio()" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-size:11px">🗑️ Xóa</button>
-      </div>
+  const previewWrap = document.getElementById('ud-lis-audio-preview');
+  if (!previewWrap) return;
+  if (url) {
+    previewWrap.innerHTML = `
+      <audio controls src="${url}" style="width:100%;height:36px;margin-top:4px">
+        Trình duyệt không hỗ trợ thẻ audio.
+      </audio>
     `;
   } else {
-    preview.innerHTML = '';
+    previewWrap.innerHTML = '';
   }
 };
 
@@ -1188,18 +1269,24 @@ window.clearListeningAudio = function() {
 };
 
 window.updateListeningVideoPreview = function(url) {
-  const preview = document.getElementById('ud-lis-video-preview');
-  if (!preview) return;
-  const u = String(url || '').trim();
-  if (u) {
-    preview.innerHTML = `
-      <div style="margin-top:6px">
-        <video controls playsinline src="${esc(u)}" style="max-width:100%;max-height:220px;border-radius:8px;border:1px solid #cbd5e1;background:#000;display:block"></video>
-        <div style="margin-top:6px"><button type="button" class="btn btn-sm" onclick="window.clearListeningVideo()" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-size:11px">🗑️ Xóa Video</button></div>
-      </div>
-    `;
+  const previewWrap = document.getElementById('ud-lis-video-preview');
+  if (!previewWrap) return;
+  if (url) {
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+      const ytId = match ? match[1] : '';
+      previewWrap.innerHTML = ytId ? `
+        <iframe width="100%" height="200" src="https://www.youtube.com/embed/${ytId}" frameborder="0" allowfullscreen style="border-radius:8px;margin-top:4px"></iframe>
+      ` : '<div style="font-size:12px;color:#dc2626">URL YouTube không hợp lệ</div>';
+    } else {
+      previewWrap.innerHTML = `
+        <video controls src="${url}" style="width:100%;max-height:220px;background:#000;border-radius:8px;margin-top:4px">
+          Trình duyệt không hỗ trợ thẻ video.
+        </video>
+      `;
+    }
   } else {
-    preview.innerHTML = '';
+    previewWrap.innerHTML = '';
   }
 };
 
@@ -1215,8 +1302,7 @@ window.clearListeningVideo = function() {
 };
 
 window.testListeningTTS = function() {
-  const textInp = document.getElementById('ud-lis-text');
-  const text = textInp?.value.trim();
+  const text = document.getElementById('ud-lis-text')?.value.trim();
   if (!text) {
     alert("Vui lòng nhập đoạn văn bản tiếng Anh trước khi nghe thử!");
     return;
@@ -1293,6 +1379,22 @@ function extractListeningExercisesFromDOM() {
           explain: exp
         });
       }
+    } else if (type === 'short_answer') {
+      const q = card.querySelector('.lis-ex-sa-q')?.value.trim() || '';
+      const sample = card.querySelector('.lis-ex-sa-sample')?.value.trim() || '';
+      const kwRaw = card.querySelector('.lis-ex-sa-keywords')?.value.trim() || '';
+      const hint = card.querySelector('.lis-ex-sa-hint')?.value.trim() || '';
+      if (q || sample) {
+        exercises.push({
+          id: `ex_sa_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          type: 'short_answer',
+          title: 'Exercise 3. Answer the question',
+          question: q,
+          sampleAnswer: sample,
+          keywords: kwRaw ? kwRaw.split(',').map(s => s.trim()).filter(Boolean) : [],
+          hint: hint
+        });
+      }
     }
   });
   return exercises;
@@ -1312,6 +1414,8 @@ window.addListeningDesignerExercise = function(type) {
     newEx = { type: 'gap_fill', sentence: '', answers: [], optionsBank: [] };
   } else if (type === 'true_false') {
     newEx = { type: 'true_false', question: '', answer: true, explain: '' };
+  } else if (type === 'short_answer') {
+    newEx = { type: 'short_answer', question: '', sampleAnswer: '', keywords: [], hint: '' };
   }
   currentList.push(newEx);
   container.innerHTML = renderListeningDesignerExercises(currentList);
@@ -1323,6 +1427,207 @@ window.deleteListeningDesignerExercise = function(idx) {
     currentList.splice(idx, 1);
     const container = document.getElementById('ud-lis-exercises-list');
     if (container) container.innerHTML = renderListeningDesignerExercises(currentList);
+  }
+};
+
+// -------------------------------------------------------------------------
+// HELPER METHODS CHO DESIGNER READING (MATCHING, MCQ, BACKWARD SPELLING)
+// -------------------------------------------------------------------------
+export function renderReadingDesignerExercises(exercises = []) {
+  if (!exercises || !exercises.length) {
+    return `<div style="text-align:center;padding:16px;color:#64748b;font-size:13px;background:#f1f5f9;border-radius:8px">📭 Chưa có bài tập đọc hiểu nào. Bấm nút bên trên để thêm bài tập Nối từ, Trắc nghiệm, hoặc Backward Spelling.</div>`;
+  }
+
+  return exercises.map((ex, idx) => {
+    const type = ex.type || 'mcq';
+    let typeBadge = '';
+    let bodyHtml = '';
+
+    if (type === 'matching') {
+      typeBadge = `<span class="ex-badge" style="background:#e0e7ff;color:#4338ca;font-weight:800">🧩 Nối Từ với Định Nghĩa (Matching 1-8/1-9)</span>`;
+      const pairs = ex.pairs || [
+        { id: 1, word: 'confined', letter: 'a', definition: 'limited or restricted to an area' },
+        { id: 2, word: 'integral', letter: 'b', definition: 'essential or necessary' }
+      ];
+      bodyHtml = `
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700">Tiêu đề bài tập</label>
+          <input type="text" class="read-ex-match-title" value="${esc(ex.title || 'Exercise 1. Match the words/ phrases (1-8) with their definitions (a-h)')}">
+        </div>
+        <div class="fg" style="margin:0">
+          <label style="font-size:11px;font-weight:700">Danh sách các cặp từ và định nghĩa (JSON Pairs) *</label>
+          <textarea class="read-ex-match-pairs" style="width:100%;min-height:90px;font-family:monospace;font-size:12px">${esc(JSON.stringify(pairs, null, 2))}</textarea>
+        </div>
+      `;
+    } else if (type === 'backward_spelling') {
+      typeBadge = `<span class="ex-badge" style="background:#f3e8ff;color:#7e22ce;font-weight:800">🔤 Backward Spelling (Đánh vần / Xếp chữ)</span>`;
+      bodyHtml = `
+        <div class="grid2" style="margin-bottom:8px">
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:700;color:#16a34a">Từ vựng mục tiêu (Target Word) *</label>
+            <input type="text" class="read-ex-spell-target" value="${esc(ex.targetWord || '')}" placeholder="VD: AUTONOMOUS" style="font-weight:800;text-transform:uppercase">
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px">Gợi ý số chữ cái / ký tự đầu (Hint)</label>
+            <input type="text" class="read-ex-spell-hint" value="${esc(ex.hint || '')}" placeholder="VD: 10 chữ cái • Bắt đầu bằng chữ A">
+          </div>
+        </div>
+        <div class="fg" style="margin:0">
+          <label style="font-size:11px;font-weight:700">Gợi ý định nghĩa / Ý nghĩa (Clue) *</label>
+          <input type="text" class="read-ex-spell-clue" value="${esc(ex.clue || '')}" placeholder="VD: Operating independently without human intervention">
+        </div>
+      `;
+    } else if (type === 'mcq' || type === 'tfng') {
+      typeBadge = `<span class="ex-badge mcq-badge">🔘 Trắc nghiệm đọc hiểu (MCQ)</span>`;
+      const opts = ex.options || ['Option A', 'Option B', 'Option C', 'Option D'];
+      bodyHtml = `
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700">Nội dung câu hỏi đọc hiểu *</label>
+          <input type="text" class="read-ex-q" value="${esc(ex.question || '')}" placeholder="VD: According to paragraph 1, how do streaming services use AI?">
+        </div>
+        <div class="grid2" style="margin-bottom:8px">
+          <div class="fg" style="margin:0"><label style="font-size:11px">Đáp án A</label><input type="text" class="read-ex-opt-0" value="${esc(opts[0] || '')}"></div>
+          <div class="fg" style="margin:0"><label style="font-size:11px">Đáp án B</label><input type="text" class="read-ex-opt-1" value="${esc(opts[1] || '')}"></div>
+        </div>
+        <div class="grid2" style="margin-bottom:8px">
+          <div class="fg" style="margin:0"><label style="font-size:11px">Đáp án C</label><input type="text" class="read-ex-opt-2" value="${esc(opts[2] || '')}"></div>
+          <div class="fg" style="margin:0"><label style="font-size:11px">Đáp án D</label><input type="text" class="read-ex-opt-3" value="${esc(opts[3] || '')}"></div>
+        </div>
+        <div class="grid2" style="margin:0">
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:700;color:#16a34a">Đáp án đúng *</label>
+            <select class="read-ex-ans" style="padding:6px 10px;border-radius:6px;border:1.5px solid #86efac;background:#f0fdf4;font-weight:700">
+              <option value="0" ${ex.answer === 0 ? 'selected' : ''}>A. Phương án 1</option>
+              <option value="1" ${ex.answer === 1 ? 'selected' : ''}>B. Phương án 2</option>
+              <option value="2" ${ex.answer === 2 ? 'selected' : ''}>C. Phương án 3</option>
+              <option value="3" ${ex.answer === 3 ? 'selected' : ''}>D. Phương án 4</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px">Giải thích / Dẫn chứng trong bài</label>
+            <input type="text" class="read-ex-explain" value="${esc(ex.explain || '')}" placeholder="VD: Đoạn 1 nêu...">
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="card ud-read-ex-card" data-type="${type}" id="ud-read-ex-${idx}" style="margin:0;padding:14px;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px dashed #cbd5e1;padding-bottom:6px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-weight:800;font-size:12px;color:#0f172a">Bài tập ${idx + 1}:</span>
+            ${typeBadge}
+          </div>
+          <button type="button" class="btn btn-sm" onclick="window.deleteReadingDesignerExercise(${idx})" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-size:11px;padding:2px 8px">🗑️ Xóa</button>
+        </div>
+        ${bodyHtml}
+      </div>
+    `;
+  }).join('');
+}
+
+function extractReadingExercisesFromDOM() {
+  const cards = document.querySelectorAll('.ud-read-ex-card');
+  const exercises = [];
+
+  cards.forEach((card) => {
+    const type = card.dataset.type || 'mcq';
+    if (type === 'matching') {
+      const title = card.querySelector('.read-ex-match-title')?.value.trim() || 'Exercise 1. Match the words with definitions';
+      const pairsRaw = card.querySelector('.read-ex-match-pairs')?.value.trim();
+      let pairs = [];
+      try { pairs = JSON.parse(pairsRaw); } catch(e){}
+      if (pairs.length) {
+        exercises.push({
+          id: `read_match_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          type: 'matching',
+          title: title,
+          pairs: pairs
+        });
+      }
+    } else if (type === 'backward_spelling') {
+      const target = card.querySelector('.read-ex-spell-target')?.value.trim().toUpperCase() || '';
+      const clue = card.querySelector('.read-ex-spell-clue')?.value.trim() || '';
+      const hint = card.querySelector('.read-ex-spell-hint')?.value.trim() || '';
+      if (target && clue) {
+        exercises.push({
+          id: `read_spell_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          type: 'backward_spelling',
+          title: 'Exercise 3. Backward Spelling (Đánh vần & Giải đố từ vựng)',
+          targetWord: target,
+          clue: clue,
+          hint: hint
+        });
+      }
+    } else if (type === 'mcq') {
+      const q = card.querySelector('.read-ex-q')?.value.trim() || '';
+      const o0 = card.querySelector('.read-ex-opt-0')?.value.trim() || '';
+      const o1 = card.querySelector('.read-ex-opt-1')?.value.trim() || '';
+      const o2 = card.querySelector('.read-ex-opt-2')?.value.trim() || '';
+      const o3 = card.querySelector('.read-ex-opt-3')?.value.trim() || '';
+      const ans = parseInt(card.querySelector('.read-ex-ans')?.value || '0', 10);
+      const exp = card.querySelector('.read-ex-explain')?.value.trim() || '';
+      if (q || o0 || o1) {
+        exercises.push({
+          id: `read_mcq_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          type: 'mcq',
+          title: 'Exercise 2. Choose the best answer',
+          question: q,
+          options: [o0, o1, o2, o3].filter(Boolean),
+          answer: isNaN(ans) ? 0 : ans,
+          explain: exp
+        });
+      }
+    }
+  });
+
+  return exercises;
+}
+
+window.addReadingDesignerExercise = function(type) {
+  const container = document.getElementById('ud-read-exercises-list');
+  if (!container) return;
+
+  const currentList = extractReadingExercisesFromDOM();
+  let newEx = { type };
+  if (type === 'matching') {
+    newEx = {
+      type: 'matching',
+      title: 'Exercise 1. Match the words/ phrases (1-8) with their definitions (a-h)',
+      pairs: [
+        { id: 1, word: 'confined', letter: 'a', definition: 'limited or restricted to a particular area' },
+        { id: 2, word: 'integral', letter: 'b', definition: 'essential or necessary for completeness' }
+      ]
+    };
+  } else if (type === 'backward_spelling') {
+    newEx = {
+      type: 'backward_spelling',
+      title: 'Exercise 3. Backward Spelling (Đánh vần & Giải đố từ vựng)',
+      targetWord: 'AUTONOMOUS',
+      clue: 'Operating independently and having the freedom to act',
+      hint: '10 chữ cái • Bắt đầu bằng chữ A'
+    };
+  } else if (type === 'mcq') {
+    newEx = {
+      type: 'mcq',
+      title: 'Exercise 2. Choose the best answer from A, B, C, or D',
+      question: '',
+      options: ['', '', '', ''],
+      answer: 0,
+      explain: ''
+    };
+  }
+
+  currentList.push(newEx);
+  container.innerHTML = renderReadingDesignerExercises(currentList);
+};
+
+window.deleteReadingDesignerExercise = function(idx) {
+  const currentList = extractReadingExercisesFromDOM();
+  if (currentList[idx] && confirm("Bạn có chắc muốn xóa bài tập đọc hiểu này?")) {
+    currentList.splice(idx, 1);
+    const container = document.getElementById('ud-read-exercises-list');
+    if (container) container.innerHTML = renderReadingDesignerExercises(currentList);
   }
 };
 
@@ -1397,24 +1702,23 @@ window.addRoleplayDesignerTurn = function() {
 };
 
 window.deleteRoleplayDesignerTurn = function(idx) {
-  const card = document.getElementById(`rp-turn-card-${idx}`);
-  if (card && confirm("Bạn có chắc chắn muốn xóa lượt thoại này?")) {
-    card.remove();
+  const el = document.getElementById(`rp-turn-card-${idx}`);
+  if (el && confirm("Bạn có chắc muốn xóa lượt thoại này?")) {
+    el.remove();
   }
 };
 
 window.testRoleplayDesignerTTS = function(idx) {
-  const textInp = document.getElementById(`rp-turn-text-${idx}`);
-  const text = textInp?.value.trim();
-  if (!text) {
+  const txt = document.getElementById(`rp-turn-text-${idx}`)?.value.trim();
+  if (!txt) {
     alert("Vui lòng nhập câu tiếng Anh trước khi nghe thử!");
     return;
   }
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
+  const utter = new SpeechSynthesisUtterance(txt);
   utter.lang = 'en-US';
-  utter.rate = 0.95;
+  utter.rate = 0.92;
   window.speechSynthesis.speak(utter);
 };
 
@@ -1425,13 +1729,13 @@ window.handleUploadRoleplayVideo = async function(idx, inputEl) {
   const videoInp = document.getElementById(`rp-turn-video-${idx}`);
   if (!videoInp) return;
 
+  videoInp.value = "⏳ Đang tải video lên Supabase...";
   try {
-    videoInp.value = "⏳ Đang tải video lên máy chủ...";
-    const downloadURL = await uploadMediaFile(file, 'audio-bank'); // bucket video/audio
+    const downloadURL = await uploadMediaFile(file, 'video-bank');
     videoInp.value = downloadURL;
-    alert("✅ Đã tải video lên thành công!");
+    alert("✅ Đã tải video cho lượt thoại " + (idx + 1) + " thành công!");
   } catch (err) {
-    console.error("Lỗi upload video:", err);
+    console.error("Lỗi upload roleplay video:", err);
     videoInp.value = "";
     alert("❌ Lỗi tải video: " + (err.message || "Vui lòng kiểm tra dung lượng hoặc dán trực tiếp đường dẫn video online."));
   }
@@ -1469,6 +1773,8 @@ function syncCurrentDesignerSkillToDraft() {
     const passage = $('ud-read-passage')?.value.trim();
     const image = $('ud-read-image')?.value.trim();
     const vocabRaw = $('ud-read-vocab')?.value.trim();
+    const exercises = extractReadingExercisesFromDOM();
+
     if (!unit.reading) unit.reading = [];
     if (!unit.reading[0]) unit.reading[0] = { id: 'read_1', exercises: [] };
 
@@ -1476,6 +1782,9 @@ function syncCurrentDesignerSkillToDraft() {
     unit.reading[0].image = image || '';
     if (vocabRaw) {
       try { unit.reading[0].vocabulary = JSON.parse(vocabRaw); } catch(e){}
+    }
+    if (exercises.length) {
+      unit.reading[0].exercises = exercises;
     }
   } else if (currentDesignerSkill === 'speaking') {
     const mode = $('ud-spk-type')?.value || 'video_roleplay';
@@ -1540,17 +1849,56 @@ function syncCurrentDesignerSkillToDraft() {
       }
     }
   } else if (currentDesignerSkill === 'writing') {
-    const sentence = $('ud-wrt-sentence')?.value.trim();
-    const hint = $('ud-wrt-hint')?.value.trim();
-    const image = $('ud-wrt-image')?.value.trim();
+    const tfOrig = $('ud-wrt-tf-orig')?.value.trim();
+    const tfNeg = $('ud-wrt-tf-neg')?.value.trim();
+    const tfQues = $('ud-wrt-tf-ques')?.value.trim();
+    const tfHint = $('ud-wrt-tf-hint')?.value.trim();
+
+    const scSentence = $('ud-wrt-scramble-sentence')?.value.trim();
+    const scHint = $('ud-wrt-scramble-hint')?.value.trim();
 
     if (!unit.writing) unit.writing = [];
-    if (!unit.writing[0]) unit.writing[0] = { id: 'wrt_1', items: [] };
-    if (sentence) {
-      const words = sentence.split(/\s+/);
-      unit.writing[0].items = [{ id: 'sc_1', words, correctSentence: sentence, hint: hint || '', image: image || '' }];
+
+    const newWrtList = [];
+
+    if (tfOrig) {
+      newWrtList.push({
+        id: 'wrt_transform',
+        title: 'Exercise 3. Make these sentences a) Negative and b) Question',
+        category: 'transformation',
+        items: [
+          {
+            id: 'tf_1',
+            originalSentence: tfOrig,
+            negativeAnswer: tfNeg || '',
+            questionAnswer: tfQues || '',
+            hint: tfHint || ''
+          }
+        ]
+      });
+    }
+
+    if (scSentence) {
+      newWrtList.push({
+        id: 'wrt_scramble',
+        title: 'Exercise 4. Reorder the words to make meaningful sentences',
+        category: 'scramble',
+        items: [
+          {
+            id: 'sc_1',
+            words: scSentence.split(/\s+/),
+            correctSentence: scSentence,
+            hint: scHint || ''
+          }
+        ]
+      });
+    }
+
+    if (newWrtList.length) {
+      unit.writing = newWrtList;
     }
   } else if (currentDesignerSkill === 'languageFocus') {
+    const pastVerbsRaw = $('ud-lf-past-verbs')?.value.trim();
     const word = $('ud-fc-word')?.value.trim();
     const pos = $('ud-fc-pos')?.value.trim();
     const ipa = $('ud-fc-ipa')?.value.trim();
@@ -1558,7 +1906,12 @@ function syncCurrentDesignerSkillToDraft() {
     const image = $('ud-fc-image')?.value.trim();
     const example = $('ud-fc-example')?.value.trim();
 
-    if (!unit.languageFocus) unit.languageFocus = { flashcards: [], matchPairs: [], grammarChallenge: [] };
+    if (!unit.languageFocus) unit.languageFocus = { pastFormVerbs: [], flashcards: [], matchPairs: [], grammarChallenge: [] };
+
+    if (pastVerbsRaw) {
+      try { unit.languageFocus.pastFormVerbs = JSON.parse(pastVerbsRaw); } catch(e){}
+    }
+
     if (word) {
       unit.languageFocus.flashcards = [{ id: 'fc_1', word, pos: pos || 'noun', ipa: ipa || '', meaning: meaning || '', image: image || '', example: example || '' }];
     }
