@@ -1030,10 +1030,6 @@ export function switchDesignerSkillTab(skill) {
   autoFitAllDesignerTextareas();
 }
 
-  // Tự động căn chỉnh chiều cao textareas để hiển thị toàn bộ nội dung
-  autoFitAllDesignerTextareas();
-}
-
 // -------------------------------------------------------------------------
 // HELPER METHODS CHO DESIGNER LISTENING (AUDIO/VIDEO UPLOAD & EXERCISES BUILDER)
 // -------------------------------------------------------------------------
@@ -1069,7 +1065,11 @@ export function renderListeningDesignerExercises(exercises = []) {
               <option value="0" ${ex.answer === 0 ? 'selected' : ''}>A. Phương án 1</option>
               <option value="1" ${ex.answer === 1 ? 'selected' : ''}>B. Phương án 2</option>
               <option value="2" ${ex.answer === 2 ? 'selected' : ''}>C. Phương án 3</option>
-<label style="font-size:11px">Giải thích chi tiết (Explain)</label>
+              <option value="3" ${ex.answer === 3 ? 'selected' : ''}>D. Phương án 4</option>
+            </select>
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px">Giải thích chi tiết (Explain)</label>
             <input type="text" class="lis-ex-explain" value="${esc(ex.explain || '')}" placeholder="VD: The passenger says: I'm flying to...">
           </div>
         </div>
