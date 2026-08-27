@@ -3596,10 +3596,10 @@ function renderMatchPuzzleView() {
 
       <!-- 2 COLUMNS OF TILES -->
       <div class="match-puzzle-grid">
-        <!-- LEFT COLUMN: ENGLISH TERMS -->
+        <!-- LEFT COLUMN: TERMS / WORDS -->
         <div class="match-col match-col-left">
           <div class="match-col-label">
-            <span>🇬🇧 Thuật ngữ / Thành ngữ tiếng Anh</span>
+            <span>📖 Từ vựng / Thuật ngữ (Words & Terms)</span>
           </div>
           <div class="match-chips-list">
             ${lefts.map(p => `
@@ -3611,10 +3611,10 @@ function renderMatchPuzzleView() {
           </div>
         </div>
 
-        <!-- RIGHT COLUMN: VIETNAMESE MEANINGS -->
+        <!-- RIGHT COLUMN: DEFINITIONS / MEANINGS -->
         <div class="match-col match-col-right">
           <div class="match-col-label">
-            <span>🇻🇳 Nghĩa tiếng Việt tương ứng</span>
+            <span>💡 Định nghĩa / Ý nghĩa tương ứng (Definitions & Meanings)</span>
           </div>
           <div class="match-chips-list">
             ${rights.map(p => `

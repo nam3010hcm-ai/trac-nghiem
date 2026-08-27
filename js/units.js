@@ -1526,10 +1526,24 @@ export function renderReadingDesignerExercises(exercises = []) {
         </div>
 
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
             <div style="font-size:12px;font-weight:700;color:#334155;">📋 Danh sách các cặp từ và định nghĩa tương ứng:</div>
-            <button type="button" class="btn btn-sm btn-p" onclick="window.addReadingMatchPairToCard(this)" style="font-size:11px;padding:3px 8px;">➕ Thêm cặp</button>
+            <div style="display:flex;gap:6px;">
+              <button type="button" class="btn btn-sm btn-p" onclick="window.addReadingMatchPairToCard(this)" style="font-size:11px;padding:3px 8px;">➕ Thêm cặp</button>
+              <button type="button" class="btn btn-sm" onclick="window.toggleReadingMatchQuickPaste(this)" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-size:11px;padding:3px 8px;">📋 Dán nhanh</button>
+            </div>
           </div>
+
+          <!-- QUICK PASTE DRAWER FOR READING MATCHING -->
+          <div class="read-match-quick-drawer" style="display:none;margin-bottom:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;">
+            <div style="font-weight:700;font-size:11.5px;color:#92400e;margin-bottom:4px;">📋 Dán bài tập nối từ (Dạng 1-8 theo sau bởi a-h hoặc từng dòng pair):</div>
+            <textarea class="read-match-quick-input" style="width:100%;min-height:90px;font-size:12px;padding:6px;border:1px solid #fcd34d;border-radius:6px;font-family:sans-serif;" placeholder="1. propaganda (n)&#10;2. establish (v)&#10;a) This is a hard fight...&#10;b) This means to start or create..."></textarea>
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <button type="button" class="btn btn-sm btn-p" onclick="window.processReadingMatchQuickPaste(this)" style="font-size:11px;padding:3px 8px;">⚡ Chuyển đổi</button>
+              <button type="button" class="btn btn-sm" onclick="window.toggleReadingMatchQuickPaste(this)" style="font-size:11px;padding:3px 8px;">Đóng</button>
+            </div>
+          </div>
+
           <div class="read-match-pairs-container" style="display:flex;flex-direction:column;gap:6px;">
             ${pairs.map((p, pIdx) => `
               <div class="read-match-pair-row" style="display:flex;gap:6px;align-items:center;background:#ffffff;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;">
@@ -2088,8 +2102,8 @@ export function renderLfMatchPairsDesigner(pairs = []) {
     <div class="ud-lf-subcard">
       <div class="ud-lf-subcard-header">
         <div>
-          <div class="ud-lf-subcard-title">🧩 Trò Chơi Nối Từ & Cặp Thành Ngữ (Matching Pairs)</div>
-          <div class="ud-lf-subcard-subtitle">Học viên tương tác nối các thẻ từ/thành ngữ tiếng Anh với nghĩa tiếng Việt tương ứng.</div>
+          <div class="ud-lf-subcard-title">🧩 Trò Chơi Nối Từ, Thành Ngữ & Định Nghĩa (Matching Pairs)</div>
+          <div class="ud-lf-subcard-subtitle">Học viên tương tác nối các thuật ngữ tiếng Anh với nghĩa tiếng Việt hoặc định nghĩa tiếng Anh (Definitions a-h) tương ứng.</div>
         </div>
         <div class="ud-lf-subcard-actions">
           <button type="button" class="btn btn-sm btn-p" onclick="window.addLfMatchPair()">➕ Thêm cặp nối</button>
@@ -2100,9 +2114,11 @@ export function renderLfMatchPairsDesigner(pairs = []) {
 
       <!-- QUICK PASTE DRAWER -->
       <div id="ud-lf-pair-quick-drawer" class="ud-lf-quick-drawer" style="display:none;">
-        <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:4px;">📋 Nhập nhanh danh sách cặp nối từ (Mỗi dòng 1 cặp):</div>
-        <div style="font-size:12px;color:#64748b;margin-bottom:8px;">Định dạng: <code>Thuật ngữ tiếng Anh = Nghĩa tiếng Việt</code> hoặc <code>English - Tiếng Việt</code></div>
-        <textarea id="ud-lf-pair-quick-input" class="ud-lf-quick-textarea" placeholder="Piece of cake = Rất dễ dàng, dễ như ăn bánh&#10;Break a leg = Chúc may mắn&#10;Pontoon Bridge = Cầu phao dã chiến&#10;Combat Engineer = Công binh chiến đấu"></textarea>
+        <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:4px;">📋 Nhập nhanh danh sách cặp nối từ hoặc bài tập nối từ sách giáo khoa:</div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:8px;">
+          Hỗ trợ: <code>1. từ_vựng = định_nghĩa</code> hoặc dán toàn bộ bài tập dạng danh sách từ <code>1. word ... 8. word</code> theo sau bởi danh sách định nghĩa <code>a) definition ... h) definition</code>.
+        </div>
+        <textarea id="ud-lf-pair-quick-input" class="ud-lf-quick-textarea" style="min-height:130px;" placeholder="1. propaganda (n)&#10;2. establish (v)&#10;3. directive (n)&#10;4. struggle (v/n)&#10;5. invader (n)&#10;a) This is a hard fight in which people try to obtain or achieve something.&#10;b) This is the act or process of freeing a country from somebody else.&#10;c) This is an official instruction.&#10;d) This means to start or create an organization.&#10;e) This is an army that enters another country by force."></textarea>
         <div style="display:flex;gap:8px;margin-top:8px;">
           <button type="button" class="btn btn-sm btn-p" onclick="window.processLfPairQuickPaste()">⚡ Chuyển đổi thành các cặp</button>
           <button type="button" class="btn btn-sm" onclick="window.toggleLfPairQuickPaste()">Đóng</button>
@@ -2118,11 +2134,11 @@ export function renderLfMatchPairsDesigner(pairs = []) {
           <div class="lf-pair-row" style="display:flex;gap:10px;align-items:center;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;">
             <div style="width:28px;text-align:center;font-weight:800;color:#64748b;font-size:12px;">#${idx + 1}</div>
             <div style="flex:1;">
-              <input type="text" class="lf-pair-left" value="${esc(p.left || '')}" placeholder="Thuật ngữ / Cụm từ tiếng Anh (VD: Piece of cake)">
+              <input type="text" class="lf-pair-left" value="${esc(p.left || '')}" placeholder="Từ vựng / Thuật ngữ (VD: propaganda (n))">
             </div>
             <div style="font-size:18px;color:#3b82f6;font-weight:bold;">⇄</div>
-            <div style="flex:1;">
-              <input type="text" class="lf-pair-right" value="${esc(p.right || '')}" placeholder="Nghĩa tiếng Việt tương ứng (VD: Rất dễ dàng)">
+            <div style="flex:1.5;">
+              <input type="text" class="lf-pair-right" value="${esc(p.right || '')}" placeholder="Định nghĩa / Nghĩa tương ứng (VD: This includes ideas or statements...)">
             </div>
             <button type="button" class="btn-icon-del" onclick="window.removeLfMatchPair(this)" title="Xóa cặp này">🗑️</button>
           </div>
@@ -2933,18 +2949,56 @@ window.processLfPairQuickPaste = function() {
   if (!input) return;
   const text = input.value.trim();
   if (!text) {
-    alert("Vui lòng nhập danh sách cặp nối từ!");
+    alert("Vui lòng nhập danh sách cặp nối từ hoặc bài tập nối từ!");
     return;
   }
-  const lines = text.split('\n');
-  lines.forEach(line => {
-    const l = line.trim();
-    if (!l) return;
-    const parts = l.split(/\s*[:=–—\t-]+\s*/);
-    if (parts.length >= 2) {
-      window.addLfMatchPair(parts[0].trim(), parts.slice(1).join(' ').trim());
+
+  const rawLines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  
+  const numberedList = [];
+  const letteredList = [];
+  const pairedLines = [];
+
+  rawLines.forEach(l => {
+    // Check if line already has a clear pair separator (=, :, —, –, Tab, or ' - ')
+    const hasPairSep = /[:=–—\t]+|\s+-\s+/.test(l);
+    const numMatch = l.match(/^([0-9]+)[\.\)\-]\s*(.*)$/);
+    const letterMatch = l.match(/^([a-zA-Z])[\.\)\-]\s*(.*)$/);
+
+    if (hasPairSep) {
+      pairedLines.push(l);
+    } else if (numMatch) {
+      numberedList.push({ num: parseInt(numMatch[1], 10), text: numMatch[2].trim() });
+    } else if (letterMatch) {
+      letteredList.push({ letter: letterMatch[1].toLowerCase(), text: letterMatch[2].trim() });
+    } else {
+      pairedLines.push(l);
     }
   });
+
+  if (numberedList.length > 0 && letteredList.length > 0 && pairedLines.length === 0) {
+    // Merge two separate lists (1-8 and a-h)
+    const maxLen = Math.max(numberedList.length, letteredList.length);
+    for (let i = 0; i < maxLen; i++) {
+      const left = numberedList[i]?.text || (numberedList[i] ? `${numberedList[i].num}. Item` : '');
+      const right = letteredList[i] ? `(${letteredList[i].letter}) ${letteredList[i].text}` : '';
+      if (left || right) {
+        window.addLfMatchPair(left, right);
+      }
+    }
+  } else {
+    // Process paired lines
+    rawLines.forEach(line => {
+      let l = line.replace(/^[0-9]+[\.\)\-]\s*/, '').trim();
+      const parts = l.split(/\s*[:=–—\t]+\s*|\s+-\s+/);
+      if (parts.length >= 2) {
+        window.addLfMatchPair(parts[0].trim(), parts.slice(1).join(' ').trim());
+      } else if (parts.length === 1 && parts[0]) {
+        window.addLfMatchPair(parts[0].trim(), '');
+      }
+    });
+  }
+
   input.value = '';
   window.toggleLfPairQuickPaste();
 };
@@ -3320,5 +3374,97 @@ window.removeReadingMatchPairRow = function(btn) {
   const row = btn.closest('.read-match-pair-row');
   if (row) row.remove();
 };
+
+window.toggleReadingMatchQuickPaste = function(btn) {
+  const card = btn.closest('.ud-read-ex-card');
+  if (!card) return;
+  const drawer = card.querySelector('.read-match-quick-drawer');
+  if (drawer) drawer.style.display = drawer.style.display === 'none' ? 'block' : 'none';
+};
+
+window.processReadingMatchQuickPaste = function(btn) {
+  const card = btn.closest('.ud-read-ex-card');
+  if (!card) return;
+  const input = card.querySelector('.read-match-quick-input');
+  const container = card.querySelector('.read-match-pairs-container');
+  if (!input || !container) return;
+
+  const text = input.value.trim();
+  if (!text) {
+    alert("Vui lòng nhập danh sách cặp nối từ hoặc bài tập nối từ!");
+    return;
+  }
+
+  const rawLines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const numberedList = [];
+  const letteredList = [];
+  const pairedLines = [];
+
+  rawLines.forEach(l => {
+    const hasPairSep = /[:=–—\t]+|\s+-\s+/.test(l);
+    const numMatch = l.match(/^([0-9]+)[\.\)\-]\s*(.*)$/);
+    const letterMatch = l.match(/^([a-zA-Z])[\.\)\-]\s*(.*)$/);
+
+    if (hasPairSep) {
+      pairedLines.push(l);
+    } else if (numMatch) {
+      numberedList.push({ num: parseInt(numMatch[1], 10), text: numMatch[2].trim() });
+    } else if (letterMatch) {
+      letteredList.push({ letter: letterMatch[1].toLowerCase(), text: letterMatch[2].trim() });
+    } else {
+      pairedLines.push(l);
+    }
+  });
+
+  // Clear existing default rows if user is replacing
+  container.innerHTML = '';
+
+  if (numberedList.length > 0 && letteredList.length > 0 && pairedLines.length === 0) {
+    const maxLen = Math.max(numberedList.length, letteredList.length);
+    for (let i = 0; i < maxLen; i++) {
+      const w = numberedList[i]?.text || (numberedList[i] ? `${numberedList[i].num}. Item` : '');
+      const l = letteredList[i]?.letter || String.fromCharCode(97 + (i % 26));
+      const d = letteredList[i]?.text || '';
+      
+      const row = document.createElement('div');
+      row.className = 'read-match-pair-row';
+      row.style = 'display:flex;gap:6px;align-items:center;background:#ffffff;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;';
+      row.innerHTML = `
+        <span style="font-size:11px;font-weight:700;color:#64748b;width:20px;text-align:center;">${i + 1}</span>
+        <input type="text" class="read-match-pair-word" value="${esc(w)}" placeholder="Từ / Cụm từ" style="flex:1;font-size:12px;">
+        <span style="font-size:12px;font-weight:bold;color:#6366f1;">➔</span>
+        <input type="text" class="read-match-pair-letter" value="${esc(l)}" placeholder="a, b..." style="width:40px;text-align:center;font-weight:700;font-size:12px;">
+        <input type="text" class="read-match-pair-def" value="${esc(d)}" placeholder="Định nghĩa tiếng Anh" style="flex:2;font-size:12px;">
+        <button type="button" class="btn-icon-del" onclick="window.removeReadingMatchPairRow(this)" title="Xóa cặp này">🗑️</button>
+      `;
+      container.appendChild(row);
+    }
+  } else {
+    pairedLines.forEach((line, i) => {
+      let l = line.replace(/^[0-9]+[\.\)\-]\s*/, '').trim();
+      const parts = l.split(/\s*[:=–—\t]+\s*|\s+-\s+/);
+      const w = parts[0]?.trim() || '';
+      const d = parts.slice(1).join(' ').trim() || '';
+      const letter = String.fromCharCode(97 + (i % 26));
+
+      const row = document.createElement('div');
+      row.className = 'read-match-pair-row';
+      row.style = 'display:flex;gap:6px;align-items:center;background:#ffffff;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;';
+      row.innerHTML = `
+        <span style="font-size:11px;font-weight:700;color:#64748b;width:20px;text-align:center;">${i + 1}</span>
+        <input type="text" class="read-match-pair-word" value="${esc(w)}" placeholder="Từ / Cụm từ" style="flex:1;font-size:12px;">
+        <span style="font-size:12px;font-weight:bold;color:#6366f1;">➔</span>
+        <input type="text" class="read-match-pair-letter" value="${letter}" placeholder="a, b..." style="width:40px;text-align:center;font-weight:700;font-size:12px;">
+        <input type="text" class="read-match-pair-def" value="${esc(d)}" placeholder="Định nghĩa tiếng Anh" style="flex:2;font-size:12px;">
+        <button type="button" class="btn-icon-del" onclick="window.removeReadingMatchPairRow(this)" title="Xóa cặp này">🗑️</button>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  input.value = '';
+  window.toggleReadingMatchQuickPaste(btn);
+};
+
 
 
