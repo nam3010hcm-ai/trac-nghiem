@@ -1741,17 +1741,133 @@ function renderReadingExercises(exercises) {
   }
 
   return exercises.map((ex, idx) => {
+    // 1. Pre-reading
+    if (ex.type === 'pre_reading') {
+      return `
+        <div class="preread-card" id="read-ex-card-${idx}">
+          <div class="reading-stage-badge stage-pre">🟢 Pre-reading — Activate Prior Knowledge</div>
+          <div style="font-weight:800;font-size:16px;color:#065f46;margin-bottom:6px">
+            ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. Pre-reading – Activate your knowledge`}
+          </div>
+          ${ex.subtitle ? `<div style="font-size:13px;color:#475569;margin-bottom:12px">${esc(ex.subtitle)}</div>` : ''}
+
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+            ${(ex.questions || []).map((q) => `
+              <div class="preread-q-item">
+                <span style="color:#059669;margin-right:6px">💬</span> ${esc(q)}
+              </div>
+            `).join('')}
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+            <button class="btn btn-sm" onclick="window.togglePreReadingHint(${idx})" style="background:#ecfdf5;color:#065f46;border:1.5px solid #a7f3d0;font-weight:700">
+              💡 Gợi ý thảo luận & Dự đoán (Reveal Hints)
+            </button>
+            <span style="font-size:12px;color:#64748b">👥 Thảo luận cặp đôi / Nhóm</span>
+          </div>
+
+          <div id="preread-hint-box-${idx}" class="preread-hint-box" style="display:none">
+            <div style="font-weight:800;color:#047857;margin-bottom:6px">🎯 Gợi ý trả lời & Thông tin tham khảo:</div>
+            ${(ex.hintAnswers || []).map(h => `<div style="margin-bottom:4px">✓ ${esc(h)}</div>`).join('')}
+            ${ex.target ? `<div style="margin-top:8px;font-style:italic;color:#6b7280">📌 ${esc(ex.target)}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // 2. Group MCQ (Skimming / Vocabulary / Comprehension)
+    if (ex.type === 'mcq_group') {
+      const stageBadgeClass = ex.stage === 'skimming' ? 'stage-skim' : (ex.stage === 'vocabulary' ? 'stage-vocab' : 'stage-comp');
+      const stageBadgeLabel = ex.stage === 'skimming' ? '🔵 Skimming — Main Idea / Overview' : (ex.stage === 'vocabulary' ? '🟡 Vocabulary in Context' : '🟠 Comprehension — Detailed Understanding');
+      
+      return `
+        <div class="mcq-group-card" id="read-ex-card-${idx}">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+            <div class="reading-stage-badge ${stageBadgeClass}">${stageBadgeLabel}</div>
+            ${ex.timeLimit ? `<span style="font-size:12px;font-weight:700;color:#2563eb;background:#eff6ff;padding:2px 8px;border-radius:6px;border:1px solid #bfdbfe">⏱️ ${esc(ex.timeLimit)}</span>` : ''}
+          </div>
+
+          <div style="font-weight:800;font-size:16px;color:#1e293b;margin-bottom:6px">
+            ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. Multiple Choice Questions`}
+          </div>
+          ${ex.subtitle ? `<div style="font-size:13px;color:#64748b;margin-bottom:14px">${esc(ex.subtitle)}</div>` : ''}
+
+          <div style="display:flex;flex-direction:column;gap:12px">
+            ${(ex.items || []).map((item, qIdx) => `
+              <div class="mcq-group-item" id="mcq-g-item-${idx}-${qIdx}">
+                <div class="mcq-group-q-text">${esc(item.question)}</div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  ${(item.options || []).map((opt, oIdx) => `
+                    <button class="opt" onclick="window.checkReadGroupMCQ(${idx}, ${qIdx}, ${oIdx}, ${item.answer})" id="read-g-opt-${idx}-${qIdx}-${oIdx}">
+                      <span class="okey">${String.fromCharCode(65 + oIdx)}</span>
+                      <span>${esc(opt)}</span>
+                    </button>
+                  `).join('')}
+                </div>
+                <div id="read-g-fb-${idx}-${qIdx}" class="fb" style="display:none;margin-top:8px"></div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // 3. Scanning Table
+    if (ex.type === 'scanning_table') {
+      const rows = ex.rows || [];
+      return `
+        <div class="scanning-table-card" id="read-ex-card-${idx}">
+          <div class="reading-stage-badge stage-scan">🔵 Scanning — Find Specific Information</div>
+          <div style="font-weight:800;font-size:16px;color:#0f766e;margin-bottom:6px">
+            ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. Scanning – Find specific information`}
+          </div>
+          ${ex.subtitle ? `<div style="font-size:13px;color:#64748b;margin-bottom:12px">${esc(ex.subtitle)}</div>` : ''}
+
+          <table class="scanning-grid-table">
+            <thead>
+              <tr style="font-size:12px;color:#64748b;text-align:left">
+                <th style="padding:6px 14px">Thông tin cần tìm (Information)</th>
+                <th style="padding:6px 10px">Câu trả lời (Your Answer)</th>
+                <th style="padding:6px 12px;text-align:center">Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map((r, rIdx) => `
+                <tr class="scanning-row" id="scan-row-${idx}-${rIdx}">
+                  <td class="scanning-col-q">${esc(r.label)}</td>
+                  <td class="scanning-col-input">
+                    <input type="text" class="scanning-text-input" id="scan-inp-${idx}-${rIdx}" placeholder="Gõ câu trả lời..." onkeydown="if(event.key==='Enter') window.checkScanningTable(${idx})">
+                  </td>
+                  <td class="scanning-col-status" id="scan-status-${idx}-${rIdx}">
+                    <span style="color:#94a3b8;font-size:12px">Chưa làm</span>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px">
+            <button class="btn btn-p" onclick="window.checkScanningTable(${idx})">✅ Kiểm tra kết quả Scanning</button>
+            <button class="btn btn-sm" onclick="window.revealScanningAnswers(${idx})">👁️ Hiện đáp án chuẩn</button>
+          </div>
+          <div id="scan-fb-${idx}" class="fb" style="display:none;margin-top:10px"></div>
+        </div>
+      `;
+    }
+
+    // 4. Vocabulary Matching
     if (ex.type === 'matching') {
       const pairs = ex.pairs || [];
       const letters = pairs.map(p => p.letter || String.fromCharCode(97 + pairs.indexOf(p)));
       const defsShuffled = [...pairs].sort((a, b) => (a.letter || '').localeCompare(b.letter || ''));
 
       return `
-        <div class="matching-exercise-card" style="margin:0">
-          <div style="font-weight:800;font-size:15px;color:#1e293b;margin-bottom:6px">
-            🧩 ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. Match the words/phrases with their definitions:`}
+        <div class="matching-exercise-card" style="margin:0" id="read-ex-card-${idx}">
+          <div class="reading-stage-badge stage-vocab">🟡 Vocabulary in Context — Matching</div>
+          <div style="font-weight:800;font-size:16px;color:#1e293b;margin-bottom:6px">
+            ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. Match the words/phrases with their definitions:`}
           </div>
-          <div style="font-size:12.5px;color:#64748b;margin-bottom:12px">Chọn chữ cái (a, b, c...) định nghĩa tương ứng cho mỗi từ vựng:</div>
+          <div style="font-size:13px;color:#64748b;margin-bottom:12px">${esc(ex.subtitle || 'Chọn chữ cái (a, b, c...) định nghĩa tương ứng cho mỗi từ vựng:')}</div>
 
           <table class="matching-grid-table">
             <thead>
@@ -1793,13 +1909,201 @@ function renderReadingExercises(exercises) {
           <div id="read-match-fb-${idx}" class="fb" style="display:none;margin-top:10px"></div>
         </div>
       `;
-    } else if (ex.type === 'backward_spelling') {
+    }
+
+    // 5. True/False Group
+    if (ex.type === 'true_false_group') {
+      const items = ex.items || [];
+      return `
+        <div class="tf-group-card" id="read-ex-card-${idx}">
+          <div class="reading-stage-badge stage-comp">🟠 Comprehension — True or False</div>
+          <div style="font-weight:800;font-size:16px;color:#c2410c;margin-bottom:6px">
+            ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. Comprehension – True or False`}
+          </div>
+          ${ex.subtitle ? `<div style="font-size:13px;color:#64748b;margin-bottom:14px">${esc(ex.subtitle)}</div>` : ''}
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            ${items.map((item, itemIdx) => `
+              <div class="tf-item" id="tf-item-${idx}-${itemIdx}">
+                <div class="tf-statement-text">${esc(item.statement)}</div>
+                <div class="tf-btn-group">
+                  <button type="button" class="tf-toggle-btn btn-true" id="tf-btn-t-${idx}-${itemIdx}" onclick="window.checkReadTrueFalse(${idx}, ${itemIdx}, true, ${item.answer})">TRUE</button>
+                  <button type="button" class="tf-toggle-btn btn-false" id="tf-btn-f-${idx}-${itemIdx}" onclick="window.checkReadTrueFalse(${idx}, ${itemIdx}, false, ${item.answer})">FALSE</button>
+                </div>
+                <div id="tf-explain-${idx}-${itemIdx}" class="tf-explain-box" style="display:none"></div>
+              </div>
+            `).join('')}
+          </div>
+          <div id="tf-fb-${idx}" class="fb" style="display:none;margin-top:12px"></div>
+        </div>
+      `;
+    }
+
+    // 6. Summary Cloze
+    if (ex.type === 'summary_cloze') {
+      const bank = ex.wordBank || [];
+      const blanks = ex.blanks || [];
+      let templateHtml = esc(ex.textTemplate || '');
+      
+      blanks.forEach(b => {
+        const placeholder = `\\[BLANK_${b.num}\\]`;
+        const selectHtml = `
+          <select class="summary-select" id="sum-sel-${idx}-${b.num}" data-correct="${esc(b.correct)}">
+            <option value="">-- (${b.num}) --</option>
+            ${bank.map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join('')}
+          </select>
+        `;
+        templateHtml = templateHtml.replace(new RegExp(placeholder, 'g'), selectHtml);
+      });
+
+      return `
+        <div class="summary-cloze-card" id="read-ex-card-${idx}">
+          <div class="reading-stage-badge stage-sum">🟣 Summarizing — Synthesize Information</div>
+          <div style="font-weight:800;font-size:16px;color:#7e22ce;margin-bottom:6px">
+            ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. Summarizing – Complete the summary`}
+          </div>
+          ${ex.subtitle ? `<div style="font-size:13px;color:#64748b;margin-bottom:12px">${esc(ex.subtitle)}</div>` : ''}
+
+          <div class="summary-wordbank-container">
+            <div style="font-size:12px;font-weight:800;color:#6b21a8;text-transform:uppercase;letter-spacing:0.04em">
+              🔤 Ngân hàng từ khóa (Word Bank):
+            </div>
+            <div class="summary-wordbank-pills">
+              ${bank.map(w => `<span class="summary-bank-pill">${esc(w)}</span>`).join('')}
+            </div>
+          </div>
+
+          <div class="summary-passage-box" style="white-space:pre-wrap">
+            ${templateHtml}
+          </div>
+
+          <div style="margin-top:14px">
+            <button class="btn btn-p" onclick="window.checkReadingSummaryCloze(${idx})">✅ Kiểm tra tóm tắt</button>
+          </div>
+          <div id="sum-fb-${idx}" class="fb" style="display:none;margin-top:10px"></div>
+        </div>
+      `;
+    }
+
+    // 7. Sequencing
+    if (ex.type === 'sequencing') {
+      const events = ex.events || [];
+      const count = events.length;
+      return `
+        <div class="sequencing-card" id="read-ex-card-${idx}">
+          <div class="reading-stage-badge stage-seq">🟣 Sequencing — Understand Chronology</div>
+          <div style="font-weight:800;font-size:16px;color:#be185d;margin-bottom:6px">
+            ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. Sequencing – Follow the historical development`}
+          </div>
+          ${ex.subtitle ? `<div style="font-size:13px;color:#64748b;margin-bottom:12px">${esc(ex.subtitle)}</div>` : ''}
+
+          <div class="sequencing-list">
+            ${events.map((ev, evIdx) => `
+              <div class="sequencing-item" id="seq-item-${idx}-${evIdx}">
+                <select class="sequencing-select" id="seq-sel-${idx}-${evIdx}" data-correct="${ev.correctOrder}">
+                  <option value="">--</option>
+                  ${Array.from({ length: count }, (_, i) => i + 1).map(n => `<option value="${n}">Vị trí ${n}</option>`).join('')}
+                </select>
+                <div class="sequencing-text">${esc(ev.text)}</div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div style="margin-top:14px">
+            <button class="btn btn-p" onclick="window.checkReadingSequencing(${idx})">✅ Kiểm tra thứ tự lịch sử</button>
+          </div>
+          <div id="seq-fb-${idx}" class="fb" style="display:none;margin-top:10px"></div>
+        </div>
+      `;
+    }
+
+    // 8. Critical Thinking
+    if (ex.type === 'critical_thinking') {
+      const questions = ex.questions || [];
+      const expressions = ex.usefulExpressions || [];
+      return `
+        <div class="critical-thinking-card" id="read-ex-card-${idx}">
+          <div class="reading-stage-badge stage-crit">🔴 Critical Thinking — Analyze & Express Opinions</div>
+          <div style="font-weight:800;font-size:16px;color:#b91c1c;margin-bottom:6px">
+            ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. Critical Thinking – Think and discuss`}
+          </div>
+          ${ex.subtitle ? `<div style="font-size:13px;color:#64748b;margin-bottom:12px">${esc(ex.subtitle)}</div>` : ''}
+
+          <div class="critical-q-grid">
+            ${questions.map((q, qIdx) => `
+              <div class="critical-item">
+                <div class="critical-q-title">❓ Câu hỏi ${q.num || (qIdx + 1)}:</div>
+                <div style="font-size:14.5px;font-weight:600;color:#1e293b;margin-bottom:8px">${esc(q.prompt)}</div>
+                <button class="btn btn-sm" onclick="window.toggleCriticalHint(${idx}, ${qIdx})" style="background:#ffffff;border:1px solid #fca5a5;color:#b91c1c;font-size:12px">
+                  💡 Gợi ý phân tích & Luận điểm
+                </button>
+                <div id="crit-hint-${idx}-${qIdx}" class="critical-hint-reveal" style="display:none">
+                  <b>🎯 Luận điểm gợi ý:</b> ${esc(q.keyIdeas || '')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          ${expressions.length ? `
+            <div class="useful-expressions-box">
+              <div style="font-size:12.5px;font-weight:800;color:#991b1b;text-transform:uppercase;letter-spacing:0.04em">
+                🗣️ Mẫu câu hữu ích khi thảo luận (Useful Expressions - Bấm để nghe phát âm):
+              </div>
+              <div class="useful-chip-container">
+                ${expressions.map(expr => `
+                  <button type="button" class="useful-expr-chip" onclick="window.speakVocab('${esc(expr).replace(/'/g, "\\'")}', this)" title="Nghe phát âm">
+                    <span>🔊</span>
+                    <span>${esc(expr)}</span>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    // 9. Post-reading Presentation
+    if (ex.type === 'post_reading') {
+      const checklist = ex.checklist || [];
+      const structure = ex.suggestedStructure || '';
+      return `
+        <div class="postread-card" id="read-ex-card-${idx}">
+          <div class="reading-stage-badge stage-post">🔴 Post-reading — Communicative Production</div>
+          <div style="font-weight:800;font-size:16px;color:#4338ca;margin-bottom:6px">
+            ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. Post-reading – Give a short presentation`}
+          </div>
+          ${ex.subtitle ? `<div style="font-size:13px;color:#64748b;margin-bottom:12px">${esc(ex.subtitle)}</div>` : ''}
+
+          <div class="postread-checklist-box">
+            <div style="font-size:13px;font-weight:800;color:#3730a3;margin-bottom:8px">📋 Nội dung cần có trong bài thuyết trình (1–2 phút):</div>
+            ${checklist.map(c => `<div style="font-size:13.5px;color:#334155;margin-bottom:4px">✓ ${esc(c)}</div>`).join('')}
+          </div>
+
+          ${structure ? `
+            <div style="font-size:13.5px;font-weight:800;color:#3730a3;margin-top:14px">💡 Cấu trúc bài thuyết trình mẫu (Suggested Structure):</div>
+            <div class="postread-structure-box" style="white-space:pre-wrap">${esc(structure)}</div>
+            <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+              <button class="btn btn-p btn-sm" onclick="window.speakVocab('${structure.replace(/\n/g, ' ').replace(/'/g, "\\'")}', this)">
+                🔊 Nghe bài thuyết trình mẫu (AI Voice)
+              </button>
+              <button class="btn btn-sm" onclick="navigator.clipboard.writeText('${structure.replace(/\n/g, '\\n').replace(/'/g, "\\'")}'); alert('Đã sao chép cấu trúc thuyết trình vào clipboard!');">
+                📋 Sao chép cấu trúc
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    // 10. Backward Spelling
+    if (ex.type === 'backward_spelling') {
       const target = (ex.targetWord || '').toUpperCase();
       const chars = target.split('');
       const shuffledTiles = [...chars].map((c, i) => ({ id: i, char: c })).sort(() => Math.random() - 0.5);
 
       return `
-        <div class="spelling-puzzle-card" style="margin:0">
+        <div class="spelling-puzzle-card" style="margin:0" id="read-ex-card-${idx}">
           <div style="font-weight:800;font-size:15px;color:#1e40af;margin-bottom:6px">
             🔤 ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. Backward Spelling & Word Puzzle:`}
           </div>
@@ -1828,9 +2132,12 @@ function renderReadingExercises(exercises) {
           <div id="spelling-fb-${idx}" class="fb" style="display:none;margin-top:10px"></div>
         </div>
       `;
-    } else if (ex.type === 'mcq' || ex.type === 'tfng') {
+    }
+
+    // 11. Legacy Single MCQ / TFNG
+    if (ex.type === 'mcq' || ex.type === 'tfng') {
       return `
-        <div class="card" style="margin:0">
+        <div class="card" style="margin:0" id="read-ex-card-${idx}">
           <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#1e293b">
             ${ex.title ? `<b>${esc(ex.title)}</b><br>` : ''}Câu ${idx + 1}: ${ex.question}
           </div>
@@ -1838,7 +2145,7 @@ function renderReadingExercises(exercises) {
             ${(ex.options || []).map((opt, oIdx) => `
               <button class="opt" onclick="window.checkReadMCQ(${idx}, ${oIdx}, ${ex.answer})" id="read-opt-${idx}-${oIdx}">
                 <span class="okey">${String.fromCharCode(65 + oIdx)}</span>
-                <span>${opt}</span>
+                <span>${esc(opt)}</span>
               </button>
             `).join('')}
           </div>
@@ -1846,9 +2153,239 @@ function renderReadingExercises(exercises) {
         </div>
       `;
     }
+
     return '';
   }).join('');
 }
+
+// Pre-reading Handler
+window.togglePreReadingHint = function(exIdx) {
+  const box = document.getElementById(`preread-hint-box-${exIdx}`);
+  if (box) {
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  }
+};
+
+// Group MCQ Handler
+window.checkReadGroupMCQ = function(exIdx, qIdx, chosenIdx, correctIdx) {
+  const item = currentReadLesson?.exercises?.[exIdx]?.items?.[qIdx];
+  const fb = document.getElementById(`read-g-fb-${exIdx}-${qIdx}`);
+  const btn = document.getElementById(`read-g-opt-${exIdx}-${qIdx}-${chosenIdx}`);
+  if (!fb || !btn) return;
+
+  const allBtns = document.querySelectorAll(`[id^="read-g-opt-${exIdx}-${qIdx}-"]`);
+  allBtns.forEach(b => (b.disabled = true));
+
+  if (chosenIdx === correctIdx) {
+    btn.classList.add('correct');
+    fb.className = 'fb fb-ok';
+    fb.innerHTML = '🎉 <b>Chính xác!</b> ' + (item?.explain || '');
+    fb.style.display = 'block';
+    playSuccessSound();
+    addXP(15, 'Trả lời đọc hiểu chính xác');
+  } else {
+    btn.classList.add('wrong');
+    const correctBtn = document.getElementById(`read-g-opt-${exIdx}-${qIdx}-${correctIdx}`);
+    if (correctBtn) correctBtn.classList.add('correct');
+    fb.className = 'fb fb-bad';
+    fb.innerHTML = '❌ <b>Chưa đúng.</b> ' + (item?.explain || '');
+    fb.style.display = 'block';
+    playWrongSound();
+  }
+};
+
+// Scanning Table Handlers
+window.checkScanningTable = function(exIdx) {
+  const ex = currentReadLesson?.exercises?.[exIdx];
+  if (!ex || !ex.rows) return;
+
+  let correctCount = 0;
+  ex.rows.forEach((r, rIdx) => {
+    const input = document.getElementById(`scan-inp-${exIdx}-${rIdx}`);
+    const status = document.getElementById(`scan-status-${exIdx}-${rIdx}`);
+    const row = document.getElementById(`scan-row-${exIdx}-${rIdx}`);
+    if (!input || !status || !row) return;
+
+    const userVal = (input.value || '').trim().toLowerCase().replace(/[.,;:]/g, '');
+    const targetKey = (r.key || '').trim().toLowerCase().replace(/[.,;:]/g, '');
+    const altKeys = (r.altKeys || []).map(k => k.trim().toLowerCase().replace(/[.,;:]/g, ''));
+
+    const isMatch = (userVal && (userVal === targetKey || altKeys.includes(userVal) || targetKey.includes(userVal) || userVal.includes(targetKey)));
+
+    if (isMatch) {
+      correctCount++;
+      row.className = 'scanning-row correct';
+      status.innerHTML = '<span style="color:#16a34a;font-weight:700;font-size:12px">✅ Đúng</span>';
+    } else if (userVal) {
+      row.className = 'scanning-row wrong';
+      status.innerHTML = '<span style="color:#dc2626;font-weight:700;font-size:12px">❌ Chưa đúng</span>';
+    } else {
+      row.className = 'scanning-row';
+      status.innerHTML = '<span style="color:#94a3b8;font-size:12px">Chưa điền</span>';
+    }
+  });
+
+  const fb = document.getElementById(`scan-fb-${exIdx}`);
+  if (fb) {
+    fb.style.display = 'block';
+    if (correctCount === ex.rows.length) {
+      fb.className = 'fb fb-ok';
+      fb.innerHTML = `🎉 <b>Xuất sắc!</b> Bạn đã tìm chính xác 100% thông tin Scanning (${correctCount}/${ex.rows.length}).`;
+      playSuccessSound();
+      addXP(25, 'Hoàn thành bài tập Scanning');
+    } else {
+      fb.className = 'fb fb-bad';
+      fb.innerHTML = `📊 Kết quả: Đúng ${correctCount}/${ex.rows.length} mục. Bạn có thể nhấn "Hiện đáp án chuẩn" để đối soát.`;
+      playWrongSound();
+    }
+  }
+};
+
+window.revealScanningAnswers = function(exIdx) {
+  const ex = currentReadLesson?.exercises?.[exIdx];
+  if (!ex || !ex.rows) return;
+
+  ex.rows.forEach((r, rIdx) => {
+    const input = document.getElementById(`scan-inp-${exIdx}-${rIdx}`);
+    const status = document.getElementById(`scan-status-${exIdx}-${rIdx}`);
+    const row = document.getElementById(`scan-row-${exIdx}-${rIdx}`);
+    if (input && r.key) {
+      input.value = r.key;
+      if (row) row.className = 'scanning-row correct';
+      if (status) status.innerHTML = '<span style="color:#059669;font-weight:700;font-size:12px">🔑 Chuẩn</span>';
+    }
+  });
+};
+
+// True/False Handler
+window.checkReadTrueFalse = function(exIdx, itemIdx, userChoice, correctChoice) {
+  const item = currentReadLesson?.exercises?.[exIdx]?.items?.[itemIdx];
+  const btnT = document.getElementById(`tf-btn-t-${exIdx}-${itemIdx}`);
+  const btnF = document.getElementById(`tf-btn-f-${exIdx}-${itemIdx}`);
+  const expBox = document.getElementById(`tf-explain-${exIdx}-${itemIdx}`);
+  if (!btnT || !btnF) return;
+
+  btnT.classList.remove('selected');
+  btnF.classList.remove('selected');
+
+  if (userChoice === true) btnT.classList.add('selected');
+  else btnF.classList.add('selected');
+
+  btnT.disabled = true;
+  btnF.disabled = true;
+
+  if (expBox) {
+    expBox.style.display = 'block';
+    if (userChoice === correctChoice) {
+      expBox.style.background = '#f0fdf4';
+      expBox.style.border = '1px solid #bbf7d0';
+      expBox.style.color = '#15803d';
+      expBox.innerHTML = `✅ <b>Chính xác!</b> ${item?.explain || ''}`;
+      playSuccessSound();
+      addXP(10, 'True/False chính xác');
+    } else {
+      expBox.style.background = '#fef2f2';
+      expBox.style.border = '1px solid #fecaca';
+      expBox.style.color = '#b91c1c';
+      expBox.innerHTML = `❌ <b>Chưa đúng!</b> ${item?.explain || ''}`;
+      playWrongSound();
+    }
+  }
+};
+
+// Summary Cloze Handler
+window.checkReadingSummaryCloze = function(exIdx) {
+  const selects = document.querySelectorAll(`[id^="sum-sel-${exIdx}-"]`);
+  const fb = document.getElementById(`sum-fb-${exIdx}`);
+  if (!selects.length || !fb) return;
+
+  let correctCount = 0;
+  let hasUnselected = false;
+
+  selects.forEach((sel) => {
+    const userVal = (sel.value || '').trim().toLowerCase();
+    const correctVal = (sel.dataset.correct || '').trim().toLowerCase();
+
+    if (!userVal) hasUnselected = true;
+
+    if (userVal && userVal === correctVal) {
+      correctCount++;
+      sel.className = 'summary-select correct';
+    } else if (userVal) {
+      sel.className = 'summary-select wrong';
+    } else {
+      sel.className = 'summary-select';
+    }
+  });
+
+  if (hasUnselected) {
+    alert('Vui lòng chọn từ khóa cho tất cả các chỗ trống trước khi kiểm tra!');
+    return;
+  }
+
+  fb.style.display = 'block';
+  if (correctCount === selects.length) {
+    fb.className = 'fb fb-ok';
+    fb.innerHTML = `🎉 <b>Tuyệt vời!</b> Bạn đã điền chính xác ${correctCount}/${selects.length} từ khóa tóm tắt toàn bài đọc.`;
+    playSuccessSound();
+    addXP(30, 'Hoàn thành tóm tắt bài đọc');
+  } else {
+    fb.className = 'fb fb-bad';
+    fb.innerHTML = `⚠️ <b>Kết quả:</b> Bạn đã điền đúng ${correctCount}/${selects.length} từ. Hãy kiểm tra các ô màu đỏ để chỉnh lại nhé!`;
+    playWrongSound();
+  }
+};
+
+// Sequencing Handler
+window.checkReadingSequencing = function(exIdx) {
+  const selects = document.querySelectorAll(`[id^="seq-sel-${exIdx}-"]`);
+  const fb = document.getElementById(`seq-fb-${exIdx}`);
+  if (!selects.length || !fb) return;
+
+  let correctCount = 0;
+  let hasUnselected = false;
+
+  selects.forEach((sel) => {
+    const userVal = (sel.value || '').trim();
+    const correctVal = (sel.dataset.correct || '').trim();
+
+    if (!userVal) hasUnselected = true;
+
+    if (userVal && userVal === correctVal) {
+      correctCount++;
+      sel.style.borderColor = '#16a34a';
+      sel.style.background = '#f0fdf4';
+    } else if (userVal) {
+      sel.style.borderColor = '#ef4444';
+      sel.style.background = '#fef2f2';
+    }
+  });
+
+  if (hasUnselected) {
+    alert('Vui lòng chọn thứ tự cho toàn bộ các sự kiện trước khi kiểm tra!');
+    return;
+  }
+
+  fb.style.display = 'block';
+  if (correctCount === selects.length) {
+    fb.className = 'fb fb-ok';
+    fb.innerHTML = `🎉 <b>Hoàn hảo!</b> Bạn đã sắp xếp đúng 100% dòng thời gian lịch sử (${correctCount}/${selects.length}).`;
+    playSuccessSound();
+    addXP(25, 'Sắp xếp trình tự lịch sử chính xác');
+  } else {
+    fb.className = 'fb fb-bad';
+    fb.innerHTML = `⚠️ <b>Kết quả:</b> Đúng ${correctCount}/${selects.length} sự kiện. Thứ tự chuẩn: 1. Thành lập ➔ 2. Giải phóng vùng ➔ 3. Hợp nhất Cứu quốc quân ➔ 4. Đổi tên Giải phóng quân ➔ 5. Lực lượng nòng cốt.`;
+    playWrongSound();
+  }
+};
+
+// Critical Thinking Toggle Hint
+window.toggleCriticalHint = function(exIdx, qIdx) {
+  const box = document.getElementById(`crit-hint-${exIdx}-${qIdx}`);
+  if (box) {
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  }
+};
 
 window.checkReadingMatching = function(exIdx) {
   const selects = document.querySelectorAll(`[id^="read-match-sel-${exIdx}-"]`);
