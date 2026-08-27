@@ -1,12 +1,14 @@
 ---
 name: docx-mathtype-parser
-description: Hướng dẫn kỹ thuật và tài liệu chi tiết về hệ thống giải mã file Word (.docx), bóc tách công thức Toán học MathType OLE Binary (MTEF), OMML sang LaTeX và hiển thị MathJax.
+description: Hướng dẫn kỹ thuật và tài liệu chi tiết về hệ thống giải mã file Word (.docx), bóc tách công thức Toán học MathType OLE Binary (MTEF), OMML sang LaTeX, hiển thị MathJax và Hệ thống Học tập 5 Kỹ năng tương tác (Learn & Unit Designer).
 ---
 
-# HƯỚNG DẪN KỸ THUẬT: BÓC TÁCH FILE WORD (.DOCX) & GIẢI MÃ MATHTYPE SANG LATEX
+# HƯỚNG DẪN KỸ THUẬT & KIẾN TRÚC HỆ THỐNG TRẮC NGHIỆM - EDUCORE
 
 ## 📌 Tổng quan
-Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật và các thay đổi đã được hiện thực trong dự án trắc nghiệm nhằm tự động hóa 100% việc đọc file đề thi Microsoft Word (.docx), giải mã các công thức toán MathType nhị phân, font Symbol, chỉ số trên/dưới và đồng bộ dữ liệu với Supabase / MathJax.
+Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật và các thay đổi đã được hiện thực trong dự án trắc nghiệm nhằm:
+1. Tự động hóa 100% việc đọc file đề thi Microsoft Word (.docx), giải mã các công thức toán MathType nhị phân (MTEF v5/v7), font Symbol, chỉ số trên/dưới và đồng bộ dữ liệu với Supabase / MathJax.
+2. Nâng cấp hệ thống học tập 5 Kỹ năng (`learn.html`) và Trình biên soạn Unit chuyên nghiệp (`teacher.html#unit`) với đồ họa tương tác cao, đường nối SVG nét đứt đa sắc màu, trắc nghiệm A/B/C/D và trò chơi xếp chữ ngược (Backward Spelling).
 
 ---
 
@@ -104,7 +106,7 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 ### 8. Bộ nhận diện đáp án đúng Đa tiêu chí (In đậm & Bôi đỏ)
 - **Tệp nguồn:** [`js/docx-parser.js`](file:///Users/namtp/Downloads/trac-nghiem/js/docx-parser.js), [`js/pdf-parser.js`](file:///Users/namtp/Downloads/trac-nghiem/js/pdf-parser.js)
 - **Vấn đề giải quyết:**
-  - Trước đây, vòng lặp nhận diện đáp án đúng kiểm tra trên toàn bộ document, dẫn đến việc phương án `A` luôn bị gán nhầm làm đáp án đúng ngay cả khi đáp án đúng là `C`, `B`, `D` được in đậm và bôi đỏ.
+  - Vòng lặp nhận diện đáp án đúng kiểm tra trên toàn bộ document, dẫn đến việc phương án `A` luôn bị gán nhầm làm đáp án đúng ngay cả khi đáp án đúng là `C`, `B`, `D` được in đậm và bôi đỏ.
   - `optRegex` cũ nuốt khoảng trắng giữa các phương án nằm cùng dòng.
 - **Giải thuật hiện thực:**
   1. Phân vùng dòng/đoạn văn chính xác theo từng câu hỏi (`qGroups`).
@@ -172,13 +174,69 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 
 ---
 
-## 📊 Kết quả kiểm thử trên Đề thi mẫu (`BTTN - P1 - DE 30 cau SO CAU.docx`)
+### 11. Hệ thống Nối từ Tự do bằng Đường nét đứt Đa sắc màu (Interactive SVG Curved Lines & Submit Engine)
+- **Tệp nguồn:** [`js/learn.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn.js) (`renderMatchPuzzleView`, `selectMatchLeft`, `selectMatchRight`, `redrawMatchLines`, `submitMatchPuzzle`), [`css/style.css`](file:///Users/namtp/Downloads/trac-nghiem/css/style.css)
+- **Vấn đề giải quyết:** Bài tập nối từ và định nghĩa trước đây kiểm tra đúng/sai ngay lập tức khi bấm cặp, làm mất tính thử thách và không cho phép học viên nối tự do, quan sát toàn bộ các đường liên kết trước khi nộp bài.
+- **Kiến trúc & Giải thuật hiện thực:**
+  1. **Tầng vẽ đường nối SVG động (`match-puzzle-svg`):**
+     - SVG layer nằm phủ lên trên canvas 2 cột (`pointer-events: none; z-index: 5`).
+     - Tự động lấy tọa độ connector dot bên phải của ô trái (`x1, y1`) và connector dot bên trái của ô phải (`x2, y2`) so với `wrapRect`.
+     - Sinh đường cong mềm mại **Cubic Bézier Curve**: `d = M x1 y1 C (x1 + dx) y1, (x2 - dx) y2, x2 y2` với `dx = Math.max(30, |x2 - x1| * 0.45)`.
+     - Đường nét đứt `stroke-dasharray="7,5"`, độ dày 3px, kèm đường viền phát sáng (Glow backdrop 7px) và 2 chấm tròn đầu mối.
+  2. **Bảng màu sinh động (Color Palette Mapping):**
+     - Mỗi cặp nối sở hữu 1 màu sắc riêng biệt (Indigo, Emerald, Amber, Rose, Cyan, Purple, Blue, Orange, Teal, Pink).
+     - Thẻ bên trái và bên phải đồng bộ màu nền, viền và chấm neo theo màu đường nối.
+  3. **Tương tác Nối & Hủy nối tự do:**
+     - Ánh xạ 1-1: Bấm đổi lựa chọn tự động chuyển đường nối sang ô mới.
+     - Nút nhỏ `✕` (`match-chip-del-btn`) trên mỗi thẻ đã nối để xóa nhanh cặp đó.
+     - Nút **`🗑️ Xóa hết nối`** để dọn sạch kết nối làm lại từ đầu.
+     - Thanh tiến độ & Badge: `Đã nối: X / Y cặp`.
+  4. **Quy trình Chấm điểm & Nộp bài (`submitMatchPuzzle`):**
+     - Chỉ khi học viên bấm nút **"✅ Nộp bài & Xem kết quả"**, hệ thống mới chấm toàn bộ.
+     - **Cặp đúng:** Đường line chuyển thành nét liền xanh lá `#16a34a`, thẻ viền xanh lá kèm tag `✅ Đúng`.
+     - **Cặp sai:** Đường line chuyển thành nét đứt màu đỏ `#dc2626`, thẻ viền đỏ kèm tag `❌ Sai`.
+     - **Chưa nối:** Thẻ mờ viền nét đứt kèm tag `⚠️ Chưa nối`.
+     - Thưởng `+XP` (hoàn hảo 100% kèm pháo hoa `Confetti`), nút `🔄 Thử sức lại`, `👁️ Xem đáp án chuẩn` và nút chuyển sang bài tiếp theo.
+
+---
+
+### 12. Bổ sung Exercise 2 (MCQ A, B, C, D) & Exercise 3 (Backward Spelling) trong 5. Language Focus
+- **Tệp nguồn:** [`js/learn.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn.js), [`js/units.js`](file:///Users/namtp/Downloads/trac-nghiem/js/units.js), [`js/learn-data.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn-data.js), [`css/style.css`](file:///Users/namtp/Downloads/trac-nghiem/css/style.js)
+- **Kiến trúc & Tính năng hiện thực:**
+  1. **⚡ Exercise 2. Choose the best answer from A, B, C, or D (Trắc nghiệm Ngữ pháp / Từ vựng):**
+     - Giao diện câu hỏi điền khuyết `________` chuyên nghiệp (Ví dụ: *For many Vietnamese people, the ________ for justice for Agent Orange victims will still continue.*).
+     - 4 nút chọn đáp án A, B, C, D với hiệu ứng hover và phản hồi tương tác mượt mà.
+     - Đánh giá tức thì, hiển thị hộp giải thích chi tiết (`Explain`), âm thanh chúc mừng / nhắc nhở và thưởng `+15 XP`.
+  2. **🔤 Exercise 3. Backward Spelling & Word Puzzle (Đánh vần / Xếp chữ ngược):**
+     - Banner ví dụ mẫu: `💡 Ví dụ: ADNAGAPORP ➔ PROPAGANDA`.
+     - Hiển thị dạng ký tự đảo ngược/xáo trộn (`ADNAGAPORP`, `HSILBATSE`, `ELGGURTS`, `NOITAREBIL`...) và định nghĩa/gợi ý ngữ cảnh.
+     - **Hàng chữ cái đã ghép (`Assembled Tiles`):** Bấm chọn chữ từ ngân hàng để đưa lên hàng ghép; bấm vào chữ đã ghép để gỡ bỏ.
+     - **Ngân hàng chữ cái (`Letter Pool`):** Các ô chữ cái 3D bóng bẩy nhấc bổng khi hover (`.spelling-char-tile`).
+     - Tích hợp nút `✅ Kiểm tra từ vựng` (`+15 XP`), `🔄 Xếp lại`, `🔊 Nghe phát âm` chuẩn tiếng Anh qua Web Speech API.
+  3. **Unit Designer (Biên soạn trực quan cho Giáo viên):**
+     - Tab 5. Language Focus trong Unit Designer được nâng cấp thành **5 Sub-tabs trực quan**:
+       1. `🧩 1. Nối Từ & Định Nghĩa (Matching Pairs)`
+       2. `⚡ 2. Trắc Nghiệm (A, B, C, D)`
+       3. `🔤 3. Backward Spelling (Xếp chữ ngược)`: Có tính năng tự động đảo ngược chữ (`autoUpdateLfScrambled`) và nút `⚡ Tải từ mẫu`.
+       4. `📝 4. Bảng Động Từ Quá Khứ (Past Form Table)`
+       5. `🎴 5. Thẻ Từ Vựng 3D (Flashcards)`
+     - Tự động đồng bộ và lưu trữ đầy đủ `grammarChallenge` và `backwardSpelling` lên Supabase / LocalStorage.
+
+---
+
+### 13. Nâng cấp 🔤 2. Danh Mục Tra Từ Nhanh & Dán Nhanh Sách Giáo Khoa (1-8 & a-h)
+- **Tệp nguồn:** [`js/units.js`](file:///Users/namtp/Downloads/trac-nghiem/js/units.js), [`js/learn.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn.js)
+- **Tính năng hiện thực:**
+  - Thay thế toàn bộ JSON textarea bằng giao diện bảng No-Code WYSIWYG có thanh chèn IPA nhanh (`æ, ə, ɪ, ʊ, θ, ð, ʃ, ʒ, ŋ, ɡ, tʃ, dʒ...`).
+  - Hỗ trợ bộ phân tích Quick Paste thông minh tự động nhận diện danh sách từ `1-8` và danh sách định nghĩa `a-h` theo chuẩn đề thi và sách giáo khoa.
+
+---
+
+## 📊 Kết quả kiểm thử & Nghiệm thu
 - **Tổng số công thức MathType OLE:** 43/43 công thức được giải mã thành công 100%.
-- **Độ chính xác nhận diện đáp án đúng (In đậm & Bôi đỏ):** 34/34 câu (100%), nhận diện chuẩn xác các đáp án C, B, D (ví dụ Câu 4: C, Câu 7: B, Câu 11: C, Câu 14: D, Câu 15: C, Câu 18: C, Câu 20: C, Câu 24: C, Câu 28: D...).
-- **Chất lượng hiển thị:**
-  - Tất cả các ma trận $2\times2, 3\times3, 2\times3, 3\times2$ hiển thị dưới dạng `\begin{bmatrix}` sắc nét.
-  - Các phân số $\frac{1}{k}A^{-1}$, $\frac{1}{k^n}A^{-1}$, $A^{-1} = \frac{1}{\det(A)}A^*$ hiển thị đúng tử số và mẫu số.
-  - Các kích thước ma trận $3\times4, 4\times2, 4\times4, 3\times2, 2\times3$ hiển thị đúng dấu nhân $\times$.
-  - Biểu thức $A^2, A^{2026}, A^T, A^{-1}, (A^*)^T, (AB^{-1}C)^{-1}$ hiển thị dạng công thức Toán học MathJax chuẩn.
-- **Tỉ lệ lỗi Math input error:** 0%.
+- **Độ chính xác nhận diện đáp án đúng (In đậm & Bôi đỏ):** 34/34 câu (100%).
+- **Trò chơi Ghép cặp SVG Line:** Vẽ đường cong Bézier chính xác 100%, chấm điểm và đổi trạng thái mượt mà.
+- **Exercise 2 & 3 Language Focus:** Hoạt động hoàn hảo trên mọi thiết bị và màn hình.
+- **Tỉ lệ lỗi Math input error / runtime error:** 0%.
 - **Tính năng điều hướng & Sticky Topbar phòng thi:** Hoạt động chính xác 100%, cập nhật thời gian thực khi chọn lại đáp án.
+
