@@ -399,22 +399,372 @@ export function openUnitEditor(unitId = null, defaultSubject = '', defaultModule
     ],
     reading: [
       {
-        id: 'read_' + Date.now(),
-        title: 'Reading Comprehension 1',
-        topic: 'General',
-        level: 'A2',
-        passage: 'Reading in English every day helps expand your vocabulary and improve comprehension.',
+        id: 'read_vpa_1',
+        title: 'The Making of VPA',
+        topic: 'Military History & Development',
+        level: 'B1-B2',
+        image: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&auto=format&fit=crop',
+        passage: `The Vietnam People's Army (VPA) was founded on December 22, 1944 in Cao Bang province under the name "The Vietnam Armed Propaganda Unit for National Liberation" (Đội Việt Nam Tuyên truyền Giải phóng quân). It was established according to the directive of President Ho Chi Minh and directly commanded by General Vo Nguyen Giap.
+
+Initially, the unit consisted of only 34 cadres and soldiers equipped with rudimentary weapons (flintlocks, rifles, and machetes). The founding principle laid out by President Ho Chi Minh was "political work is more important than military operations, and propaganda is more important than fighting." 
+
+Just a few days after its founding, on December 25 and 26, 1944, the young unit achieved its first resounding military feats by destroying two French military outposts at Phai Khat and Na Ngan in Cao Bang province. These early victories helped boost the morale of the local population and proved that a small revolutionary force with high determination could defeat a well-equipped enemy.
+
+Following the principle of "fighting while building forces," the unit expanded rapidly. On May 15, 1945, the Vietnam Armed Propaganda Unit for National Liberation merged with the National Salvation Army (Cứu quốc quân) to form the Vietnam Liberation Army (Việt Nam Giải phóng quân). This consolidated military force served as the core strength of the entire Vietnamese people during the General Uprising of the August Revolution in 1945, successfully liberating many regions and founding the Democratic Republic of Vietnam.`,
         vocabulary: {
-          'expand': { ipa: '/ɪkˈspænd/', pos: 'verb', meaning: 'Mở rộng, phát triển' },
-          'comprehension': { ipa: '/ˌkɒm.prɪˈhen.ʃən/', pos: 'noun', meaning: 'Sự hiểu, khả năng lĩnh hội' }
+          'core': { ipa: '/kɔːr/', pos: 'noun', meaning: 'Nòng cốt, phần trung tâm quan trọng nhất' },
+          'sacrifice': { ipa: '/ˈsæk.rɪ.faɪs/', pos: 'verb', meaning: 'Hy sinh, cống hiến vì mục tiêu cao cả' },
+          'forerunner': { ipa: '/ˈfɔːˌrʌn.ər/', pos: 'noun', meaning: 'Tiền thân, người/vật đi trước mở đường' },
+          'directive': { ipa: '/daɪˈrek.tɪv/', pos: 'noun', meaning: 'Chỉ thị, mệnh lệnh chính thức từ cấp trên' },
+          'cadre': { ipa: '/ˈkɑː.dər/', pos: 'noun', meaning: 'Cán bộ, hạt nhân nòng cốt của phong trào' },
+          'invader': { ipa: '/ɪnˈveɪ.dər/', pos: 'noun', meaning: 'Kẻ xâm lược, quân xâm lược' },
+          'liberate': { ipa: '/ˈlɪb.ər.eɪt/', pos: 'verb', meaning: 'Giải phóng, đem lại tự do cho vùng đất' },
+          'feat of arms': { ipa: '/fiːt əv ɑːmz/', pos: 'noun', meaning: 'Chiến công hiển hách trong chiến đấu' }
         },
         exercises: [
           {
-            type: 'mcq',
-            question: 'What does daily reading help with?',
-            options: ['Expanding vocabulary', 'Cooking food', 'Playing sports', 'Fixing cars'],
-            answer: 0,
-            explain: 'The passage says reading expands vocabulary.'
+            id: 'ex_1_pre',
+            type: 'pre_reading',
+            title: 'Exercise 1. Pre-reading – Activate your knowledge',
+            subtitle: 'Work in pairs and discuss the following questions:',
+            questions: [
+              '1. When was the Vietnam People\'s Army (VPA) founded?',
+              '2. What was the precursor of the VPA?',
+              '3. How many cadres and soldiers were there when it was established?',
+              '4. What military art did the first regular troops use?'
+            ],
+            hintAnswers: [
+              '1. December 22, 1944 in Cao Bang province.',
+              '2. The Vietnam Armed Propaganda Unit for National Liberation.',
+              '3. There were 34 cadres and soldiers.',
+              '4. Guerrilla warfare tactics (đánh du kích, xuất quỷ nhập thần, dựa vào dân).'
+            ],
+            target: 'Kích hoạt kiến thức nền và dự đoán nội dung trước khi đọc.'
+          },
+          {
+            id: 'ex_2_skim',
+            type: 'mcq_group',
+            stage: 'skimming',
+            title: 'Exercise 2. Skimming – Read for the main idea',
+            subtitle: 'Read the text quickly in 2–3 minutes. Choose the best answer for each question:',
+            timeLimit: '2–3 minutes',
+            items: [
+              {
+                question: '1. What is the main idea of the entire text?',
+                options: [
+                  'A. The biography and military achievements of General Vo Nguyen Giap.',
+                  'B. The foundation, early victories, and historical development of the Vietnam People\'s Army.',
+                  'C. The comparison between Vietnamese and French military tactics in 1944.',
+                  'D. The timeline of the August Revolution in 1945.'
+                ],
+                answer: 1,
+                explain: 'Bài đọc bao quát quá trình thành lập, các trận đánh đầu tiên và sự lớn mạnh của Quân đội Nhân dân Việt Nam.'
+              },
+              {
+                question: '2. Which of the following is NOT mentioned in the text?',
+                options: [
+                  'A. The initial number of soldiers in the armed propaganda unit.',
+                  'B. The names of the two military outposts destroyed in December 1944.',
+                  'C. The specific modern aircraft and heavy tanks used in 1944.',
+                  'D. The merger on May 15, 1945 to form the Vietnam Liberation Army.'
+                ],
+                answer: 2,
+                explain: 'Vào năm 1944, đội quân chỉ có vũ khí thô sơ (súng kíp, súng trường, dao găm), chưa có máy bay hay xe tăng hiện đại.'
+              },
+              {
+                question: '3. What was the primary guiding principle given by President Ho Chi Minh upon founding the unit?',
+                options: [
+                  'A. Military operations are more important than political work.',
+                  'B. Political work is more important than military operations, and propaganda is more important than fighting.',
+                  'C. Relying entirely on foreign military support.',
+                  'D. Stationing permanently in urban areas.'
+                ],
+                answer: 1,
+                explain: 'Hồ Chủ tịch chỉ thị: "Chính trị trọng hơn quân sự, tuyên truyền trọng hơn tác chiến".'
+              }
+            ]
+          },
+          {
+            id: 'ex_3_scan',
+            type: 'scanning_table',
+            title: 'Exercise 3. Scanning – Find specific information',
+            subtitle: 'Scan the passage quickly and write the correct facts or figures for each item:',
+            rows: [
+              { label: '1. Official date of establishment', key: 'December 22, 1944', altKeys: ['22/12/1944', 'Dec 22, 1944', '22 December 1944'] },
+              { label: '2. Location where the unit was formed', key: 'Cao Bang province', altKeys: ['Cao Bang', 'Nguyen Binh, Cao Bang'] },
+              { label: '3. Initial number of cadres and soldiers', key: '34', altKeys: ['34 soldiers', '34 cadres'] },
+              { label: '4. Leader who directly commanded the unit', key: 'General Vo Nguyen Giap', altKeys: ['Vo Nguyen Giap', 'General Giap'] },
+              { label: '5. Date of first victories (Phai Khat & Na Ngan)', key: 'December 25 and 26, 1944', altKeys: ['25 and 26 December 1944', 'Dec 25-26, 1944'] },
+              { label: '6. Date the unit merged with National Salvation Army', key: 'May 15, 1945', altKeys: ['15/5/1945', 'May 15 1945'] },
+              { label: '7. New name given after the merger in May 1945', key: 'Vietnam Liberation Army', altKeys: ['Việt Nam Giải phóng quân', 'The Vietnam Liberation Army'] }
+            ]
+          },
+          {
+            id: 'ex_4a_match',
+            type: 'matching',
+            title: 'Exercise 4A. Vocabulary in Context – Matching',
+            subtitle: 'Match the target vocabulary words (1–8) with their correct English definitions (a–h):',
+            pairs: [
+              { id: 1, word: 'core (n)', letter: 'a', definition: 'The central, most important, or foundational part of something' },
+              { id: 2, word: 'sacrifice (v, n)', letter: 'b', definition: 'To give up something valuable or one\'s own life for a noble cause' },
+              { id: 3, word: 'forerunner (n)', letter: 'c', definition: 'A person or thing that precedes the coming or development of someone or something else; precursor' },
+              { id: 4, word: 'directive (n)', letter: 'd', definition: 'An official instruction or order issued by an authority' },
+              { id: 5, word: 'cadre (n)', letter: 'e', definition: 'A small group of trained officers or key personnel capable of training and leading others' },
+              { id: 6, word: 'invader (n)', letter: 'f', definition: 'An armed person or foreign military force that enters a country by force' },
+              { id: 7, word: 'liberate (v)', letter: 'g', definition: 'To set a country or its people free from enemy control or oppression' },
+              { id: 8, word: 'feat of arms (n)', letter: 'h', definition: 'A striking act of courage, military victory, or heroic combat achievement' }
+            ]
+          },
+          {
+            id: 'ex_4b_vocab_mcq',
+            type: 'mcq_group',
+            stage: 'vocabulary',
+            title: 'Exercise 4B. Vocabulary in Context – Multiple Choice',
+            subtitle: 'Choose the best word from A, B, C, or D to complete each sentence based on the context of the reading:',
+            items: [
+              {
+                question: '1. The Vietnam Armed Propaganda Unit for National Liberation was the ________ of today\'s mighty Vietnam People\'s Army.',
+                options: ['A. invader', 'B. forerunner', 'C. sacrifice', 'D. feat of arms'],
+                answer: 1,
+                explain: '"forerunner" mang nghĩa tiền thân, tổ chức tiền đề mở đường.'
+              },
+              {
+                question: '2. The military unit was officially established following the strategic ________ of President Ho Chi Minh.',
+                options: ['A. directive', 'B. invader', 'C. core', 'D. sacrifice'],
+                answer: 0,
+                explain: '"directive" nghĩa là chỉ thị của lãnh tụ.'
+              },
+              {
+                question: '3. The victories at Phai Khat and Na Ngan were celebrated as the first resounding ________ of the young army.',
+                options: ['A. cadres', 'B. directives', 'C. feats of arms', 'D. invaders'],
+                answer: 2,
+                explain: '"feats of arms" nghĩa là các chiến công quân sự hiển hách.'
+              },
+              {
+                question: '4. The consolidated military force served as the ________ strength during the August General Uprising.',
+                options: ['A. core', 'B. forerunner', 'C. directive', 'D. invader'],
+                answer: 0,
+                explain: '"core strength" là lực lượng nòng cốt.'
+              }
+            ]
+          },
+          {
+            id: 'ex_5_comp_mcq',
+            type: 'mcq_group',
+            stage: 'comprehension',
+            title: 'Exercise 5. Comprehension – Understanding Details',
+            subtitle: 'Read the text carefully and choose the correct answer for each detailed question:',
+            items: [
+              {
+                question: '1. Who directly organized and commanded the founding ceremony of the unit on December 22, 1944?',
+                options: [
+                  'A. President Ho Chi Minh',
+                  'B. General Vo Nguyen Giap',
+                  'C. Comrade Hoang Van Thai',
+                  'D. General Nguyen Chi Thanh'
+                ],
+                answer: 1,
+                explain: 'Đồng chí Võ Nguyên Giáp trực tiếp nhận chỉ thị và chỉ huy buổi lễ thành lập tại khu rừng Trần Hưng Đạo.'
+              },
+              {
+                question: '2. With what kind of weapons were the original 34 soldiers equipped?',
+                options: [
+                  'A. Heavy modern artillery and automatic machine guns.',
+                  'B. Rudimentary weapons including flintlocks, rifles, and machetes.',
+                  'C. Tanks and armored combat vehicles.',
+                  'D. Naval torpedoes and fighter jets.'
+                ],
+                answer: 1,
+                explain: 'Trang bị ban đầu chỉ có súng kíp, súng trường hỏa mai và dao găm thô sơ.'
+              },
+              {
+                question: '3. What did the victories at Phai Khat and Na Ngan prove to the revolutionary movement?',
+                options: [
+                  'A. That the revolutionary army should avoid fighting French outposts.',
+                  'B. That a small revolutionary force with high determination could defeat a well-equipped enemy.',
+                  'C. That French military posts were completely impregnable.',
+                  'D. That political propaganda was no longer necessary.'
+                ],
+                answer: 1,
+                explain: 'Hai trận thắng giòn giã chứng minh lực lượng nhỏ nhưng mưu trí và quyết tâm cao hoàn toàn có thể diệt đồn địch trang bị hiện đại.'
+              },
+              {
+                question: '4. What happened on May 15, 1945 in Dinh Ca (Thai Nguyen)?',
+                options: [
+                  'A. The unit disbanded due to lack of supplies.',
+                  'B. The unit merged with the National Salvation Army to form the Vietnam Liberation Army.',
+                  'C. The French colonial forces regained total control of Cao Bang.',
+                  'D. The August Revolution officially ended.'
+                ],
+                answer: 1,
+                explain: 'Ngày 15/5/1945, Việt Nam Tuyên truyền Giải phóng quân hợp nhất với Cứu quốc quân thành Việt Nam Giải phóng quân.'
+              },
+              {
+                question: '5. What was the role of the Vietnam Liberation Army during the August Revolution in 1945?',
+                options: [
+                  'A. It acted as an observer force without participating in battles.',
+                  'B. It served as the core military force supporting the nationwide General Uprising to seize power.',
+                  'C. It retreated to the southern border.',
+                  'D. It focused solely on defensive agriculture.'
+                ],
+                answer: 1,
+                explain: 'Việt Nam Giải phóng quân là lực lượng nòng cốt hỗ trợ quần chúng tổng khởi nghĩa giành chính quyền.'
+              },
+              {
+                question: '6. What does the operational motto "fighting while building forces" mean in practice?',
+                options: [
+                  'A. Waiting until full weapons are imported before fighting.',
+                  'B. Expanding manpower and capturing enemy weapons through continuous combat victories.',
+                  'C. Halting all recruitment during wartime.',
+                  'D. Only training soldiers in peacetime.'
+                ],
+                answer: 1,
+                explain: '"Vừa đánh vừa xây dựng lực lượng": lấy súng giặc đánh giặc, qua thực tiễn chiến đấu để tôi luyện và phát triển quân số.'
+              }
+            ]
+          },
+          {
+            id: 'ex_6_tf',
+            type: 'true_false_group',
+            title: 'Exercise 6. Comprehension – True or False',
+            subtitle: 'Read the statements below and determine whether each is True (T) or False (F):',
+            items: [
+              {
+                statement: '1. The Vietnam People\'s Army was officially founded on December 22, 1944.',
+                answer: true,
+                explain: 'Đúng. Ngày 22/12/1944 là ngày thành lập Đội Việt Nam Tuyên truyền Giải phóng quân.'
+              },
+              {
+                statement: '2. The precursor unit was initially established with 340 soldiers and modern tanks.',
+                answer: false,
+                explain: 'Sai. Ban đầu chỉ có 34 cán bộ, chiến sĩ với vũ khí thô sơ (súng kíp, súng trường).'
+              },
+              {
+                statement: '3. President Ho Chi Minh emphasized that military operations were more important than political work from the beginning.',
+                answer: false,
+                explain: 'Sai. Bác Hồ chỉ thị: "Chính trị trọng hơn quân sự, tuyên truyền trọng hơn tác chiến".'
+              },
+              {
+                statement: '4. The early victories at Phai Khat and Na Ngan were achieved within just a few days after the unit\'s founding.',
+                answer: true,
+                explain: 'Đúng. Ngày 25 và 26/12/1944 đơn vị đã tiêu diệt gọn hai đồn Phai Khắt và Nà Ngần.'
+              },
+              {
+                statement: '5. The Vietnam Liberation Army was formed by merging the Propaganda Unit with the National Salvation Army on May 15, 1945.',
+                answer: true,
+                explain: 'Đúng. Ngày 15/5/1945 diễn ra lễ hợp nhất thành Việt Nam Giải phóng quân.'
+              },
+              {
+                statement: '6. The young army grew by capturing enemy weapons and recruiting patriotic volunteers following the principle of "fighting while building forces".',
+                answer: true,
+                explain: 'Đúng. Nguyên tắc "vừa đánh vừa xây dựng" giúp quân đội lớn mạnh vượt bậc.'
+              },
+              {
+                statement: '7. The unit played no significant role in the August Revolution of 1945.',
+                answer: false,
+                explain: 'Sai. Đội quân là lực lượng nòng cốt đi đầu giải phóng các vùng và bảo vệ chính quyền cách mạng.'
+              }
+            ]
+          },
+          {
+            id: 'ex_7_cloze',
+            type: 'summary_cloze',
+            title: 'Exercise 7. Summarizing – Complete the summary paragraph',
+            subtitle: 'Complete the summary paragraph by choosing the correct words from the Word Bank below:',
+            wordBank: [
+              '1944',
+              '34',
+              'Cao Bang',
+              'directive',
+              'forerunner',
+              'Phai Khat',
+              'National Salvation Army',
+              'core'
+            ],
+            textTemplate: 'The Vietnam People\'s Army traces its history back to December 22, (1) [BLANK_1], when "The Vietnam Armed Propaganda Unit for National Liberation" was established in (2) [BLANK_2] province. Created under the historic (3) [BLANK_3] of President Ho Chi Minh, this unit was the early (4) [BLANK_4] of the entire national armed forces. Starting with only (5) [BLANK_5] brave members, the unit swiftly achieved its first glorious feats of arms at (6) [BLANK_6] and Na Ngan. In May 1945, it merged with the (7) [BLANK_7] to form the Vietnam Liberation Army, becoming the (8) [BLANK_8] force that spearheaded the triumph of the 1945 August Revolution.',
+            blanks: [
+              { num: 1, correct: '1944' },
+              { num: 2, correct: 'Cao Bang' },
+              { num: 3, correct: 'directive' },
+              { num: 4, correct: 'forerunner' },
+              { num: 5, correct: '34' },
+              { num: 6, correct: 'Phai Khat' },
+              { num: 7, correct: 'National Salvation Army' },
+              { num: 8, correct: 'core' }
+            ]
+          },
+          {
+            id: 'ex_8_seq',
+            type: 'sequencing',
+            title: 'Exercise 8. Sequencing – Chronological timeline of the VPA',
+            subtitle: 'Arrange the following historical milestones in the correct chronological order (1 to 5):',
+            events: [
+              { text: 'President Ho Chi Minh issued the directive establishing the armed propaganda unit.', correctOrder: 1 },
+              { text: 'The Vietnam Armed Propaganda Unit for National Liberation was founded in Cao Bang with 34 members.', correctOrder: 2 },
+              { text: 'The young unit won its first two battles at Phai Khat and Na Ngan.', correctOrder: 3 },
+              { text: 'The unit merged with the National Salvation Army to become the Vietnam Liberation Army on May 15, 1945.', correctOrder: 4 },
+              { text: 'The revolutionary army served as the core military force during the August Revolution in 1945.', correctOrder: 5 }
+            ]
+          },
+          {
+            id: 'ex_9_crit',
+            type: 'critical_thinking',
+            title: 'Exercise 9. Critical Thinking – Analytical Discussion',
+            subtitle: 'Work in small groups and prepare detailed spoken arguments for the following questions:',
+            questions: [
+              {
+                num: 1,
+                prompt: 'Why did President Ho Chi Minh emphasize that "political work is more important than military operations" at the time of founding the unit?',
+                keyIdeas: '1. In late 1944, gaining the absolute trust and support of the people (dân vận) was vital for guerrilla survival.\n2. Political awareness provided soldiers with unwavering revolutionary ideals.\n3. Military strength without mass political mobilization could easily be isolated by French colonialists.'
+              },
+              {
+                num: 2,
+                prompt: 'How did the tactical philosophy of "fighting while building forces" (vừa đánh vừa xây dựng lực lượng) enable 34 soldiers to expand into a national liberation army in less than a year?',
+                keyIdeas: '1. Capturing modern arms and ammunition directly from defeated enemy outposts.\n2. Inspiring hundreds of local patriotic youth to volunteer after each victory.\n3. Combining guerrilla tactics with rapid troop training in practical combat.'
+              },
+              {
+                num: 3,
+                prompt: 'What core qualities and traditions of the first 34 soldiers remain crucial for the modern Vietnam People\'s Army today?',
+                keyIdeas: '1. Absolute loyalty to the Homeland and the People (Trung với nước, hiếu với dân).\n2. Boundless courage, self-reliance, and readiness to make sacrifices for national independence.\n3. Tight solidarity between the military and civilian populace (quân dân một lòng).'
+              },
+              {
+                num: 4,
+                prompt: 'In your view, what is the significance of the military-civilian bond in modern national defense?',
+                keyIdeas: '1. The people constitute the unbreakable fortress of national defense (thế trận lòng dân).\n2. Mutual assistance during peacetime, disaster relief, and national protection.'
+              }
+            ],
+            usefulExpressions: [
+              'In my view / From my perspective',
+              'The text clearly illustrates that',
+              'This historical event proves that',
+              'As stated in the directive of President Ho Chi Minh',
+              'Consequently, the revolutionary momentum grew rapidly',
+              'This tradition continues to inspire modern defense strategies'
+            ]
+          },
+          {
+            id: 'ex_10_post',
+            type: 'post_reading',
+            title: 'Exercise 10. Post-reading – 1-2 Minute Presentation',
+            subtitle: 'Prepare and deliver a concise 1–2 minute spoken presentation on "The Foundation and Early Victories of the VPA":',
+            checklist: [
+              '1. Time, place, and founding leader of the VPA (Dec 22, 1944, Cao Bang, Gen. Vo Nguyen Giap).',
+              '2. Initial numbers and original weapons (34 soldiers, rudimentary arms).',
+              '3. President Ho Chi Minh\'s guiding directive on political and propaganda priority.',
+              '4. First resounding military feats at Phai Khat and Na Ngan.',
+              '5. The May 15, 1945 merger to become the Vietnam Liberation Army.',
+              '6. Core contribution to the triumph of the August Revolution in 1945.',
+              '7. Personal reflection on the heroism and legacy of the VPA.'
+            ],
+            suggestedStructure: `Good morning comrades and classmates. Today, I am proud to present the heroic foundation and early development of the Vietnam People's Army.
+
+On December 22, 1944, following the strategic directive of President Ho Chi Minh, the Vietnam Armed Propaganda Unit for National Liberation was founded in Cao Bang province under the direct command of General Vo Nguyen Giap. 
+
+Although the unit began with only 34 cadres and rudimentary weapons, they were armed with profound revolutionary spirit. Guided by the principle that "political work is more important than military operations," the young unit won its first glorious battles at Phai Khat and Na Ngan just three days after its founding.
+
+Applying the strategy of "fighting while building forces," the army expanded rapidly. On May 15, 1945, it merged to form the Vietnam Liberation Army, serving as the core strength of the historic August Revolution. 
+
+In conclusion, the legendary beginning of the VPA demonstrates that courage, unity, and tactical wisdom can overcome any adversity. Thank you for listening.`
           }
         ]
       }
@@ -736,6 +1086,16 @@ export function switchDesignerSkillTab(skill) {
 
     contentWrap.innerHTML = `
       <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #e2e8f0;padding-bottom:10px;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-size:16px;font-weight:800;color:#0f172a">📖 Thiết Kế Kỹ Năng Đọc Hiểu (Reading Curriculum Studio)</div>
+            <div style="font-size:12.5px;color:#64748b">Soạn đoạn văn, danh mục tra từ nhanh và chuỗi 10 bài tập chuẩn phương pháp sư phạm</div>
+          </div>
+          <button type="button" class="btn btn-sm btn-p" onclick="window.loadVpaReadingSampleToDesigner()" style="font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(79,70,229,0.25)">
+            ⚡ Tải Bài Mẫu Chuẩn 10 Bước VPA
+          </button>
+        </div>
+
         <div class="fg">
           <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">📖 1. Đoạn Văn Đọc Hiểu (Reading Passage) *</label>
           <div style="font-size:12px;color:#64748b;margin-bottom:8px">Đoạn văn đọc hiểu sẽ hiển thị toàn bộ cho học sinh đọc và tra từ tức thì:</div>
@@ -754,18 +1114,29 @@ export function switchDesignerSkillTab(skill) {
         <!-- 🔤 2. DANH MỤC TRA TỪ NHANH (NO-CODE DICTIONARY STUDIO) -->
         ${renderReadingVocabularyDesigner(read.vocabulary || {})}
 
-        <!-- BÀI TẬP ĐỌC HIỂU TƯƠNG TÁC (MATCHING, MCQ, BACKWARD SPELLING) -->
+        <!-- 🧩 3. BÀI TẬP ĐỌC HIỂU TƯƠNG TÁC (10 STAGES PEDAGOGICAL ENGINE) -->
         <div style="margin-top:20px;border-top:1.5px solid #cbd5e1;padding-top:16px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
             <div>
-              <div style="font-size:14px;font-weight:800;color:#1e293b">🧩 3. Bài Tập Đọc Hiểu Tương Tác (Interactive Exercises)</div>
-              <div style="font-size:12px;color:#64748b">Bao gồm Nối từ 1-8 với định nghĩa a-h, Trắc nghiệm MCQ, và Backward Spelling</div>
+              <div style="font-size:14px;font-weight:800;color:#1e293b">🧩 3. Chuỗi Bài Tập Đọc Hiểu 10 Bước (10 Pedagogical Reading Exercises)</div>
+              <div style="font-size:12px;color:#64748b">Thêm nhanh các dạng bài tập theo chuẩn phương pháp sư phạm đọc hiểu:</div>
             </div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('matching')" style="background:#fff;border:1px solid #818cf8;color:#4338ca;font-size:12px;font-weight:700">🧩 1. Nối Từ (Matching)</button>
-              <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('mcq')" style="background:#fff;border:1px solid #93c5fd;color:#1d4ed8;font-size:12px;font-weight:700">🔘 2. Trắc Nghiệm (MCQ)</button>
-              <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('backward_spelling')" style="background:#fff;border:1px solid #c084fc;color:#7e22ce;font-size:12px;font-weight:700">🔤 3. Backward Spelling</button>
-            </div>
+          </div>
+
+          <!-- DẢI NÚT THÊM 10 DẠNG BÀI TẬP -->
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;background:#ffffff;padding:10px;border:1px solid #e2e8f0;border-radius:10px;">
+            <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('pre_reading')" style="background:#ecfdf5;border:1px solid #a7f3d0;color:#059669;font-size:11.5px;font-weight:700">🟢 1. Pre-reading</button>
+            <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('skimming')" style="background:#eff6ff;border:1px solid #bfdbfe;color:#2563eb;font-size:11.5px;font-weight:700">🔵 2. Skimming (MCQ)</button>
+            <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('scanning_table')" style="background:#f0fdfa;border:1px solid #99f6e4;color:#0d9488;font-size:11.5px;font-weight:700">🔵 3. Scanning Table</button>
+            <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('matching')" style="background:#fffbeb;border:1px solid #fde68a;color:#d97706;font-size:11.5px;font-weight:700">🟡 4A. Nối Từ (Vocab)</button>
+            <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('vocab_mcq')" style="background:#fffbeb;border:1px solid #fde68a;color:#d97706;font-size:11.5px;font-weight:700">🟡 4B. Trắc Nghiệm Từ</button>
+            <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('comp_mcq')" style="background:#fff7ed;border:1px solid #fed7aa;color:#ea580c;font-size:11.5px;font-weight:700">🟠 5. Trắc Nghiệm Chi Tiết</button>
+            <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('true_false_group')" style="background:#fff7ed;border:1px solid #fed7aa;color:#ea580c;font-size:11.5px;font-weight:700">🟠 6. True or False</button>
+            <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('summary_cloze')" style="background:#faf5ff;border:1px solid #e9d5ff;color:#9333ea;font-size:11.5px;font-weight:700">🟣 7. Summarizing (Cloze)</button>
+            <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('sequencing')" style="background:#fdf2f8;border:1px solid #fbcfe8;color:#db2777;font-size:11.5px;font-weight:700">🟣 8. Sequencing</button>
+            <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('critical_thinking')" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;font-size:11.5px;font-weight:700">🔴 9. Critical Thinking</button>
+            <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('post_reading')" style="background:#eef2ff;border:1px solid #c7d2fe;color:#4f46e5;font-size:11.5px;font-weight:700">🔴 10. Post-reading</button>
+            <button type="button" class="btn btn-sm" onclick="window.addReadingDesignerExercise('backward_spelling')" style="background:#f3e8ff;border:1px solid #c084fc;color:#7e22ce;font-size:11.5px;font-weight:700">🔤 Xếp chữ (Spelling)</button>
           </div>
 
           <div id="ud-read-exercises-list" style="display:flex;flex-direction:column;gap:14px">
@@ -1505,7 +1876,7 @@ export function renderReadingVocabularyDesigner(vocabulary = {}) {
 
 export function renderReadingDesignerExercises(exercises = []) {
   if (!exercises || !exercises.length) {
-    return `<div style="text-align:center;padding:16px;color:#64748b;font-size:13px;background:#f1f5f9;border-radius:8px">📭 Chưa có bài tập đọc hiểu nào. Bấm nút bên trên để thêm bài tập Nối từ, Trắc nghiệm, hoặc Backward Spelling.</div>`;
+    return `<div style="text-align:center;padding:16px;color:#64748b;font-size:13px;background:#f1f5f9;border-radius:8px">📭 Chưa có bài tập đọc hiểu nào. Bấm các nút bên trên để thêm bài tập Pre-reading, Skimming, Scanning, Nối từ, True/False, Tóm tắt... hoặc bấm <b>"⚡ Tải Bài Mẫu Chuẩn 10 Bước VPA"</b>.</div>`;
   }
 
   return exercises.map((ex, idx) => {
@@ -1513,16 +1884,170 @@ export function renderReadingDesignerExercises(exercises = []) {
     let typeBadge = '';
     let bodyHtml = '';
 
-    if (type === 'matching') {
-      typeBadge = `<span class="ex-badge" style="background:#e0e7ff;color:#4338ca;font-weight:800">🧩 Nối Từ với Định Nghĩa (Matching 1-8/1-9)</span>`;
-      const pairs = ex.pairs || [
-        { id: 1, word: 'confined', letter: 'a', definition: 'limited or restricted to an area' },
-        { id: 2, word: 'integral', letter: 'b', definition: 'essential or necessary' }
-      ];
+    // 1. Pre-reading
+    if (type === 'pre_reading') {
+      typeBadge = `<span class="reading-stage-badge stage-pre" style="margin:0">🟢 1. Pre-reading (Kích hoạt kiến thức)</span>`;
+      const qList = (ex.questions || ['When was the Vietnam People\'s Army (VPA) founded?']).join('\n');
+      const hList = (ex.hintAnswers || ['December 22, 1944 in Cao Bang province']).join('\n');
       bodyHtml = `
-        <div class="fg" style="margin-bottom:10px">
+        <div class="fg" style="margin-bottom:8px">
           <label style="font-size:12px;font-weight:700">Tiêu đề bài tập</label>
-          <input type="text" class="read-ex-match-title" value="${esc(ex.title || 'Exercise 1. Match the words/ phrases (1-8) with their definitions (a-h)')}">
+          <input type="text" class="read-ex-title" value="${esc(ex.title || 'Exercise 1. Pre-reading – Activate your knowledge')}">
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px">Mô tả / Hướng dẫn học sinh</label>
+          <input type="text" class="read-ex-subtitle" value="${esc(ex.subtitle || 'Work in pairs and discuss the following questions:')}">
+        </div>
+        <div class="grid2" style="margin-bottom:8px">
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:700;color:#059669">Danh sách câu hỏi thảo luận (Mỗi câu 1 dòng)</label>
+            <textarea class="read-ex-preread-q" style="width:100%;min-height:90px;font-size:12px">${esc(qList)}</textarea>
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px;font-weight:700;color:#0369a1">Gợi ý trả lời / Dự đoán (Mỗi ý 1 dòng)</label>
+            <textarea class="read-ex-preread-hints" style="width:100%;min-height:90px;font-size:12px">${esc(hList)}</textarea>
+          </div>
+        </div>
+        <div class="fg" style="margin:0">
+          <label style="font-size:11px">Mục tiêu sư phạm (Pedagogical Objective)</label>
+          <input type="text" class="read-ex-target" value="${esc(ex.target || 'Kích hoạt kiến thức nền và dự đoán nội dung trước khi đọc.')}">
+        </div>
+      `;
+    }
+
+    // 2. Group MCQ (Skimming / Vocabulary MCQ / Comprehension MCQ)
+    else if (type === 'mcq_group') {
+      const stage = ex.stage || 'skimming';
+      const stageLabel = stage === 'skimming' ? '🔵 2. Skimming (Đọc lướt ý chính)' : (stage === 'vocabulary' ? '🟡 4B. Trắc Nghiệm Từ Vựng' : '🟠 5. Trắc Nghiệm Chi Tiết');
+      typeBadge = `<span class="reading-stage-badge ${stage === 'skimming' ? 'stage-skim' : (stage === 'vocabulary' ? 'stage-vocab' : 'stage-comp')}" style="margin:0">${stageLabel}</span>`;
+      const items = ex.items || [
+        { question: 'What is the main topic of the passage?', options: ['Topic A', 'Topic B', 'Topic C', 'Topic D'], answer: 0, explain: '' }
+      ];
+
+      bodyHtml = `
+        <div class="grid2" style="margin-bottom:8px">
+          <div class="fg" style="margin:0">
+            <label style="font-size:12px;font-weight:700">Tiêu đề bài tập</label>
+            <input type="text" class="read-ex-title" value="${esc(ex.title || 'Exercise 2. Skimming – Read for the main idea')}">
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:12px;font-weight:700">Giai đoạn đọc (Stage)</label>
+            <select class="read-ex-stage" style="padding:6px;border-radius:6px;border:1px solid #cbd5e1;font-weight:700">
+              <option value="skimming" ${stage === 'skimming' ? 'selected' : ''}>🔵 Skimming (Ý chính / Tổng quan)</option>
+              <option value="vocabulary" ${stage === 'vocabulary' ? 'selected' : ''}>🟡 Vocabulary MCQ (Ngữ cảnh)</option>
+              <option value="comprehension" ${stage === 'comprehension' ? 'selected' : ''}>🟠 Comprehension MCQ (Chi tiết)</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid2" style="margin-bottom:8px">
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px">Mô tả / Hướng dẫn</label>
+            <input type="text" class="read-ex-subtitle" value="${esc(ex.subtitle || 'Read quickly and choose the best answer:')}">
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:11px">Thời gian giới hạn (Tùy chọn)</label>
+            <input type="text" class="read-ex-timelimit" value="${esc(ex.timeLimit || '2–3 minutes')}" placeholder="VD: 2–3 minutes">
+          </div>
+        </div>
+
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:12px;font-weight:700;color:#334155;">📋 Danh sách các câu hỏi trắc nghiệm:</div>
+            <button type="button" class="btn btn-sm btn-p" onclick="window.addReadingMcqGroupItemToCard(this)" style="font-size:11px;padding:3px 8px;">➕ Thêm câu hỏi</button>
+          </div>
+
+          <div class="read-mcq-group-items-container" style="display:flex;flex-direction:column;gap:10px;">
+            ${items.map((item, itemIdx) => {
+              const opts = item.options || ['', '', '', ''];
+              return `
+                <div class="read-mcq-group-item-row" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:8px 10px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                    <span style="font-size:12px;font-weight:800;color:#1e40af">Câu ${itemIdx + 1}:</span>
+                    <button type="button" class="btn-icon-del" onclick="window.removeReadingMcqGroupItem(this)" title="Xóa câu này">🗑️</button>
+                  </div>
+                  <input type="text" class="read-g-item-q" value="${esc(item.question || '')}" placeholder="Nội dung câu hỏi..." style="width:100%;font-size:13px;font-weight:600;margin-bottom:6px">
+                  <div class="grid2" style="margin-bottom:4px">
+                    <input type="text" class="read-g-item-opt-0" value="${esc(opts[0] || '')}" placeholder="A. Phương án 1" style="font-size:12px">
+                    <input type="text" class="read-g-item-opt-1" value="${esc(opts[1] || '')}" placeholder="B. Phương án 2" style="font-size:12px">
+                  </div>
+                  <div class="grid2" style="margin-bottom:6px">
+                    <input type="text" class="read-g-item-opt-2" value="${esc(opts[2] || '')}" placeholder="C. Phương án 3" style="font-size:12px">
+                    <input type="text" class="read-g-item-opt-3" value="${esc(opts[3] || '')}" placeholder="D. Phương án 4" style="font-size:12px">
+                  </div>
+                  <div class="grid2" style="margin:0">
+                    <div style="display:flex;align-items:center;gap:6px">
+                      <label style="font-size:11px;font-weight:700;color:#16a34a">Đáp án đúng:</label>
+                      <select class="read-g-item-ans" style="padding:4px 8px;font-size:12px;font-weight:700">
+                        <option value="0" ${item.answer === 0 ? 'selected' : ''}>A</option>
+                        <option value="1" ${item.answer === 1 ? 'selected' : ''}>B</option>
+                        <option value="2" ${item.answer === 2 ? 'selected' : ''}>C</option>
+                        <option value="3" ${item.answer === 3 ? 'selected' : ''}>D</option>
+                      </select>
+                    </div>
+                    <input type="text" class="read-g-item-explain" value="${esc(item.explain || '')}" placeholder="Giải thích đáp án..." style="font-size:11.5px">
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // 3. Scanning Table
+    else if (type === 'scanning_table') {
+      typeBadge = `<span class="reading-stage-badge stage-scan" style="margin:0">🔵 3. Scanning (Tìm thông tin chi tiết)</span>`;
+      const rows = ex.rows || [
+        { label: 'Founding date of the VPA', key: 'December 22, 1944', altKeys: ['22/12/1944', 'Dec 22, 1944'] }
+      ];
+
+      bodyHtml = `
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700">Tiêu đề bài tập</label>
+          <input type="text" class="read-ex-title" value="${esc(ex.title || 'Exercise 3. Scanning – Find specific information')}">
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px">Mô tả / Hướng dẫn</label>
+          <input type="text" class="read-ex-subtitle" value="${esc(ex.subtitle || 'Complete the table by scanning the text for facts and figures:')}">
+        </div>
+
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:12px;font-weight:700;color:#0f766e;">📋 Bảng thông tin cần quét (Questions & Target Keys):</div>
+            <button type="button" class="btn btn-sm btn-p" onclick="window.addReadingScanningRowToCard(this)" style="font-size:11px;padding:3px 8px;">➕ Thêm hàng quét</button>
+          </div>
+
+          <div class="read-scan-rows-container" style="display:flex;flex-direction:column;gap:6px;">
+            ${rows.map((r, rIdx) => `
+              <div class="read-scan-row-item" style="display:flex;gap:6px;align-items:center;background:#ffffff;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;">
+                <span style="font-size:11px;font-weight:700;color:#64748b;width:20px;text-align:center;">${rIdx + 1}</span>
+                <input type="text" class="read-scan-label" value="${esc(r.label || '')}" placeholder="Thông tin cần tìm (VD: Founding date)" style="flex:2;font-size:12px;">
+                <span style="font-size:12px;font-weight:bold;color:#0d9488;">➔</span>
+                <input type="text" class="read-scan-key" value="${esc(r.key || '')}" placeholder="Đáp án chuẩn (VD: December 22, 1944)" style="flex:2;font-size:12px;font-weight:600">
+                <input type="text" class="read-scan-altkeys" value="${esc((r.altKeys || []).join(', '))}" placeholder="Đáp án chấp nhận khác (phân tách bởi dấu phẩy)" style="flex:1.5;font-size:11.5px;">
+                <button type="button" class="btn-icon-del" onclick="window.removeReadingScanningRow(this)" title="Xóa hàng này">🗑️</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // 4. Matching (Vocabulary Matching)
+    else if (type === 'matching') {
+      typeBadge = `<span class="reading-stage-badge stage-vocab" style="margin:0">🟡 4A. Nối Từ Vựng với Định Nghĩa</span>`;
+      const pairs = ex.pairs || [
+        { id: 1, word: 'core', letter: 'a', definition: 'the central or most important part' }
+      ];
+
+      bodyHtml = `
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700">Tiêu đề bài tập</label>
+          <input type="text" class="read-ex-title" value="${esc(ex.title || 'Exercise 4A. Match the words/phrases with their definitions')}">
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px">Mô tả / Hướng dẫn</label>
+          <input type="text" class="read-ex-subtitle" value="${esc(ex.subtitle || 'Match the words/phrases (1–8) with their correct definitions (a–h):')}">
         </div>
 
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">
@@ -1537,7 +2062,7 @@ export function renderReadingDesignerExercises(exercises = []) {
           <!-- QUICK PASTE DRAWER FOR READING MATCHING -->
           <div class="read-match-quick-drawer" style="display:none;margin-bottom:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;">
             <div style="font-weight:700;font-size:11.5px;color:#92400e;margin-bottom:4px;">📋 Dán bài tập nối từ (Dạng 1-8 theo sau bởi a-h hoặc từng dòng pair):</div>
-            <textarea class="read-match-quick-input" style="width:100%;min-height:90px;font-size:12px;padding:6px;border:1px solid #fcd34d;border-radius:6px;font-family:sans-serif;" placeholder="1. propaganda (n)&#10;2. establish (v)&#10;a) This is a hard fight...&#10;b) This means to start or create..."></textarea>
+            <textarea class="read-match-quick-input" style="width:100%;min-height:90px;font-size:12px;padding:6px;border:1px solid #fcd34d;border-radius:6px;font-family:sans-serif;" placeholder="1. core (n)&#10;2. sacrifice (n, v)&#10;a) The central or most important part...&#10;b) An act of giving up something..."></textarea>
             <div style="display:flex;gap:6px;margin-top:6px;">
               <button type="button" class="btn btn-sm btn-p" onclick="window.processReadingMatchQuickPaste(this)" style="font-size:11px;padding:3px 8px;">⚡ Chuyển đổi</button>
               <button type="button" class="btn btn-sm" onclick="window.toggleReadingMatchQuickPaste(this)" style="font-size:11px;padding:3px 8px;">Đóng</button>
@@ -1548,17 +2073,201 @@ export function renderReadingDesignerExercises(exercises = []) {
             ${pairs.map((p, pIdx) => `
               <div class="read-match-pair-row" style="display:flex;gap:6px;align-items:center;background:#ffffff;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;">
                 <span style="font-size:11px;font-weight:700;color:#64748b;width:20px;text-align:center;">${pIdx + 1}</span>
-                <input type="text" class="read-match-pair-word" value="${esc(p.word || '')}" placeholder="Từ / Cụm từ (VD: confined)" style="flex:1;font-size:12px;">
+                <input type="text" class="read-match-pair-word" value="${esc(p.word || '')}" placeholder="Từ / Cụm từ (VD: core)" style="flex:1;font-size:12px;">
                 <span style="font-size:12px;font-weight:bold;color:#6366f1;">➔</span>
                 <input type="text" class="read-match-pair-letter" value="${esc(p.letter || String.fromCharCode(97 + (pIdx % 26)))}" placeholder="a, b..." style="width:40px;text-align:center;font-weight:700;font-size:12px;">
-                <input type="text" class="read-match-pair-def" value="${esc(p.definition || '')}" placeholder="Định nghĩa tiếng Anh (VD: limited or restricted to...)" style="flex:2;font-size:12px;">
+                <input type="text" class="read-match-pair-def" value="${esc(p.definition || '')}" placeholder="Định nghĩa tiếng Anh (VD: the central or most important part...)" style="flex:2;font-size:12px;">
                 <button type="button" class="btn-icon-del" onclick="window.removeReadingMatchPairRow(this)" title="Xóa cặp này">🗑️</button>
               </div>
             `).join('')}
           </div>
         </div>
       `;
-    } else if (type === 'backward_spelling') {
+    }
+
+    // 5. True/False Group
+    else if (type === 'true_false_group') {
+      typeBadge = `<span class="reading-stage-badge stage-comp" style="margin:0">🟠 6. True or False</span>`;
+      const items = ex.items || [
+        { statement: 'The VPA was founded in late 1944.', answer: true, explain: 'Correct! Founded on Dec 22, 1944.' }
+      ];
+
+      bodyHtml = `
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700">Tiêu đề bài tập</label>
+          <input type="text" class="read-ex-title" value="${esc(ex.title || 'Exercise 6. Comprehension – True or False')}">
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px">Mô tả / Hướng dẫn</label>
+          <input type="text" class="read-ex-subtitle" value="${esc(ex.subtitle || 'Decide whether the following statements are True (T) or False (F):')}">
+        </div>
+
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:12px;font-weight:700;color:#c2410c;">📋 Danh sách các nhận định True / False:</div>
+            <button type="button" class="btn btn-sm btn-p" onclick="window.addReadingTfRowToCard(this)" style="font-size:11px;padding:3px 8px;">➕ Thêm nhận định</button>
+          </div>
+
+          <div class="read-tf-items-container" style="display:flex;flex-direction:column;gap:8px;">
+            ${items.map((item, itemIdx) => `
+              <div class="read-tf-item-row" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:8px 10px;">
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+                  <span style="font-size:11px;font-weight:700;color:#64748b;width:20px;text-align:center;">${itemIdx + 1}</span>
+                  <input type="text" class="read-tf-statement" value="${esc(item.statement || '')}" placeholder="Nội dung nhận định..." style="flex:1;font-size:13px;font-weight:600">
+                  <select class="read-tf-answer" style="padding:4px 8px;font-weight:800;font-size:12px;border-radius:6px;border:1.5px solid #cbd5e1">
+                    <option value="true" ${item.answer === true ? 'selected' : ''}>TRUE</option>
+                    <option value="false" ${item.answer === false ? 'selected' : ''}>FALSE</option>
+                  </select>
+                  <button type="button" class="btn-icon-del" onclick="window.removeReadingTfRow(this)" title="Xóa nhận định này">🗑️</button>
+                </div>
+                <input type="text" class="read-tf-explain" value="${esc(item.explain || '')}" placeholder="Giải thích / Dẫn chứng sửa câu sai..." style="width:100%;font-size:11.5px">
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // 6. Summary Cloze
+    else if (type === 'summary_cloze') {
+      typeBadge = `<span class="reading-stage-badge stage-sum" style="margin:0">🟣 7. Summarizing (Điền từ tóm tắt)</span>`;
+      const bank = (ex.wordBank || ['1944', '34', 'military art', 'liberated', 'forerunner']).join(', ');
+      const blanks = (ex.blanks || []).map(b => `${b.num}: ${b.correct}`).join('\n');
+
+      bodyHtml = `
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700">Tiêu đề bài tập</label>
+          <input type="text" class="read-ex-title" value="${esc(ex.title || 'Exercise 7. Summarizing – Complete the summary')}">
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px">Mô tả / Hướng dẫn</label>
+          <input type="text" class="read-ex-subtitle" value="${esc(ex.subtitle || 'Fill in the blanks with suitable words from the box:')}">
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:11px;font-weight:700;color:#7e22ce">Ngân hàng từ khóa (Word Bank - Phân tách bởi dấu phẩy)</label>
+          <input type="text" class="read-ex-wordbank" value="${esc(bank)}" placeholder="VD: 1944, 34, military art, liberated, forerunner, sacrifice...">
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:11px;font-weight:700">Đoạn văn tóm tắt có chỗ trống dạng [BLANK_1], [BLANK_2]...</label>
+          <textarea class="read-ex-cloze-template" style="width:100%;min-height:100px;font-size:13px;line-height:1.6">${esc(ex.textTemplate || '')}</textarea>
+        </div>
+        <div class="fg" style="margin:0">
+          <label style="font-size:11px;font-weight:700;color:#15803d">Đáp án các chỗ trống (Định dạng STT: từ_đúng, mỗi dòng 1 chỗ trống)</label>
+          <textarea class="read-ex-cloze-blanks" style="width:100%;min-height:70px;font-size:12px" placeholder="1: 1944&#10;2: 34&#10;3: military art">${esc(blanks)}</textarea>
+        </div>
+      `;
+    }
+
+    // 7. Sequencing
+    else if (type === 'sequencing') {
+      typeBadge = `<span class="reading-stage-badge stage-seq" style="margin:0">🟣 8. Sequencing (Trình tự thời gian)</span>`;
+      const events = ex.events || [
+        { text: 'The Vietnam Armed Propaganda Unit for National Liberation was founded.', correctOrder: 1 }
+      ];
+
+      bodyHtml = `
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700">Tiêu đề bài tập</label>
+          <input type="text" class="read-ex-title" value="${esc(ex.title || 'Exercise 8. Sequencing – Follow the historical development')}">
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px">Mô tả / Hướng dẫn</label>
+          <input type="text" class="read-ex-subtitle" value="${esc(ex.subtitle || 'Put the following historical events in chronological order (1–5):')}">
+        </div>
+
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:12px;font-weight:700;color:#be185d;">📋 Danh sách các sự kiện lịch sử cần sắp xếp:</div>
+            <button type="button" class="btn btn-sm btn-p" onclick="window.addReadingSeqRowToCard(this)" style="font-size:11px;padding:3px 8px;">➕ Thêm sự kiện</button>
+          </div>
+
+          <div class="read-seq-items-container" style="display:flex;flex-direction:column;gap:6px;">
+            ${events.map((ev, evIdx) => `
+              <div class="read-seq-item-row" style="display:flex;gap:6px;align-items:center;background:#ffffff;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;">
+                <span style="font-size:11px;font-weight:700;color:#64748b;width:20px;text-align:center;">${evIdx + 1}</span>
+                <input type="text" class="read-seq-text" value="${esc(ev.text || '')}" placeholder="Nội dung sự kiện..." style="flex:1;font-size:12.5px;font-weight:600">
+                <span style="font-size:11px;font-weight:700;color:#be185d">Thứ tự đúng:</span>
+                <input type="number" class="read-seq-order" value="${ev.correctOrder || (evIdx + 1)}" min="1" max="20" style="width:50px;text-align:center;font-weight:800;font-size:12px">
+                <button type="button" class="btn-icon-del" onclick="window.removeReadingSeqRow(this)" title="Xóa sự kiện này">🗑️</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // 8. Critical Thinking
+    else if (type === 'critical_thinking') {
+      typeBadge = `<span class="reading-stage-badge stage-crit" style="margin:0">🔴 9. Critical Thinking (Phản biện & Thảo luận)</span>`;
+      const questions = ex.questions || [
+        { num: 1, prompt: 'Why was the founding of the VPA with only 34 soldiers significant?', keyIdeas: 'It laid the foundation for the revolutionary army.' }
+      ];
+      const exprList = (ex.usefulExpressions || ['In my opinion...', 'The text clearly states that...']).join(', ');
+
+      bodyHtml = `
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700">Tiêu đề bài tập</label>
+          <input type="text" class="read-ex-title" value="${esc(ex.title || 'Exercise 9. Critical Thinking – Think and discuss')}">
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px">Mô tả / Hướng dẫn</label>
+          <input type="text" class="read-ex-subtitle" value="${esc(ex.subtitle || 'Work in groups and answer the following questions with your own reasoning:')}">
+        </div>
+
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:12px;font-weight:700;color:#b91c1c;">📋 Danh sách câu hỏi phản biện:</div>
+            <button type="button" class="btn btn-sm btn-p" onclick="window.addReadingCritRowToCard(this)" style="font-size:11px;padding:3px 8px;">➕ Thêm câu hỏi</button>
+          </div>
+
+          <div class="read-crit-items-container" style="display:flex;flex-direction:column;gap:8px;">
+            ${questions.map((q, qIdx) => `
+              <div class="read-crit-item-row" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:6px;padding:8px 10px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                  <span style="font-size:12px;font-weight:800;color:#991b1b">Chủ đề ${qIdx + 1}:</span>
+                  <button type="button" class="btn-icon-del" onclick="window.removeReadingCritRow(this)" title="Xóa chủ đề này">🗑️</button>
+                </div>
+                <input type="text" class="read-crit-prompt" value="${esc(q.prompt || '')}" placeholder="Nội dung câu hỏi thảo luận..." style="width:100%;font-size:13px;font-weight:600;margin-bottom:4px">
+                <input type="text" class="read-crit-keyideas" value="${esc(q.keyIdeas || '')}" placeholder="Luận điểm & Gợi ý phân tích..." style="width:100%;font-size:11.5px">
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="fg" style="margin:0">
+          <label style="font-size:11px;font-weight:700;color:#991b1b">Mẫu câu hữu ích khi thảo luận (Useful Expressions - Phân tách bởi dấu phẩy)</label>
+          <input type="text" class="read-ex-useful-expr" value="${esc(exprList)}" placeholder="VD: In my opinion, From my perspective, It is evident that...">
+        </div>
+      `;
+    }
+
+    // 9. Post-reading Presentation
+    else if (type === 'post_reading') {
+      typeBadge = `<span class="reading-stage-badge stage-post" style="margin:0">🔴 10. Post-reading (Thuyết trình)</span>`;
+      const checklist = (ex.checklist || ['Founding date and location', 'First military feats']).join('\n');
+
+      bodyHtml = `
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px;font-weight:700">Tiêu đề bài tập</label>
+          <input type="text" class="read-ex-title" value="${esc(ex.title || 'Exercise 10. Post-reading – Give a short presentation')}">
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:12px">Mô tả / Hướng dẫn</label>
+          <input type="text" class="read-ex-subtitle" value="${esc(ex.subtitle || 'Prepare a 1–2 minute talk about The Founding and Early Victories of the VPA:')}">
+        </div>
+        <div class="fg" style="margin-bottom:8px">
+          <label style="font-size:11px;font-weight:700;color:#4338ca">Danh mục tiêu chí / Nội dung cần có (Mỗi ý 1 dòng)</label>
+          <textarea class="read-ex-post-checklist" style="width:100%;min-height:80px;font-size:12px">${esc(checklist)}</textarea>
+        </div>
+        <div class="fg" style="margin:0">
+          <label style="font-size:11px;font-weight:700;color:#3730a3">Cấu trúc bài thuyết trình mẫu (Suggested Structure Template)</label>
+          <textarea class="read-ex-post-structure" style="width:100%;min-height:90px;font-size:12.5px;line-height:1.6">${esc(ex.suggestedStructure || '')}</textarea>
+        </div>
+      `;
+    }
+
+    // 10. Backward Spelling
+    else if (type === 'backward_spelling') {
       typeBadge = `<span class="ex-badge" style="background:#f3e8ff;color:#7e22ce;font-weight:800">🔤 Backward Spelling (Đánh vần / Xếp chữ)</span>`;
       bodyHtml = `
         <div class="grid2" style="margin-bottom:8px">
@@ -1576,8 +2285,11 @@ export function renderReadingDesignerExercises(exercises = []) {
           <input type="text" class="read-ex-spell-clue" value="${esc(ex.clue || '')}" placeholder="VD: Operating independently without human intervention">
         </div>
       `;
-    } else if (type === 'mcq' || type === 'tfng') {
-      typeBadge = `<span class="ex-badge mcq-badge">🔘 Trắc nghiệm đọc hiểu (MCQ)</span>`;
+    }
+
+    // 11. Legacy Single MCQ
+    else {
+      typeBadge = `<span class="ex-badge mcq-badge">🔘 Trắc nghiệm đọc hiểu đơn (MCQ)</span>`;
       const opts = ex.options || ['Option A', 'Option B', 'Option C', 'Option D'];
       bodyHtml = `
         <div class="fg" style="margin-bottom:8px">
@@ -1629,56 +2341,272 @@ function extractReadingExercisesFromDOM() {
   const cards = document.querySelectorAll('.ud-read-ex-card');
   const exercises = [];
 
-  cards.forEach((card) => {
+  cards.forEach((card, idx) => {
     const type = card.dataset.type || 'mcq';
-    if (type === 'matching') {
-      const title = card.querySelector('.read-ex-match-title')?.value.trim() || 'Exercise 1. Match the words with definitions';
+
+    // 1. Pre-reading
+    if (type === 'pre_reading') {
+      const title = card.querySelector('.read-ex-title')?.value.trim() || 'Exercise 1. Pre-reading – Activate your knowledge';
+      const subtitle = card.querySelector('.read-ex-subtitle')?.value.trim() || '';
+      const qText = card.querySelector('.read-ex-preread-q')?.value || '';
+      const hText = card.querySelector('.read-ex-preread-hints')?.value || '';
+      const target = card.querySelector('.read-ex-target')?.value.trim() || '';
+
+      const questions = qText.split('\n').map(s => s.trim()).filter(Boolean);
+      const hintAnswers = hText.split('\n').map(s => s.trim()).filter(Boolean);
+
+      exercises.push({
+        id: `read_pre_${Date.now()}_${idx}`,
+        type: 'pre_reading',
+        title,
+        subtitle,
+        questions,
+        hintAnswers,
+        target
+      });
+    }
+
+    // 2. Group MCQ
+    else if (type === 'mcq_group') {
+      const title = card.querySelector('.read-ex-title')?.value.trim() || 'Exercise 2. Multiple Choice Questions';
+      const subtitle = card.querySelector('.read-ex-subtitle')?.value.trim() || '';
+      const stage = card.querySelector('.read-ex-stage')?.value || 'skimming';
+      const timeLimit = card.querySelector('.read-ex-timelimit')?.value.trim() || '';
+
+      const itemRows = card.querySelectorAll('.read-mcq-group-item-row');
+      const items = [];
+      itemRows.forEach((iRow) => {
+        const q = iRow.querySelector('.read-g-item-q')?.value.trim() || '';
+        const o0 = iRow.querySelector('.read-g-item-opt-0')?.value.trim() || '';
+        const o1 = iRow.querySelector('.read-g-item-opt-1')?.value.trim() || '';
+        const o2 = iRow.querySelector('.read-g-item-opt-2')?.value.trim() || '';
+        const o3 = iRow.querySelector('.read-g-item-opt-3')?.value.trim() || '';
+        const ans = parseInt(iRow.querySelector('.read-g-item-ans')?.value || '0', 10);
+        const exp = iRow.querySelector('.read-g-item-explain')?.value.trim() || '';
+
+        if (q || o0 || o1) {
+          items.push({
+            question: q,
+            options: [o0, o1, o2, o3].filter(Boolean),
+            answer: isNaN(ans) ? 0 : ans,
+            explain: exp
+          });
+        }
+      });
+
+      exercises.push({
+        id: `read_mcq_g_${Date.now()}_${idx}`,
+        type: 'mcq_group',
+        stage,
+        title,
+        subtitle,
+        timeLimit,
+        items
+      });
+    }
+
+    // 3. Scanning Table
+    else if (type === 'scanning_table') {
+      const title = card.querySelector('.read-ex-title')?.value.trim() || 'Exercise 3. Scanning – Find specific information';
+      const subtitle = card.querySelector('.read-ex-subtitle')?.value.trim() || '';
+
+      const scanRows = card.querySelectorAll('.read-scan-row-item');
+      const rows = [];
+      scanRows.forEach((sRow) => {
+        const label = sRow.querySelector('.read-scan-label')?.value.trim() || '';
+        const key = sRow.querySelector('.read-scan-key')?.value.trim() || '';
+        const altStr = sRow.querySelector('.read-scan-altkeys')?.value.trim() || '';
+        const altKeys = altStr ? altStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+        if (label || key) {
+          rows.push({ label, key, altKeys });
+        }
+      });
+
+      exercises.push({
+        id: `read_scan_${Date.now()}_${idx}`,
+        type: 'scanning_table',
+        title,
+        subtitle,
+        rows
+      });
+    }
+
+    // 4. Matching
+    else if (type === 'matching') {
+      const title = card.querySelector('.read-ex-title')?.value.trim() || 'Exercise 4A. Match the words with definitions';
+      const subtitle = card.querySelector('.read-ex-subtitle')?.value.trim() || '';
       const pairRows = card.querySelectorAll('.read-match-pair-row');
       const pairs = [];
-      if (pairRows.length > 0) {
-        pairRows.forEach((pRow, pIdx) => {
-          const w = pRow.querySelector('.read-match-pair-word')?.value.trim();
-          const l = pRow.querySelector('.read-match-pair-letter')?.value.trim() || String.fromCharCode(97 + (pIdx % 26));
-          const d = pRow.querySelector('.read-match-pair-def')?.value.trim();
-          if (w || d) {
-            pairs.push({
-              id: pIdx + 1,
-              word: w || '',
-              letter: l || '',
-              definition: d || ''
-            });
+      pairRows.forEach((pRow, pIdx) => {
+        const w = pRow.querySelector('.read-match-pair-word')?.value.trim();
+        const l = pRow.querySelector('.read-match-pair-letter')?.value.trim() || String.fromCharCode(97 + (pIdx % 26));
+        const d = pRow.querySelector('.read-match-pair-def')?.value.trim();
+        if (w || d) {
+          pairs.push({
+            id: pIdx + 1,
+            word: w || '',
+            letter: l || '',
+            definition: d || ''
+          });
+        }
+      });
+
+      exercises.push({
+        id: `read_match_${Date.now()}_${idx}`,
+        type: 'matching',
+        title,
+        subtitle,
+        pairs
+      });
+    }
+
+    // 5. True/False Group
+    else if (type === 'true_false_group') {
+      const title = card.querySelector('.read-ex-title')?.value.trim() || 'Exercise 6. Comprehension – True or False';
+      const subtitle = card.querySelector('.read-ex-subtitle')?.value.trim() || '';
+      const tfRows = card.querySelectorAll('.read-tf-item-row');
+      const items = [];
+      tfRows.forEach((tRow) => {
+        const statement = tRow.querySelector('.read-tf-statement')?.value.trim() || '';
+        const answer = tRow.querySelector('.read-tf-answer')?.value === 'true';
+        const explain = tRow.querySelector('.read-tf-explain')?.value.trim() || '';
+        if (statement) {
+          items.push({ statement, answer, explain });
+        }
+      });
+
+      exercises.push({
+        id: `read_tf_${Date.now()}_${idx}`,
+        type: 'true_false_group',
+        title,
+        subtitle,
+        items
+      });
+    }
+
+    // 6. Summary Cloze
+    else if (type === 'summary_cloze') {
+      const title = card.querySelector('.read-ex-title')?.value.trim() || 'Exercise 7. Summarizing – Complete the summary';
+      const subtitle = card.querySelector('.read-ex-subtitle')?.value.trim() || '';
+      const wbStr = card.querySelector('.read-ex-wordbank')?.value.trim() || '';
+      const textTemplate = card.querySelector('.read-ex-cloze-template')?.value || '';
+      const blanksStr = card.querySelector('.read-ex-cloze-blanks')?.value.trim() || '';
+
+      const wordBank = wbStr ? wbStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const blanks = [];
+      if (blanksStr) {
+        blanksStr.split('\n').forEach(line => {
+          const parts = line.split(':');
+          if (parts.length >= 2) {
+            const num = parseInt(parts[0].trim(), 10);
+            const correct = parts.slice(1).join(':').trim();
+            if (!isNaN(num) && correct) {
+              blanks.push({ num, correct });
+            }
           }
         });
-      } else {
-        const pairsRaw = card.querySelector('.read-ex-match-pairs')?.value.trim();
-        if (pairsRaw) {
-          try { pairs.push(...JSON.parse(pairsRaw)); } catch(e){}
-        }
       }
 
-      if (pairs.length) {
-        exercises.push({
-          id: `read_match_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-          type: 'matching',
-          title: title,
-          pairs: pairs
-        });
-      }
-    } else if (type === 'backward_spelling') {
+      exercises.push({
+        id: `read_sum_${Date.now()}_${idx}`,
+        type: 'summary_cloze',
+        title,
+        subtitle,
+        wordBank,
+        textTemplate,
+        blanks
+      });
+    }
+
+    // 7. Sequencing
+    else if (type === 'sequencing') {
+      const title = card.querySelector('.read-ex-title')?.value.trim() || 'Exercise 8. Sequencing – Follow the historical development';
+      const subtitle = card.querySelector('.read-ex-subtitle')?.value.trim() || '';
+      const seqRows = card.querySelectorAll('.read-seq-item-row');
+      const events = [];
+      seqRows.forEach((sRow, sIdx) => {
+        const text = sRow.querySelector('.read-seq-text')?.value.trim() || '';
+        const correctOrder = parseInt(sRow.querySelector('.read-seq-order')?.value || `${sIdx + 1}`, 10);
+        if (text) {
+          events.push({ text, correctOrder: isNaN(correctOrder) ? sIdx + 1 : correctOrder });
+        }
+      });
+
+      exercises.push({
+        id: `read_seq_${Date.now()}_${idx}`,
+        type: 'sequencing',
+        title,
+        subtitle,
+        events
+      });
+    }
+
+    // 8. Critical Thinking
+    else if (type === 'critical_thinking') {
+      const title = card.querySelector('.read-ex-title')?.value.trim() || 'Exercise 9. Critical Thinking – Think and discuss';
+      const subtitle = card.querySelector('.read-ex-subtitle')?.value.trim() || '';
+      const critRows = card.querySelectorAll('.read-crit-item-row');
+      const questions = [];
+      critRows.forEach((cRow, cIdx) => {
+        const prompt = cRow.querySelector('.read-crit-prompt')?.value.trim() || '';
+        const keyIdeas = cRow.querySelector('.read-crit-keyideas')?.value.trim() || '';
+        if (prompt) {
+          questions.push({ num: cIdx + 1, prompt, keyIdeas });
+        }
+      });
+
+      const exprStr = card.querySelector('.read-ex-useful-expr')?.value.trim() || '';
+      const usefulExpressions = exprStr ? exprStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+      exercises.push({
+        id: `read_crit_${Date.now()}_${idx}`,
+        type: 'critical_thinking',
+        title,
+        subtitle,
+        questions,
+        usefulExpressions
+      });
+    }
+
+    // 9. Post-reading Presentation
+    else if (type === 'post_reading') {
+      const title = card.querySelector('.read-ex-title')?.value.trim() || 'Exercise 10. Post-reading – Give a short presentation';
+      const subtitle = card.querySelector('.read-ex-subtitle')?.value.trim() || '';
+      const checkStr = card.querySelector('.read-ex-post-checklist')?.value || '';
+      const suggestedStructure = card.querySelector('.read-ex-post-structure')?.value || '';
+
+      const checklist = checkStr.split('\n').map(s => s.trim()).filter(Boolean);
+
+      exercises.push({
+        id: `read_post_${Date.now()}_${idx}`,
+        type: 'post_reading',
+        title,
+        subtitle,
+        checklist,
+        suggestedStructure
+      });
+    }
+
+    // 10. Backward Spelling
+    else if (type === 'backward_spelling') {
       const target = card.querySelector('.read-ex-spell-target')?.value.trim().toUpperCase() || '';
       const clue = card.querySelector('.read-ex-spell-clue')?.value.trim() || '';
       const hint = card.querySelector('.read-ex-spell-hint')?.value.trim() || '';
       if (target && clue) {
         exercises.push({
-          id: `read_spell_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          id: `read_spell_${Date.now()}_${idx}`,
           type: 'backward_spelling',
-          title: 'Exercise 3. Backward Spelling (Đánh vần & Giải đố từ vựng)',
+          title: 'Exercise. Backward Spelling & Word Puzzle',
           targetWord: target,
           clue: clue,
           hint: hint
         });
       }
-    } else if (type === 'mcq') {
+    }
+
+    // 11. Legacy Single MCQ
+    else if (type === 'mcq') {
       const q = card.querySelector('.read-ex-q')?.value.trim() || '';
       const o0 = card.querySelector('.read-ex-opt-0')?.value.trim() || '';
       const o1 = card.querySelector('.read-ex-opt-1')?.value.trim() || '';
@@ -1688,9 +2616,9 @@ function extractReadingExercisesFromDOM() {
       const exp = card.querySelector('.read-ex-explain')?.value.trim() || '';
       if (q || o0 || o1) {
         exercises.push({
-          id: `read_mcq_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+          id: `read_mcq_${Date.now()}_${idx}`,
           type: 'mcq',
-          title: 'Exercise 2. Choose the best answer',
+          title: 'Exercise. Choose the best answer',
           question: q,
           options: [o0, o1, o2, o3].filter(Boolean),
           answer: isNaN(ans) ? 0 : ans,
@@ -1709,27 +2637,144 @@ window.addReadingDesignerExercise = function(type) {
 
   const currentList = extractReadingExercisesFromDOM();
   let newEx = { type };
-  if (type === 'matching') {
+
+  if (type === 'pre_reading') {
+    newEx = {
+      type: 'pre_reading',
+      title: 'Exercise 1. Pre-reading – Activate your knowledge',
+      subtitle: 'Work in pairs and discuss the following questions:',
+      questions: [
+        'When was the Vietnam People\'s Army (VPA) founded?',
+        'What was the precursor of the VPA?',
+        'How many cadres and soldiers were there when it was established?',
+        'What military art did the first regular troops use?'
+      ],
+      hintAnswers: [
+        'Founded on December 22, 1944 in Cao Bang.',
+        'The precursor was the Vietnam Armed Propaganda Unit for National Liberation.',
+        'Initially established with 34 cadres and soldiers.',
+        'Guerrilla warfare (đánh du kích), hit-and-run, mobilizing the people.'
+      ],
+      target: 'Kích hoạt kiến thức nền và dự đoán nội dung trước khi đọc.'
+    };
+  } else if (type === 'skimming' || type === 'vocab_mcq' || type === 'comp_mcq') {
+    const stage = type === 'skimming' ? 'skimming' : (type === 'vocab_mcq' ? 'vocabulary' : 'comprehension');
+    const title = type === 'skimming' ? 'Exercise 2. Skimming – Read for the main idea' : (type === 'vocab_mcq' ? 'Exercise 4B. Vocabulary in Context (MCQ)' : 'Exercise 5. Comprehension – Understanding details');
+    newEx = {
+      type: 'mcq_group',
+      stage: stage,
+      title: title,
+      subtitle: 'Read the questions and select the best answer from A, B, C, or D:',
+      timeLimit: type === 'skimming' ? '2–3 minutes' : '',
+      items: [
+        {
+          question: 'What is the main purpose of the passage?',
+          options: [
+            'To describe the foundation and early development of the VPA',
+            'To analyze modern weaponry of Vietnam',
+            'To compare French and Vietnamese military tactics',
+            'To provide a biography of General Vo Nguyen Giap'
+          ],
+          answer: 0,
+          explain: 'The passage focuses chronologically on the establishment and evolution of the VPA from 1944 to 1945.'
+        }
+      ]
+    };
+  } else if (type === 'scanning_table') {
+    newEx = {
+      type: 'scanning_table',
+      title: 'Exercise 3. Scanning – Find specific information',
+      subtitle: 'Complete the table by scanning the text for facts and figures:',
+      rows: [
+        { label: '1. Founding date of the VPA', key: 'December 22, 1944', altKeys: ['22/12/1944', 'Dec 22, 1944'] },
+        { label: '2. Place of establishment', key: 'Nguyen Binh, Cao Bang', altKeys: ['Cao Bang', 'Tran Hung Dao forest'] },
+        { label: '3. Initial number of cadres and soldiers', key: '34', altKeys: ['34 soldiers', '34 cadres'] }
+      ]
+    };
+  } else if (type === 'matching') {
     newEx = {
       type: 'matching',
-      title: 'Exercise 1. Match the words/ phrases (1-8) with their definitions (a-h)',
+      title: 'Exercise 4A. Match the words/phrases with their definitions',
+      subtitle: 'Match the words/phrases (1–8) with their correct definitions (a–h):',
       pairs: [
-        { id: 1, word: 'confined', letter: 'a', definition: 'limited or restricted to a particular area' },
-        { id: 2, word: 'integral', letter: 'b', definition: 'essential or necessary for completeness' }
+        { id: 1, word: 'core (n)', letter: 'a', definition: 'the central or most important part of something' },
+        { id: 2, word: 'sacrifice (v, n)', letter: 'b', definition: 'giving up something valuable for a noble cause' }
       ]
+    };
+  } else if (type === 'true_false_group') {
+    newEx = {
+      type: 'true_false_group',
+      title: 'Exercise 6. Comprehension – True or False',
+      subtitle: 'Decide whether the following statements are True (T) or False (F):',
+      items: [
+        { statement: 'The VPA was established on December 22, 1944.', answer: true, explain: 'Correct! Established on 22/12/1944.' },
+        { statement: 'The initial unit consisted of 340 soldiers.', answer: false, explain: 'False. It consisted of only 34 cadres and soldiers.' }
+      ]
+    };
+  } else if (type === 'summary_cloze') {
+    newEx = {
+      type: 'summary_cloze',
+      title: 'Exercise 7. Summarizing – Complete the summary',
+      subtitle: 'Complete the summary paragraph by selecting the correct words from the box:',
+      wordBank: ['1944', '34', 'guerrilla warfare', 'forerunner', 'liberated', 'feat of arms'],
+      textTemplate: 'The Vietnam People\'s Army was founded in late (1) [BLANK_1] with only (2) [BLANK_2] members. It served as the (3) [BLANK_3] of the modern military force.',
+      blanks: [
+        { num: 1, correct: '1944' },
+        { num: 2, correct: '34' },
+        { num: 3, correct: 'forerunner' }
+      ]
+    };
+  } else if (type === 'sequencing') {
+    newEx = {
+      type: 'sequencing',
+      title: 'Exercise 8. Sequencing – Follow the historical development',
+      subtitle: 'Put the following historical events in chronological order (1–5):',
+      events: [
+        { text: 'President Ho Chi Minh issued the directive to establish the armed propaganda unit.', correctOrder: 1 },
+        { text: 'The Vietnam Armed Propaganda Unit for National Liberation won battles at Phai Khat and Na Ngan.', correctOrder: 2 },
+        { text: 'The unit merged with the National Salvation Army to form the Vietnam Liberation Army.', correctOrder: 3 }
+      ]
+    };
+  } else if (type === 'critical_thinking') {
+    newEx = {
+      type: 'critical_thinking',
+      title: 'Exercise 9. Critical Thinking – Think and discuss',
+      subtitle: 'Work in groups and discuss the following analytical questions:',
+      questions: [
+        { num: 1, prompt: 'Why was "political work more important than military operations" emphasized at the beginning?', keyIdeas: 'Building public trust and mobilizing local support were fundamental to survival.' },
+        { num: 2, prompt: 'How did the principle of "fighting while building forces" help the young army grow?', keyIdeas: 'Securing weapons from enemy outposts and recruiting local volunteers rapidly.' }
+      ],
+      usefulExpressions: [
+        'In my perspective...',
+        'The passage demonstrates that...',
+        'This historical milestone signifies...'
+      ]
+    };
+  } else if (type === 'post_reading') {
+    newEx = {
+      type: 'post_reading',
+      title: 'Exercise 10. Post-reading – Give a short presentation',
+      subtitle: 'Prepare a 1–2 minute presentation on the foundation of the VPA:',
+      checklist: [
+        'Time and place of establishment',
+        'Early leadership and initial number of troops',
+        'First military victories at Phai Khat and Na Ngan',
+        'Historical significance for the August Revolution'
+      ],
+      suggestedStructure: 'Good morning everyone. Today, I would like to talk about the remarkable founding of the Vietnam People\'s Army. Established on December 22, 1944 in Cao Bang with 34 cadres, the unit quickly proved that courage and strategy overcome numbers...'
     };
   } else if (type === 'backward_spelling') {
     newEx = {
       type: 'backward_spelling',
-      title: 'Exercise 3. Backward Spelling (Đánh vần & Giải đố từ vựng)',
-      targetWord: 'AUTONOMOUS',
-      clue: 'Operating independently and having the freedom to act',
-      hint: '10 chữ cái • Bắt đầu bằng chữ A'
+      title: 'Exercise. Backward Spelling (Đánh vần & Giải đố từ vựng)',
+      targetWord: 'LIBERATE',
+      clue: 'To set someone free from imprisonment, slavery, or enemy occupation',
+      hint: '8 chữ cái • Bắt đầu bằng chữ L'
     };
   } else if (type === 'mcq') {
     newEx = {
       type: 'mcq',
-      title: 'Exercise 2. Choose the best answer from A, B, C, or D',
+      title: 'Exercise. Choose the best answer from A, B, C, or D',
       question: '',
       options: ['', '', '', ''],
       answer: 0,
