@@ -984,49 +984,7 @@ export function switchDesignerSkillTab(skill) {
       </div>
     `;
   } else if (skill === 'languageFocus') {
-    const lf = unit.languageFocus || { pastFormVerbs: [], flashcards: [], matchPairs: [], grammarChallenge: [] };
-    const verbs = lf.pastFormVerbs || [
-      { infinitive: 'go', past: 'went', meaning: 'đi' },
-      { infinitive: 'see', past: 'saw', meaning: 'thấy' },
-      { infinitive: 'buy', past: 'bought', meaning: 'mua' }
-    ];
-    const fc = lf.flashcards?.[0] || { word: 'Sustainable', pos: 'adjective', ipa: '/səˈsteɪ.nə.bəl/', meaning: 'Bền vững', example: 'Solar energy is sustainable.', image: '' };
-
-    contentWrap.innerHTML = `
-      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column;gap:18px">
-        <!-- 1. EXERCISE 1: PAST FORM VERBS TABLE -->
-        <div style="padding:14px;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:10px">
-          <div style="font-size:14px;font-weight:800;color:#1e40af;margin-bottom:4px">📝 Exercise 1. Fill in the Past Form (Bảng Động Từ Quá Khứ)</div>
-          <div style="font-size:12px;color:#64748b;margin-bottom:8px">Định dạng JSON danh sách động từ nguyên thể, quá khứ (V2) và ý nghĩa:</div>
-          <textarea id="ud-lf-past-verbs" class="designer-textarea" style="width:100%;min-height:110px;font-family:monospace;font-size:13px">${esc(JSON.stringify(verbs, null, 2))}</textarea>
-        </div>
-
-        <!-- 2. 3D FLASHCARDS -->
-        <div style="padding:14px;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:10px">
-          <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:8px">🎴 Thẻ Từ Vựng 3D (Flashcard Minh Họa)</div>
-          <div class="grid2">
-            <div class="fg" style="margin:0"><label>Từ vựng (Word) *</label><input id="ud-fc-word" value="${esc(fc.word || '')}"></div>
-            <div class="fg" style="margin:0"><label>Từ loại (noun/verb/adj)</label><input id="ud-fc-pos" value="${esc(fc.pos || '')}"></div>
-          </div>
-          <div class="grid2" style="margin-top:8px">
-            <div class="fg" style="margin:0"><label>Phiên âm IPA</label><input id="ud-fc-ipa" value="${esc(fc.ipa || '')}"></div>
-            <div class="fg" style="margin:0"><label>Nghĩa tiếng Việt *</label><input id="ud-fc-meaning" value="${esc(fc.meaning || '')}"></div>
-          </div>
-          <div class="fg" style="margin-top:8px">
-            <label>🖼️ URL Hình ảnh minh họa cho thẻ 3D</label>
-            <div style="display:flex;gap:8px;">
-              <input id="ud-fc-image" placeholder="VD: https://images.unsplash.com/... hoặc chọn từ thư viện" value="${esc(fc.image || '')}">
-              <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('ud-fc-image', 'ud-fc-img-preview')" style="white-space:nowrap;">📂 Thư viện ảnh</button>
-            </div>
-            <div id="ud-fc-img-preview" style="margin-top:6px">${fc.image ? `<img src="${fc.image}" style="max-height:120px;border-radius:6px;border:1px solid #cbd5e1">` : ''}</div>
-          </div>
-          <div class="fg" style="margin-top:8px">
-            <label>Ví dụ câu thực tế (Example)</label>
-            <input id="ud-fc-example" value="${esc(fc.example || '')}">
-          </div>
-        </div>
-      </div>
-    `;
+    contentWrap.innerHTML = renderLanguageFocusDesigner(unit);
   }
 
   // Tự động căn chỉnh chiều cao textareas để hiển thị toàn bộ nội dung
@@ -1744,6 +1702,408 @@ window.handleUploadRoleplayVideo = async function(idx, inputEl) {
   }
 };
 
+// -------------------------------------------------------------------------
+// HELPER METHODS CHO DESIGNER 5. LANGUAGE FOCUS (NO-CODE / VISUAL STUDIO)
+// -------------------------------------------------------------------------
+let _currentLfSubTab = 'past_verbs'; // 'past_verbs' | 'grammar' | 'pairs' | 'flashcards'
+
+export function renderLanguageFocusDesigner(unit) {
+  const lf = unit.languageFocus || unit.language_focus || {};
+  const verbs = Array.isArray(lf.pastFormVerbs) ? lf.pastFormVerbs : [
+    { infinitive: 'go', past: 'went', meaning: 'đi' },
+    { infinitive: 'see', past: 'saw', meaning: 'thấy, nhìn' },
+    { infinitive: 'buy', past: 'bought', meaning: 'mua' }
+  ];
+  const grammar = Array.isArray(lf.grammarChallenge) ? lf.grammarChallenge : [
+    {
+      id: 'gm_1',
+      question: 'She ___ English for five years.',
+      options: ['has learned', 'is learning', 'learns', 'learned'],
+      answer: 0,
+      explain: 'Thì Hiện tại hoàn thành với "for five years".'
+    }
+  ];
+  const pairs = Array.isArray(lf.matchPairs) ? lf.matchPairs : [
+    { left: 'Piece of cake', right: 'Rất dễ dàng, dễ như ăn bánh', pairId: 1 },
+    { left: 'Break a leg', right: 'Chúc may mắn', pairId: 2 }
+  ];
+  const flashcards = Array.isArray(lf.flashcards) && lf.flashcards.length > 0 ? lf.flashcards : [
+    {
+      id: 'fc_1',
+      word: 'Sustainable',
+      pos: 'adjective',
+      ipa: '/səˈsteɪ.nə.bəl/',
+      meaning: 'Bền vững, thân thiện môi trường',
+      example: 'Solar energy is a clean and sustainable source of power.',
+      synonyms: 'Eco-friendly, renewable',
+      image: 'https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=600&auto=format&fit=crop&q=80'
+    }
+  ];
+
+  if (!unit.languageFocus) unit.languageFocus = {};
+  unit.languageFocus.pastFormVerbs = verbs;
+  unit.languageFocus.grammarChallenge = grammar;
+  unit.languageFocus.matchPairs = pairs;
+  unit.languageFocus.flashcards = flashcards;
+
+  const activeTab = _currentLfSubTab || 'past_verbs';
+
+  return `
+    <div class="ud-lf-container">
+      <!-- HEADER -->
+      <div class="ud-lf-header">
+        <div>
+          <div class="ud-lf-title">🔍 5. Language Focus & Sổ Tay Ghi Nhớ Tương Tác</div>
+          <div class="ud-lf-desc">Biên soạn trực quan không cần viết mã JSON: Bảng động từ quá khứ, Trắc nghiệm ngữ pháp, Nối từ và Bộ thẻ từ vựng 3D.</div>
+        </div>
+      </div>
+
+      <!-- 4 SUB-TABS NAVIGATION -->
+      <div class="ud-lf-subnav">
+        <button type="button" class="ud-lf-subnav-btn ${activeTab === 'past_verbs' ? 'active' : ''}" onclick="window.switchLfSubTab('past_verbs')">
+          <span>📝 1. Bảng Động Từ Quá Khứ</span>
+          <span class="ud-lf-badge" id="badge-lf-verbs">${verbs.length}</span>
+        </button>
+        <button type="button" class="ud-lf-subnav-btn ${activeTab === 'grammar' ? 'active' : ''}" onclick="window.switchLfSubTab('grammar')">
+          <span>⚡ 2. Trắc Nghiệm Ngữ Pháp</span>
+          <span class="ud-lf-badge" id="badge-lf-grammar">${grammar.length}</span>
+        </button>
+        <button type="button" class="ud-lf-subnav-btn ${activeTab === 'pairs' ? 'active' : ''}" onclick="window.switchLfSubTab('pairs')">
+          <span>🧩 3. Nối Từ & Thành Ngữ</span>
+          <span class="ud-lf-badge" id="badge-lf-pairs">${pairs.length}</span>
+        </button>
+        <button type="button" class="ud-lf-subnav-btn ${activeTab === 'flashcards' ? 'active' : ''}" onclick="window.switchLfSubTab('flashcards')">
+          <span>🎴 4. Thẻ Từ Vựng 3D</span>
+          <span class="ud-lf-badge" id="badge-lf-cards">${flashcards.length}</span>
+        </button>
+      </div>
+
+      <!-- ACTIVE SUB-TAB CONTENT -->
+      <div id="ud-lf-subtab-body">
+        ${activeTab === 'past_verbs' ? renderLfPastVerbsDesigner(verbs) : ''}
+        ${activeTab === 'grammar' ? renderLfGrammarDesigner(grammar) : ''}
+        ${activeTab === 'pairs' ? renderLfMatchPairsDesigner(pairs) : ''}
+        ${activeTab === 'flashcards' ? renderLfFlashcardsDesigner(flashcards) : ''}
+      </div>
+    </div>
+  `;
+}
+
+export function renderLfPastVerbsDesigner(verbs = []) {
+  return `
+    <div class="ud-lf-subcard">
+      <div class="ud-lf-subcard-header">
+        <div>
+          <div class="ud-lf-subcard-title">📝 Bảng Động Từ Nguyên Thể & Quá Khứ (Past Form Table)</div>
+          <div class="ud-lf-subcard-subtitle">Học viên sẽ thực hành gõ dạng V2 quá khứ tương ứng khi làm bài tập Ex 1.</div>
+        </div>
+        <div class="ud-lf-subcard-actions">
+          <button type="button" class="btn btn-sm btn-p" onclick="window.addLfPastVerbRow()">➕ Thêm dòng</button>
+          <button type="button" class="btn btn-sm" onclick="window.toggleLfPastQuickPaste()" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;">📋 Dán nhanh</button>
+          <button type="button" class="btn btn-sm" onclick="window.loadSampleLfPastVerbs()" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">⚡ Tải mẫu</button>
+          <button type="button" class="btn btn-sm btn-danger" onclick="window.clearAllLfPastVerbs()">🗑️ Xóa hết</button>
+        </div>
+      </div>
+
+      <!-- QUICK PASTE DRAWER -->
+      <div id="ud-lf-past-quick-drawer" class="ud-lf-quick-drawer" style="display:none;">
+        <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:4px;">📋 Nhập nhanh danh sách động từ (Mỗi dòng 1 động từ):</div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:8px;">Định dạng: <code>nguyên_thể - quá_khứ - nghĩa</code> hoặc <code>go, went, đi</code> hoặc cách nhau bằng dấu Tab.</div>
+        <textarea id="ud-lf-past-quick-input" class="ud-lf-quick-textarea" placeholder="go - went - đi&#10;see - saw - nhìn thấy&#10;buy - bought - mua&#10;take - took - lấy, cầm&#10;write - wrote - viết"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button type="button" class="btn btn-sm btn-p" onclick="window.processLfPastQuickPaste()">⚡ Chuyển đổi thành bảng dữ liệu</button>
+          <button type="button" class="btn btn-sm" onclick="window.toggleLfPastQuickPaste()">Đóng</button>
+        </div>
+      </div>
+
+      <!-- VISUAL TABLE -->
+      <div class="ud-lf-table-wrap">
+        <table class="ud-lf-table" id="ud-lf-verbs-table">
+          <thead>
+            <tr>
+              <th style="width:50px;text-align:center;">#</th>
+              <th>Động từ nguyên thể (Infinitive / V1) *</th>
+              <th>Dạng quá khứ (Past Form / V2) *</th>
+              <th>Nghĩa tiếng Việt *</th>
+              <th style="width:70px;text-align:center;">Xóa</th>
+            </tr>
+          </thead>
+          <tbody id="ud-lf-verbs-tbody">
+            ${verbs.map((v, i) => `
+              <tr class="lf-verb-row">
+                <td class="lf-row-num" style="text-align:center;font-weight:700;color:#64748b;">${i + 1}</td>
+                <td><input type="text" class="lf-verb-inf" value="${esc(v.infinitive || '')}" placeholder="VD: go"></td>
+                <td><input type="text" class="lf-verb-past" value="${esc(v.past || '')}" placeholder="VD: went"></td>
+                <td><input type="text" class="lf-verb-meaning" value="${esc(v.meaning || '')}" placeholder="VD: đi"></td>
+                <td style="text-align:center;">
+                  <button type="button" class="btn-icon-del" onclick="window.removeLfPastVerbRow(this)" title="Xóa dòng này">🗑️</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;">
+        <button type="button" class="btn btn-sm" onclick="window.addLfPastVerbRow()" style="background:#ffffff;border:1.5px dashed #3b82f6;color:#2563eb;font-weight:700;width:100%;padding:8px;">
+          ➕ Thêm dòng động từ mới
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+export function renderLfGrammarDesigner(grammarList = []) {
+  return `
+    <div class="ud-lf-subcard">
+      <div class="ud-lf-subcard-header">
+        <div>
+          <div class="ud-lf-subcard-title">⚡ Thử Thách Trắc Nghiệm Ngữ Pháp (Grammar Quiz)</div>
+          <div class="ud-lf-subcard-subtitle">Soạn các câu hỏi trắc nghiệm kiểm tra cấu trúc ngữ pháp trọng tâm của Unit.</div>
+        </div>
+        <div class="ud-lf-subcard-actions">
+          <button type="button" class="btn btn-sm btn-p" onclick="window.addLfGrammarQuestion()">➕ Thêm câu hỏi</button>
+          <button type="button" class="btn btn-sm" onclick="window.loadSampleLfGrammar()" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">⚡ Tải câu hỏi mẫu</button>
+        </div>
+      </div>
+
+      <div id="ud-lf-grammar-list" style="display:flex;flex-direction:column;gap:14px;">
+        ${(!grammarList || !grammarList.length) ? `
+          <div class="empty-placeholder" style="text-align:center;padding:24px;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:10px;color:#64748b;">
+            Chưa có câu hỏi trắc nghiệm ngữ pháp nào. Bấm "➕ Thêm câu hỏi" để bắt đầu.
+          </div>
+        ` : grammarList.map((g, idx) => {
+          const opts = Array.isArray(g.options) ? g.options : ['Option A', 'Option B', 'Option C', 'Option D'];
+          const correctAns = typeof g.answer === 'number' ? g.answer : 0;
+          return `
+            <div class="lf-gm-card card" style="padding:16px;border:1.5px solid #cbd5e1;border-radius:12px;background:#ffffff;margin:0;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f1f5f9;">
+                <div style="font-weight:800;font-size:14px;color:#1e40af;display:flex;align-items:center;gap:6px;">
+                  <span class="gm-q-badge" style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:6px;font-size:12px;">Câu hỏi #${idx + 1}</span>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger" onclick="window.removeLfGrammarQuestion(this)" title="Xóa câu hỏi này">🗑️ Xóa câu</button>
+              </div>
+
+              <div class="fg" style="margin-bottom:10px;">
+                <label style="font-weight:700;font-size:12.5px;color:#0f172a;">Nội dung câu hỏi (Dùng ___ cho vị trí cần điền) *</label>
+                <input type="text" class="lf-gm-question" value="${esc(g.question || '')}" placeholder="VD: She ___ English for five years.">
+              </div>
+
+              <div class="grid2" style="margin-bottom:10px;">
+                <div class="fg" style="margin:0;">
+                  <label style="font-size:11.5px;color:#64748b;">Đáp án A</label>
+                  <input type="text" class="lf-gm-opt-0" value="${esc(opts[0] || '')}" placeholder="Lựa chọn A">
+                </div>
+                <div class="fg" style="margin:0;">
+                  <label style="font-size:11.5px;color:#64748b;">Đáp án B</label>
+                  <input type="text" class="lf-gm-opt-1" value="${esc(opts[1] || '')}" placeholder="Lựa chọn B">
+                </div>
+              </div>
+
+              <div class="grid2" style="margin-bottom:12px;">
+                <div class="fg" style="margin:0;">
+                  <label style="font-size:11.5px;color:#64748b;">Đáp án C</label>
+                  <input type="text" class="lf-gm-opt-2" value="${esc(opts[2] || '')}" placeholder="Lựa chọn C">
+                </div>
+                <div class="fg" style="margin:0;">
+                  <label style="font-size:11.5px;color:#64748b;">Đáp án D</label>
+                  <input type="text" class="lf-gm-opt-3" value="${esc(opts[3] || '')}" placeholder="Lựa chọn D">
+                </div>
+              </div>
+
+              <div class="grid2" style="margin:0;">
+                <div class="fg" style="margin:0;">
+                  <label style="font-size:12px;font-weight:700;color:#16a34a;">Đáp án đúng *</label>
+                  <select class="lf-gm-ans" style="padding:7px 10px;border-radius:6px;border:1.5px solid #86efac;background:#f0fdf4;font-weight:700;color:#166534;">
+                    <option value="0" ${correctAns === 0 ? 'selected' : ''}>A (Phương án 1)</option>
+                    <option value="1" ${correctAns === 1 ? 'selected' : ''}>B (Phương án 2)</option>
+                    <option value="2" ${correctAns === 2 ? 'selected' : ''}>C (Phương án 3)</option>
+                    <option value="3" ${correctAns === 3 ? 'selected' : ''}>D (Phương án 4)</option>
+                  </select>
+                </div>
+                <div class="fg" style="margin:0;">
+                  <label style="font-size:12px;color:#64748b;">Giải thích chi tiết (Explain)</label>
+                  <input type="text" class="lf-gm-explain" value="${esc(g.explain || '')}" placeholder="VD: Thì Hiện tại hoàn thành với for five years.">
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <div style="margin-top:14px;">
+        <button type="button" class="btn btn-sm" onclick="window.addLfGrammarQuestion()" style="background:#ffffff;border:1.5px dashed #3b82f6;color:#2563eb;font-weight:700;width:100%;padding:8px;">
+          ➕ Thêm câu hỏi ngữ pháp mới
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+export function renderLfMatchPairsDesigner(pairs = []) {
+  return `
+    <div class="ud-lf-subcard">
+      <div class="ud-lf-subcard-header">
+        <div>
+          <div class="ud-lf-subcard-title">🧩 Trò Chơi Nối Từ & Cặp Thành Ngữ (Matching Pairs)</div>
+          <div class="ud-lf-subcard-subtitle">Học viên tương tác nối các thẻ từ/thành ngữ tiếng Anh với nghĩa tiếng Việt tương ứng.</div>
+        </div>
+        <div class="ud-lf-subcard-actions">
+          <button type="button" class="btn btn-sm btn-p" onclick="window.addLfMatchPair()">➕ Thêm cặp nối</button>
+          <button type="button" class="btn btn-sm" onclick="window.toggleLfPairQuickPaste()" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;">📋 Dán nhanh</button>
+          <button type="button" class="btn btn-sm" onclick="window.loadSampleLfMatchPairs()" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">⚡ Tải mẫu</button>
+        </div>
+      </div>
+
+      <!-- QUICK PASTE DRAWER -->
+      <div id="ud-lf-pair-quick-drawer" class="ud-lf-quick-drawer" style="display:none;">
+        <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:4px;">📋 Nhập nhanh danh sách cặp nối từ (Mỗi dòng 1 cặp):</div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:8px;">Định dạng: <code>Thuật ngữ tiếng Anh = Nghĩa tiếng Việt</code> hoặc <code>English - Tiếng Việt</code></div>
+        <textarea id="ud-lf-pair-quick-input" class="ud-lf-quick-textarea" placeholder="Piece of cake = Rất dễ dàng, dễ như ăn bánh&#10;Break a leg = Chúc may mắn&#10;Pontoon Bridge = Cầu phao dã chiến&#10;Combat Engineer = Công binh chiến đấu"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button type="button" class="btn btn-sm btn-p" onclick="window.processLfPairQuickPaste()">⚡ Chuyển đổi thành các cặp</button>
+          <button type="button" class="btn btn-sm" onclick="window.toggleLfPairQuickPaste()">Đóng</button>
+        </div>
+      </div>
+
+      <div id="ud-lf-pairs-list" style="display:flex;flex-direction:column;gap:10px;">
+        ${(!pairs || !pairs.length) ? `
+          <div class="empty-placeholder" style="text-align:center;padding:24px;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:10px;color:#64748b;">
+            Chưa có cặp nối từ nào. Bấm "➕ Thêm cặp nối" để bắt đầu.
+          </div>
+        ` : pairs.map((p, idx) => `
+          <div class="lf-pair-row" style="display:flex;gap:10px;align-items:center;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;">
+            <div style="width:28px;text-align:center;font-weight:800;color:#64748b;font-size:12px;">#${idx + 1}</div>
+            <div style="flex:1;">
+              <input type="text" class="lf-pair-left" value="${esc(p.left || '')}" placeholder="Thuật ngữ / Cụm từ tiếng Anh (VD: Piece of cake)">
+            </div>
+            <div style="font-size:18px;color:#3b82f6;font-weight:bold;">⇄</div>
+            <div style="flex:1;">
+              <input type="text" class="lf-pair-right" value="${esc(p.right || '')}" placeholder="Nghĩa tiếng Việt tương ứng (VD: Rất dễ dàng)">
+            </div>
+            <button type="button" class="btn-icon-del" onclick="window.removeLfMatchPair(this)" title="Xóa cặp này">🗑️</button>
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="margin-top:12px;">
+        <button type="button" class="btn btn-sm" onclick="window.addLfMatchPair()" style="background:#ffffff;border:1.5px dashed #3b82f6;color:#2563eb;font-weight:700;width:100%;padding:8px;">
+          ➕ Thêm cặp nối từ mới
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+export function renderLfFlashcardsDesigner(flashcards = []) {
+  return `
+    <div class="ud-lf-subcard">
+      <div class="ud-lf-subcard-header">
+        <div>
+          <div class="ud-lf-subcard-title">🎴 Bộ Thẻ Từ Vựng 3D & Minh Họa (Vocabulary Flashcards Deck)</div>
+          <div class="ud-lf-subcard-subtitle">Biên soạn các thẻ từ vựng với phiên âm IPA, từ loại, hình ảnh minh họa và câu ví dụ.</div>
+        </div>
+        <div class="ud-lf-subcard-actions">
+          <button type="button" class="btn btn-sm btn-p" onclick="window.addLfFlashcard()">➕ Thêm thẻ từ vựng</button>
+          <button type="button" class="btn btn-sm" onclick="window.loadSampleLfFlashcards()" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">⚡ Tải thẻ mẫu</button>
+        </div>
+      </div>
+
+      <!-- PHONETIC KEYBOARD HELPER TOOLBAR -->
+      <div class="ud-lf-ipa-bar" style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;padding:8px 12px;margin-bottom:14px;">
+        <div style="font-size:11.5px;font-weight:700;color:#475569;margin-bottom:4px;">⌨️ Bàn phím ký tự phiên âm IPA (Bấm vào ký tự để chèn nhanh vào ô IPA đang chọn):</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          ${['ˈ', 'ˌ', 'ə', 'ɪ', 'iː', 'æ', 'ɑː', 'ɒ', 'ɔː', 'ʊ', 'uː', 'ʌ', 'e', 'eɪ', 'aɪ', 'ɔɪ', 'aʊ', 'əʊ', 'ɪə', 'eə', 'ʊə', 'θ', 'ð', 'ʃ', 'ʒ', 'tʃ', 'dʒ', 'ŋ'].map(sym => `
+            <button type="button" class="btn-ipa-key" onclick="window.insertIpaSymbol('${sym}')" title="Chèn ký tự ${sym}">${sym}</button>
+          `).join('')}
+        </div>
+      </div>
+
+      <div id="ud-lf-cards-list" style="display:flex;flex-direction:column;gap:14px;">
+        ${(!flashcards || !flashcards.length) ? `
+          <div class="empty-placeholder" style="text-align:center;padding:24px;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:10px;color:#64748b;">
+            Chưa có thẻ từ vựng nào trong bộ thẻ. Bấm "➕ Thêm thẻ từ vựng" để bắt đầu.
+          </div>
+        ` : flashcards.map((fc, idx) => {
+          const cardId = fc.id || `fc_${idx + 1}`;
+          const posVal = fc.pos || 'noun';
+          const imgInputId = `ud-fc-img-${idx}-${Date.now().toString(36)}`;
+          const imgPrevId = `ud-fc-prev-${idx}-${Date.now().toString(36)}`;
+          return `
+            <div class="lf-fc-card card" id="card-${cardId}" style="padding:16px;border:1.5px solid #cbd5e1;border-radius:12px;background:#ffffff;margin:0;box-shadow:0 2px 6px rgba(0,0,0,0.03);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f1f5f9;">
+                <div style="font-weight:800;font-size:14px;color:#0f172a;display:flex;align-items:center;gap:6px;">
+                  <span style="background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:6px;font-size:12px;">Thẻ #${idx + 1}</span>
+                  <span class="lf-fc-title-preview" style="color:#0f172a;font-weight:700;">${esc(fc.word || 'Từ vựng mới')}</span>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button type="button" class="btn btn-sm" onclick="window.duplicateLfFlashcard(this)" style="background:#f8fafc;border:1px solid #cbd5e1;color:#475569;" title="Nhân bản thẻ này">📋 Nhân bản</button>
+                  <button type="button" class="btn btn-sm btn-danger" onclick="window.removeLfFlashcard(this)" title="Xóa thẻ này">🗑️ Xóa</button>
+                </div>
+              </div>
+
+              <div class="grid3" style="margin-bottom:10px;">
+                <div class="fg" style="margin:0;">
+                  <label style="font-size:12px;font-weight:700;">Từ vựng (Word) *</label>
+                  <input type="text" class="lf-fc-word" value="${esc(fc.word || '')}" placeholder="VD: Sustainable" oninput="window.updateCardHeaderPreview(this)">
+                </div>
+                <div class="fg" style="margin:0;">
+                  <label style="font-size:12px;">Từ loại (POS)</label>
+                  <select class="lf-fc-pos">
+                    <option value="noun" ${posVal === 'noun' ? 'selected' : ''}>noun (Danh từ)</option>
+                    <option value="verb" ${posVal === 'verb' ? 'selected' : ''}>verb (Động từ)</option>
+                    <option value="adjective" ${posVal === 'adjective' || posVal === 'adj' ? 'selected' : ''}>adjective (Tính từ)</option>
+                    <option value="adverb" ${posVal === 'adverb' || posVal === 'adv' ? 'selected' : ''}>adverb (Trạng từ)</option>
+                    <option value="phrase" ${posVal === 'phrase' ? 'selected' : ''}>phrase (Cụm từ)</option>
+                    <option value="idiom" ${posVal === 'idiom' ? 'selected' : ''}>idiom (Thành ngữ)</option>
+                    <option value="preposition" ${posVal === 'preposition' ? 'selected' : ''}>preposition (Giới từ)</option>
+                  </select>
+                </div>
+                <div class="fg" style="margin:0;">
+                  <label style="font-size:12px;">Phiên âm IPA</label>
+                  <input type="text" class="lf-fc-ipa" value="${esc(fc.ipa || '')}" placeholder="VD: /səˈsteɪ.nə.bəl/" onfocus="window._lastFocusedIpaInput = this;">
+                </div>
+              </div>
+
+              <div class="grid2" style="margin-bottom:10px;">
+                <div class="fg" style="margin:0;">
+                  <label style="font-size:12px;font-weight:700;">Nghĩa tiếng Việt *</label>
+                  <input type="text" class="lf-fc-meaning" value="${esc(fc.meaning || '')}" placeholder="VD: Bền vững, thân thiện môi trường">
+                </div>
+                <div class="fg" style="margin:0;">
+                  <label style="font-size:12px;">Từ đồng nghĩa / Gợi ý (Synonyms)</label>
+                  <input type="text" class="lf-fc-synonyms" value="${esc(fc.synonyms || '')}" placeholder="VD: Eco-friendly, renewable">
+                </div>
+              </div>
+
+              <div class="fg" style="margin-bottom:10px;">
+                <label style="font-size:12px;">🖼️ URL Hình ảnh minh họa cho thẻ 3D</label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input type="text" id="${imgInputId}" class="lf-fc-image" placeholder="VD: https://images.unsplash.com/... hoặc chọn từ thư viện" value="${esc(fc.image || '')}" oninput="window.updateCardImagePreview(this)">
+                  <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('${imgInputId}', '${imgPrevId}')" style="white-space:nowrap;">📂 Thư viện ảnh</button>
+                </div>
+                <div id="${imgPrevId}" class="lf-fc-img-preview" style="margin-top:6px;">
+                  ${fc.image ? `<img src="${fc.image}" style="max-height:90px;border-radius:6px;border:1px solid #cbd5e1;">` : ''}
+                </div>
+              </div>
+
+              <div class="fg" style="margin:0;">
+                <label style="font-size:12px;">Ví dụ câu thực tế (Example Sentence)</label>
+                <input type="text" class="lf-fc-example" value="${esc(fc.example || '')}" placeholder="VD: Solar energy is a clean and sustainable source of power.">
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <div style="margin-top:14px;">
+        <button type="button" class="btn btn-sm" onclick="window.addLfFlashcard()" style="background:#ffffff;border:1.5px dashed #3b82f6;color:#2563eb;font-weight:700;width:100%;padding:8px;">
+          ➕ Thêm thẻ từ vựng mới
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 // 5. LƯU THAY ĐỔI CỦA SKILL ĐANG SỬA VÀO DRAFT
 function syncCurrentDesignerSkillToDraft() {
   if (!window._currentDraftUnit) return;
@@ -1901,23 +2261,101 @@ function syncCurrentDesignerSkillToDraft() {
       unit.writing = newWrtList;
     }
   } else if (currentDesignerSkill === 'languageFocus') {
-    const pastVerbsRaw = $('ud-lf-past-verbs')?.value.trim();
-    const word = $('ud-fc-word')?.value.trim();
-    const pos = $('ud-fc-pos')?.value.trim();
-    const ipa = $('ud-fc-ipa')?.value.trim();
-    const meaning = $('ud-fc-meaning')?.value.trim();
-    const image = $('ud-fc-image')?.value.trim();
-    const example = $('ud-fc-example')?.value.trim();
+    if (!unit.languageFocus) unit.languageFocus = {};
 
-    if (!unit.languageFocus) unit.languageFocus = { pastFormVerbs: [], flashcards: [], matchPairs: [], grammarChallenge: [] };
-
-    if (pastVerbsRaw) {
-      try { unit.languageFocus.pastFormVerbs = JSON.parse(pastVerbsRaw); } catch(e){}
+    // 1. Past form verbs
+    const verbRows = document.querySelectorAll('.lf-verb-row');
+    if (verbRows.length > 0) {
+      const verbs = [];
+      verbRows.forEach(row => {
+        const inf = row.querySelector('.lf-verb-inf')?.value.trim();
+        const past = row.querySelector('.lf-verb-past')?.value.trim();
+        const meaning = row.querySelector('.lf-verb-meaning')?.value.trim();
+        if (inf || past) {
+          verbs.push({
+            infinitive: inf || '',
+            past: past || '',
+            meaning: meaning || ''
+          });
+        }
+      });
+      unit.languageFocus.pastFormVerbs = verbs;
     }
 
-    if (word) {
-      unit.languageFocus.flashcards = [{ id: 'fc_1', word, pos: pos || 'noun', ipa: ipa || '', meaning: meaning || '', image: image || '', example: example || '' }];
+    // 2. Grammar questions
+    const gmCards = document.querySelectorAll('.lf-gm-card');
+    if (gmCards.length > 0) {
+      const grammar = [];
+      gmCards.forEach((card, idx) => {
+        const q = card.querySelector('.lf-gm-question')?.value.trim();
+        const opt0 = card.querySelector('.lf-gm-opt-0')?.value.trim() || 'A';
+        const opt1 = card.querySelector('.lf-gm-opt-1')?.value.trim() || 'B';
+        const opt2 = card.querySelector('.lf-gm-opt-2')?.value.trim() || 'C';
+        const opt3 = card.querySelector('.lf-gm-opt-3')?.value.trim() || 'D';
+        const ans = parseInt(card.querySelector('.lf-gm-ans')?.value || '0', 10);
+        const exp = card.querySelector('.lf-gm-explain')?.value.trim() || '';
+
+        if (q) {
+          grammar.push({
+            id: `gm_${idx + 1}`,
+            question: q,
+            options: [opt0, opt1, opt2, opt3],
+            answer: ans,
+            explain: exp
+          });
+        }
+      });
+      unit.languageFocus.grammarChallenge = grammar;
     }
+
+    // 3. Match pairs
+    const pairRows = document.querySelectorAll('.lf-pair-row');
+    if (pairRows.length > 0) {
+      const pairs = [];
+      pairRows.forEach((row, idx) => {
+        const left = row.querySelector('.lf-pair-left')?.value.trim();
+        const right = row.querySelector('.lf-pair-right')?.value.trim();
+        if (left || right) {
+          pairs.push({
+            left: left || '',
+            right: right || '',
+            pairId: idx + 1
+          });
+        }
+      });
+      unit.languageFocus.matchPairs = pairs;
+    }
+
+    // 4. Flashcards
+    const fcCards = document.querySelectorAll('.lf-fc-card');
+    if (fcCards.length > 0) {
+      const cards = [];
+      fcCards.forEach((card, idx) => {
+        const word = card.querySelector('.lf-fc-word')?.value.trim();
+        const pos = card.querySelector('.lf-fc-pos')?.value || 'noun';
+        const ipa = card.querySelector('.lf-fc-ipa')?.value.trim() || '';
+        const meaning = card.querySelector('.lf-fc-meaning')?.value.trim() || '';
+        const synonyms = card.querySelector('.lf-fc-synonyms')?.value.trim() || '';
+        const image = card.querySelector('.lf-fc-image')?.value.trim() || '';
+        const example = card.querySelector('.lf-fc-example')?.value.trim() || '';
+
+        if (word || meaning) {
+          cards.push({
+            id: `fc_${idx + 1}`,
+            word: word || 'New Word',
+            pos: pos,
+            ipa: ipa,
+            meaning: meaning,
+            synonyms: synonyms,
+            image: image,
+            example: example
+          });
+        }
+      });
+      unit.languageFocus.flashcards = cards;
+    }
+
+    unit.language_focus = unit.languageFocus;
   }
 }
 
@@ -2067,3 +2505,458 @@ window.switchDesignerSkillTab = (skill) => {
 window.saveUnit = saveUnit;
 window.toggleUnitVisibility = toggleUnitVisibility;
 window.deleteUnit = deleteUnit;
+
+// -------------------------------------------------------------------------
+// LANGUAGE FOCUS INTERACTIVE HANDLERS (NO-CODE WYSIWYG STUDIO)
+// -------------------------------------------------------------------------
+window.switchLfSubTab = function(subTab) {
+  syncCurrentDesignerSkillToDraft();
+  _currentLfSubTab = subTab;
+  const contentWrap = document.getElementById('ud-skill-content');
+  if (contentWrap && window._currentDraftUnit) {
+    contentWrap.innerHTML = renderLanguageFocusDesigner(window._currentDraftUnit);
+    autoFitAllDesignerTextareas();
+  }
+};
+
+window.addLfPastVerbRow = function(inf = '', past = '', meaning = '') {
+  const tbody = document.getElementById('ud-lf-verbs-tbody');
+  if (!tbody) return;
+  const curCount = tbody.querySelectorAll('tr.lf-verb-row').length;
+  const tr = document.createElement('tr');
+  tr.className = 'lf-verb-row';
+  tr.innerHTML = `
+    <td class="lf-row-num" style="text-align:center;font-weight:700;color:#64748b;">${curCount + 1}</td>
+    <td><input type="text" class="lf-verb-inf" value="${esc(inf)}" placeholder="VD: go"></td>
+    <td><input type="text" class="lf-verb-past" value="${esc(past)}" placeholder="VD: went"></td>
+    <td><input type="text" class="lf-verb-meaning" value="${esc(meaning)}" placeholder="VD: đi"></td>
+    <td style="text-align:center;">
+      <button type="button" class="btn-icon-del" onclick="window.removeLfPastVerbRow(this)" title="Xóa dòng này">🗑️</button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+  window._updateLfVerbsIndices();
+};
+
+window.removeLfPastVerbRow = function(btn) {
+  const row = btn.closest('tr.lf-verb-row');
+  if (row) {
+    row.remove();
+    window._updateLfVerbsIndices();
+  }
+};
+
+window._updateLfVerbsIndices = function() {
+  const rows = document.querySelectorAll('#ud-lf-verbs-tbody tr.lf-verb-row');
+  rows.forEach((r, idx) => {
+    const numEl = r.querySelector('.lf-row-num');
+    if (numEl) numEl.textContent = idx + 1;
+  });
+  const badge = document.getElementById('badge-lf-verbs');
+  if (badge) badge.textContent = rows.length;
+};
+
+window.toggleLfPastQuickPaste = function() {
+  const el = document.getElementById('ud-lf-past-quick-drawer');
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+};
+
+window.processLfPastQuickPaste = function() {
+  const input = document.getElementById('ud-lf-past-quick-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) {
+    alert("Vui lòng nhập nội dung danh sách động từ cần chuyển đổi!");
+    return;
+  }
+  const lines = text.split('\n');
+  let addedCount = 0;
+  lines.forEach(line => {
+    const l = line.trim();
+    if (!l) return;
+    const parts = l.split(/\s*[-–—\t,;|]+\s*/);
+    if (parts.length >= 2) {
+      const inf = parts[0]?.trim() || '';
+      const past = parts[1]?.trim() || '';
+      const meaning = parts.slice(2).join(', ').trim() || '';
+      if (inf || past) {
+        window.addLfPastVerbRow(inf, past, meaning);
+        addedCount++;
+      }
+    } else if (parts.length === 1 && parts[0]) {
+      window.addLfPastVerbRow(parts[0].trim(), '', '');
+      addedCount++;
+    }
+  });
+
+  input.value = '';
+  window.toggleLfPastQuickPaste();
+};
+
+window.loadSampleLfPastVerbs = function() {
+  const samples = [
+    { infinitive: 'go', past: 'went', meaning: 'đi' },
+    { infinitive: 'see', past: 'saw', meaning: 'thấy, nhìn' },
+    { infinitive: 'buy', past: 'bought', meaning: 'mua' },
+    { infinitive: 'take', past: 'took', meaning: 'cầm, lấy' },
+    { infinitive: 'make', past: 'made', meaning: 'làm, chế tạo' },
+    { infinitive: 'write', past: 'wrote', meaning: 'viết' },
+    { infinitive: 'read', past: 'read', meaning: 'đọc' },
+    { infinitive: 'build', past: 'built', meaning: 'xây dựng' },
+    { infinitive: 'speak', past: 'spoke', meaning: 'nói' },
+    { infinitive: 'find', past: 'found', meaning: 'tìm thấy' }
+  ];
+  const tbody = document.getElementById('ud-lf-verbs-tbody');
+  if (tbody) tbody.innerHTML = '';
+  samples.forEach(s => window.addLfPastVerbRow(s.infinitive, s.past, s.meaning));
+};
+
+window.clearAllLfPastVerbs = function() {
+  if (!confirm("Bạn có chắc chắn muốn xóa toàn bộ danh sách động từ này?")) return;
+  const tbody = document.getElementById('ud-lf-verbs-tbody');
+  if (tbody) tbody.innerHTML = '';
+  window._updateLfVerbsIndices();
+};
+
+window.addLfGrammarQuestion = function(q = '', opts = ['Option A', 'Option B', 'Option C', 'Option D'], ans = 0, exp = '') {
+  const list = document.getElementById('ud-lf-grammar-list');
+  if (!list) return;
+  const empty = list.querySelector('.empty-placeholder');
+  if (empty) empty.remove();
+  const curCount = list.querySelectorAll('.lf-gm-card').length;
+  const card = document.createElement('div');
+  card.className = 'lf-gm-card card';
+  card.style = 'padding:16px;border:1.5px solid #cbd5e1;border-radius:12px;background:#ffffff;margin:0;';
+  card.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f1f5f9;">
+      <div style="font-weight:800;font-size:14px;color:#1e40af;display:flex;align-items:center;gap:6px;">
+        <span class="gm-q-badge" style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:6px;font-size:12px;">Câu hỏi #${curCount + 1}</span>
+      </div>
+      <button type="button" class="btn btn-sm btn-danger" onclick="window.removeLfGrammarQuestion(this)" title="Xóa câu hỏi này">🗑️ Xóa câu</button>
+    </div>
+
+    <div class="fg" style="margin-bottom:10px;">
+      <label style="font-weight:700;font-size:12.5px;color:#0f172a;">Nội dung câu hỏi (Dùng ___ cho vị trí cần điền) *</label>
+      <input type="text" class="lf-gm-question" value="${esc(q)}" placeholder="VD: She ___ English for five years.">
+    </div>
+
+    <div class="grid2" style="margin-bottom:10px;">
+      <div class="fg" style="margin:0;">
+        <label style="font-size:11.5px;color:#64748b;">Đáp án A</label>
+        <input type="text" class="lf-gm-opt-0" value="${esc(opts[0] || '')}" placeholder="Lựa chọn A">
+      </div>
+      <div class="fg" style="margin:0;">
+        <label style="font-size:11.5px;color:#64748b;">Đáp án B</label>
+        <input type="text" class="lf-gm-opt-1" value="${esc(opts[1] || '')}" placeholder="Lựa chọn B">
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-bottom:12px;">
+      <div class="fg" style="margin:0;">
+        <label style="font-size:11.5px;color:#64748b;">Đáp án C</label>
+        <input type="text" class="lf-gm-opt-2" value="${esc(opts[2] || '')}" placeholder="Lựa chọn C">
+      </div>
+      <div class="fg" style="margin:0;">
+        <label style="font-size:11.5px;color:#64748b;">Đáp án D</label>
+        <input type="text" class="lf-gm-opt-3" value="${esc(opts[3] || '')}" placeholder="Lựa chọn D">
+      </div>
+    </div>
+
+    <div class="grid2" style="margin:0;">
+      <div class="fg" style="margin:0;">
+        <label style="font-size:12px;font-weight:700;color:#16a34a;">Đáp án đúng *</label>
+        <select class="lf-gm-ans" style="padding:7px 10px;border-radius:6px;border:1.5px solid #86efac;background:#f0fdf4;font-weight:700;color:#166534;">
+          <option value="0" ${ans === 0 ? 'selected' : ''}>A (Phương án 1)</option>
+          <option value="1" ${ans === 1 ? 'selected' : ''}>B (Phương án 2)</option>
+          <option value="2" ${ans === 2 ? 'selected' : ''}>C (Phương án 3)</option>
+          <option value="3" ${ans === 3 ? 'selected' : ''}>D (Phương án 4)</option>
+        </select>
+      </div>
+      <div class="fg" style="margin:0;">
+        <label style="font-size:12px;color:#64748b;">Giải thích chi tiết (Explain)</label>
+        <input type="text" class="lf-gm-explain" value="${esc(exp)}" placeholder="VD: Giải thích ngữ pháp...">
+      </div>
+    </div>
+  `;
+  list.appendChild(card);
+  window._updateLfGrammarIndices();
+};
+
+window.removeLfGrammarQuestion = function(btn) {
+  const card = btn.closest('.lf-gm-card');
+  if (card) {
+    card.remove();
+    window._updateLfGrammarIndices();
+  }
+};
+
+window._updateLfGrammarIndices = function() {
+  const cards = document.querySelectorAll('#ud-lf-grammar-list .lf-gm-card');
+  cards.forEach((c, idx) => {
+    const badge = c.querySelector('.gm-q-badge');
+    if (badge) badge.textContent = `Câu hỏi #${idx + 1}`;
+  });
+  const badge = document.getElementById('badge-lf-grammar');
+  if (badge) badge.textContent = cards.length;
+};
+
+window.loadSampleLfGrammar = function() {
+  window.addLfGrammarQuestion(
+    'She ___ English for five years.',
+    ['has learned', 'is learning', 'learns', 'learned'],
+    0,
+    'Thì Hiện tại hoàn thành (Present Perfect) diễn tả hành động kéo dài đến hiện tại với "for five years".'
+  );
+  window.addLfGrammarQuestion(
+    'While I was walking home, it ___ to rain heavily.',
+    ['starts', 'started', 'was starting', 'has started'],
+    1,
+    'Hành động ngắn cắt ngang một hành động đang diễn ra trong quá khứ dùng Quá khứ đơn (started).'
+  );
+};
+
+window.addLfMatchPair = function(left = '', right = '') {
+  const list = document.getElementById('ud-lf-pairs-list');
+  if (!list) return;
+  const empty = list.querySelector('.empty-placeholder');
+  if (empty) empty.remove();
+  const curCount = list.querySelectorAll('.lf-pair-row').length;
+  const row = document.createElement('div');
+  row.className = 'lf-pair-row';
+  row.style = 'display:flex;gap:10px;align-items:center;background:#ffffff;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;';
+  row.innerHTML = `
+    <div class="lf-pair-num" style="width:28px;text-align:center;font-weight:800;color:#64748b;font-size:12px;">#${curCount + 1}</div>
+    <div style="flex:1;">
+      <input type="text" class="lf-pair-left" value="${esc(left)}" placeholder="Thuật ngữ / Cụm từ tiếng Anh">
+    </div>
+    <div style="font-size:18px;color:#3b82f6;font-weight:bold;">⇄</div>
+    <div style="flex:1;">
+      <input type="text" class="lf-pair-right" value="${esc(right)}" placeholder="Nghĩa tiếng Việt tương ứng">
+    </div>
+    <button type="button" class="btn-icon-del" onclick="window.removeLfMatchPair(this)" title="Xóa cặp này">🗑️</button>
+  `;
+  list.appendChild(row);
+  window._updateLfPairsIndices();
+};
+
+window.removeLfMatchPair = function(btn) {
+  const row = btn.closest('.lf-pair-row');
+  if (row) {
+    row.remove();
+    window._updateLfPairsIndices();
+  }
+};
+
+window._updateLfPairsIndices = function() {
+  const rows = document.querySelectorAll('#ud-lf-pairs-list .lf-pair-row');
+  rows.forEach((r, idx) => {
+    const numEl = r.querySelector('.lf-pair-num');
+    if (numEl) numEl.textContent = `#${idx + 1}`;
+  });
+  const badge = document.getElementById('badge-lf-pairs');
+  if (badge) badge.textContent = rows.length;
+};
+
+window.toggleLfPairQuickPaste = function() {
+  const el = document.getElementById('ud-lf-pair-quick-drawer');
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+};
+
+window.processLfPairQuickPaste = function() {
+  const input = document.getElementById('ud-lf-pair-quick-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) {
+    alert("Vui lòng nhập danh sách cặp nối từ!");
+    return;
+  }
+  const lines = text.split('\n');
+  lines.forEach(line => {
+    const l = line.trim();
+    if (!l) return;
+    const parts = l.split(/\s*[:=–—\t-]+\s*/);
+    if (parts.length >= 2) {
+      window.addLfMatchPair(parts[0].trim(), parts.slice(1).join(' ').trim());
+    }
+  });
+  input.value = '';
+  window.toggleLfPairQuickPaste();
+};
+
+window.loadSampleLfMatchPairs = function() {
+  window.addLfMatchPair('Piece of cake', 'Rất dễ dàng, dễ như ăn bánh');
+  window.addLfMatchPair('Break a leg', 'Chúc may mắn trong buổi biểu diễn');
+  window.addLfMatchPair('Once in a blue moon', 'Rất hiếm khi xảy ra');
+  window.addLfMatchPair('Combat Engineer', 'Binh chủng Công binh / Công binh chiến đấu');
+};
+
+window.addLfFlashcard = function(cardData = {}) {
+  const list = document.getElementById('ud-lf-cards-list');
+  if (!list) return;
+  const empty = list.querySelector('.empty-placeholder');
+  if (empty) empty.remove();
+  const idx = list.querySelectorAll('.lf-fc-card').length;
+  const cardId = cardData.id || `fc_${idx + 1}`;
+  const posVal = cardData.pos || 'noun';
+  const imgInputId = `ud-fc-img-${idx}-${Date.now().toString(36)}`;
+  const imgPrevId = `ud-fc-prev-${idx}-${Date.now().toString(36)}`;
+
+  const card = document.createElement('div');
+  card.className = 'lf-fc-card card';
+  card.id = `card-${cardId}`;
+  card.style = 'padding:16px;border:1.5px solid #cbd5e1;border-radius:12px;background:#ffffff;margin:0;box-shadow:0 2px 6px rgba(0,0,0,0.03);';
+  card.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f1f5f9;">
+      <div style="font-weight:800;font-size:14px;color:#0f172a;display:flex;align-items:center;gap:6px;">
+        <span class="lf-fc-num-badge" style="background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:6px;font-size:12px;">Thẻ #${idx + 1}</span>
+        <span class="lf-fc-title-preview" style="color:#0f172a;font-weight:700;">${esc(cardData.word || 'Từ vựng mới')}</span>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button type="button" class="btn btn-sm" onclick="window.duplicateLfFlashcard(this)" style="background:#f8fafc;border:1px solid #cbd5e1;color:#475569;" title="Nhân bản thẻ này">📋 Nhân bản</button>
+        <button type="button" class="btn btn-sm btn-danger" onclick="window.removeLfFlashcard(this)" title="Xóa thẻ này">🗑️ Xóa</button>
+      </div>
+    </div>
+
+    <div class="grid3" style="margin-bottom:10px;">
+      <div class="fg" style="margin:0;">
+        <label style="font-size:12px;font-weight:700;">Từ vựng (Word) *</label>
+        <input type="text" class="lf-fc-word" value="${esc(cardData.word || '')}" placeholder="VD: Sustainable" oninput="window.updateCardHeaderPreview(this)">
+      </div>
+      <div class="fg" style="margin:0;">
+        <label style="font-size:12px;">Từ loại (POS)</label>
+        <select class="lf-fc-pos">
+          <option value="noun" ${posVal === 'noun' ? 'selected' : ''}>noun (Danh từ)</option>
+          <option value="verb" ${posVal === 'verb' ? 'selected' : ''}>verb (Động từ)</option>
+          <option value="adjective" ${posVal === 'adjective' || posVal === 'adj' ? 'selected' : ''}>adjective (Tính từ)</option>
+          <option value="adverb" ${posVal === 'adverb' || posVal === 'adv' ? 'selected' : ''}>adverb (Trạng từ)</option>
+          <option value="phrase" ${posVal === 'phrase' ? 'selected' : ''}>phrase (Cụm từ)</option>
+          <option value="idiom" ${posVal === 'idiom' ? 'selected' : ''}>idiom (Thành ngữ)</option>
+          <option value="preposition" ${posVal === 'preposition' ? 'selected' : ''}>preposition (Giới từ)</option>
+        </select>
+      </div>
+      <div class="fg" style="margin:0;">
+        <label style="font-size:12px;">Phiên âm IPA</label>
+        <input type="text" class="lf-fc-ipa" value="${esc(cardData.ipa || '')}" placeholder="VD: /səˈsteɪ.nə.bəl/" onfocus="window._lastFocusedIpaInput = this;">
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-bottom:10px;">
+      <div class="fg" style="margin:0;">
+        <label style="font-size:12px;font-weight:700;">Nghĩa tiếng Việt *</label>
+        <input type="text" class="lf-fc-meaning" value="${esc(cardData.meaning || '')}" placeholder="VD: Bền vững, thân thiện môi trường">
+      </div>
+      <div class="fg" style="margin:0;">
+        <label style="font-size:12px;">Từ đồng nghĩa / Gợi ý (Synonyms)</label>
+        <input type="text" class="lf-fc-synonyms" value="${esc(cardData.synonyms || '')}" placeholder="VD: Eco-friendly, renewable">
+      </div>
+    </div>
+
+    <div class="fg" style="margin-bottom:10px;">
+      <label style="font-size:12px;">🖼️ URL Hình ảnh minh họa cho thẻ 3D</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" id="${imgInputId}" class="lf-fc-image" placeholder="VD: https://images.unsplash.com/... hoặc chọn từ thư viện" value="${esc(cardData.image || '')}" oninput="window.updateCardImagePreview(this)">
+        <button type="button" class="btn btn-sm btn-p" onclick="window.openSelectGalleryModal('${imgInputId}', '${imgPrevId}')" style="white-space:nowrap;">📂 Thư viện ảnh</button>
+      </div>
+      <div id="${imgPrevId}" class="lf-fc-img-preview" style="margin-top:6px;">
+        ${cardData.image ? `<img src="${cardData.image}" style="max-height:90px;border-radius:6px;border:1px solid #cbd5e1;">` : ''}
+      </div>
+    </div>
+
+    <div class="fg" style="margin:0;">
+      <label style="font-size:12px;">Ví dụ câu thực tế (Example Sentence)</label>
+      <input type="text" class="lf-fc-example" value="${esc(cardData.example || '')}" placeholder="VD: Solar energy is a clean and sustainable source of power.">
+    </div>
+  `;
+  list.appendChild(card);
+  window._updateLfCardsIndices();
+};
+
+window.removeLfFlashcard = function(btn) {
+  const card = btn.closest('.lf-fc-card');
+  if (card) {
+    card.remove();
+    window._updateLfCardsIndices();
+  }
+};
+
+window.duplicateLfFlashcard = function(btn) {
+  const card = btn.closest('.lf-fc-card');
+  if (!card) return;
+  const word = card.querySelector('.lf-fc-word')?.value.trim() || '';
+  const pos = card.querySelector('.lf-fc-pos')?.value || 'noun';
+  const ipa = card.querySelector('.lf-fc-ipa')?.value.trim() || '';
+  const meaning = card.querySelector('.lf-fc-meaning')?.value.trim() || '';
+  const synonyms = card.querySelector('.lf-fc-synonyms')?.value.trim() || '';
+  const image = card.querySelector('.lf-fc-image')?.value.trim() || '';
+  const example = card.querySelector('.lf-fc-example')?.value.trim() || '';
+
+  window.addLfFlashcard({
+    word: word ? `${word} (Bản sao)` : 'Từ vựng mới',
+    pos,
+    ipa,
+    meaning,
+    synonyms,
+    image,
+    example
+  });
+};
+
+window._updateLfCardsIndices = function() {
+  const cards = document.querySelectorAll('#ud-lf-cards-list .lf-fc-card');
+  cards.forEach((c, idx) => {
+    const badge = c.querySelector('.lf-fc-num-badge');
+    if (badge) badge.textContent = `Thẻ #${idx + 1}`;
+  });
+  const badge = document.getElementById('badge-lf-cards');
+  if (badge) badge.textContent = cards.length;
+};
+
+window.updateCardHeaderPreview = function(input) {
+  const card = input.closest('.lf-fc-card');
+  if (!card) return;
+  const prev = card.querySelector('.lf-fc-title-preview');
+  if (prev) prev.textContent = input.value.trim() || 'Từ vựng mới';
+};
+
+window.updateCardImagePreview = function(input) {
+  const card = input.closest('.lf-fc-card');
+  if (!card) return;
+  const prev = card.querySelector('.lf-fc-img-preview');
+  if (prev) {
+    const url = input.value.trim();
+    prev.innerHTML = url ? `<img src="${url}" style="max-height:90px;border-radius:6px;border:1px solid #cbd5e1;">` : '';
+  }
+};
+
+window.insertIpaSymbol = function(sym) {
+  const input = window._lastFocusedIpaInput || document.querySelector('.lf-fc-ipa');
+  if (!input) return;
+  const start = input.selectionStart || input.value.length;
+  const end = input.selectionEnd || input.value.length;
+  const text = input.value;
+  input.value = text.substring(0, start) + sym + text.substring(end);
+  input.focus();
+  input.setSelectionRange(start + sym.length, start + sym.length);
+};
+
+window.loadSampleLfFlashcards = function() {
+  window.addLfFlashcard({
+    word: 'Enthusiastic',
+    pos: 'adjective',
+    ipa: '/ɪnˌθjuː.ziˈæs.tɪk/',
+    meaning: 'Hăng hái, nhiệt tình, đầy hứng khởi',
+    synonyms: 'Eager, passionate, excited',
+    example: 'She was enthusiastic about learning new foreign languages.',
+    image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&auto=format&fit=crop&q=80'
+  });
+  window.addLfFlashcard({
+    word: 'Combat Engineer',
+    pos: 'noun',
+    ipa: '/ˈkɒm.bæt ˌen.dʒɪˈnɪər/',
+    meaning: 'Binh chủng Công binh, Công binh chiến đấu',
+    synonyms: 'Sapper, military pioneer',
+    example: 'Combat engineers provide critical mobility support to advancing troops.',
+    image: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80'
+  });
+};
+
