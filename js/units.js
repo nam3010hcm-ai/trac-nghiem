@@ -751,10 +751,8 @@ export function switchDesignerSkillTab(skill) {
           <div id="ud-read-img-preview" style="margin-top:6px">${read.image ? `<img src="${read.image}" style="max-height:140px;border-radius:6px;border:1px solid #cbd5e1">` : ''}</div>
         </div>
 
-        <div class="fg" style="margin-top:14px">
-          <label style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:6px">🔤 2. Danh Mục Tra Từ Nhanh (JSON Dictionary)</label>
-          <textarea id="ud-read-vocab" class="designer-textarea" style="width:100%;min-height:100px;font-family:monospace;font-size:13px">${esc(JSON.stringify(read.vocabulary || {}, null, 2))}</textarea>
-        </div>
+        <!-- 🔤 2. DANH MỤC TRA TỪ NHANH (NO-CODE DICTIONARY STUDIO) -->
+        ${renderReadingVocabularyDesigner(read.vocabulary || {})}
 
         <!-- BÀI TẬP ĐỌC HIỂU TƯƠNG TÁC (MATCHING, MCQ, BACKWARD SPELLING) -->
         <div style="margin-top:20px;border-top:1.5px solid #cbd5e1;padding-top:16px">
@@ -1392,8 +1390,119 @@ window.deleteListeningDesignerExercise = function(idx) {
 };
 
 // -------------------------------------------------------------------------
-// HELPER METHODS CHO DESIGNER READING (MATCHING, MCQ, BACKWARD SPELLING)
+// HELPER METHODS CHO DESIGNER READING (VOCABULARY DICTIONARY STUDIO & EXERCISES)
 // -------------------------------------------------------------------------
+export function renderReadingVocabularyDesigner(vocabulary = {}) {
+  const vocabEntries = Object.entries(vocabulary || {}).map(([word, data]) => {
+    return {
+      word: word,
+      ipa: data?.ipa || '',
+      pos: data?.pos || 'noun',
+      meaning: data?.meaning || ''
+    };
+  });
+
+  return `
+    <div class="ud-read-vocab-card" style="background:#ffffff;border:1.5px solid #cbd5e1;border-radius:12px;padding:16px;margin-top:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1.5px solid #f1f5f9;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:6px;">
+            <span>🔤</span> 2. Danh Mục Tra Từ Nhanh (Vocabulary Dictionary)
+            <span class="ud-lf-badge" id="badge-read-vocab" style="background:#e0f2fe;color:#0369a1;">${vocabEntries.length} từ</span>
+          </div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px;">
+            Học viên bấm hoặc rê chuột lên các từ này trong đoạn văn để tra nhanh phiên âm, từ loại và nghĩa tiếng Việt.
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm btn-p" onclick="window.addReadingVocabRow()">➕ Thêm từ vựng</button>
+          <button type="button" class="btn btn-sm" onclick="window.toggleReadingVocabQuickPaste()" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;">📋 Dán nhanh</button>
+          <button type="button" class="btn btn-sm" onclick="window.loadSampleReadingVocab()" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">⚡ Tải mẫu</button>
+          <button type="button" class="btn btn-sm btn-danger" onclick="window.clearAllReadingVocab()">🗑️ Xóa hết</button>
+        </div>
+      </div>
+
+      <!-- PHONETIC KEYBOARD HELPER -->
+      <div class="ud-lf-ipa-bar" style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;padding:6px 10px;margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:4px;">⌨️ Bàn phím ký tự phiên âm IPA (Bấm ký tự để chèn vào ô IPA):</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          ${['ˈ', 'ˌ', 'ə', 'ɪ', 'iː', 'æ', 'ɑː', 'ɒ', 'ɔː', 'ʊ', 'uː', 'ʌ', 'e', 'eɪ', 'aɪ', 'ɔɪ', 'aʊ', 'əʊ', 'ɪə', 'eə', 'ʊə', 'θ', 'ð', 'ʃ', 'ʒ', 'tʃ', 'dʒ', 'ŋ'].map(sym => `
+            <button type="button" class="btn-ipa-key" onclick="window.insertReadingVocabIpa('${sym}')" title="Chèn ${sym}">${sym}</button>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- QUICK PASTE DRAWER -->
+      <div id="ud-read-vocab-quick-drawer" class="ud-lf-quick-drawer" style="display:none;">
+        <div style="font-weight:700;font-size:13px;color:#92400e;margin-bottom:4px;">📋 Nhập nhanh danh sách từ vựng (Mỗi dòng 1 từ):</div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:8px;">
+          Định dạng: <code>từ_vựng - /phiên_âm/ - từ_loại - nghĩa</code> hoặc <code>expand - verb - Mở rộng, phát triển</code> hoặc <code>expand: Mở rộng</code> hoặc dán từ Excel.
+        </div>
+        <textarea id="ud-read-vocab-quick-input" class="ud-lf-quick-textarea" placeholder="expand - /ɪkˈspænd/ - verb - Mở rộng, phát triển&#10;comprehension - /ˌkɒm.prɪˈhen.ʃən/ - noun - Sự hiểu, khả năng lĩnh hội&#10;sustainable - /səˈsteɪ.nə.bəl/ - adjective - Bền vững, thân thiện môi trường"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button type="button" class="btn btn-sm btn-p" onclick="window.processReadingVocabQuickPaste()">⚡ Chuyển đổi thành danh mục tra từ</button>
+          <button type="button" class="btn btn-sm" onclick="window.toggleReadingVocabQuickPaste()">Đóng</button>
+        </div>
+      </div>
+
+      <!-- VISUAL VOCABULARY TABLE -->
+      <div class="ud-lf-table-wrap">
+        <table class="ud-lf-table" id="ud-read-vocab-table">
+          <thead>
+            <tr>
+              <th style="width:45px;text-align:center;">#</th>
+              <th style="width:25%;">Từ vựng (Word) *</th>
+              <th style="width:24%;">Phiên âm IPA</th>
+              <th style="width:18%;">Từ loại (POS)</th>
+              <th>Nghĩa tiếng Việt *</th>
+              <th style="width:55px;text-align:center;">Xóa</th>
+            </tr>
+          </thead>
+          <tbody id="ud-read-vocab-tbody">
+            ${vocabEntries.map((v, i) => {
+              const posVal = v.pos || 'noun';
+              return `
+                <tr class="read-vocab-row">
+                  <td class="read-vocab-num" style="text-align:center;font-weight:700;color:#64748b;">${i + 1}</td>
+                  <td>
+                    <input type="text" class="read-vocab-word" value="${esc(v.word || '')}" placeholder="VD: expand">
+                  </td>
+                  <td>
+                    <input type="text" class="read-vocab-ipa" value="${esc(v.ipa || '')}" placeholder="VD: /ɪkˈspænd/" onfocus="window._lastFocusedReadVocabIpa = this;">
+                  </td>
+                  <td>
+                    <select class="read-vocab-pos" style="width:100%;padding:7px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:12.5px;">
+                      <option value="verb" ${posVal === 'verb' ? 'selected' : ''}>verb (Động từ)</option>
+                      <option value="noun" ${posVal === 'noun' ? 'selected' : ''}>noun (Danh từ)</option>
+                      <option value="adjective" ${posVal === 'adjective' || posVal === 'adj' ? 'selected' : ''}>adjective (Tính từ)</option>
+                      <option value="adverb" ${posVal === 'adverb' || posVal === 'adv' ? 'selected' : ''}>adverb (Trạng từ)</option>
+                      <option value="phrase" ${posVal === 'phrase' ? 'selected' : ''}>phrase (Cụm từ)</option>
+                      <option value="idiom" ${posVal === 'idiom' ? 'selected' : ''}>idiom (Thành ngữ)</option>
+                      <option value="preposition" ${posVal === 'preposition' ? 'selected' : ''}>preposition (Giới từ)</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input type="text" class="read-vocab-meaning" value="${esc(v.meaning || '')}" placeholder="VD: Mở rộng, phát triển">
+                  </td>
+                  <td style="text-align:center;">
+                    <button type="button" class="btn-icon-del" onclick="window.removeReadingVocabRow(this)" title="Xóa từ này">🗑️</button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:10px;">
+        <button type="button" class="btn btn-sm" onclick="window.addReadingVocabRow()" style="background:#ffffff;border:1.5px dashed #3b82f6;color:#2563eb;font-weight:700;width:100%;padding:8px;">
+          ➕ Thêm từ vựng mới vào danh mục
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 export function renderReadingDesignerExercises(exercises = []) {
   if (!exercises || !exercises.length) {
     return `<div style="text-align:center;padding:16px;color:#64748b;font-size:13px;background:#f1f5f9;border-radius:8px">📭 Chưa có bài tập đọc hiểu nào. Bấm nút bên trên để thêm bài tập Nối từ, Trắc nghiệm, hoặc Backward Spelling.</div>`;
@@ -1411,13 +1520,28 @@ export function renderReadingDesignerExercises(exercises = []) {
         { id: 2, word: 'integral', letter: 'b', definition: 'essential or necessary' }
       ];
       bodyHtml = `
-        <div class="fg" style="margin-bottom:8px">
+        <div class="fg" style="margin-bottom:10px">
           <label style="font-size:12px;font-weight:700">Tiêu đề bài tập</label>
           <input type="text" class="read-ex-match-title" value="${esc(ex.title || 'Exercise 1. Match the words/ phrases (1-8) with their definitions (a-h)')}">
         </div>
-        <div class="fg" style="margin:0">
-          <label style="font-size:11px;font-weight:700">Danh sách các cặp từ và định nghĩa (JSON Pairs) *</label>
-          <textarea class="read-ex-match-pairs" style="width:100%;min-height:90px;font-family:monospace;font-size:12px">${esc(JSON.stringify(pairs, null, 2))}</textarea>
+
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-size:12px;font-weight:700;color:#334155;">📋 Danh sách các cặp từ và định nghĩa tương ứng:</div>
+            <button type="button" class="btn btn-sm btn-p" onclick="window.addReadingMatchPairToCard(this)" style="font-size:11px;padding:3px 8px;">➕ Thêm cặp</button>
+          </div>
+          <div class="read-match-pairs-container" style="display:flex;flex-direction:column;gap:6px;">
+            ${pairs.map((p, pIdx) => `
+              <div class="read-match-pair-row" style="display:flex;gap:6px;align-items:center;background:#ffffff;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;">
+                <span style="font-size:11px;font-weight:700;color:#64748b;width:20px;text-align:center;">${pIdx + 1}</span>
+                <input type="text" class="read-match-pair-word" value="${esc(p.word || '')}" placeholder="Từ / Cụm từ (VD: confined)" style="flex:1;font-size:12px;">
+                <span style="font-size:12px;font-weight:bold;color:#6366f1;">➔</span>
+                <input type="text" class="read-match-pair-letter" value="${esc(p.letter || String.fromCharCode(97 + (pIdx % 26)))}" placeholder="a, b..." style="width:40px;text-align:center;font-weight:700;font-size:12px;">
+                <input type="text" class="read-match-pair-def" value="${esc(p.definition || '')}" placeholder="Định nghĩa tiếng Anh (VD: limited or restricted to...)" style="flex:2;font-size:12px;">
+                <button type="button" class="btn-icon-del" onclick="window.removeReadingMatchPairRow(this)" title="Xóa cặp này">🗑️</button>
+              </div>
+            `).join('')}
+          </div>
         </div>
       `;
     } else if (type === 'backward_spelling') {
@@ -1495,9 +1619,29 @@ function extractReadingExercisesFromDOM() {
     const type = card.dataset.type || 'mcq';
     if (type === 'matching') {
       const title = card.querySelector('.read-ex-match-title')?.value.trim() || 'Exercise 1. Match the words with definitions';
-      const pairsRaw = card.querySelector('.read-ex-match-pairs')?.value.trim();
-      let pairs = [];
-      try { pairs = JSON.parse(pairsRaw); } catch(e){}
+      const pairRows = card.querySelectorAll('.read-match-pair-row');
+      const pairs = [];
+      if (pairRows.length > 0) {
+        pairRows.forEach((pRow, pIdx) => {
+          const w = pRow.querySelector('.read-match-pair-word')?.value.trim();
+          const l = pRow.querySelector('.read-match-pair-letter')?.value.trim() || String.fromCharCode(97 + (pIdx % 26));
+          const d = pRow.querySelector('.read-match-pair-def')?.value.trim();
+          if (w || d) {
+            pairs.push({
+              id: pIdx + 1,
+              word: w || '',
+              letter: l || '',
+              definition: d || ''
+            });
+          }
+        });
+      } else {
+        const pairsRaw = card.querySelector('.read-ex-match-pairs')?.value.trim();
+        if (pairsRaw) {
+          try { pairs.push(...JSON.parse(pairsRaw)); } catch(e){}
+        }
+      }
+
       if (pairs.length) {
         exercises.push({
           id: `read_match_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
@@ -2135,17 +2279,39 @@ function syncCurrentDesignerSkillToDraft() {
   } else if (currentDesignerSkill === 'reading') {
     const passage = $('ud-read-passage')?.value.trim();
     const image = $('ud-read-image')?.value.trim();
-    const vocabRaw = $('ud-read-vocab')?.value.trim();
     const exercises = extractReadingExercisesFromDOM();
 
     if (!unit.reading) unit.reading = [];
     if (!unit.reading[0]) unit.reading[0] = { id: 'read_1', exercises: [] };
 
-    if (passage) unit.reading[0].passage = passage;
+    if (passage !== undefined) unit.reading[0].passage = passage;
     unit.reading[0].image = image || '';
-    if (vocabRaw) {
-      try { unit.reading[0].vocabulary = JSON.parse(vocabRaw); } catch(e){}
+
+    // Extract Vocabulary Dictionary from Visual Table (or fallback to textarea if present)
+    const vocabRows = document.querySelectorAll('#ud-read-vocab-tbody tr.read-vocab-row');
+    if (vocabRows.length > 0) {
+      const vocabObj = {};
+      vocabRows.forEach(row => {
+        const word = (row.querySelector('.read-vocab-word')?.value || '').trim().toLowerCase();
+        const ipa = (row.querySelector('.read-vocab-ipa')?.value || '').trim();
+        const pos = row.querySelector('.read-vocab-pos')?.value || 'noun';
+        const meaning = (row.querySelector('.read-vocab-meaning')?.value || '').trim();
+        if (word && meaning) {
+          vocabObj[word] = {
+            ipa: ipa || '',
+            pos: pos || 'noun',
+            meaning: meaning || ''
+          };
+        }
+      });
+      unit.reading[0].vocabulary = vocabObj;
+    } else {
+      const vocabRaw = $('ud-read-vocab')?.value.trim();
+      if (vocabRaw) {
+        try { unit.reading[0].vocabulary = JSON.parse(vocabRaw); } catch(e){}
+      }
     }
+
     if (exercises.length) {
       unit.reading[0].exercises = exercises;
     }
@@ -2959,4 +3125,200 @@ window.loadSampleLfFlashcards = function() {
     image: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80'
   });
 };
+
+// -------------------------------------------------------------------------
+// READING VOCABULARY DICTIONARY & MATCHING EXERCISE INTERACTIVE HANDLERS
+// -------------------------------------------------------------------------
+window.addReadingVocabRow = function(word = '', ipa = '', pos = 'noun', meaning = '') {
+  const tbody = document.getElementById('ud-read-vocab-tbody');
+  if (!tbody) return;
+  const curCount = tbody.querySelectorAll('tr.read-vocab-row').length;
+  const posVal = pos || 'noun';
+  const tr = document.createElement('tr');
+  tr.className = 'read-vocab-row';
+  tr.innerHTML = `
+    <td class="read-vocab-num" style="text-align:center;font-weight:700;color:#64748b;">${curCount + 1}</td>
+    <td>
+      <input type="text" class="read-vocab-word" value="${esc(word)}" placeholder="VD: expand">
+    </td>
+    <td>
+      <input type="text" class="read-vocab-ipa" value="${esc(ipa)}" placeholder="VD: /ɪkˈspænd/" onfocus="window._lastFocusedReadVocabIpa = this;">
+    </td>
+    <td>
+      <select class="read-vocab-pos" style="width:100%;padding:7px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:12.5px;">
+        <option value="verb" ${posVal === 'verb' ? 'selected' : ''}>verb (Động từ)</option>
+        <option value="noun" ${posVal === 'noun' ? 'selected' : ''}>noun (Danh từ)</option>
+        <option value="adjective" ${posVal === 'adjective' || posVal === 'adj' ? 'selected' : ''}>adjective (Tính từ)</option>
+        <option value="adverb" ${posVal === 'adverb' || posVal === 'adv' ? 'selected' : ''}>adverb (Trạng từ)</option>
+        <option value="phrase" ${posVal === 'phrase' ? 'selected' : ''}>phrase (Cụm từ)</option>
+        <option value="idiom" ${posVal === 'idiom' ? 'selected' : ''}>idiom (Thành ngữ)</option>
+        <option value="preposition" ${posVal === 'preposition' ? 'selected' : ''}>preposition (Giới từ)</option>
+      </select>
+    </td>
+    <td>
+      <input type="text" class="read-vocab-meaning" value="${esc(meaning)}" placeholder="VD: Mở rộng, phát triển">
+    </td>
+    <td style="text-align:center;">
+      <button type="button" class="btn-icon-del" onclick="window.removeReadingVocabRow(this)" title="Xóa từ này">🗑️</button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+  window._updateReadingVocabIndices();
+};
+
+window.removeReadingVocabRow = function(btn) {
+  const row = btn.closest('tr.read-vocab-row');
+  if (row) {
+    row.remove();
+    window._updateReadingVocabIndices();
+  }
+};
+
+window._updateReadingVocabIndices = function() {
+  const rows = document.querySelectorAll('#ud-read-vocab-tbody tr.read-vocab-row');
+  rows.forEach((r, idx) => {
+    const numEl = r.querySelector('.read-vocab-num');
+    if (numEl) numEl.textContent = idx + 1;
+  });
+  const badge = document.getElementById('badge-read-vocab');
+  if (badge) badge.textContent = `${rows.length} từ`;
+};
+
+window.toggleReadingVocabQuickPaste = function() {
+  const el = document.getElementById('ud-read-vocab-quick-drawer');
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+};
+
+window.processReadingVocabQuickPaste = function() {
+  const input = document.getElementById('ud-read-vocab-quick-input');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) {
+    alert("Vui lòng nhập nội dung danh sách từ vựng cần chuyển đổi!");
+    return;
+  }
+  const lines = text.split('\n');
+  let addedCount = 0;
+  lines.forEach(line => {
+    const l = line.trim();
+    if (!l) return;
+
+    let word = '', ipa = '', pos = 'noun', meaning = '';
+
+    const ipaMatch = l.match(/\/(.*?)\//);
+    if (ipaMatch) {
+      ipa = `/${ipaMatch[1].trim()}/`;
+      const partsBefore = l.substring(0, ipaMatch.index).trim();
+      const partsAfter = l.substring(ipaMatch.index + ipaMatch[0].length).trim();
+      word = partsBefore.replace(/^[0-9]+[\.\)\-]\s*/, '').trim();
+
+      const posMatch = partsAfter.match(/[\(\[\-:]?\s*(verb|noun|adjective|adj|adverb|adv|phrase|idiom|preposition)\s*[\)\]\-:]?/i);
+      if (posMatch) {
+        let pStr = posMatch[1].toLowerCase();
+        if (pStr === 'adj') pStr = 'adjective';
+        if (pStr === 'adv') pStr = 'adverb';
+        pos = pStr;
+        meaning = partsAfter.substring(posMatch.index + posMatch[0].length).replace(/^[\s:\-–—,]+/, '').trim();
+      } else {
+        meaning = partsAfter.replace(/^[\s:\-–—,]+/, '').trim();
+      }
+    } else {
+      const parts = l.split(/\s*[-–—:=,\t]+\s*/);
+      if (parts.length >= 4) {
+        word = parts[0];
+        ipa = parts[1].startsWith('/') ? parts[1] : `/${parts[1]}/`;
+        let pStr = parts[2].toLowerCase();
+        if (pStr === 'adj') pStr = 'adjective';
+        if (pStr === 'adv') pStr = 'adverb';
+        pos = pStr;
+        meaning = parts.slice(3).join(', ');
+      } else if (parts.length === 3) {
+        word = parts[0];
+        const p2 = parts[1].toLowerCase();
+        if (['verb', 'noun', 'adjective', 'adj', 'adverb', 'adv', 'phrase', 'idiom', 'preposition'].includes(p2)) {
+          pos = p2 === 'adj' ? 'adjective' : (p2 === 'adv' ? 'adverb' : p2);
+          meaning = parts[2];
+        } else if (p2.startsWith('/') || p2.endsWith('/')) {
+          ipa = p2.startsWith('/') ? p2 : `/${p2}/`;
+          meaning = parts[2];
+        } else {
+          pos = 'noun';
+          meaning = `${parts[1]} - ${parts[2]}`;
+        }
+      } else if (parts.length === 2) {
+        word = parts[0];
+        meaning = parts[1];
+      } else if (parts.length === 1 && parts[0]) {
+        word = parts[0];
+      }
+    }
+
+    word = word.replace(/^[0-9]+[\.\)\-]\s*/, '').trim();
+    if (word) {
+      window.addReadingVocabRow(word, ipa, pos, meaning);
+      addedCount++;
+    }
+  });
+
+  input.value = '';
+  window.toggleReadingVocabQuickPaste();
+};
+
+window.loadSampleReadingVocab = function() {
+  const samples = [
+    { word: 'expand', ipa: '/ɪkˈspænd/', pos: 'verb', meaning: 'Mở rộng, phát triển quy mô' },
+    { word: 'comprehension', ipa: '/ˌkɒm.prɪˈhen.ʃən/', pos: 'noun', meaning: 'Sự hiểu biết, khả năng lĩnh hội' },
+    { word: 'sustainable', ipa: '/səˈsteɪ.nə.bəl/', pos: 'adjective', meaning: 'Bền vững, thân thiện với môi trường' },
+    { word: 'confined', ipa: '/kənˈfaɪnd/', pos: 'adjective', meaning: 'Bị giới hạn trong một phạm vi nhất định' },
+    { word: 'integral', ipa: '/ˈɪn.tɪ.ɡrəl/', pos: 'adjective', meaning: 'Thiết yếu, không thể thiếu' }
+  ];
+  const tbody = document.getElementById('ud-read-vocab-tbody');
+  if (tbody) tbody.innerHTML = '';
+  samples.forEach(s => window.addReadingVocabRow(s.word, s.ipa, s.pos, s.meaning));
+};
+
+window.clearAllReadingVocab = function() {
+  if (!confirm("Bạn có chắc chắn muốn xóa toàn bộ danh mục tra từ này?")) return;
+  const tbody = document.getElementById('ud-read-vocab-tbody');
+  if (tbody) tbody.innerHTML = '';
+  window._updateReadingVocabIndices();
+};
+
+window.insertReadingVocabIpa = function(sym) {
+  const input = window._lastFocusedReadVocabIpa || document.querySelector('.read-vocab-ipa');
+  if (!input) return;
+  const start = input.selectionStart || input.value.length;
+  const end = input.selectionEnd || input.value.length;
+  const text = input.value;
+  input.value = text.substring(0, start) + sym + text.substring(end);
+  input.focus();
+  input.setSelectionRange(start + sym.length, start + sym.length);
+};
+
+window.addReadingMatchPairToCard = function(btn) {
+  const card = btn.closest('.ud-read-ex-card');
+  if (!card) return;
+  const container = card.querySelector('.read-match-pairs-container');
+  if (!container) return;
+  const curCount = container.querySelectorAll('.read-match-pair-row').length;
+  const nextLetter = String.fromCharCode(97 + (curCount % 26));
+  const row = document.createElement('div');
+  row.className = 'read-match-pair-row';
+  row.style = 'display:flex;gap:6px;align-items:center;background:#ffffff;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;';
+  row.innerHTML = `
+    <span style="font-size:11px;font-weight:700;color:#64748b;width:20px;text-align:center;">${curCount + 1}</span>
+    <input type="text" class="read-match-pair-word" value="" placeholder="Từ / Cụm từ (VD: confined)" style="flex:1;font-size:12px;">
+    <span style="font-size:12px;font-weight:bold;color:#6366f1;">➔</span>
+    <input type="text" class="read-match-pair-letter" value="${nextLetter}" placeholder="a, b..." style="width:40px;text-align:center;font-weight:700;font-size:12px;">
+    <input type="text" class="read-match-pair-def" value="" placeholder="Định nghĩa tiếng Anh (VD: limited or restricted to...)" style="flex:2;font-size:12px;">
+    <button type="button" class="btn-icon-del" onclick="window.removeReadingMatchPairRow(this)" title="Xóa cặp này">🗑️</button>
+  `;
+  container.appendChild(row);
+};
+
+window.removeReadingMatchPairRow = function(btn) {
+  const row = btn.closest('.read-match-pair-row');
+  if (row) row.remove();
+};
+
 
