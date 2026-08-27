@@ -4,6 +4,7 @@ import { showToast, renderSkeletonCards, renderSkeletonTableRows, renderLMSBadge
 const db = () => window.supabaseClient;
 
 export const KEYS = ['A','B','C','D'];
+if (typeof window !== 'undefined') { window.KEYS = KEYS; }
 export { uploadMediaFile, showToast, renderSkeletonCards, renderSkeletonTableRows, renderLMSBadge };
 
 export const state = { SUBCATS:{}, questions:[], exams:[], results:[], teachers:[], students:[], nextQId:100, nextEId:10, currentUserEmail: '', currentUserName: '' };
@@ -15,6 +16,7 @@ export const shuffle = a => a.slice().sort(() => Math.random() - .5);
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({
   '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
 }[m]));
+if (typeof window !== 'undefined') { window.esc = esc; }
 
 
 

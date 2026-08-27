@@ -1,4 +1,4 @@
-import { state, $, esc, KEYS, mediaHTML, audioHTML, videoHTML, renderRich, typesetMath, TYPE_LABELS, splitBlanks, countBlanks, fillSubcatSelect, canEditItem, isRootUser, getAuthorDisplayName, logTeacherActivity } from './common.js';
+import { state, $, esc, KEYS, mediaHTML, audioHTML, videoHTML, renderRich, typesetMath, TYPE_LABELS, splitBlanks, countBlanks, fillSubcatSelect, canEditItem, isRootUser, getAuthorDisplayName, logTeacherActivity, uploadMediaFile } from './common.js';
 
 const db = () => window.supabaseClient;
 

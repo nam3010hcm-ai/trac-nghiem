@@ -6,7 +6,7 @@
  */
 
 import { LEARN_DATA, DEFAULT_UNITS } from './learn-data.js';
-import { renderRich, typesetMath, renderGlobalHeaderProfile } from './common.js';
+import { renderRich, typesetMath, renderGlobalHeaderProfile, esc, KEYS } from './common.js';
 
 const db = () => window.supabaseClient;
 

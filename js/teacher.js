@@ -4,7 +4,7 @@ import {
 } from './supabase.js';
 
 import { showToast } from './ui-components.js';
-import { initData, state, $, esc, isRootUser } from './common.js';
+import { initData, state, $, esc, isRootUser, renderGlobalHeaderProfile } from './common.js';
 import { populateCategoryDropdowns, updateFltSubcat, updateQFormSubcat, updateEFormSubcat, addParentCategory, deleteParentCategory, addSubCategory, deleteSubCategory, editSubCategory, restoreDefaultCategories, renderCatManagementList } from './categories.js';
 import { openQForm, closeQForm, saveQ, deleteQ, renderQuestions, deleteSelectedQuestions } from './questions.js';
 import { openEForm, closeEForm, saveExam, deleteExam, toggleExamVisibility, renderExams, renderPracticeExams, populateExamSelect } from './exams.js';

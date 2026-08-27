@@ -1,4 +1,4 @@
-import { initData, state, $, KEYS, shuffle, getPool, esc, mediaHTML, audioHTML, videoHTML, renderRich, typesetMath, isCorrect, formatAnswer, splitBlanks } from './common.js';
+import { initData, state, $, KEYS, shuffle, getPool, esc, mediaHTML, audioHTML, videoHTML, renderRich, typesetMath, isCorrect, formatAnswer, splitBlanks, renderGlobalHeaderProfile } from './common.js';
 import { populateExamSelect, updateExamDesc } from './exams.js';
 import { saveResult } from './results.js';
 import { recordAuthEvent, recordStudyTime } from './auth-logs.js';
