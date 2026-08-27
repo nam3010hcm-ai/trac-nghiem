@@ -1479,12 +1479,13 @@ body.learn-body {
 /* 1. Highlighted Word in Passage (.vocab-tag) */
 .vocab-tag {
   color: #0369a1;
-  font-weight: 700;
-  background: linear-gradient(120deg, rgba(224, 242, 254, 0.7) 0%, rgba(186, 230, 253, 0.85) 100%);
-  padding: 2px 7px;
+  font-weight: normal;
+  text-decoration: none;
+  background: #e0f2fe;
+  padding: 1px 6px;
   margin: 0 1px;
-  border-radius: 6px;
-  border-bottom: 2px solid #0284c7;
+  border-radius: 4px;
+  border-bottom: none;
   cursor: pointer;
   display: inline-block;
   vertical-align: baseline;
@@ -1495,20 +1496,18 @@ body.learn-body {
 }
 
 .vocab-tag:hover {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  color: #ffffff !important;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
-  border-bottom-color: transparent;
+  background: #bae6fd;
+  color: #0284c7;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
 }
 
 .vocab-tag:active,
 .vocab-tag.active-lookup {
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-  color: #ffffff !important;
-  border-bottom-color: transparent;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35);
-  transform: scale(0.97);
+  background: #c7d2fe;
+  color: #4338ca;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+  transform: scale(0.98);
 }
 
 /* 2. Floating Popover Modal Card (#vocab-lookup-card / .vocab-modal-card) */
