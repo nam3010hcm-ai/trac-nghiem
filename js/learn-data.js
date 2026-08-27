@@ -961,6 +961,156 @@ Unfortunately, rising ocean temperatures due to climate change have triggered se
   },
 
   // -------------------------------------------------------------
+  // UNIT TIẾNG ANH CHUYÊN NGÀNH CÔNG BINH
+  // -------------------------------------------------------------
+  {
+    id: 'unit_1787359536907',
+    subject: '🇬🇧 Tiếng Anh',
+    module: 'Tiếng Anh Chuyên Ngành Công Binh',
+    title: 'Unit 1: VPA: FOUNDATION AND DEVELOPMENT',
+    topic: 'Military Engineering & History',
+    level: 'B1 - B2',
+    icon: '🎖️',
+    description: 'Học phần Tiếng Anh chuyên ngành Công Binh: Luyện nghe hiểu lịch sử QĐND Việt Nam, từ vựng quân sự, cấu trúc ngữ pháp và xếp câu chuyên ngành.',
+    isHidden: false,
+    listening: [
+      {
+        id: 'lis_1787359536907',
+        title: 'Track 1: VPA Foundation & Development',
+        topic: 'Military History',
+        level: 'B1 - B2',
+        mediaType: 'audio',
+        audioUrl: 'https://xuioxmjufpfdblecjvuv.supabase.co/storage/v1/object/public/audio-bank/1787796826762_Track_1_ENG-ME-VPA.mp3',
+        videoUrl: '',
+        audioText: "After the 1975 historic victory, the VPA with the whole people again won the wars for borderprotection, preserved the homeland's independence, sovereignty, unity and territorial integrity. Right after the end of the National Salvation War against American aggressors, the genocide regime headed by Pol Pot in Cambodia incited nationalist resentment and launched the Border Encroachment War in the southwest border of Vietnam. Pol Pot's clique committed numerous barbarous massacres against the Vietnamese people living along the border and at the same time conducted the policy of genocide against the people of Cambodia.\nTo protect the homeland, on 23 December 1978, the VPA launched the strategic counter offensive and smashed the Pol Pot army's attacks. Then, in response to an urgent appeal from the Cambodian people and the Kampuchean National United Front for national salvation, Vietnam's military volunteers along with the Cambodian armed forces annihilated 21 Pol Pot divisions and put an end to this brutal genocide regime.",
+        transcript: "After the 1975 historic victory, the VPA with the whole people again won the wars for borderprotection, preserved the homeland's independence, sovereignty, unity and territorial integrity. Right after the end of the National Salvation War against American aggressors, the genocide regime headed by Pol Pot in Cambodia incited nationalist resentment and launched the Border Encroachment War in the southwest border of Vietnam. Pol Pot's clique committed numerous barbarous massacres against the Vietnamese people living along the border and at the same time conducted the policy of genocide against the people of Cambodia.\nTo protect the homeland, on 23 December 1978, the VPA launched the strategic counter offensive and smashed the Pol Pot army's attacks. Then, in response to an urgent appeal from the Cambodian people and the Kampuchean National United Front for national salvation, Vietnam's military volunteers along with the Cambodian armed forces annihilated 21 Pol Pot divisions and put an end to this brutal genocide regime.",
+        image: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=600&auto=format&fit=crop&q=80',
+        speed: 1.0,
+        duration: '60s',
+        exercises: [
+          {
+            id: 'ex_mcq_1787796836238_vj81',
+            type: 'mcq',
+            title: 'Exercise 1. Listening Comprehension MCQ',
+            question: 'When did the VPA launch the strategic counter-offensive to protect the homeland?',
+            options: ['On 23 December 1978', 'In 1975', 'In 1979', 'On 30 April 1975'],
+            answer: 0,
+            explain: 'The audio explicitly states: "To protect the homeland, on 23 December 1978, the VPA launched the strategic counter offensive..."'
+          },
+          {
+            id: 'ex_dict_1787796836238_mkum',
+            type: 'dictation',
+            prompt: 'Nghe và gõ lại chính xác câu:',
+            targetSentence: 'To protect the homeland, the VPA launched the strategic counter offensive.'
+          }
+        ]
+      }
+    ],
+    reading: [
+      {
+        id: 'read_1787359536907',
+        level: 'B1 - B2',
+        title: 'Reading: Military Engineering Corps in National Defense',
+        topic: 'Engineering & Defense',
+        passage: 'Military engineering is loosely defined as the art, science, and practice of designing and building military works and maintaining lines of military transport and military communications. Military engineers are also responsible for logistics behind military tactics. Modern military engineering encompasses civil engineering, construction, bridge assembly, demining, and fortifications.',
+        exercises: [
+          {
+            type: 'mcq',
+            question: 'What is a primary responsibility of military engineers mentioned in the text?',
+            options: [
+              'Designing military works, bridge assembly and fortifications',
+              'Commercial air traffic management',
+              'Cooking and catering for military officers',
+              'Selling civilian construction machinery'
+            ],
+            answer: 0,
+            explain: 'The text states military engineering encompasses civil engineering, construction, bridge assembly, demining, and fortifications.'
+          }
+        ],
+        vocabulary: {
+          fortification: { ipa: '/ˌfɔː.tɪ.fɪˈkeɪ.ʃən/', pos: 'noun', meaning: 'Công sự, đồn lũy phòng thủ' },
+          logistics: { ipa: '/ləˈdʒɪs.tɪks/', pos: 'noun', meaning: 'Hậu cần, tiếp vận' },
+          demining: { ipa: '/diːˈmaɪ.nɪŋ/', pos: 'noun', meaning: 'Rà phá bom mìn' }
+        }
+      }
+    ],
+    speaking: [
+      {
+        id: 'spk_1787359536907',
+        level: 'B1 - B2',
+        title: 'Speaking: Technical & Tactical Mission Briefing',
+        topic: 'Military Mission',
+        phrases: [
+          {
+            text: 'Our engineering unit is tasked with assembling the pontoon bridge across the river.',
+            ipa: '/ˈaʊər ˌen.dʒɪˈnɪə.rɪŋ ˈjuː.nɪt ɪz tɑːskt wɪð əˈsem.blɪŋ ðə pɒnˈtuːn brɪdʒ əˈkrɒs ðə ˈrɪv.ər/',
+            meaning: 'Đơn vị công binh của chúng tôi được giao nhiệm vụ lắp ghép cầu phao qua sông.',
+            tip: 'Nhấn mạnh vào cụm từ "pontoon bridge" và phát âm chuẩn âm cuối /dʒ/.'
+          }
+        ]
+      }
+    ],
+    writing: [
+      {
+        id: 'wrt_scramble_1787359536907',
+        level: 'B1 - B2',
+        title: 'Sentence Scramble: Defense & Engineering',
+        topic: 'Grammar Structure',
+        items: [
+          {
+            id: 'sc_cb_1',
+            words: ['The', 'combat', 'engineers', 'cleared', 'the', 'obstacle', 'safely.'],
+            correctSentence: 'The combat engineers cleared the obstacle safely.',
+            hint: 'Bắt đầu bằng cụm danh từ "The combat engineers..."'
+          }
+        ]
+      }
+    ],
+    languageFocus: {
+      flashcards: [
+        {
+          id: 'fc_cb_1',
+          word: 'Combat Engineer',
+          ipa: '/ˈkɒm.bæt ˌen.dʒɪˈnɪər/',
+          pos: 'noun',
+          meaning: 'Binh chủng Công binh, Công binh chiến đấu',
+          example: 'Combat engineers provide critical mobility support to advancing troops.',
+          synonyms: 'Sapper, military pioneer'
+        },
+        {
+          id: 'fc_cb_2',
+          word: 'Pontoon Bridge',
+          ipa: '/pɒnˈtuːn brɪdʒ/',
+          pos: 'noun',
+          meaning: 'Cầu phao dã chiến',
+          example: 'The engineers rapidly deployed a heavy pontoon bridge under camouflage.',
+          synonyms: 'Floating bridge'
+        }
+      ],
+      matchPairs: [
+        { left: 'Pontoon Bridge', right: 'Cầu phao dã chiến', pairId: 1 },
+        { left: 'Demining Operation', right: 'Chiến dịch rà phá bom mìn', pairId: 2 },
+        { left: 'Combat Engineer', right: 'Công binh chiến đấu', pairId: 3 }
+      ],
+      pastFormVerbs: [
+        { infinitive: 'build', past: 'built', meaning: 'xây dựng' },
+        { infinitive: 'deploy', past: 'deployed', meaning: 'triển khai' },
+        { infinitive: 'clear', past: 'cleared', meaning: 'dọn sạch, rà phá' },
+        { infinitive: 'cross', past: 'crossed', meaning: 'vượt qua' }
+      ],
+      grammarChallenge: [
+        {
+          id: 'gm_cb_1',
+          question: 'The military convoy ___ the newly constructed bridge yesterday.',
+          options: ['crosses', 'crossed', 'is crossing', 'has crossed'],
+          answer: 1,
+          explain: 'Sử dụng thì Quá khứ đơn ("yesterday") -> crossed.'
+        }
+      ]
+    }
+  },
+
+  // -------------------------------------------------------------
   // UNIT TOÁN HỌC
   // -------------------------------------------------------------
   {

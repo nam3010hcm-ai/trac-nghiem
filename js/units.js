@@ -64,6 +64,9 @@ export function normalizeSubjectName(sub) {
 export function normalizeModuleName(mod) {
   if (!mod) return 'English B1 - General & Academic Skills';
   const m = String(mod).trim();
+  if (m.toLowerCase().includes('công binh') || m.toLowerCase().includes('military engineering')) {
+    return 'Tiếng Anh Chuyên Ngành Công Binh';
+  }
   if (m.includes('Tiếng Anh cơ bản 1') || m.includes('Basic English Module 1') || m.includes('Tiếng Anh cơ bản')) {
     return 'English B1 - General & Academic Skills';
   }
@@ -1986,6 +1989,12 @@ export async function saveUnit() {
 
     closeUnitEditor();
     renderUnitsList();
+    if (typeof window.syncCurriculumWithUnits === 'function') {
+      window.syncCurriculumWithUnits();
+    }
+    if (typeof window.renderCurriculumTree === 'function') {
+      window.renderCurriculumTree();
+    }
     alert('✅ Đã lưu Unit bài học thành công!');
   } catch (err) {
     console.error("Lỗi khi lưu Unit:", err);
@@ -2013,6 +2022,9 @@ export async function toggleUnitVisibility(unitId) {
     if (error) console.error("Lỗi toggleUnitVisibility:", error);
     await logTeacherActivity(u.isHidden ? 'Ẩn bài học' : 'Mở bài học', 'Bài học Unit', u.title, unitId, '');
     renderUnitsList();
+    if (typeof window.renderCurriculumTree === 'function') {
+      window.renderCurriculumTree();
+    }
   } catch (e) {
     console.error(e);
   }
@@ -2033,6 +2045,12 @@ export async function deleteUnit(unitId) {
     unitsState = unitsState.filter(u => u.id !== unitId);
     await logTeacherActivity('Xóa bài học', 'Bài học Unit', u?.title || unitId, unitId, '');
     renderUnitsList();
+    if (typeof window.syncCurriculumWithUnits === 'function') {
+      window.syncCurriculumWithUnits();
+    }
+    if (typeof window.renderCurriculumTree === 'function') {
+      window.renderCurriculumTree();
+    }
     alert("✅ Đã xóa Unit thành công!");
   } catch (e) {
     console.error("Lỗi xóa Unit:", e);

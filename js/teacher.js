@@ -188,8 +188,12 @@ async function showTeacherPanel(user) {
     renderResults();
     renderCatManagementList();
     loadCohorts(); 
-    loadCurriculumFromSupabase().then(() => renderCurriculumTree());
-    loadUnits().then(() => renderUnitsList());
+    loadUnits().then(() => {
+      renderUnitsList();
+      return loadCurriculumFromSupabase();
+    }).then(() => {
+      renderCurriculumTree();
+    });
     loadStudents().then(() => {
       renderStudentsList();
       updateDashboardKPICounts();

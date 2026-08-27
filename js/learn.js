@@ -659,6 +659,9 @@ function normalizeSubjectName(sub) {
 function normalizeModuleName(mod) {
   if (!mod) return 'English B1 - General & Academic Skills';
   const m = String(mod).trim();
+  if (m.toLowerCase().includes('công binh') || m.toLowerCase().includes('military engineering')) {
+    return 'Tiếng Anh Chuyên Ngành Công Binh';
+  }
   if (m.includes('Tiếng Anh cơ bản 1') || m.includes('Basic English Module 1') || m.includes('Tiếng Anh cơ bản')) {
     return 'English B1 - General & Academic Skills';
   }
