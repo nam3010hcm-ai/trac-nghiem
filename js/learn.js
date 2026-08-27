@@ -3543,12 +3543,39 @@ window.nextFlashcard = function() {
   }
 };
 
+// ==========================================================================
+// MATCH PUZZLE: FREE-CONNECT WITH DASHED SVG LINES & SUBMIT ENGINE
+// ==========================================================================
+const MATCH_COLORS = [
+  { id: 'indigo', hex: '#6366f1', bg: '#eef2ff', border: '#6366f1', text: '#4338ca' },
+  { id: 'emerald', hex: '#10b981', bg: '#ecfdf5', border: '#10b981', text: '#047857' },
+  { id: 'amber', hex: '#f59e0b', bg: '#fffbeb', border: '#f59e0b', text: '#b45309' },
+  { id: 'rose', hex: '#f43f5e', bg: '#fff1f2', border: '#f43f5e', text: '#be123c' },
+  { id: 'cyan', hex: '#06b6d4', bg: '#ecfeff', border: '#06b6d4', text: '#0e7490' },
+  { id: 'purple', hex: '#8b5cf6', bg: '#f5f3ff', border: '#8b5cf6', text: '#6d28d9' },
+  { id: 'blue', hex: '#3b82f6', bg: '#eff6ff', border: '#3b82f6', text: '#1d4ed8' },
+  { id: 'orange', hex: '#ea580c', bg: '#fff7ed', border: '#ea580c', text: '#c2410c' },
+  { id: 'teal', hex: '#14b8a6', bg: '#f0fdfa', border: '#14b8a6', text: '#0f766e' },
+  { id: 'pink', hex: '#ec4899', bg: '#fdf2f8', border: '#ec4899', text: '#be185d' }
+];
+
+let matchPuzzleState = {
+  pairs: [],
+  lefts: [],
+  rights: [],
+  connections: {}, // { [leftId]: rightId }
+  selectedLeft: null,
+  selectedRight: null,
+  submitted: false,
+  result: null
+};
+
 function renderMatchPuzzleView() {
   const langObj = (typeof getUnitSkillObj === 'function' ? getUnitSkillObj(currentUnit, 'languageFocus') : null) || currentUnit?.languageFocus || currentUnit?.language_focus || {};
   const rawPairs = safeArray(langObj?.matchPairs, []);
   
   const pairs = rawPairs.map((p, idx) => ({
-    pairId: p.pairId !== undefined ? p.pairId : (idx + 1),
+    pairId: p.pairId !== undefined ? String(p.pairId) : String(idx + 1),
     left: p.left || '',
     right: p.right || ''
   })).filter(p => p.left && p.right);
@@ -3565,26 +3592,46 @@ function renderMatchPuzzleView() {
 
   const lefts = [...pairs].sort(() => Math.random() - 0.5);
   const rights = [...pairs].sort(() => Math.random() - 0.5);
-  matchedCount = 0;
-  matchSelectedLeft = null;
-  matchSelectedRight = null;
-  window._currentMatchTotalPairs = pairs.length;
+
+  matchPuzzleState = {
+    pairs: pairs,
+    lefts: lefts,
+    rights: rights,
+    connections: {},
+    selectedLeft: null,
+    selectedRight: null,
+    submitted: false,
+    result: null
+  };
+
+  // Schedule SVG line redraw after layout render
+  setTimeout(() => {
+    window.redrawMatchLines();
+    if (!window._matchResizeAttached) {
+      window._matchResizeAttached = true;
+      window.addEventListener('resize', () => {
+        if (document.getElementById('match-puzzle-svg')) {
+          window.redrawMatchLines();
+        }
+      });
+    }
+  }, 60);
 
   return `
     <div class="match-puzzle-wrapper">
       <!-- HEADER -->
       <div class="match-puzzle-header">
         <div class="match-puzzle-title-wrap">
-          <div class="match-puzzle-title">🧩 Ghép cặp Từ vựng & Thành ngữ (Match Pairs)</div>
-          <div class="match-puzzle-desc">Bấm chọn 1 ô thuật ngữ tiếng Anh bên trái rồi bấm 1 ô nghĩa tiếng Việt bên phải tương ứng.</div>
+          <div class="match-puzzle-title">🧩 Ghép Cặp Từ Vựng, Thành Ngữ & Định Nghĩa</div>
+          <div class="match-puzzle-desc">Bấm 1 ô bên trái rồi bấm 1 ô bên phải để nối đường line. Bạn có thể nối và chỉnh sửa tự do trước khi bấm <b>Nộp bài</b>.</div>
         </div>
         <div class="match-puzzle-stats">
           <div class="match-progress-badge">
-            <span>Tiến độ:</span>
+            <span>Đã nối:</span>
             <strong id="match-progress-text">0 / ${pairs.length} cặp</strong>
           </div>
-          <button type="button" class="btn btn-sm match-btn-reset" onclick="window.switchLangSubTab('match')" title="Xáo trộn và chơi lại từ đầu">
-            🔄 Chơi lại
+          <button type="button" class="btn btn-sm match-btn-reset" onclick="window.resetMatchPuzzle(true)" title="Xáo trộn và nối lại từ đầu">
+            🔄 Xáo trộn lại
           </button>
         </div>
       </div>
@@ -3594,130 +3641,531 @@ function renderMatchPuzzleView() {
         <div class="match-progress-fill" id="match-progress-fill" style="width: 0%;"></div>
       </div>
 
-      <!-- 2 COLUMNS OF TILES -->
-      <div class="match-puzzle-grid">
-        <!-- LEFT COLUMN: TERMS / WORDS -->
-        <div class="match-col match-col-left">
-          <div class="match-col-label">
-            <span>📖 Từ vựng / Thuật ngữ (Words & Terms)</span>
-          </div>
-          <div class="match-chips-list">
-            ${lefts.map(p => `
-              <button type="button" class="match-puzzle-chip chip-left" id="mp-left-${p.pairId}" onclick="window.selectMatchLeft('${p.pairId}')">
-                <span class="chip-dot"></span>
-                <span class="chip-text">${esc(p.left)}</span>
-              </button>
-            `).join('')}
-          </div>
-        </div>
+      <!-- CANVAS WITH SVG LAYER AND 2-COLUMNS -->
+      <div class="match-puzzle-canvas-wrap" id="match-puzzle-canvas-wrap">
+        <svg class="match-puzzle-svg" id="match-puzzle-svg"></svg>
 
-        <!-- RIGHT COLUMN: DEFINITIONS / MEANINGS -->
-        <div class="match-col match-col-right">
-          <div class="match-col-label">
-            <span>💡 Định nghĩa / Ý nghĩa tương ứng (Definitions & Meanings)</span>
+        <div class="match-puzzle-grid">
+          <!-- LEFT COLUMN: WORDS & TERMS -->
+          <div class="match-col match-col-left">
+            <div class="match-col-label">
+              <span>📖 Từ vựng / Thuật ngữ (Words & Terms)</span>
+            </div>
+            <div class="match-chips-list" id="match-chips-left">
+              ${lefts.map((p, idx) => `
+                <div class="match-puzzle-chip chip-left" id="mp-left-${p.pairId}" onclick="window.selectMatchLeft('${p.pairId}')">
+                  <div class="chip-content-wrap">
+                    <span style="font-weight:700;color:#64748b;font-size:12px;width:18px;">${idx + 1}.</span>
+                    <span class="chip-text">${esc(p.left)}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="match-eval-holder" id="mp-eval-left-${p.pairId}"></span>
+                    <span class="match-del-holder" id="mp-del-left-${p.pairId}"></span>
+                    <div class="chip-connector-dot chip-connector-dot-right"></div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
           </div>
-          <div class="match-chips-list">
-            ${rights.map(p => `
-              <button type="button" class="match-puzzle-chip chip-right" id="mp-right-${p.pairId}" onclick="window.selectMatchRight('${p.pairId}')">
-                <span class="chip-dot"></span>
-                <span class="chip-text">${esc(p.right)}</span>
-              </button>
-            `).join('')}
+
+          <!-- RIGHT COLUMN: DEFINITIONS & MEANINGS -->
+          <div class="match-col match-col-right">
+            <div class="match-col-label">
+              <span>💡 Định nghĩa / Ý nghĩa tương ứng (Definitions)</span>
+            </div>
+            <div class="match-chips-list" id="match-chips-right">
+              ${rights.map(p => `
+                <div class="match-puzzle-chip chip-right" id="mp-right-${p.pairId}" onclick="window.selectMatchRight('${p.pairId}')">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <div class="chip-connector-dot chip-connector-dot-left"></div>
+                    <span class="match-eval-holder" id="mp-eval-right-${p.pairId}"></span>
+                  </div>
+                  <div class="chip-content-wrap">
+                    <span class="chip-text">${esc(p.right)}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- WIN CELEBRATION BOX -->
-      <div id="match-puzzle-win" class="match-puzzle-win-card" style="display:none;">
-        <div class="match-win-icon">🎉</div>
-        <div class="match-win-title">Xuất Sắc! Bạn Đã Ghép Đúng Tất Cả Các Cặp!</div>
-        <div class="match-win-desc">Bạn vừa nhận được <strong style="color:#16a34a;">+${pairs.length * 10} XP</strong> ghi nhớ từ vựng.</div>
-        <div class="match-win-actions">
-          <button type="button" class="btn btn-p" onclick="window.switchLangSubTab('match')">🔄 Luyện tập lại</button>
-          <button type="button" class="btn" style="background:#8b5cf6;color:#ffffff;" onclick="window.switchLangSubTab('quiz')">⚡ Tiếp theo: Trắc nghiệm Ngữ Pháp ➔</button>
+      <!-- ACTION BAR: SUBMIT & CLEAR -->
+      <div class="match-action-bar" id="match-action-bar">
+        <div style="font-size:13px;color:#64748b;" id="match-status-hint">
+          💡 Chọn cặp để nối. Bấm <b>Nộp bài</b> khi đã hoàn thành tất cả.
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button type="button" class="btn btn-sm" onclick="window.clearAllMatchConnections()" style="background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;">
+            🗑️ Xóa hết nối
+          </button>
+          <button type="button" class="btn-match-submit" id="btn-match-submit" onclick="window.submitMatchPuzzle()">
+            <span>✅ Nộp bài & Xem kết quả</span>
+          </button>
         </div>
       </div>
+
+      <!-- RESULT CARD (DISPLAYED AFTER SUBMIT) -->
+      <div id="match-result-card" class="match-result-card" style="display:none;"></div>
     </div>
   `;
 }
 
-window.selectMatchLeft = function(pairId) {
-  const btn = document.getElementById(`mp-left-${pairId}`);
-  if (!btn || btn.classList.contains('matched') || btn.classList.contains('wrong')) return;
-  if (matchSelectedLeft === pairId) {
-    btn.classList.remove('selected');
-    matchSelectedLeft = null;
+window.selectMatchLeft = function(leftId) {
+  if (matchPuzzleState.submitted) return;
+
+  // If clicking the same selected left, unselect
+  if (matchPuzzleState.selectedLeft === leftId) {
+    matchPuzzleState.selectedLeft = null;
+    window._updateMatchChipsState();
+    window.redrawMatchLines();
     return;
   }
-  document.querySelectorAll('[id^="mp-left-"]').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  matchSelectedLeft = pairId;
-  checkPuzzlePair();
-};
 
-window.selectMatchRight = function(pairId) {
-  const btn = document.getElementById(`mp-right-${pairId}`);
-  if (!btn || btn.classList.contains('matched') || btn.classList.contains('wrong')) return;
-  if (matchSelectedRight === pairId) {
-    btn.classList.remove('selected');
-    matchSelectedRight = null;
+  // If a right item was previously selected, connect immediately!
+  if (matchPuzzleState.selectedRight !== null) {
+    const rightId = matchPuzzleState.selectedRight;
+    window._applyConnection(leftId, rightId);
+    matchPuzzleState.selectedLeft = null;
+    matchPuzzleState.selectedRight = null;
+    window._updateMatchChipsState();
+    window.redrawMatchLines();
     return;
   }
-  document.querySelectorAll('[id^="mp-right-"]').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  matchSelectedRight = pairId;
-  checkPuzzlePair();
+
+  // Otherwise, select this left
+  matchPuzzleState.selectedLeft = leftId;
+  window._updateMatchChipsState();
+  window.redrawMatchLines();
 };
 
-function checkPuzzlePair() {
-  if (matchSelectedLeft !== null && matchSelectedRight !== null) {
-    const bLeft = document.getElementById(`mp-left-${matchSelectedLeft}`);
-    const bRight = document.getElementById(`mp-right-${matchSelectedRight}`);
+window.selectMatchRight = function(rightId) {
+  if (matchPuzzleState.submitted) return;
 
-    if (String(matchSelectedLeft) === String(matchSelectedRight)) {
-      if (bLeft) {
-        bLeft.classList.remove('selected');
-        bLeft.classList.add('matched');
-        bLeft.disabled = true;
+  // If clicking the same selected right, unselect
+  if (matchPuzzleState.selectedRight === rightId) {
+    matchPuzzleState.selectedRight = null;
+    window._updateMatchChipsState();
+    window.redrawMatchLines();
+    return;
+  }
+
+  // If a left item was previously selected, connect immediately!
+  if (matchPuzzleState.selectedLeft !== null) {
+    const leftId = matchPuzzleState.selectedLeft;
+    window._applyConnection(leftId, rightId);
+    matchPuzzleState.selectedLeft = null;
+    matchPuzzleState.selectedRight = null;
+    window._updateMatchChipsState();
+    window.redrawMatchLines();
+    return;
+  }
+
+  // Otherwise, select this right
+  matchPuzzleState.selectedRight = rightId;
+  window._updateMatchChipsState();
+  window.redrawMatchLines();
+};
+
+window._applyConnection = function(leftId, rightId) {
+  // If another left was connected to this right, remove it to maintain 1-to-1 matching
+  Object.keys(matchPuzzleState.connections).forEach(k => {
+    if (matchPuzzleState.connections[k] === rightId) {
+      delete matchPuzzleState.connections[k];
+    }
+  });
+  // Connect
+  matchPuzzleState.connections[leftId] = rightId;
+  playShortBlipSound();
+};
+
+window.removeMatchConnection = function(leftId, event) {
+  if (event) event.stopPropagation();
+  if (matchPuzzleState.submitted) return;
+  delete matchPuzzleState.connections[leftId];
+  if (matchPuzzleState.selectedLeft === leftId) matchPuzzleState.selectedLeft = null;
+  window._updateMatchChipsState();
+  window.redrawMatchLines();
+};
+
+window.clearAllMatchConnections = function() {
+  if (matchPuzzleState.submitted) return;
+  matchPuzzleState.connections = {};
+  matchPuzzleState.selectedLeft = null;
+  matchPuzzleState.selectedRight = null;
+  window._updateMatchChipsState();
+  window.redrawMatchLines();
+};
+
+window.resetMatchPuzzle = function(reshuffle = false) {
+  if (reshuffle) {
+    window.switchLangSubTab('match');
+    return;
+  }
+  matchPuzzleState.connections = {};
+  matchPuzzleState.selectedLeft = null;
+  matchPuzzleState.selectedRight = null;
+  matchPuzzleState.submitted = false;
+  matchPuzzleState.result = null;
+
+  const resCard = document.getElementById('match-result-card');
+  if (resCard) resCard.style.display = 'none';
+
+  const submitBtn = document.getElementById('btn-match-submit');
+  if (submitBtn) submitBtn.disabled = false;
+
+  // Clear eval tags
+  document.querySelectorAll('.match-eval-holder').forEach(el => el.innerHTML = '');
+
+  window._updateMatchChipsState();
+  window.redrawMatchLines();
+};
+
+window._updateMatchChipsState = function() {
+  const total = matchPuzzleState.pairs.length;
+  const connectedCount = Object.keys(matchPuzzleState.connections).length;
+
+  // Update progress
+  const progText = document.getElementById('match-progress-text');
+  const progFill = document.getElementById('match-progress-fill');
+  if (progText) progText.textContent = `${connectedCount} / ${total} cặp`;
+  if (progFill) progFill.style.width = Math.round((connectedCount / total) * 100) + '%';
+
+  // Invert connections map for right chips: { [rightId]: leftId }
+  const rightToLeft = {};
+  const leftColorMap = {};
+  const connKeys = Object.keys(matchPuzzleState.connections);
+  connKeys.forEach((leftId, idx) => {
+    const rId = matchPuzzleState.connections[leftId];
+    rightToLeft[rId] = leftId;
+    leftColorMap[leftId] = MATCH_COLORS[idx % MATCH_COLORS.length];
+  });
+
+  // Update Left Chips
+  matchPuzzleState.lefts.forEach(p => {
+    const el = document.getElementById(`mp-left-${p.pairId}`);
+    if (!el) return;
+    const isSelected = matchPuzzleState.selectedLeft === p.pairId;
+    const isConnected = !!matchPuzzleState.connections[p.pairId];
+    const color = leftColorMap[p.pairId];
+
+    el.classList.toggle('selected', isSelected);
+    el.classList.toggle('connected', isConnected && !isSelected);
+
+    const delHolder = document.getElementById(`mp-del-left-${p.pairId}`);
+    if (delHolder) {
+      delHolder.innerHTML = (isConnected && !matchPuzzleState.submitted) 
+        ? `<button type="button" class="match-chip-del-btn" onclick="window.removeMatchConnection('${p.pairId}', event)" title="Hủy nối">✕</button>` 
+        : '';
+    }
+
+    if (isConnected && color && !isSelected && !matchPuzzleState.submitted) {
+      el.style.borderColor = color.border;
+      el.style.backgroundColor = color.bg;
+      el.style.color = color.text;
+      const dot = el.querySelector('.chip-connector-dot-right');
+      if (dot) {
+        dot.style.borderColor = color.border;
+        dot.style.backgroundColor = color.hex;
       }
-      if (bRight) {
-        bRight.classList.remove('selected');
-        bRight.classList.add('matched');
-        bRight.disabled = true;
+    } else if (!isSelected && !matchPuzzleState.submitted) {
+      el.style.borderColor = '';
+      el.style.backgroundColor = '';
+      el.style.color = '';
+      const dot = el.querySelector('.chip-connector-dot-right');
+      if (dot) {
+        dot.style.borderColor = '';
+        dot.style.backgroundColor = '';
       }
-      playSuccessSound();
-      addXP(10, 'Nối thành ngữ đúng');
-      matchedCount++;
+    }
+  });
 
-      const totalPairs = window._currentMatchTotalPairs || 1;
-      const progressFill = document.getElementById('match-progress-fill');
-      const progressText = document.getElementById('match-progress-text');
-      if (progressFill) progressFill.style.width = Math.round((matchedCount / totalPairs) * 100) + '%';
-      if (progressText) progressText.textContent = `${matchedCount} / ${totalPairs} cặp`;
+  // Update Right Chips
+  matchPuzzleState.rights.forEach(p => {
+    const el = document.getElementById(`mp-right-${p.pairId}`);
+    if (!el) return;
+    const isSelected = matchPuzzleState.selectedRight === p.pairId;
+    const connectedLeftId = rightToLeft[p.pairId];
+    const isConnected = !!connectedLeftId;
+    const color = connectedLeftId ? leftColorMap[connectedLeftId] : null;
 
-      if (matchedCount === totalPairs) {
-        triggerConfetti();
-        const winBox = document.getElementById('match-puzzle-win');
-        if (winBox) winBox.style.display = 'block';
+    el.classList.toggle('selected', isSelected);
+    el.classList.toggle('connected', isConnected && !isSelected);
+
+    if (isConnected && color && !isSelected && !matchPuzzleState.submitted) {
+      el.style.borderColor = color.border;
+      el.style.backgroundColor = color.bg;
+      el.style.color = color.text;
+      const dot = el.querySelector('.chip-connector-dot-left');
+      if (dot) {
+        dot.style.borderColor = color.border;
+        dot.style.backgroundColor = color.hex;
+      }
+    } else if (!isSelected && !matchPuzzleState.submitted) {
+      el.style.borderColor = '';
+      el.style.backgroundColor = '';
+      el.style.color = '';
+      const dot = el.querySelector('.chip-connector-dot-left');
+      if (dot) {
+        dot.style.borderColor = '';
+        dot.style.backgroundColor = '';
+      }
+    }
+  });
+};
+
+window.redrawMatchLines = function() {
+  const svg = document.getElementById('match-puzzle-svg');
+  const canvasWrap = document.getElementById('match-puzzle-canvas-wrap');
+  if (!svg || !canvasWrap) return;
+
+  const wrapRect = canvasWrap.getBoundingClientRect();
+  svg.setAttribute('width', wrapRect.width);
+  svg.setAttribute('height', wrapRect.height);
+  svg.setAttribute('viewBox', `0 0 ${wrapRect.width} ${wrapRect.height}`);
+
+  let pathsHtml = '';
+  const isSubmitted = matchPuzzleState.submitted;
+
+  const connEntries = Object.entries(matchPuzzleState.connections);
+  connEntries.forEach(([leftId, rightId], idx) => {
+    const bLeft = document.getElementById(`mp-left-${leftId}`);
+    const bRight = document.getElementById(`mp-right-${rightId}`);
+    if (!bLeft || !bRight) return;
+
+    const dotLeft = bLeft.querySelector('.chip-connector-dot-right') || bLeft;
+    const dotRight = bRight.querySelector('.chip-connector-dot-left') || bRight;
+
+    const rectL = dotLeft.getBoundingClientRect();
+    const rectR = dotRight.getBoundingClientRect();
+
+    const x1 = rectL.left + rectL.width / 2 - wrapRect.left;
+    const y1 = rectL.top + rectL.height / 2 - wrapRect.top;
+    const x2 = rectR.left + rectR.width / 2 - wrapRect.left;
+    const y2 = rectR.top + rectR.height / 2 - wrapRect.top;
+
+    const dx = Math.max(30, Math.abs(x2 - x1) * 0.45);
+    const d = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+
+    let strokeColor = '';
+    let dashArray = '7,5';
+    let strokeWidth = 3;
+    let glowColor = '';
+
+    if (isSubmitted) {
+      const isCorrect = String(leftId) === String(rightId);
+      if (isCorrect) {
+        strokeColor = '#16a34a';
+        dashArray = 'none';
+        strokeWidth = 3.5;
+        glowColor = 'rgba(22, 163, 74, 0.2)';
+      } else {
+        strokeColor = '#dc2626';
+        dashArray = '5,4';
+        strokeWidth = 3;
+        glowColor = 'rgba(220, 38, 38, 0.2)';
       }
     } else {
-      if (bLeft) bLeft.classList.add('wrong');
-      if (bRight) bRight.classList.add('wrong');
-      playWrongSound();
-      setTimeout(() => {
-        if (bLeft) {
-          bLeft.classList.remove('selected');
-          bLeft.classList.remove('wrong');
-        }
-        if (bRight) {
-          bRight.classList.remove('selected');
-          bRight.classList.remove('wrong');
-        }
-      }, 450);
+      const color = MATCH_COLORS[idx % MATCH_COLORS.length];
+      strokeColor = color.hex;
+      dashArray = '7,5';
+      strokeWidth = 3;
+      glowColor = `${color.hex}33`;
     }
-    matchSelectedLeft = null;
-    matchSelectedRight = null;
+
+    pathsHtml += `
+      <g class="match-line-group">
+        <!-- GLOW BACKDROP -->
+        <path d="${d}" fill="none" stroke="${glowColor}" stroke-width="${strokeWidth + 4}" stroke-linecap="round" />
+        <!-- MAIN DASHED/SOLID LINE -->
+        <path d="${d}" fill="none" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-dasharray="${dashArray}" stroke-linecap="round" />
+        <!-- START & END DOTS -->
+        <circle cx="${x1}" cy="${y1}" r="4" fill="${strokeColor}" />
+        <circle cx="${x2}" cy="${y2}" r="4" fill="${strokeColor}" />
+      </g>
+    `;
+  });
+
+  svg.innerHTML = pathsHtml;
+};
+
+window.submitMatchPuzzle = function() {
+  const total = matchPuzzleState.pairs.length;
+  const connectedCount = Object.keys(matchPuzzleState.connections).length;
+
+  if (connectedCount < total) {
+    if (!confirm(`Bạn mới hoàn thành ${connectedCount}/${total} cặp nối. Bạn có chắc chắn muốn nộp bài để xem kết quả ngay không?`)) {
+      return;
+    }
   }
+
+  matchPuzzleState.submitted = true;
+  matchPuzzleState.selectedLeft = null;
+  matchPuzzleState.selectedRight = null;
+
+  let correctCount = 0;
+  let wrongCount = 0;
+  let skippedCount = 0;
+
+  // Invert connections map for right chips: { [rightId]: leftId }
+  const rightToLeft = {};
+  Object.entries(matchPuzzleState.connections).forEach(([lId, rId]) => {
+    rightToLeft[rId] = lId;
+  });
+
+  // Evaluate Lefts
+  matchPuzzleState.lefts.forEach(p => {
+    const el = document.getElementById(`mp-left-${p.pairId}`);
+    const evalHolder = document.getElementById(`mp-eval-left-${p.pairId}`);
+    const delHolder = document.getElementById(`mp-del-left-${p.pairId}`);
+    if (delHolder) delHolder.innerHTML = '';
+
+    const connectedRightId = matchPuzzleState.connections[p.pairId];
+    if (connectedRightId) {
+      const isCorrect = String(p.pairId) === String(connectedRightId);
+      if (isCorrect) {
+        correctCount++;
+        if (el) {
+          el.className = 'match-puzzle-chip chip-left is-correct';
+          el.style.backgroundColor = '';
+          el.style.borderColor = '';
+          el.style.color = '';
+        }
+        if (evalHolder) evalHolder.innerHTML = `<span class="match-eval-tag eval-ok">✅ Đúng</span>`;
+      } else {
+        wrongCount++;
+        if (el) {
+          el.className = 'match-puzzle-chip chip-left is-wrong';
+          el.style.backgroundColor = '';
+          el.style.borderColor = '';
+          el.style.color = '';
+        }
+        if (evalHolder) evalHolder.innerHTML = `<span class="match-eval-tag eval-bad">❌ Sai</span>`;
+      }
+    } else {
+      skippedCount++;
+      if (el) {
+        el.className = 'match-puzzle-chip chip-left is-unconnected';
+        el.style.backgroundColor = '';
+        el.style.borderColor = '';
+        el.style.color = '';
+      }
+      if (evalHolder) evalHolder.innerHTML = `<span class="match-eval-tag eval-skip">⚠️ Chưa nối</span>`;
+    }
+  });
+
+  // Evaluate Rights
+  matchPuzzleState.rights.forEach(p => {
+    const el = document.getElementById(`mp-right-${p.pairId}`);
+    const evalHolder = document.getElementById(`mp-eval-right-${p.pairId}`);
+    const connectedLeftId = rightToLeft[p.pairId];
+
+    if (connectedLeftId) {
+      const isCorrect = String(p.pairId) === String(connectedLeftId);
+      if (isCorrect) {
+        if (el) {
+          el.className = 'match-puzzle-chip chip-right is-correct';
+          el.style.backgroundColor = '';
+          el.style.borderColor = '';
+          el.style.color = '';
+        }
+        if (evalHolder) evalHolder.innerHTML = `<span class="match-eval-tag eval-ok">✅</span>`;
+      } else {
+        if (el) {
+          el.className = 'match-puzzle-chip chip-right is-wrong';
+          el.style.backgroundColor = '';
+          el.style.borderColor = '';
+          el.style.color = '';
+        }
+        if (evalHolder) evalHolder.innerHTML = `<span class="match-eval-tag eval-bad">❌</span>`;
+      }
+    } else {
+      if (el) {
+        el.className = 'match-puzzle-chip chip-right is-unconnected';
+        el.style.backgroundColor = '';
+        el.style.borderColor = '';
+        el.style.color = '';
+      }
+      if (evalHolder) evalHolder.innerHTML = `<span class="match-eval-tag eval-skip">⚠️</span>`;
+    }
+  });
+
+  // Re-draw SVG with evaluation styling (solid green vs dashed red)
+  window.redrawMatchLines();
+
+  // Show sound & XP
+  const isPerfect = correctCount === total;
+  if (isPerfect) {
+    playSuccessSound();
+    triggerConfetti();
+    addXP(total * 10, 'Ghép cặp hoàn hảo 100%');
+  } else {
+    if (correctCount > 0) {
+      addXP(correctCount * 5, 'Ghép cặp từ vựng');
+    }
+    playWrongSound();
+  }
+
+  // Render Result Card
+  const resCard = document.getElementById('match-result-card');
+  if (resCard) {
+    resCard.style.display = 'block';
+    resCard.className = `match-result-card ${isPerfect ? 'all-correct' : 'partial-correct'}`;
+    resCard.innerHTML = `
+      <div class="match-res-title">
+        ${isPerfect ? '🎉 Xuất Sắc! Bạn Đã Ghép Chính Xác Toàn Bộ Cặp Từ!' : `📊 Kết Quả: Bạn Đã Ghép Đúng ${correctCount} / ${total} Cặp`}
+      </div>
+      <div class="match-res-desc">
+        ${isPerfect 
+          ? `Tất cả các đường nối đều chính xác tuyệt đối. Bạn nhận được <strong style="color:#16a34a;">+${total * 10} XP</strong>!`
+          : `Bạn đã làm đúng ${correctCount} cặp, sai ${wrongCount} cặp${skippedCount > 0 ? `, chưa nối ${skippedCount} cặp` : ''}. Các đường nối màu đỏ thể hiện cặp ghép chưa đúng.`}
+      </div>
+      <div class="match-res-actions">
+        <button type="button" class="btn btn-p" onclick="window.resetMatchPuzzle(false)">🔄 Thử sức lại</button>
+        <button type="button" class="btn btn-sm" onclick="window.toggleMatchAnswersDrawer()" style="background:#ffffff;border:1.5px solid #cbd5e1;color:#1e293b;font-weight:700;">
+          👁️ Xem đáp án chuẩn
+        </button>
+        <button type="button" class="btn" style="background:#8b5cf6;color:#ffffff;" onclick="window.switchLangSubTab('quiz')">
+          ⚡ Tiếp theo: Trắc nghiệm Ngữ Pháp ➔
+        </button>
+      </div>
+      <div id="match-answers-drawer" class="match-answers-drawer" style="display:none;">
+        <div style="font-weight:800;color:#0f172a;margin-bottom:8px;">📖 Bảng Ghép Đôi Chuẩn Xác:</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${matchPuzzleState.pairs.map((p, idx) => `
+            <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+              <span style="font-weight:700;color:#64748b;font-size:12px;width:20px;">#${idx + 1}</span>
+              <strong style="color:#1d4ed8;flex:1;">${esc(p.left)}</strong>
+              <span style="color:#6366f1;font-weight:bold;">➔</span>
+              <span style="color:#15803d;flex:1.5;">${esc(p.right)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+};
+
+window.toggleMatchAnswersDrawer = function() {
+  const drawer = document.getElementById('match-answers-drawer');
+  if (drawer) {
+    drawer.style.display = drawer.style.display === 'none' ? 'block' : 'none';
+  }
+};
+
+function playShortBlipSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.12);
+  } catch (e) {}
 }
 
 function renderGrammarQuizView() {
