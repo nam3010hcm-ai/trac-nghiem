@@ -3544,77 +3544,176 @@ window.nextFlashcard = function() {
 };
 
 function renderMatchPuzzleView() {
-  const pairs = currentUnit?.languageFocus?.matchPairs || [];
-  if (!pairs.length) return '<div class="empty">Chưa có bài nối từ trong Unit này.</div>';
+  const langObj = (typeof getUnitSkillObj === 'function' ? getUnitSkillObj(currentUnit, 'languageFocus') : null) || currentUnit?.languageFocus || currentUnit?.language_focus || {};
+  const rawPairs = safeArray(langObj?.matchPairs, []);
+  
+  const pairs = rawPairs.map((p, idx) => ({
+    pairId: p.pairId !== undefined ? p.pairId : (idx + 1),
+    left: p.left || '',
+    right: p.right || ''
+  })).filter(p => p.left && p.right);
+
+  if (!pairs.length) {
+    return `
+      <div class="empty" style="text-align:center;padding:40px;background:#ffffff;border-radius:16px;border:1.5px dashed #cbd5e1;max-width:650px;margin:0 auto;">
+        <div style="font-size:36px;margin-bottom:8px;">🧩</div>
+        <div style="font-weight:700;font-size:16px;color:#1e293b;">Chưa có bài nối từ & thành ngữ trong Unit này</div>
+        <div style="font-size:13px;color:#64748b;margin-top:4px;">Giáo viên có thể bổ sung các cặp từ trong Unit Designer.</div>
+      </div>
+    `;
+  }
 
   const lefts = [...pairs].sort(() => Math.random() - 0.5);
   const rights = [...pairs].sort(() => Math.random() - 0.5);
   matchedCount = 0;
   matchSelectedLeft = null;
   matchSelectedRight = null;
+  window._currentMatchTotalPairs = pairs.length;
 
   return `
-    <div class="card" style="max-width:700px;margin:0 auto">
-      <div style="font-weight:700;font-size:16px;margin-bottom:6px;color:#1e293b">🧩 Ghép cặp Từ vựng & Thành ngữ (Match Pairs)</div>
-      <div style="font-size:13px;color:#64748b;margin-bottom:14px">Bấm 1 ô bên trái rồi bấm 1 ô bên phải mang nghĩa tương ứng.</div>
-
-      <div class="match-puzzle-grid">
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${lefts.map(p => `<button class="match-puzzle-chip" id="mp-left-${p.pairId}" onclick="window.selectMatchLeft(${p.pairId})">${p.left}</button>`).join('')}
+    <div class="match-puzzle-wrapper">
+      <!-- HEADER -->
+      <div class="match-puzzle-header">
+        <div class="match-puzzle-title-wrap">
+          <div class="match-puzzle-title">🧩 Ghép cặp Từ vựng & Thành ngữ (Match Pairs)</div>
+          <div class="match-puzzle-desc">Bấm chọn 1 ô thuật ngữ tiếng Anh bên trái rồi bấm 1 ô nghĩa tiếng Việt bên phải tương ứng.</div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${rights.map(p => `<button class="match-puzzle-chip" id="mp-right-${p.pairId}" onclick="window.selectMatchRight(${p.pairId})">${p.right}</button>`).join('')}
+        <div class="match-puzzle-stats">
+          <div class="match-progress-badge">
+            <span>Tiến độ:</span>
+            <strong id="match-progress-text">0 / ${pairs.length} cặp</strong>
+          </div>
+          <button type="button" class="btn btn-sm match-btn-reset" onclick="window.switchLangSubTab('match')" title="Xáo trộn và chơi lại từ đầu">
+            🔄 Chơi lại
+          </button>
         </div>
       </div>
-      <div id="match-puzzle-win" style="display:none;text-align:center;padding:16px;background:#ecfdf5;border-radius:10px;color:#047857;font-weight:700;margin-top:14px">
-        🎉 Chúc mừng! Bạn đã ghép chính xác toàn bộ các cặp!
+
+      <!-- PROGRESS BAR -->
+      <div class="match-progress-track">
+        <div class="match-progress-fill" id="match-progress-fill" style="width: 0%;"></div>
+      </div>
+
+      <!-- 2 COLUMNS OF TILES -->
+      <div class="match-puzzle-grid">
+        <!-- LEFT COLUMN: ENGLISH TERMS -->
+        <div class="match-col match-col-left">
+          <div class="match-col-label">
+            <span>🇬🇧 Thuật ngữ / Thành ngữ tiếng Anh</span>
+          </div>
+          <div class="match-chips-list">
+            ${lefts.map(p => `
+              <button type="button" class="match-puzzle-chip chip-left" id="mp-left-${p.pairId}" onclick="window.selectMatchLeft('${p.pairId}')">
+                <span class="chip-dot"></span>
+                <span class="chip-text">${esc(p.left)}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: VIETNAMESE MEANINGS -->
+        <div class="match-col match-col-right">
+          <div class="match-col-label">
+            <span>🇻🇳 Nghĩa tiếng Việt tương ứng</span>
+          </div>
+          <div class="match-chips-list">
+            ${rights.map(p => `
+              <button type="button" class="match-puzzle-chip chip-right" id="mp-right-${p.pairId}" onclick="window.selectMatchRight('${p.pairId}')">
+                <span class="chip-dot"></span>
+                <span class="chip-text">${esc(p.right)}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- WIN CELEBRATION BOX -->
+      <div id="match-puzzle-win" class="match-puzzle-win-card" style="display:none;">
+        <div class="match-win-icon">🎉</div>
+        <div class="match-win-title">Xuất Sắc! Bạn Đã Ghép Đúng Tất Cả Các Cặp!</div>
+        <div class="match-win-desc">Bạn vừa nhận được <strong style="color:#16a34a;">+${pairs.length * 10} XP</strong> ghi nhớ từ vựng.</div>
+        <div class="match-win-actions">
+          <button type="button" class="btn btn-p" onclick="window.switchLangSubTab('match')">🔄 Luyện tập lại</button>
+          <button type="button" class="btn" style="background:#8b5cf6;color:#ffffff;" onclick="window.switchLangSubTab('quiz')">⚡ Tiếp theo: Trắc nghiệm Ngữ Pháp ➔</button>
+        </div>
       </div>
     </div>
   `;
 }
 
 window.selectMatchLeft = function(pairId) {
-  document.querySelectorAll('[id^="mp-left-"]').forEach(b => b.classList.remove('selected'));
   const btn = document.getElementById(`mp-left-${pairId}`);
-  if (btn && !btn.classList.contains('matched')) {
-    btn.classList.add('selected');
-    matchSelectedLeft = pairId;
-    checkPuzzlePair();
+  if (!btn || btn.classList.contains('matched') || btn.classList.contains('wrong')) return;
+  if (matchSelectedLeft === pairId) {
+    btn.classList.remove('selected');
+    matchSelectedLeft = null;
+    return;
   }
+  document.querySelectorAll('[id^="mp-left-"]').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  matchSelectedLeft = pairId;
+  checkPuzzlePair();
 };
 
 window.selectMatchRight = function(pairId) {
-  document.querySelectorAll('[id^="mp-right-"]').forEach(b => b.classList.remove('selected'));
   const btn = document.getElementById(`mp-right-${pairId}`);
-  if (btn && !btn.classList.contains('matched')) {
-    btn.classList.add('selected');
-    matchSelectedRight = pairId;
-    checkPuzzlePair();
+  if (!btn || btn.classList.contains('matched') || btn.classList.contains('wrong')) return;
+  if (matchSelectedRight === pairId) {
+    btn.classList.remove('selected');
+    matchSelectedRight = null;
+    return;
   }
+  document.querySelectorAll('[id^="mp-right-"]').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  matchSelectedRight = pairId;
+  checkPuzzlePair();
 };
 
 function checkPuzzlePair() {
   if (matchSelectedLeft !== null && matchSelectedRight !== null) {
-    if (matchSelectedLeft === matchSelectedRight) {
-      const bLeft = document.getElementById(`mp-left-${matchSelectedLeft}`);
-      const bRight = document.getElementById(`mp-right-${matchSelectedRight}`);
-      if (bLeft) { bLeft.classList.remove('selected'); bLeft.classList.add('matched'); bLeft.disabled = true; }
-      if (bRight) { bRight.classList.remove('selected'); bRight.classList.add('matched'); bRight.disabled = true; }
+    const bLeft = document.getElementById(`mp-left-${matchSelectedLeft}`);
+    const bRight = document.getElementById(`mp-right-${matchSelectedRight}`);
+
+    if (String(matchSelectedLeft) === String(matchSelectedRight)) {
+      if (bLeft) {
+        bLeft.classList.remove('selected');
+        bLeft.classList.add('matched');
+        bLeft.disabled = true;
+      }
+      if (bRight) {
+        bRight.classList.remove('selected');
+        bRight.classList.add('matched');
+        bRight.disabled = true;
+      }
       playSuccessSound();
       addXP(10, 'Nối thành ngữ đúng');
       matchedCount++;
 
-      const pairs = currentUnit?.languageFocus?.matchPairs || [];
-      if (matchedCount === pairs.length) {
+      const totalPairs = window._currentMatchTotalPairs || 1;
+      const progressFill = document.getElementById('match-progress-fill');
+      const progressText = document.getElementById('match-progress-text');
+      if (progressFill) progressFill.style.width = Math.round((matchedCount / totalPairs) * 100) + '%';
+      if (progressText) progressText.textContent = `${matchedCount} / ${totalPairs} cặp`;
+
+      if (matchedCount === totalPairs) {
         triggerConfetti();
         const winBox = document.getElementById('match-puzzle-win');
         if (winBox) winBox.style.display = 'block';
       }
     } else {
+      if (bLeft) bLeft.classList.add('wrong');
+      if (bRight) bRight.classList.add('wrong');
       playWrongSound();
       setTimeout(() => {
-        document.querySelectorAll('.match-puzzle-chip.selected').forEach(b => b.classList.remove('selected'));
-      }, 400);
+        if (bLeft) {
+          bLeft.classList.remove('selected');
+          bLeft.classList.remove('wrong');
+        }
+        if (bRight) {
+          bRight.classList.remove('selected');
+          bRight.classList.remove('wrong');
+        }
+      }, 450);
     }
     matchSelectedLeft = null;
     matchSelectedRight = null;
