@@ -3367,11 +3367,17 @@ function loadLanguageFocusView() {
   const workspace = document.getElementById('lang-workspace');
   if (!workspace || !currentUnit) return;
 
-  const tab = window._langTab || 'past_form';
-  const langObj = getUnitSkillObj(currentUnit, 'languageFocus');
+  const tab = window._langTab || 'match';
+  const langObj = getUnitSkillObj(currentUnit, 'languageFocus') || currentUnit?.languageFocus || currentUnit?.language_focus || {};
 
   let bodyContent = '';
-  if (tab === 'past_form') {
+  if (tab === 'match') {
+    bodyContent = renderMatchPuzzleView();
+  } else if (tab === 'quiz') {
+    bodyContent = renderGrammarQuizView();
+  } else if (tab === 'spelling') {
+    bodyContent = renderLfSpellingView();
+  } else if (tab === 'past_form') {
     const verbs = langObj?.pastFormVerbs || [
       { infinitive: 'go', past: 'went', meaning: 'đi' },
       { infinitive: 'see', past: 'saw', meaning: 'thấy' },
@@ -3382,17 +3388,14 @@ function loadLanguageFocusView() {
     const fCards = safeArray(langObj?.flashcards, []);
     const currentCard = fCards[currentCardIdx] || fCards[0] || { word: 'Practice', meaning: 'Luyện tập', ipa: '/ˈpræk.tɪs/', pos: 'noun' };
     bodyContent = renderFlashcardsView(currentCard, fCards.length || 1);
-  } else if (tab === 'match') {
-    bodyContent = renderMatchPuzzleView();
-  } else if (tab === 'quiz') {
-    bodyContent = renderGrammarQuizView();
   }
 
   workspace.innerHTML = `
-    <div class="skill-subnav-bar" style="justify-content:center">
-      <button class="skill-subnav-btn ${tab === 'past_form' ? 'active' : ''}" onclick="window.switchLangSubTab('past_form')">📝 Ex 1. Bảng Động Từ Quá Khứ (Past Form)</button>
-      <button class="skill-subnav-btn ${tab === 'quiz' ? 'active' : ''}" onclick="window.switchLangSubTab('quiz')">⚡ Ex 2. Thử Thách Ngữ Pháp (Grammar Quiz)</button>
-      <button class="skill-subnav-btn ${tab === 'match' ? 'active' : ''}" onclick="window.switchLangSubTab('match')">🧩 Nối Từ & Thành Ngữ</button>
+    <div class="skill-subnav-bar" style="justify-content:center;flex-wrap:wrap;gap:6px;">
+      <button class="skill-subnav-btn ${tab === 'match' ? 'active' : ''}" onclick="window.switchLangSubTab('match')">🧩 Ex 1. Nối Từ & Định Nghĩa (Match Pairs)</button>
+      <button class="skill-subnav-btn ${tab === 'quiz' ? 'active' : ''}" onclick="window.switchLangSubTab('quiz')">⚡ Ex 2. Chọn A, B, C, D (Choose Answer)</button>
+      <button class="skill-subnav-btn ${tab === 'spelling' ? 'active' : ''}" onclick="window.switchLangSubTab('spelling')">🔤 Ex 3. Backward Spelling (Xếp chữ)</button>
+      <button class="skill-subnav-btn ${tab === 'past_form' ? 'active' : ''}" onclick="window.switchLangSubTab('past_form')">📝 Động Từ Quá Khứ (Past Form)</button>
       <button class="skill-subnav-btn ${tab === 'cards' ? 'active' : ''}" onclick="window.switchLangSubTab('cards')">🎴 Thẻ Từ Vựng 3D</button>
     </div>
 
@@ -4169,23 +4172,43 @@ function playShortBlipSound() {
 }
 
 function renderGrammarQuizView() {
-  const quiz = currentUnit?.languageFocus?.grammarChallenge || [];
-  if (!quiz.length) return '<div class="empty">Chưa có thử thách ngữ pháp trong Unit này.</div>';
+  const langObj = getUnitSkillObj(currentUnit, 'languageFocus') || currentUnit?.languageFocus || currentUnit?.language_focus || {};
+  const quiz = langObj?.grammarChallenge || langObj?.grammarQuiz || [];
+  if (!quiz.length) {
+    return `
+      <div class="empty" style="text-align:center;padding:40px;background:#ffffff;border-radius:16px;border:1.5px dashed #cbd5e1;max-width:650px;margin:0 auto;">
+        <div style="font-size:36px;margin-bottom:8px;">⚡</div>
+        <div style="font-weight:700;font-size:16px;color:#1e293b;">Chưa có câu hỏi trắc nghiệm trong Unit này</div>
+      </div>
+    `;
+  }
 
   return `
-    <div style="display:flex;flex-direction:column;gap:16px;max-width:700px;margin:0 auto">
+    <div style="display:flex;flex-direction:column;gap:18px;max-width:760px;margin:0 auto">
+      <div style="background:#ffffff;padding:16px 20px;border-radius:14px;border:1.5px solid #e2e8f0;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
+        <div style="font-weight:800;font-size:17px;color:#0f172a;margin-bottom:4px;">
+          ⚡ Exercise 2. Choose the best answer from A, B, C, or D.
+        </div>
+        <div style="font-size:13px;color:#64748b;">
+          Đọc kỹ từng câu hỏi và bấm chọn phương án chính xác nhất để hoàn thành câu.
+        </div>
+      </div>
+
       ${quiz.map((q, idx) => `
-        <div class="card" style="margin:0">
-          <div style="font-weight:700;font-size:15px;margin-bottom:8px;color:#1e293b">Câu ${idx + 1}: ${q.question}</div>
-          <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="card" style="margin:0;padding:20px;border-radius:14px;border:1.5px solid #e2e8f0;box-shadow:0 2px 10px rgba(0,0,0,0.03);" id="gq-card-${idx}">
+          <div style="font-weight:700;font-size:15px;margin-bottom:12px;color:#1e293b;line-height:1.5;">
+            <span style="display:inline-block;background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:6px;font-size:12.5px;font-weight:800;margin-right:6px;">Câu ${idx + 1}</span>
+            ${esc(q.question)}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
             ${(q.options || []).map((opt, oIdx) => `
               <button class="opt" onclick="window.checkGrammarQuiz(${idx}, ${oIdx}, ${q.answer})" id="gq-opt-${idx}-${oIdx}">
                 <span class="okey">${String.fromCharCode(65 + oIdx)}</span>
-                <span>${opt}</span>
+                <span>${esc(opt)}</span>
               </button>
             `).join('')}
           </div>
-          <div id="gq-fb-${idx}" class="fb" style="display:none"></div>
+          <div id="gq-fb-${idx}" class="fb" style="display:none;margin-top:12px;"></div>
         </div>
       `).join('')}
     </div>
@@ -4200,7 +4223,9 @@ window.checkGrammarQuiz = function(qIdx, chosenIdx, correctIdx) {
   const allBtns = document.querySelectorAll(`[id^="gq-opt-${qIdx}-"]`);
   allBtns.forEach(b => (b.disabled = true));
 
-  const quizItem = currentUnit.languageFocus?.grammarChallenge?.[qIdx];
+  const langObj = getUnitSkillObj(currentUnit, 'languageFocus') || currentUnit?.languageFocus || currentUnit?.language_focus || {};
+  const quiz = langObj?.grammarChallenge || langObj?.grammarQuiz || [];
+  const quizItem = quiz[qIdx];
 
   if (chosenIdx === correctIdx) {
     btn.classList.add('correct');
@@ -4219,6 +4244,175 @@ window.checkGrammarQuiz = function(qIdx, chosenIdx, correctIdx) {
     fb.style.display = 'block';
     typesetMath(fb);
     playWrongSound();
+  }
+};
+
+function renderLfSpellingView() {
+  const langObj = getUnitSkillObj(currentUnit, 'languageFocus') || currentUnit?.languageFocus || currentUnit?.language_focus || {};
+  let puzzles = safeArray(langObj?.backwardSpelling, []);
+  
+  if (!puzzles.length) {
+    puzzles = [
+      {
+        id: 'sp_def_1',
+        targetWord: 'PROPAGANDA',
+        scrambled: 'ADNAGAPORP',
+        clue: 'This includes ideas or statements that may be false or present only one side of an argument that are used in order to gain support for a political leader, party, etc.',
+        hint: '10 chữ cái • Bắt đầu bằng chữ P • Nghĩa: Tuyên truyền'
+      },
+      {
+        id: 'sp_def_2',
+        targetWord: 'ESTABLISH',
+        scrambled: 'HSILBATSE',
+        clue: 'This means to start or create an organization, a system, or a relationship.',
+        hint: '9 chữ cái • Bắt đầu bằng chữ E • Nghĩa: Thành lập, thiết lập'
+      },
+      {
+        id: 'sp_def_3',
+        targetWord: 'STRUGGLE',
+        scrambled: 'ELGGURTS',
+        clue: 'This is a hard fight in which people try to obtain or achieve something.',
+        hint: '8 chữ cái • Bắt đầu bằng chữ S • Nghĩa: Cuộc đấu tranh'
+      },
+      {
+        id: 'sp_def_4',
+        targetWord: 'LIBERATION',
+        scrambled: 'NOITAREBIL',
+        clue: 'This is the act or process of freeing a country or person from the control of somebody else.',
+        hint: '10 chữ cái • Bắt đầu bằng chữ L • Nghĩa: Sự giải phóng'
+      }
+    ];
+  }
+
+  return `
+    <div style="display:flex;flex-direction:column;gap:18px;max-width:780px;margin:0 auto">
+      <!-- HEADER BANNER -->
+      <div style="background:#ffffff;padding:16px 20px;border-radius:14px;border:1.5px solid #e2e8f0;box-shadow:0 2px 10px rgba(0,0,0,0.03);">
+        <div style="font-weight:800;font-size:17px;color:#0f172a;margin-bottom:4px;">
+          🔤 Exercise 3. Backward Spelling & Word Puzzle
+        </div>
+        <div style="font-size:13px;color:#64748b;margin-bottom:8px;">
+          Sắp xếp các chữ cái ngược / xáo trộn để tạo thành từ vựng tiếng Anh chính xác:
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:6px 12px;font-size:12.5px;color:#166534;display:flex;align-items:center;gap:8px;">
+          <span>💡 <b>Ví dụ:</b></span>
+          <code style="background:#dcfce7;padding:2px 6px;border-radius:4px;font-weight:bold;color:#15803d;">ADNAGAPORP</code>
+          <span>➔</span>
+          <strong style="color:#047857;">PROPAGANDA</strong>
+        </div>
+      </div>
+
+      <!-- PUZZLE CARDS -->
+      ${puzzles.map((pz, idx) => {
+        const target = (pz.targetWord || '').toUpperCase().trim();
+        const chars = target.split('');
+        const scrambledChars = (pz.scrambled ? pz.scrambled.toUpperCase().split('') : [...chars].sort(() => Math.random() - 0.5));
+        const shuffledTiles = scrambledChars.map((c, i) => ({ id: i, char: c }));
+
+        return `
+          <div class="spelling-puzzle-card" style="margin:0;padding:20px;background:#ffffff;border-radius:14px;border:1.5px solid #e2e8f0;box-shadow:0 2px 10px rgba(0,0,0,0.03);" id="lf-spelling-card-${idx}">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+              <span style="font-weight:800;font-size:13px;background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:6px;">
+                Từ vựng #${idx + 1}
+              </span>
+              ${pz.scrambled ? `
+                <div style="font-size:12px;font-weight:700;color:#64748b;">
+                  Ký tự đảo: <code style="background:#f1f5f9;color:#0f172a;padding:2px 6px;border-radius:4px;letter-spacing:1.5px;">${esc(pz.scrambled)}</code>
+                </div>
+              ` : ''}
+            </div>
+
+            <div style="font-size:14px;color:#1e293b;font-weight:600;margin-bottom:6px;line-height:1.45;">
+              💡 Định nghĩa/Gợi ý: <span style="color:#0369a1">${esc(pz.clue || '')}</span>
+            </div>
+            ${pz.hint ? `<div style="font-size:12.5px;color:#64748b;margin-bottom:12px;">🔑 <i>${esc(pz.hint)}</i></div>` : ''}
+
+            <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:6px;text-align:center;">Chữ cái bạn đã xếp:</div>
+            <div class="spelling-assembled-row" id="lf-spelling-assembled-${idx}">
+              <span style="color:#94a3b8;font-size:13px" id="lf-spelling-ph-${idx}">(Bấm các ô chữ cái bên dưới để ghép từ)</span>
+            </div>
+
+            <div style="font-size:12px;font-weight:700;color:#475569;margin-bottom:6px;text-align:center;">Ngân hàng chữ cái:</div>
+            <div class="spelling-tiles-container" id="lf-spelling-pool-${idx}">
+              ${shuffledTiles.map(tile => `
+                <button type="button" class="spelling-char-tile" id="lf-sp-tile-${idx}-${tile.id}" onclick="window.placeLfSpellingTile(${idx}, ${tile.id}, '${tile.char}')">${tile.char}</button>
+              `).join('')}
+            </div>
+
+            <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
+              <button type="button" class="btn btn-p" onclick="window.checkLfSpellingPuzzle(${idx}, '${target}')">✅ Kiểm tra từ vựng</button>
+              <button type="button" class="btn btn-sm" onclick="window.resetLfSpellingPuzzle(${idx})" style="background:#f8fafc;border:1px solid #cbd5e1;color:#475569;">🔄 Xếp lại</button>
+              <button type="button" class="btn btn-sm" onclick="window.speakVocab('${target}')" style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;">🔊 Nghe phát âm</button>
+            </div>
+            <div id="lf-spelling-fb-${idx}" class="fb" style="display:none;margin-top:12px;"></div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+window.placeLfSpellingTile = function(pIdx, tileId, char) {
+  const tile = document.getElementById(`lf-sp-tile-${pIdx}-${tileId}`);
+  const assembled = document.getElementById(`lf-spelling-assembled-${pIdx}`);
+  const placeholder = document.getElementById(`lf-spelling-ph-${pIdx}`);
+  if (!tile || !assembled) return;
+
+  if (placeholder) placeholder.style.display = 'none';
+
+  tile.style.display = 'none';
+
+  const placed = document.createElement('button');
+  placed.type = 'button';
+  placed.className = 'spelling-placed-tile';
+  placed.textContent = char;
+  placed.title = 'Bấm để xóa chữ cái này';
+  placed.onclick = function() {
+    placed.remove();
+    tile.style.display = 'inline-flex';
+    if (!assembled.querySelector('.spelling-placed-tile') && placeholder) {
+      placeholder.style.display = 'inline';
+    }
+  };
+  assembled.appendChild(placed);
+};
+
+window.checkLfSpellingPuzzle = function(pIdx, targetWord) {
+  const assembled = document.getElementById(`lf-spelling-assembled-${pIdx}`);
+  const fb = document.getElementById(`lf-spelling-fb-${pIdx}`);
+  if (!assembled || !fb) return;
+
+  const placedTiles = assembled.querySelectorAll('.spelling-placed-tile');
+  const userWord = Array.from(placedTiles).map(t => t.textContent.trim()).join('').toUpperCase();
+
+  fb.style.display = 'block';
+  if (userWord === targetWord.toUpperCase()) {
+    fb.className = 'fb fb-ok';
+    fb.innerHTML = `🎉 <b>Chính xác!</b> Từ vựng đúng là: <strong style="font-size:15px;color:#15803d;">${targetWord}</strong>.`;
+    playSuccessSound();
+    addXP(15, 'Ghép từ Backward Spelling đúng');
+  } else {
+    fb.className = 'fb fb-bad';
+    fb.innerHTML = `❌ <b>Chưa đúng:</b> Từ bạn ghép là "<b>${userWord || '(trống)'}</b>". Hãy thử xếp lại nhé!`;
+    playWrongSound();
+  }
+};
+
+window.resetLfSpellingPuzzle = function(pIdx) {
+  const assembled = document.getElementById(`lf-spelling-assembled-${pIdx}`);
+  const pool = document.getElementById(`lf-spelling-pool-${pIdx}`);
+  const fb = document.getElementById(`lf-spelling-fb-${pIdx}`);
+  const placeholder = document.getElementById(`lf-spelling-ph-${pIdx}`);
+
+  if (assembled) {
+    assembled.querySelectorAll('.spelling-placed-tile').forEach(t => t.remove());
+    if (placeholder) placeholder.style.display = 'inline';
+  }
+  if (pool) {
+    pool.querySelectorAll('.spelling-char-tile').forEach(t => t.style.display = 'inline-flex');
+  }
+  if (fb) {
+    fb.style.display = 'none';
   }
 };
 

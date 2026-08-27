@@ -1898,13 +1898,24 @@ export function renderLanguageFocusDesigner(unit) {
     }
   ];
 
+  const spelling = Array.isArray(lf.backwardSpelling) ? lf.backwardSpelling : (Array.isArray(lf.spelling) ? lf.spelling : [
+    {
+      id: 'sp_lf_1',
+      targetWord: 'PROPAGANDA',
+      scrambled: 'ADNAGAPORP',
+      clue: 'This includes ideas or statements used to gain support for a political leader or party.',
+      hint: '10 chữ cái • Bắt đầu bằng chữ P • Nghĩa: Tuyên truyền'
+    }
+  ]);
+
   if (!unit.languageFocus) unit.languageFocus = {};
   unit.languageFocus.pastFormVerbs = verbs;
   unit.languageFocus.grammarChallenge = grammar;
   unit.languageFocus.matchPairs = pairs;
   unit.languageFocus.flashcards = flashcards;
+  unit.languageFocus.backwardSpelling = spelling;
 
-  const activeTab = _currentLfSubTab || 'past_verbs';
+  const activeTab = _currentLfSubTab || 'pairs';
 
   return `
     <div class="ud-lf-container">
@@ -1912,35 +1923,40 @@ export function renderLanguageFocusDesigner(unit) {
       <div class="ud-lf-header">
         <div>
           <div class="ud-lf-title">🔍 5. Language Focus & Sổ Tay Ghi Nhớ Tương Tác</div>
-          <div class="ud-lf-desc">Biên soạn trực quan không cần viết mã JSON: Bảng động từ quá khứ, Trắc nghiệm ngữ pháp, Nối từ và Bộ thẻ từ vựng 3D.</div>
+          <div class="ud-lf-desc">Biên soạn trực quan không cần viết mã JSON: Nối từ & Định nghĩa, Trắc nghiệm A/B/C/D, Xếp chữ ngược (Backward Spelling), Bảng động từ quá khứ và Bộ thẻ từ vựng 3D.</div>
         </div>
       </div>
 
-      <!-- 4 SUB-TABS NAVIGATION -->
+      <!-- 5 SUB-TABS NAVIGATION -->
       <div class="ud-lf-subnav">
-        <button type="button" class="ud-lf-subnav-btn ${activeTab === 'past_verbs' ? 'active' : ''}" onclick="window.switchLfSubTab('past_verbs')">
-          <span>📝 1. Bảng Động Từ Quá Khứ</span>
-          <span class="ud-lf-badge" id="badge-lf-verbs">${verbs.length}</span>
-        </button>
-        <button type="button" class="ud-lf-subnav-btn ${activeTab === 'grammar' ? 'active' : ''}" onclick="window.switchLfSubTab('grammar')">
-          <span>⚡ 2. Trắc Nghiệm Ngữ Pháp</span>
-          <span class="ud-lf-badge" id="badge-lf-grammar">${grammar.length}</span>
-        </button>
         <button type="button" class="ud-lf-subnav-btn ${activeTab === 'pairs' ? 'active' : ''}" onclick="window.switchLfSubTab('pairs')">
-          <span>🧩 3. Nối Từ & Thành Ngữ</span>
+          <span>🧩 1. Nối Từ & Định Nghĩa</span>
           <span class="ud-lf-badge" id="badge-lf-pairs">${pairs.length}</span>
         </button>
+        <button type="button" class="ud-lf-subnav-btn ${activeTab === 'grammar' ? 'active' : ''}" onclick="window.switchLfSubTab('grammar')">
+          <span>⚡ 2. Trắc Nghiệm (A, B, C, D)</span>
+          <span class="ud-lf-badge" id="badge-lf-grammar">${grammar.length}</span>
+        </button>
+        <button type="button" class="ud-lf-subnav-btn ${activeTab === 'spelling' ? 'active' : ''}" onclick="window.switchLfSubTab('spelling')">
+          <span>🔤 3. Backward Spelling</span>
+          <span class="ud-lf-badge" id="badge-lf-spelling">${spelling.length}</span>
+        </button>
+        <button type="button" class="ud-lf-subnav-btn ${activeTab === 'past_verbs' ? 'active' : ''}" onclick="window.switchLfSubTab('past_verbs')">
+          <span>📝 4. Động Từ Quá Khứ</span>
+          <span class="ud-lf-badge" id="badge-lf-verbs">${verbs.length}</span>
+        </button>
         <button type="button" class="ud-lf-subnav-btn ${activeTab === 'flashcards' ? 'active' : ''}" onclick="window.switchLfSubTab('flashcards')">
-          <span>🎴 4. Thẻ Từ Vựng 3D</span>
+          <span>🎴 5. Thẻ Từ Vựng 3D</span>
           <span class="ud-lf-badge" id="badge-lf-cards">${flashcards.length}</span>
         </button>
       </div>
 
       <!-- ACTIVE SUB-TAB CONTENT -->
       <div id="ud-lf-subtab-body">
-        ${activeTab === 'past_verbs' ? renderLfPastVerbsDesigner(verbs) : ''}
-        ${activeTab === 'grammar' ? renderLfGrammarDesigner(grammar) : ''}
         ${activeTab === 'pairs' ? renderLfMatchPairsDesigner(pairs) : ''}
+        ${activeTab === 'grammar' ? renderLfGrammarDesigner(grammar) : ''}
+        ${activeTab === 'spelling' ? renderLfSpellingDesigner(spelling) : ''}
+        ${activeTab === 'past_verbs' ? renderLfPastVerbsDesigner(verbs) : ''}
         ${activeTab === 'flashcards' ? renderLfFlashcardsDesigner(flashcards) : ''}
       </div>
     </div>
@@ -2096,6 +2112,68 @@ export function renderLfGrammarDesigner(grammarList = []) {
     </div>
   `;
 }
+
+export function renderLfSpellingDesigner(spellingList = []) {
+  return `
+    <div class="ud-lf-subcard">
+      <div class="ud-lf-subcard-header">
+        <div>
+          <div class="ud-lf-subcard-title">🔤 Thử Thách Xếp Chữ Ngược (Backward Spelling)</div>
+          <div class="ud-lf-subcard-subtitle">Học viên chọn các chữ cái bị đảo ngược/xáo trộn để ghép thành từ vựng tiếng Anh chuẩn (Ví dụ: ADNAGAPORP ➔ PROPAGANDA).</div>
+        </div>
+        <div class="ud-lf-subcard-actions">
+          <button type="button" class="btn btn-sm btn-p" onclick="window.addLfSpellingCard()">➕ Thêm từ xếp chữ</button>
+          <button type="button" class="btn btn-sm" onclick="window.loadSampleLfSpelling()" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">⚡ Tải từ mẫu</button>
+        </div>
+      </div>
+
+      <div id="ud-lf-spelling-list" style="display:flex;flex-direction:column;gap:14px;">
+        ${(!spellingList || !spellingList.length) ? `
+          <div class="empty-placeholder" style="text-align:center;padding:24px;background:#f8fafc;border:1.5px dashed #cbd5e1;border-radius:10px;color:#64748b;">
+            Chưa có từ vựng xếp chữ nào. Bấm "➕ Thêm từ xếp chữ" để bắt đầu.
+          </div>
+        ` : spellingList.map((s, idx) => `
+          <div class="lf-spelling-card card" style="padding:16px;border:1.5px solid #cbd5e1;border-radius:12px;background:#ffffff;margin:0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f1f5f9;">
+              <div style="font-weight:800;font-size:14px;color:#7e22ce;display:flex;align-items:center;gap:6px;">
+                <span class="spelling-q-badge" style="background:#f3e8ff;color:#7e22ce;padding:2px 8px;border-radius:6px;font-size:12px;">Từ vựng #${idx + 1}</span>
+              </div>
+              <button type="button" class="btn btn-sm btn-danger" onclick="window.removeLfSpellingCard(this)" title="Xóa từ này">🗑️ Xóa từ</button>
+            </div>
+
+            <div class="grid2" style="margin-bottom:10px;">
+              <div class="fg" style="margin:0;">
+                <label style="font-weight:700;font-size:12.5px;color:#16a34a;">Từ vựng mục tiêu (Target Word) *</label>
+                <input type="text" class="lf-sp-target" value="${esc(s.targetWord || '')}" placeholder="VD: PROPAGANDA" style="font-weight:800;text-transform:uppercase;" oninput="window.autoUpdateLfScrambled(this)">
+              </div>
+              <div class="fg" style="margin:0;">
+                <label style="font-size:12px;color:#64748b;">Dạng đảo ngược / xáo trộn (Scrambled/Backward)</label>
+                <input type="text" class="lf-sp-scrambled" value="${esc(s.scrambled || '')}" placeholder="VD: ADNAGAPORP" style="font-weight:700;text-transform:uppercase;">
+              </div>
+            </div>
+
+            <div class="fg" style="margin-bottom:10px;">
+              <label style="font-size:12px;font-weight:700;color:#0f172a;">Định nghĩa / Gợi ý ngữ cảnh (Clue) *</label>
+              <input type="text" class="lf-sp-clue" value="${esc(s.clue || '')}" placeholder="VD: This includes ideas or statements used to gain support...">
+            </div>
+
+            <div class="fg" style="margin:0;">
+              <label style="font-size:12px;color:#64748b;">Gợi ý ký tự / nghĩa (Hint)</label>
+              <input type="text" class="lf-sp-hint" value="${esc(s.hint || '')}" placeholder="VD: 10 chữ cái • Bắt đầu bằng chữ P • Nghĩa: Tuyên truyền">
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="margin-top:14px;">
+        <button type="button" class="btn btn-sm" onclick="window.addLfSpellingCard()" style="background:#ffffff;border:1.5px dashed #a855f7;color:#7e22ce;font-weight:700;width:100%;padding:8px;">
+          ➕ Thêm từ vựng xếp chữ mới
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 
 export function renderLfMatchPairsDesigner(pairs = []) {
   return `
@@ -2508,7 +2586,30 @@ function syncCurrentDesignerSkillToDraft() {
       unit.languageFocus.matchPairs = pairs;
     }
 
-    // 4. Flashcards
+    // 4. Backward Spelling
+    const spCards = document.querySelectorAll('.lf-spelling-card');
+    if (spCards.length > 0) {
+      const spellings = [];
+      spCards.forEach((card, idx) => {
+        const target = card.querySelector('.lf-sp-target')?.value.trim().toUpperCase();
+        const scrambled = card.querySelector('.lf-sp-scrambled')?.value.trim().toUpperCase();
+        const clue = card.querySelector('.lf-sp-clue')?.value.trim();
+        const hint = card.querySelector('.lf-sp-hint')?.value.trim();
+
+        if (target) {
+          spellings.push({
+            id: `sp_lf_${idx + 1}`,
+            targetWord: target,
+            scrambled: scrambled || target.split('').reverse().join(''),
+            clue: clue || '',
+            hint: hint || ''
+          });
+        }
+      });
+      unit.languageFocus.backwardSpelling = spellings;
+    }
+
+    // 5. Flashcards
     const fcCards = document.querySelectorAll('.lf-fc-card');
     if (fcCards.length > 0) {
       const cards = [];
@@ -3465,6 +3566,121 @@ window.processReadingMatchQuickPaste = function(btn) {
   input.value = '';
   window.toggleReadingMatchQuickPaste(btn);
 };
+
+// -------------------------------------------------------------------------
+// LANGUAGE FOCUS BACKWARD SPELLING DESIGNER HANDLERS
+// -------------------------------------------------------------------------
+window.addLfSpellingCard = function(data = {}) {
+  const list = document.getElementById('ud-lf-spelling-list');
+  if (!list) return;
+
+  const placeholder = list.querySelector('.empty-placeholder');
+  if (placeholder) placeholder.remove();
+
+  const curCount = list.querySelectorAll('.lf-spelling-card').length;
+  const target = (data.targetWord || '').toUpperCase();
+  const scrambled = (data.scrambled || '').toUpperCase() || (target ? target.split('').reverse().join('') : '');
+  const clue = data.clue || '';
+  const hint = data.hint || '';
+
+  const card = document.createElement('div');
+  card.className = 'lf-spelling-card card';
+  card.style = 'padding:16px;border:1.5px solid #cbd5e1;border-radius:12px;background:#ffffff;margin:0;';
+  card.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #f1f5f9;">
+      <div style="font-weight:800;font-size:14px;color:#7e22ce;display:flex;align-items:center;gap:6px;">
+        <span class="spelling-q-badge" style="background:#f3e8ff;color:#7e22ce;padding:2px 8px;border-radius:6px;font-size:12px;">Từ vựng #${curCount + 1}</span>
+      </div>
+      <button type="button" class="btn btn-sm btn-danger" onclick="window.removeLfSpellingCard(this)" title="Xóa từ này">🗑️ Xóa từ</button>
+    </div>
+
+    <div class="grid2" style="margin-bottom:10px;">
+      <div class="fg" style="margin:0;">
+        <label style="font-weight:700;font-size:12.5px;color:#16a34a;">Từ vựng mục tiêu (Target Word) *</label>
+        <input type="text" class="lf-sp-target" value="${esc(target)}" placeholder="VD: PROPAGANDA" style="font-weight:800;text-transform:uppercase;" oninput="window.autoUpdateLfScrambled(this)">
+      </div>
+      <div class="fg" style="margin:0;">
+        <label style="font-size:12px;color:#64748b;">Dạng đảo ngược / xáo trộn (Scrambled/Backward)</label>
+        <input type="text" class="lf-sp-scrambled" value="${esc(scrambled)}" placeholder="VD: ADNAGAPORP" style="font-weight:700;text-transform:uppercase;">
+      </div>
+    </div>
+
+    <div class="fg" style="margin-bottom:10px;">
+      <label style="font-size:12px;font-weight:700;color:#0f172a;">Định nghĩa / Gợi ý ngữ cảnh (Clue) *</label>
+      <input type="text" class="lf-sp-clue" value="${esc(clue)}" placeholder="VD: This includes ideas or statements used to gain support...">
+    </div>
+
+    <div class="fg" style="margin:0;">
+      <label style="font-size:12px;color:#64748b;">Gợi ý ký tự / nghĩa (Hint)</label>
+      <input type="text" class="lf-sp-hint" value="${esc(hint)}" placeholder="VD: 10 chữ cái • Bắt đầu bằng chữ P • Nghĩa: Tuyên truyền">
+    </div>
+  `;
+  list.appendChild(card);
+  window._updateLfSpellingIndices();
+};
+
+window.removeLfSpellingCard = function(btn) {
+  const card = btn.closest('.lf-spelling-card');
+  if (card) {
+    card.remove();
+    window._updateLfSpellingIndices();
+  }
+};
+
+window._updateLfSpellingIndices = function() {
+  const cards = document.querySelectorAll('#ud-lf-spelling-list .lf-spelling-card');
+  cards.forEach((c, idx) => {
+    const badge = c.querySelector('.spelling-q-badge');
+    if (badge) badge.textContent = `Từ vựng #${idx + 1}`;
+  });
+  const badge = document.getElementById('badge-lf-spelling');
+  if (badge) badge.textContent = cards.length;
+};
+
+window.autoUpdateLfScrambled = function(input) {
+  const card = input.closest('.lf-spelling-card');
+  if (!card) return;
+  const scrambledInput = card.querySelector('.lf-sp-scrambled');
+  if (scrambledInput && (!scrambledInput.value.trim() || scrambledInput.dataset.auto === '1')) {
+    const word = input.value.trim().toUpperCase();
+    scrambledInput.value = word.split('').reverse().join('');
+    scrambledInput.dataset.auto = '1';
+  }
+};
+
+window.loadSampleLfSpelling = function() {
+  const samples = [
+    {
+      targetWord: 'PROPAGANDA',
+      scrambled: 'ADNAGAPORP',
+      clue: 'This includes ideas or statements that may be false or present only one side of an argument that are used in order to gain support for a political leader, party, etc.',
+      hint: '10 chữ cái • Bắt đầu bằng chữ P • Nghĩa: Tuyên truyền'
+    },
+    {
+      targetWord: 'ESTABLISH',
+      scrambled: 'HSILBATSE',
+      clue: 'This means to start or create an organization, a system, or a relationship.',
+      hint: '9 chữ cái • Bắt đầu bằng chữ E • Nghĩa: Thành lập, thiết lập'
+    },
+    {
+      targetWord: 'STRUGGLE',
+      scrambled: 'ELGGURTS',
+      clue: 'This is a hard fight in which people try to obtain or achieve something.',
+      hint: '8 chữ cái • Bắt đầu bằng chữ S • Nghĩa: Cuộc đấu tranh'
+    },
+    {
+      targetWord: 'LIBERATION',
+      scrambled: 'NOITAREBIL',
+      clue: 'This is the act or process of freeing a country or person from the control of somebody else.',
+      hint: '10 chữ cái • Bắt đầu bằng chữ L • Nghĩa: Sự giải phóng'
+    }
+  ];
+
+  const list = document.getElementById('ud-lf-spelling-list');
+  if (list) list.innerHTML = '';
+  samples.forEach(s => window.addLfSpellingCard(s));
+};
+
 
 
 

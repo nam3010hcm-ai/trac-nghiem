@@ -670,6 +670,13 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
       ],
       grammarChallenge: [
         {
+          id: 'gm_orange_1',
+          question: 'For many Vietnamese people, the ________ for justice for Agent Orange victims will still continue.',
+          options: ['struggle', 'liberation', 'struggling', 'fought'],
+          answer: 0,
+          explain: 'Sau mạo từ "the" và trước giới từ "for", chúng ta cần một danh từ (noun). "struggle" (cuộc đấu tranh) là danh từ chính xác nhất về mặt ngữ pháp và ngữ nghĩa.'
+        },
+        {
           id: 'gm_1',
           question: 'If I ___ enough money, I would travel around the world.',
           options: ['have', 'had', 'will have', 'would have'],
@@ -682,6 +689,36 @@ However, the rapid advancement of AI also raises ethical dilemmas. Issues regard
           options: ['arrives', 'was arriving', 'is arriving', 'has arrived'],
           answer: 1,
           explain: 'Thì Quá khứ tiếp diễn (Past Continuous) diễn tả hành động đang diễn ra thì hành động khác cắt ngang.'
+        }
+      ],
+      backwardSpelling: [
+        {
+          id: 'sp_lf_1',
+          targetWord: 'PROPAGANDA',
+          scrambled: 'ADNAGAPORP',
+          clue: 'This includes ideas or statements that may be false or present only one side of an argument that are used in order to gain support for a political leader, party, etc.',
+          hint: '10 chữ cái • Bắt đầu bằng chữ P • Nghĩa: Tuyên truyền'
+        },
+        {
+          id: 'sp_lf_2',
+          targetWord: 'ESTABLISH',
+          scrambled: 'HSILBATSE',
+          clue: 'This means to start or create an organization, a system, or a relationship.',
+          hint: '9 chữ cái • Bắt đầu bằng chữ E • Nghĩa: Thành lập, thiết lập'
+        },
+        {
+          id: 'sp_lf_3',
+          targetWord: 'STRUGGLE',
+          scrambled: 'ELGGURTS',
+          clue: 'This is a hard fight in which people try to obtain or achieve something.',
+          hint: '8 chữ cái • Bắt đầu bằng chữ S • Nghĩa: Cuộc đấu tranh'
+        },
+        {
+          id: 'sp_lf_4',
+          targetWord: 'LIBERATION',
+          scrambled: 'NOITAREBIL',
+          clue: 'This is the act or process of freeing a country or person from the control of somebody else.',
+          hint: '10 chữ cái • Bắt đầu bằng chữ L • Nghĩa: Sự giải phóng'
         }
       ]
     }
