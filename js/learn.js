@@ -778,46 +778,46 @@ export function updateSubjectUI(subject) {
       navRow.innerHTML = `
         <button class="skill-tab-btn ${currentSkillTab === 'listening' ? 'active' : ''}" data-skill="listening" onclick="window.switchSkillTab('listening')">
           <span class="tab-icon">🎧</span>
-          <span>1. LISTENING</span>
+          <span class="tab-label">1. LISTENING</span>
         </button>
         <button class="skill-tab-btn ${currentSkillTab === 'reading' ? 'active' : ''}" data-skill="reading" onclick="window.switchSkillTab('reading')">
           <span class="tab-icon">📖</span>
-          <span>2. READING</span>
+          <span class="tab-label">2. READING</span>
         </button>
         <button class="skill-tab-btn ${currentSkillTab === 'speaking' ? 'active' : ''}" data-skill="speaking" onclick="window.switchSkillTab('speaking')">
           <span class="tab-icon">🗣️</span>
-          <span>3. SPEAKING</span>
+          <span class="tab-label">3. SPEAKING</span>
         </button>
         <button class="skill-tab-btn ${currentSkillTab === 'writing' ? 'active' : ''}" data-skill="writing" onclick="window.switchSkillTab('writing')">
           <span class="tab-icon">✍️</span>
-          <span>4. WRITING</span>
+          <span class="tab-label">4. WRITING</span>
         </button>
         <button class="skill-tab-btn ${currentSkillTab === 'languageFocus' ? 'active' : ''}" data-skill="languageFocus" onclick="window.switchSkillTab('languageFocus')">
           <span class="tab-icon">🔍</span>
-          <span>5. LANGUAGE FOCUS</span>
+          <span class="tab-label">5. LANGUAGE FOCUS</span>
         </button>
       `;
     } else {
       navRow.innerHTML = `
         <button class="skill-tab-btn ${currentSkillTab === 'listening' ? 'active' : ''}" data-skill="listening" onclick="window.switchSkillTab('listening')">
           <span class="tab-icon">📖</span>
-          <span>1. LÝ THUYẾT & BÀI GIẢNG</span>
+          <span class="tab-label">1. LÝ THUYẾT & BÀI GIẢNG</span>
         </button>
         <button class="skill-tab-btn ${currentSkillTab === 'reading' ? 'active' : ''}" data-skill="reading" onclick="window.switchSkillTab('reading')">
           <span class="tab-icon">💡</span>
-          <span>2. VÍ DỤ MINH HỌA</span>
+          <span class="tab-label">2. VÍ DỤ MINH HỌA</span>
         </button>
         <button class="skill-tab-btn ${currentSkillTab === 'speaking' ? 'active' : ''}" data-skill="speaking" onclick="window.switchSkillTab('speaking')">
           <span class="tab-icon">🗣️</span>
-          <span>3. ĐỌC CÔNG THỨC / CODE</span>
+          <span class="tab-label">3. ĐỌC CÔNG THỨC / CODE</span>
         </button>
         <button class="skill-tab-btn ${currentSkillTab === 'writing' ? 'active' : ''}" data-skill="writing" onclick="window.switchSkillTab('writing')">
           <span class="tab-icon">✍️</span>
-          <span>4. BÀI TẬP TỰ LUYỆN</span>
+          <span class="tab-label">4. BÀI TẬP TỰ LUYỆN</span>
         </button>
         <button class="skill-tab-btn ${currentSkillTab === 'languageFocus' ? 'active' : ''}" data-skill="languageFocus" onclick="window.switchSkillTab('languageFocus')">
           <span class="tab-icon">🧠</span>
-          <span>5. CÔNG THỨC & TRẮC NGHIỆM</span>
+          <span class="tab-label">5. CÔNG THỨC & TRẮC NGHIỆM</span>
         </button>
       `;
     }
@@ -3680,16 +3680,21 @@ export function switchSkillTab(skill) {
   currentSkillTab = skill;
 
   // 1. Cập nhật trạng thái Active trên 5 nút Tab
-  document.querySelectorAll('.skill-tab-btn').forEach(btn => {
-    const isTarget = btn.dataset.skill === skill;
+  document.querySelectorAll('#learn-skill-nav-row .skill-tab-btn, #learn-skill-nav-row .subject-tab, .skill-tab-btn, .subject-tab').forEach(btn => {
+    const btnSkill = btn.dataset.skill || btn.getAttribute('data-skill');
+    const isTarget = btnSkill === skill;
     btn.classList.toggle('active', isTarget);
   });
 
   // 2. Ẩn/Hiện chính xác Panel nội dung tương ứng
-  document.querySelectorAll('.skill-content-panel').forEach(panel => {
-    const isTarget = panel.id === `skill-panel-${skill}`;
-    panel.classList.toggle('active', isTarget);
-    panel.style.display = isTarget ? 'block' : 'none';
+  const panelIds = ['skill-panel-listening', 'skill-panel-reading', 'skill-panel-speaking', 'skill-panel-writing', 'skill-panel-languageFocus'];
+  panelIds.forEach(pId => {
+    const panel = document.getElementById(pId);
+    if (panel) {
+      const isTarget = pId === `skill-panel-${skill}`;
+      panel.classList.toggle('active', isTarget);
+      panel.style.display = isTarget ? 'block' : 'none';
+    }
   });
 
   // 3. Khởi tạo dữ liệu bài tập tương ứng một cách an toàn
@@ -3707,7 +3712,7 @@ export function switchSkillTab(skill) {
 window.switchSkillTab = switchSkillTab;
 
 async function initLearnApp() {
-  document.querySelectorAll('.skill-tab-btn').forEach(btn => {
+  document.querySelectorAll('#learn-skill-nav-row button, .skill-tab-btn, .subject-tab').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       const skill = btn.dataset.skill || btn.getAttribute('data-skill');

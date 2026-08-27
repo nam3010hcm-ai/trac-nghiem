@@ -114,46 +114,148 @@ body.learn-body {
 }
 
 /* =========================================================================
-   SUBJECT SELECTION TABS & UNITS CARDS
+   SKILL SELECTION TABS (5 KỸ NĂNG: LISTENING, READING, SPEAKING, WRITING, LANGUAGE FOCUS)
    ========================================================================= */
-.subject-nav-bar {
-  display: flex;
+.subject-nav-bar,
+.learn-skill-nav-bar,
+#learn-skill-nav-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
-  background: #f1f5f9;
-  padding: 6px;
-  border-radius: 14px;
-  margin-bottom: 28px;
-  overflow-x: auto;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 8px;
+  border-radius: 16px;
+  margin-top: 18px;
+  margin-bottom: 24px;
   border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.05), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  position: relative;
+  box-sizing: border-box;
 }
 
+@media (max-width: 960px) {
+  .subject-nav-bar,
+  .learn-skill-nav-bar,
+  #learn-skill-nav-row {
+    display: flex;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 6px;
+    gap: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.skill-tab-btn,
 .subject-tab {
   flex: 1;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #64748b;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-family: var(--font-display, 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #475569;
+  border: 1.5px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  position: relative;
+  text-decoration: none;
+  min-height: 48px;
+  box-sizing: border-box;
 }
 
+.skill-tab-btn .tab-icon,
+.subject-tab span:first-child {
+  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.skill-tab-btn .tab-label,
+.skill-tab-btn span:last-child,
+.subject-tab span:last-child {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* Hover State */
+.skill-tab-btn:hover,
 .subject-tab:hover {
-  color: #6366f1;
-  background: rgba(255, 255, 255, 0.6);
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.85);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  transform: translateY(-1.5px);
 }
 
+.skill-tab-btn:hover .tab-icon,
+.subject-tab:hover span:first-child {
+  transform: scale(1.2);
+}
+
+/* Active State General */
+.skill-tab-btn.active,
 .subject-tab.active {
   background: #ffffff;
-  color: #4338ca;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  color: #0f172a;
+  border-color: #6366f1;
+  box-shadow: 0 6px 20px -2px rgba(99, 102, 241, 0.16), 0 2px 6px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1.5px);
+}
+
+.skill-tab-btn.active .tab-icon,
+.subject-tab.active span:first-child {
+  transform: scale(1.18);
+}
+
+/* Distinct Skill Themes When Active */
+.skill-tab-btn.active[data-skill="listening"],
+.subject-tab.active[data-skill="listening"] {
+  color: #1d4ed8;
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 6px 20px -2px rgba(37, 99, 235, 0.18), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.skill-tab-btn.active[data-skill="reading"],
+.subject-tab.active[data-skill="reading"] {
+  color: #047857;
+  border-color: #10b981;
+  background: #ffffff;
+  box-shadow: 0 6px 20px -2px rgba(16, 185, 129, 0.18), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.skill-tab-btn.active[data-skill="speaking"],
+.subject-tab.active[data-skill="speaking"] {
+  color: #6d28d9;
+  border-color: #8b5cf6;
+  background: #ffffff;
+  box-shadow: 0 6px 20px -2px rgba(139, 92, 246, 0.18), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.skill-tab-btn.active[data-skill="writing"],
+.subject-tab.active[data-skill="writing"] {
+  color: #b45309;
+  border-color: #f59e0b;
+  background: #ffffff;
+  box-shadow: 0 6px 20px -2px rgba(245, 158, 11, 0.18), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.skill-tab-btn.active[data-skill="languageFocus"],
+.subject-tab.active[data-skill="languageFocus"] {
+  color: #be123c;
+  border-color: #f43f5e;
+  background: #ffffff;
+  box-shadow: 0 6px 20px -2px rgba(244, 63, 94, 0.18), 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .units-grid {

@@ -227,31 +227,31 @@ window.globalLogout = async function() {
     </div>
 
     <!-- THANH CHỌN KỸ NĂNG / HẠNG MỤC BÀI HỌC -->
-    <div class="subject-nav-bar" id="learn-skill-nav-row">
-      <button class="subject-tab active" data-skill="listening" onclick="window.switchSkillTab('listening')">
-        <span>🎧</span>
-        <span>1. LISTENING</span>
+    <div class="subject-nav-bar learn-skill-nav-bar" id="learn-skill-nav-row">
+      <button class="skill-tab-btn active" data-skill="listening" onclick="window.switchSkillTab('listening')">
+        <span class="tab-icon">🎧</span>
+        <span class="tab-label">1. LISTENING</span>
       </button>
-      <button class="subject-tab" data-skill="reading" onclick="window.switchSkillTab('reading')">
-        <span>📖</span>
-        <span>2. READING</span>
+      <button class="skill-tab-btn" data-skill="reading" onclick="window.switchSkillTab('reading')">
+        <span class="tab-icon">📖</span>
+        <span class="tab-label">2. READING</span>
       </button>
-      <button class="subject-tab" data-skill="speaking" onclick="window.switchSkillTab('speaking')">
-        <span>🗣️</span>
-        <span>3. SPEAKING</span>
+      <button class="skill-tab-btn" data-skill="speaking" onclick="window.switchSkillTab('speaking')">
+        <span class="tab-icon">🗣️</span>
+        <span class="tab-label">3. SPEAKING</span>
       </button>
-      <button class="subject-tab" data-skill="writing" onclick="window.switchSkillTab('writing')">
-        <span>✍️</span>
-        <span>4. WRITING</span>
+      <button class="skill-tab-btn" data-skill="writing" onclick="window.switchSkillTab('writing')">
+        <span class="tab-icon">✍️</span>
+        <span class="tab-label">4. WRITING</span>
       </button>
-      <button class="subject-tab" data-skill="languageFocus" onclick="window.switchSkillTab('languageFocus')">
-        <span>🔍</span>
-        <span>5. LANGUAGE FOCUS</span>
+      <button class="skill-tab-btn" data-skill="languageFocus" onclick="window.switchSkillTab('languageFocus')">
+        <span class="tab-icon">🔍</span>
+        <span class="tab-label">5. LANGUAGE FOCUS</span>
       </button>
     </div>
 
     <!-- 1. PHÂN HỆ LISTENING -->
-    <div class="tab-content active" id="skill-panel-listening">
+    <div class="tab-content skill-content-panel active" id="skill-panel-listening">
       <div class="card">
         <div style="font-family:var(--font-display);margin-bottom:14px;font-weight:800;font-size:16px;color:#0f172a">🎧 Chọn Bài Luyện Nghe Trong Unit:</div>
         <div class="lesson-selector-grid" id="lis-lesson-list"></div>
@@ -260,7 +260,7 @@ window.globalLogout = async function() {
     </div>
 
     <!-- 2. PHÂN HỆ READING -->
-    <div class="tab-content" id="skill-panel-reading">
+    <div class="tab-content skill-content-panel" id="skill-panel-reading">
       <div class="card">
         <div style="font-family:var(--font-display);margin-bottom:14px;font-weight:800;font-size:16px;color:#0f172a">📖 Chọn Bài Đọc Hiểu Trong Unit:</div>
         <div class="lesson-selector-grid" id="read-lesson-list"></div>
@@ -269,7 +269,7 @@ window.globalLogout = async function() {
     </div>
 
     <!-- 3. PHÂN HỆ SPEAKING -->
-    <div class="tab-content" id="skill-panel-speaking">
+    <div class="tab-content skill-content-panel" id="skill-panel-speaking">
       <div class="card">
         <div style="font-family:var(--font-display);margin-bottom:14px;font-weight:800;font-size:16px;color:#0f172a">🗣️ Chọn Bài Luyện Nói & Phát Âm Trong Unit:</div>
         <div class="lesson-selector-grid" id="spk-lesson-list"></div>
@@ -278,7 +278,7 @@ window.globalLogout = async function() {
     </div>
 
     <!-- 4. PHÂN HỆ WRITING -->
-    <div class="tab-content" id="skill-panel-writing">
+    <div class="tab-content skill-content-panel" id="skill-panel-writing">
       <div class="card">
         <div style="display:flex;gap:12px;margin-bottom:18px">
           <button class="btn btn-p" onclick="window.selectWritingTab('scramble')">🧩 Xếp Từ Thành Câu</button>
@@ -289,7 +289,7 @@ window.globalLogout = async function() {
     </div>
 
     <!-- 5. PHÂN HỆ LANGUAGE FOCUS -->
-    <div class="tab-content" id="skill-panel-languageFocus">
+    <div class="tab-content skill-content-panel" id="skill-panel-languageFocus">
       <div class="card">
         <div style="font-family:var(--font-display);margin-bottom:14px;font-weight:800;font-size:16px;color:#0f172a">🔍 Thẻ Từ Vựng Flashcard 3D & Ghép Cụm Từ:</div>
         <div class="exercise-workspace" id="lang-workspace"></div>
@@ -302,6 +302,6 @@ window.globalLogout = async function() {
 <canvas id="confetti-canvas"></canvas>
 
 <!-- SCRIPT CONTROLLER -->
-<script type="module" src="js/learn.js?v=6.2"></script>
+<script type="module" src="js/learn.js?v=6.3"></script>
 </body>
 </html>
