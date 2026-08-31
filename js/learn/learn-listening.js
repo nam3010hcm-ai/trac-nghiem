@@ -127,38 +127,82 @@ export function renderListeningExercises(exercises) {
   }
 
   return exercises.map((ex, idx) => {
-    if (ex.type === 'mcq') {
+    if (!ex) return '';
+    const exType = ex.type || 'mcq';
+
+    if (exType === 'mcq') {
+      const qText = ex.question || ex.title || `Câu hỏi ${idx + 1}`;
+      const opts = Array.isArray(ex.options) ? ex.options : ['A', 'B', 'C', 'D'];
+      const ansIdx = typeof ex.answer === 'number' ? ex.answer : 0;
       return `
         <div class="card" style="margin:0" id="lis-ex-card-${idx}">
           <div style="font-weight:700;font-size:14.5px;margin-bottom:10px;color:#1e293b">
-            Câu ${idx + 1}: ${esc(ex.question)}
+            Câu ${idx + 1}: ${esc(qText)}
           </div>
           <div style="display:flex;flex-direction:column;gap:8px">
-            ${(ex.options || []).map((opt, oIdx) => `
-              <button class="opt" onclick="window.checkLisMCQ(${idx}, ${oIdx}, ${ex.answer})" id="lis-opt-${idx}-${oIdx}">
+            ${opts.map((opt, oIdx) => `
+              <button class="opt" onclick="window.checkLisMCQ(${idx}, ${oIdx}, ${ansIdx})" id="lis-opt-${idx}-${oIdx}">
                 <span class="okey">${String.fromCharCode(65 + oIdx)}</span>
-                <span>${esc(opt)}</span>
+                <span>${esc(opt || '')}</span>
               </button>
             `).join('')}
           </div>
           <div id="lis-fb-${idx}" class="fb" style="display:none"></div>
+          ${ex.explain ? `<div id="lis-exp-${idx}" class="video-tip-pill" style="display:none;margin-top:8px;"><span>💡</span> <span><b>Giải thích:</b> ${esc(ex.explain)}</span></div>` : ''}
         </div>
       `;
     }
 
-    if (ex.type === 'dictation') {
+    if (exType === 'dictation') {
+      const rawSent = ex.sentence || ex.text || ex.correct || '';
+      const safeSent = String(rawSent).replace(/'/g, "\\'").replace(/"/g, '&quot;');
       return `
         <div class="card" style="margin:0;border-left:4px solid #0284c7" id="lis-ex-card-${idx}">
           <div style="font-weight:700;font-size:15px;margin-bottom:6px;color:#1e293b">Câu ${idx + 1}: Nghe và chép chính tả (Dictation)</div>
           <div style="font-size:13px;color:#64748b;margin-bottom:12px">💡 Bấm nút nghe câu mẫu, sau đó gõ lại chính xác từng từ bạn nghe được:</div>
           <div style="margin-bottom:12px;display:flex;gap:10px">
-            <button class="btn btn-sm" onclick="window.speakDictation('${ex.sentence.replace(/'/g, "\\'")}')" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd">🔊 Nghe câu này</button>
+            <button class="btn btn-sm" onclick="window.speakDictation('${safeSent}')" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd">🔊 Nghe câu này</button>
           </div>
           <textarea id="dictation-input-${idx}" class="dictation-textarea" placeholder="Gõ lại câu bạn nghe được tại đây..."></textarea>
           <div style="display:flex;gap:10px;margin-top:10px">
-            <button class="btn btn-p" onclick="window.checkDictation(${idx}, '${ex.sentence.replace(/'/g, "\\'")}')">✅ Kiểm tra kết quả</button>
+            <button class="btn btn-p" onclick="window.checkDictation(${idx}, '${safeSent}')">✅ Kiểm tra kết quả</button>
           </div>
           <div id="dictation-fb-${idx}" class="fb" style="display:none"></div>
+        </div>
+      `;
+    }
+
+    if (exType === 'gap_fill' || exType === 'fill_in_the_blank') {
+      const rawSent = ex.sentence || ex.text || '';
+      const correctVal = ex.correct || ex.answer || '';
+      const parts = rawSent.split(/\[___\]|___|\.{3,}/);
+      return `
+        <div class="card" style="margin:0;border-left:4px solid #8b5cf6" id="lis-ex-card-${idx}">
+          <div style="font-weight:700;font-size:15px;margin-bottom:6px;color:#1e293b">Câu ${idx + 1}: Nghe & Điền từ còn thiếu</div>
+          <div style="font-size:14px;color:#334155;line-height:1.8;margin-bottom:12px;">
+            ${esc(parts[0] || '')}
+            <input type="text" id="gap-inp-${idx}-0" data-correct="${esc(correctVal)}" placeholder="..." style="display:inline-block;width:140px;padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-weight:700;text-align:center;">
+            ${esc(parts[1] || '')}
+          </div>
+          <button class="btn btn-sm btn-p" onclick="window.checkLisGapFill(${idx})">✅ Kiểm tra</button>
+          <div id="gap-fb-${idx}" class="fb" style="display:none;margin-top:10px;"></div>
+        </div>
+      `;
+    }
+
+    if (exType === 'true_false' || exType === 'tf') {
+      const isCorrectTrue = ex.answer === true || String(ex.answer).toLowerCase() === 'true' || ex.answer === 1;
+      return `
+        <div class="card" style="margin:0;border-left:4px solid #f59e0b" id="lis-ex-card-${idx}">
+          <div style="font-weight:700;font-size:14.5px;margin-bottom:10px;color:#1e293b">
+            Câu ${idx + 1} (True/False): ${esc(ex.statement || ex.question || '')}
+          </div>
+          <div style="display:flex;gap:12px;">
+            <button class="btn" id="lis-tf-${idx}-true" onclick="window.checkLisTrueFalse(${idx}, true, ${isCorrectTrue})" style="padding:8px 24px;font-weight:700;border:1.5px solid #cbd5e1;">Đúng (TRUE)</button>
+            <button class="btn" id="lis-tf-${idx}-false" onclick="window.checkLisTrueFalse(${idx}, false, ${isCorrectTrue})" style="padding:8px 24px;font-weight:700;border:1.5px solid #cbd5e1;">Sai (FALSE)</button>
+          </div>
+          <div id="lis-tf-fb-${idx}" class="fb" style="display:none;margin-top:10px;"></div>
+          ${ex.explain ? `<div id="lis-tf-exp-${idx}" class="video-tip-pill" style="display:none;margin-top:8px;"><span>💡</span> <span><b>Giải thích:</b> ${esc(ex.explain)}</span></div>` : ''}
         </div>
       `;
     }

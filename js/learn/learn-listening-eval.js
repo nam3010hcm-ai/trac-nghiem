@@ -94,8 +94,9 @@ export function checkDictation(idx, targetSentence) {
   if (!inputEl || !fb) return;
   const userInput = inputEl.value.trim();
   if (!userInput) { alert('Vui lòng gõ nội dung trước khi kiểm tra!'); return; }
-  const cleanTarget = targetSentence.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '').toLowerCase().split(/\s+/);
-  const cleanUser = userInput.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '').toLowerCase().split(/\s+/);
+  const cleanTarget = String(targetSentence || '').replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '').toLowerCase().split(/\s+/).filter(Boolean);
+  const cleanUser = userInput.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '').toLowerCase().split(/\s+/).filter(Boolean);
+  if (!cleanTarget.length) return;
   let matchCount = 0;
   let diffHtml = cleanTarget.map((targetWord, i) => {
     const userWord = cleanUser[i];
