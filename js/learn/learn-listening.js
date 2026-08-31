@@ -109,26 +109,26 @@ export function loadListeningLesson(id) {
   }
 
   workspace.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;flex-direction:column;gap:22px">
       <div class="card" style="margin:0">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
           <div>
-            <div style="font-size:22px;font-weight:800;color:#0f172a;line-height:1.3">${esc(l.title)}</div>
-            <div style="font-size:15px;color:#64748b;margin-top:4px">🎯 Chủ đề: <b style="color:#1e293b">${esc(l.topic || currentUnit.topic || 'General')}</b></div>
+            <div style="font-size:26px;font-weight:800;color:#0f172a;line-height:1.3">${esc(l.title)}</div>
+            <div style="font-size:16px;color:#475569;margin-top:6px">🎯 Chủ đề: <b style="color:#1e293b">${esc(l.topic || currentUnit.topic || 'General')}</b></div>
           </div>
-          <button class="btn btn-sm" id="btn-toggle-transcript" onclick="window.toggleLisTranscript()" style="font-size:14px;padding:6px 14px;font-weight:700">👁️ Hiện Transcript</button>
+          <button class="btn btn-sm" id="btn-toggle-transcript" onclick="window.toggleLisTranscript()" style="font-size:15px;padding:8px 16px;font-weight:700">👁️ Hiện Transcript</button>
         </div>
 
         ${mediaHtml}
 
-        <div id="lis-transcript-box" class="transcript-box" style="display:none;margin-top:16px">
-          <div style="font-weight:800;font-size:17px;color:#0f172a;margin-bottom:8px">📝 Lời thoại bài nghe (Transcript):</div>
-          <div style="font-size:17.5px;color:#1e293b;line-height:1.95;background:#f8fafc;padding:16px 20px;border-radius:12px;border:1px solid #e2e8f0;">${esc(l.transcript || l.audioText || l.text || 'Chưa có transcript.')}</div>
+        <div id="lis-transcript-box" class="transcript-box" style="display:none;margin-top:18px">
+          <div style="font-weight:800;font-size:18.5px;color:#0f172a;margin-bottom:10px">📝 Lời thoại bài nghe (Transcript):</div>
+          <div style="font-size:19px;color:#1e293b;line-height:1.95;background:#f8fafc;padding:20px 24px;border-radius:14px;border:1px solid #e2e8f0;letter-spacing:0.15px;">${esc(l.transcript || l.audioText || l.text || 'Chưa có transcript.')}</div>
         </div>
       </div>
 
-      <div style="font-weight:800;font-size:19px;color:#0f172a;margin-top:6px">📋 Bài tập luyện tập (Exercises):</div>
-      <div id="lis-exercises-container" style="display:flex;flex-direction:column;gap:16px">
+      <div style="font-weight:800;font-size:21px;color:#0f172a;margin-top:8px">📋 Bài tập luyện tập (Exercises):</div>
+      <div id="lis-exercises-container" style="display:flex;flex-direction:column;gap:18px">
         ${renderListeningExercises(l.exercises)}
       </div>
     </div>
@@ -138,7 +138,7 @@ export function loadListeningLesson(id) {
 
 export function renderListeningExercises(exercises) {
   if (!exercises || !exercises.length) {
-    return '<div class="empty" style="font-size:16px;padding:24px">Chưa có bài tập cho phần nghe này.</div>';
+    return '<div class="empty" style="font-size:17.5px;padding:28px">Chưa có bài tập cho phần nghe này.</div>';
   }
 
   return exercises.map((ex, idx) => {
@@ -151,19 +151,19 @@ export function renderListeningExercises(exercises) {
       const ansIdx = typeof ex.answer === 'number' ? ex.answer : 0;
       return `
         <div class="card" style="margin:0" id="lis-ex-card-${idx}">
-          <div style="font-weight:800;font-size:17px;margin-bottom:14px;color:#0f172a;line-height:1.5">
+          <div style="font-weight:800;font-size:18.5px;margin-bottom:16px;color:#0f172a;line-height:1.55">
             Câu ${idx + 1}: ${esc(qText)}
           </div>
-          <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;flex-direction:column;gap:12px">
             ${opts.map((opt, oIdx) => `
-              <button class="opt" onclick="window.checkLisMCQ(${idx}, ${oIdx}, ${ansIdx})" id="lis-opt-${idx}-${oIdx}" style="font-size:16px;padding:12px 18px;border-radius:12px">
-                <span class="okey" style="font-size:15px;width:32px;height:32px">${String.fromCharCode(65 + oIdx)}</span>
-                <span style="font-size:16px;font-weight:600">${esc(opt || '')}</span>
+              <button class="opt" onclick="window.checkLisMCQ(${idx}, ${oIdx}, ${ansIdx})" id="lis-opt-${idx}-${oIdx}" style="font-size:17.5px;padding:14px 20px;border-radius:12px">
+                <span class="okey" style="font-size:16px;width:36px;height:36px">${String.fromCharCode(65 + oIdx)}</span>
+                <span style="font-size:17.5px;font-weight:600">${esc(opt || '')}</span>
               </button>
             `).join('')}
           </div>
-          <div id="lis-fb-${idx}" class="fb" style="display:none;font-size:15px;margin-top:12px"></div>
-          ${ex.explain ? `<div id="lis-exp-${idx}" class="video-tip-pill" style="display:none;margin-top:10px;font-size:14.5px"><span>💡</span> <span><b>Giải thích:</b> ${esc(ex.explain)}</span></div>` : ''}
+          <div id="lis-fb-${idx}" class="fb" style="display:none;font-size:16.5px;margin-top:14px"></div>
+          ${ex.explain ? `<div id="lis-exp-${idx}" class="video-tip-pill" style="display:none;margin-top:12px;font-size:15.5px"><span>💡</span> <span><b>Giải thích:</b> ${esc(ex.explain)}</span></div>` : ''}
         </div>
       `;
     }
@@ -174,20 +174,20 @@ export function renderListeningExercises(exercises) {
       const promptText = ex.prompt || ex.question || ex.title || 'Nghe và chép chính tả (Dictation)';
       return `
         <div class="card" style="margin:0;border-left:5px solid #0284c7" id="lis-ex-card-${idx}">
-          <div style="font-weight:800;font-size:17.5px;margin-bottom:8px;color:#0f172a">Câu ${idx + 1}: ${esc(promptText)}</div>
-          <div style="font-size:15px;color:#475569;margin-bottom:14px;line-height:1.6">💡 Bấm nút nghe câu mẫu, sau đó gõ lại chính xác từng từ bạn nghe được:</div>
+          <div style="font-weight:800;font-size:18.5px;margin-bottom:8px;color:#0f172a">Câu ${idx + 1}: ${esc(promptText)}</div>
+          <div style="font-size:16px;color:#475569;margin-bottom:14px;line-height:1.6">💡 Bấm nút nghe câu mẫu, sau đó gõ lại chính xác từng từ bạn nghe được:</div>
           <div style="margin-bottom:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-            <button type="button" class="btn btn-sm" id="btn-dict-play-${idx}" onclick="window.speakDictation('${safeSent}', ${idx})" style="background:#e0f2fe;color:#0369a1;border:1.5px solid #bae6fd;font-weight:700;font-size:15px;padding:8px 18px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;">
-              <span id="dict-icon-${idx}" style="font-size:18px">🔊</span>
+            <button type="button" class="btn btn-sm" id="btn-dict-play-${idx}" onclick="window.speakDictation('${safeSent}', ${idx})" style="background:#e0f2fe;color:#0369a1;border:1.5px solid #bae6fd;font-weight:700;font-size:15.5px;padding:9px 20px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;">
+              <span id="dict-icon-${idx}" style="font-size:20px">🔊</span>
               <span id="dict-label-${idx}">Nghe câu này</span>
             </button>
-            ${ex.hint ? `<span style="font-size:14px;color:#475569;background:#f1f5f9;padding:6px 12px;border-radius:8px;border:1px solid #e2e8f0">💡 Gợi ý: ${esc(ex.hint)}</span>` : ''}
+            ${ex.hint ? `<span style="font-size:14.5px;color:#475569;background:#f1f5f9;padding:6px 14px;border-radius:8px;border:1px solid #e2e8f0">💡 Gợi ý: ${esc(ex.hint)}</span>` : ''}
           </div>
-          <textarea id="dictation-input-${idx}" class="dictation-textarea" placeholder="Gõ lại câu bạn nghe được tại đây..." style="width:100%;min-height:85px;padding:12px 16px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:16.5px;line-height:1.6;box-sizing:border-box;resize:vertical;"></textarea>
-          <div style="display:flex;gap:10px;margin-top:12px">
-            <button type="button" class="btn btn-p" onclick="window.checkDictation(${idx}, '${safeSent}')" style="font-weight:700;font-size:15.5px;padding:10px 22px">✅ Kiểm tra kết quả</button>
+          <textarea id="dictation-input-${idx}" class="dictation-textarea" placeholder="Gõ lại câu bạn nghe được tại đây..." style="width:100%;min-height:95px;padding:14px 18px;border:1.5px solid #cbd5e1;border-radius:12px;font-size:18px;line-height:1.7;box-sizing:border-box;resize:vertical;"></textarea>
+          <div style="display:flex;gap:12px;margin-top:14px">
+            <button type="button" class="btn btn-p" onclick="window.checkDictation(${idx}, '${safeSent}')" style="font-weight:700;font-size:16px;padding:11px 24px">✅ Kiểm tra kết quả</button>
           </div>
-          <div id="dictation-fb-${idx}" class="fb" style="display:none;margin-top:12px;font-size:15.5px"></div>
+          <div id="dictation-fb-${idx}" class="fb" style="display:none;margin-top:14px;font-size:16.5px"></div>
         </div>
       `;
     }
@@ -199,13 +199,13 @@ export function renderListeningExercises(exercises) {
       const safeSampleAns = String(sampleAns).replace(/'/g, "\\'").replace(/"/g, '&quot;');
       return `
         <div class="card" style="margin:0;border-left:5px solid #06b6d4" id="lis-ex-card-${idx}">
-          <div style="font-weight:800;font-size:17px;margin-bottom:8px;color:#0f172a;line-height:1.5">Câu ${idx + 1}: ${esc(qText)}</div>
-          ${ex.hint ? `<div style="font-size:14px;color:#475569;margin-bottom:12px">💡 <b>Gợi ý:</b> ${esc(ex.hint)}</div>` : ''}
-          <input type="text" id="short-ans-inp-${idx}" placeholder="Nhập câu trả lời của bạn tại đây..." style="width:100%;padding:10px 14px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:16px;box-sizing:border-box;">
-          <div style="display:flex;gap:10px;margin-top:12px">
-            <button type="button" class="btn btn-p" onclick="window.checkLisShortAnswer(${idx}, '${safeSampleAns}', ${safeKw})" style="font-size:15px;padding:9px 20px">✅ Kiểm tra câu trả lời</button>
+          <div style="font-weight:800;font-size:18.5px;margin-bottom:8px;color:#0f172a;line-height:1.55">Câu ${idx + 1}: ${esc(qText)}</div>
+          ${ex.hint ? `<div style="font-size:15px;color:#475569;margin-bottom:12px">💡 <b>Gợi ý:</b> ${esc(ex.hint)}</div>` : ''}
+          <input type="text" id="short-ans-inp-${idx}" placeholder="Nhập câu trả lời của bạn tại đây..." style="width:100%;padding:12px 16px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:17.5px;box-sizing:border-box;">
+          <div style="display:flex;gap:12px;margin-top:14px">
+            <button type="button" class="btn btn-p" onclick="window.checkLisShortAnswer(${idx}, '${safeSampleAns}', ${safeKw})" style="font-size:16px;padding:10px 22px">✅ Kiểm tra câu trả lời</button>
           </div>
-          <div id="short-ans-fb-${idx}" class="fb" style="display:none;margin-top:12px;font-size:15px"></div>
+          <div id="short-ans-fb-${idx}" class="fb" style="display:none;margin-top:14px;font-size:16.5px"></div>
         </div>
       `;
     }
@@ -216,22 +216,22 @@ export function renderListeningExercises(exercises) {
       const parts = rawSent.split(/\[___\]|___|\.{3,}/);
       return `
         <div class="card" style="margin:0;border-left:5px solid #8b5cf6" id="lis-ex-card-${idx}">
-          <div style="font-weight:800;font-size:17px;margin-bottom:8px;color:#0f172a">Câu ${idx + 1}: Nghe & Điền từ còn thiếu</div>
-          <div style="font-size:16.5px;color:#1e293b;line-height:2.4;margin-bottom:14px;">
+          <div style="font-weight:800;font-size:18.5px;margin-bottom:8px;color:#0f172a">Câu ${idx + 1}: Nghe & Điền từ còn thiếu</div>
+          <div style="font-size:18px;color:#1e293b;line-height:2.5;margin-bottom:16px;">
             ${parts.map((p, pIdx) => {
               if (pIdx >= answers.length) return esc(p);
               const ans = answers[pIdx] || '';
-              return `${esc(p)} <input type="text" id="gap-inp-${idx}-${pIdx}" data-correct="${esc(ans)}" placeholder="..." style="display:inline-block;width:150px;padding:6px 12px;border:1.5px solid #cbd5e1;border-radius:8px;font-weight:700;font-size:16px;text-align:center;">`;
+              return `${esc(p)} <input type="text" id="gap-inp-${idx}-${pIdx}" data-correct="${esc(ans)}" placeholder="..." style="display:inline-block;width:160px;padding:6px 14px;border:1.5px solid #cbd5e1;border-radius:8px;font-weight:700;font-size:17.5px;text-align:center;">`;
             }).join('')}
           </div>
           ${ex.optionsBank && ex.optionsBank.length ? `
-            <div style="font-size:14px;color:#475569;margin-bottom:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div style="font-size:15px;color:#475569;margin-bottom:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
               <span style="font-weight:700">Từ gợi ý:</span>
-              ${ex.optionsBank.map(opt => `<span style="background:#f1f5f9;border:1px solid #cbd5e1;padding:3px 10px;border-radius:6px;font-weight:700;font-size:14.5px;color:#1e293b">${esc(opt)}</span>`).join('')}
+              ${ex.optionsBank.map(opt => `<span style="background:#f1f5f9;border:1px solid #cbd5e1;padding:4px 12px;border-radius:8px;font-weight:700;font-size:15.5px;color:#1e293b">${esc(opt)}</span>`).join('')}
             </div>
           ` : ''}
-          <button type="button" class="btn btn-sm btn-p" onclick="window.checkLisGapFill(${idx})" style="font-size:15px;padding:8px 18px">✅ Kiểm tra</button>
-          <div id="gap-fb-${idx}" class="fb" style="display:none;margin-top:12px;font-size:15px"></div>
+          <button type="button" class="btn btn-sm btn-p" onclick="window.checkLisGapFill(${idx})" style="font-size:16px;padding:9px 20px">✅ Kiểm tra</button>
+          <div id="gap-fb-${idx}" class="fb" style="display:none;margin-top:14px;font-size:16.5px"></div>
         </div>
       `;
     }
@@ -240,15 +240,15 @@ export function renderListeningExercises(exercises) {
       const isCorrectTrue = ex.answer === true || String(ex.answer).toLowerCase() === 'true' || ex.answer === 1;
       return `
         <div class="card" style="margin:0;border-left:5px solid #f59e0b" id="lis-ex-card-${idx}">
-          <div style="font-weight:800;font-size:17px;margin-bottom:14px;color:#0f172a;line-height:1.5">
+          <div style="font-weight:800;font-size:18.5px;margin-bottom:16px;color:#0f172a;line-height:1.55">
             Câu ${idx + 1} (True/False): ${esc(ex.statement || ex.question || '')}
           </div>
           <div style="display:flex;gap:14px;">
-            <button class="btn" id="lis-tf-${idx}-true" onclick="window.checkLisTrueFalse(${idx}, true, ${isCorrectTrue})" style="padding:10px 28px;font-size:15.5px;font-weight:700;border:1.5px solid #cbd5e1;border-radius:10px">Đúng (TRUE)</button>
-            <button class="btn" id="lis-tf-${idx}-false" onclick="window.checkLisTrueFalse(${idx}, false, ${isCorrectTrue})" style="padding:10px 28px;font-size:15.5px;font-weight:700;border:1.5px solid #cbd5e1;border-radius:10px">Sai (FALSE)</button>
+            <button class="btn" id="lis-tf-${idx}-true" onclick="window.checkLisTrueFalse(${idx}, true, ${isCorrectTrue})" style="padding:12px 30px;font-size:16.5px;font-weight:700;border:1.5px solid #cbd5e1;border-radius:12px">Đúng (TRUE)</button>
+            <button class="btn" id="lis-tf-${idx}-false" onclick="window.checkLisTrueFalse(${idx}, false, ${isCorrectTrue})" style="padding:12px 30px;font-size:16.5px;font-weight:700;border:1.5px solid #cbd5e1;border-radius:12px">Sai (FALSE)</button>
           </div>
-          <div id="lis-tf-fb-${idx}" class="fb" style="display:none;margin-top:12px;font-size:15px"></div>
-          ${ex.explain ? `<div id="lis-tf-exp-${idx}" class="video-tip-pill" style="display:none;margin-top:10px;font-size:14.5px"><span>💡</span> <span><b>Giải thích:</b> ${esc(ex.explain)}</span></div>` : ''}
+          <div id="lis-tf-fb-${idx}" class="fb" style="display:none;margin-top:14px;font-size:16.5px"></div>
+          ${ex.explain ? `<div id="lis-tf-exp-${idx}" class="video-tip-pill" style="display:none;margin-top:12px;font-size:15.5px"><span>💡</span> <span><b>Giải thích:</b> ${esc(ex.explain)}</span></div>` : ''}
         </div>
       `;
     }

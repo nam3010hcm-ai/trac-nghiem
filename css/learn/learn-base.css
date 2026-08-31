@@ -17,10 +17,10 @@
 
 body.learn-body {
   background: #ffffff;
-  color: #0f172a;
+  color: #1e293b;
   font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 16px;
-  line-height: 1.7;
+  font-size: 17.5px;
+  line-height: 1.8;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
@@ -413,24 +413,24 @@ body.learn-body {
 }
 
 /* =========================================================================
-   ENHANCED READABILITY & TYPOGRAPHY SCALING FOR LEARN PORTAL
+   VNEXPRESS-GRADE EDITORIAL TYPOGRAPHY & READABILITY SCALING
    ========================================================================= */
 /* 5 Kỹ Năng Navigation Tabs */
 .skill-tab-btn,
 .subject-tab {
-  font-size: 15.5px !important;
+  font-size: 16.5px !important;
   font-weight: 700 !important;
-  padding: 13px 18px !important;
+  padding: 14px 20px !important;
 }
 
 .skill-tab-btn .tab-icon,
 .subject-tab span:first-child {
-  font-size: 20px !important;
+  font-size: 22px !important;
 }
 
 /* Sidebar Lesson Selector Cards */
 .lesson-card {
-  padding: 15px 18px;
+  padding: 16px 20px;
   border-radius: 14px;
   background: #ffffff;
   border: 1.5px solid #e2e8f0;
@@ -438,8 +438,8 @@ body.learn-body {
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .lesson-card:hover {
@@ -451,12 +451,12 @@ body.learn-body {
 .lesson-card.active {
   border-color: #2563eb;
   background: #eff6ff;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 4px 18px rgba(37, 99, 235, 0.14);
 }
 
 .lesson-card-title,
 .lesson-card > div:first-child {
-  font-size: 16px !important;
+  font-size: 17.5px !important;
   font-weight: 800 !important;
   color: #0f172a;
   line-height: 1.4;
@@ -464,28 +464,58 @@ body.learn-body {
 
 .lesson-card-meta,
 .lesson-card > div:last-child {
-  font-size: 13.5px !important;
+  font-size: 14.5px !important;
   color: #475569;
 }
 
-/* Content Cards & Questions */
+/* Content Cards & Headings */
 .card {
-  font-size: 16px;
-  line-height: 1.7;
-  padding: 24px 28px;
-  border-radius: 16px;
+  font-size: 17.5px;
+  line-height: 1.8;
+  padding: 26px 32px;
+  border-radius: 18px;
 }
 
-/* MCQ Options */
+/* Reading Passages & Transcripts (Exact VnExpress Article Readability) */
+.reading-passage,
+.transcript-box,
+.passage-content,
+.reading-passage-box {
+  font-size: 19px !important;
+  line-height: 1.95 !important;
+  color: #1e293b !important;
+  letter-spacing: 0.15px;
+}
+
+.reading-passage p,
+.transcript-box p,
+.reading-text p,
+.passage-content p {
+  font-size: 19px !important;
+  line-height: 1.95 !important;
+  margin-bottom: 16px !important;
+  color: #1e293b;
+}
+
+/* MCQ Question Titles & Options */
+.q-title,
+.card > div[style*="font-weight:700"],
+.card > div[style*="font-weight: 700"],
+.card > div[style*="font-weight:800"],
+.card > div[style*="font-weight: 800"] {
+  font-size: 18.5px !important;
+  line-height: 1.55 !important;
+}
+
 .opt {
-  font-size: 15.5px !important;
+  font-size: 17.5px !important;
   font-weight: 600 !important;
-  padding: 12px 18px !important;
+  padding: 14px 20px !important;
   border-radius: 12px !important;
   line-height: 1.5;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   border: 1.5px solid #e2e8f0;
   background: #ffffff;
   color: #1e293b;
@@ -496,40 +526,23 @@ body.learn-body {
 }
 
 .opt:hover {
-  border-color: #3b82f6;
+  border-color: #2563eb;
   background: #f8faff;
-  transform: translateX(3px);
+  transform: translateX(4px);
 }
 
 .okey {
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  font-size: 14.5px !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  font-size: 16px !important;
   font-weight: 800 !important;
-  border-radius: 8px !important;
+  border-radius: 10px !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: #f1f5f9;
-  color: #334155;
-}
-
-/* Reading Passages & Transcripts */
-.reading-passage,
-.transcript-box,
-.passage-content {
-  font-size: 16.5px !important;
-  line-height: 1.85 !important;
   color: #1e293b;
-}
-
-.reading-passage p,
-.transcript-box p,
-.reading-text p {
-  font-size: 16.5px !important;
-  line-height: 1.85 !important;
-  margin-bottom: 12px;
 }
 
 /* Inputs & Textareas */
@@ -538,51 +551,55 @@ textarea,
 .dictation-textarea,
 .short-ans-inp,
 .gap-input {
-  font-size: 15.5px !important;
+  font-size: 17.5px !important;
   font-family: inherit;
+  line-height: 1.6;
 }
 
 .dictation-textarea {
-  font-size: 16px !important;
-  line-height: 1.6;
+  font-size: 18.5px !important;
+  line-height: 1.7 !important;
+  padding: 14px 18px !important;
+  min-height: 95px !important;
 }
 
 /* Speaking & Roleplay Typography */
 .timeline-text {
-  font-size: 15.5px !important;
-  line-height: 1.55 !important;
+  font-size: 17.5px !important;
+  line-height: 1.65 !important;
 }
 
 .timeline-speaker-name {
-  font-size: 13px !important;
+  font-size: 14.5px !important;
   font-weight: 800 !important;
 }
 
 /* Buttons */
 .btn {
-  font-size: 14.5px !important;
+  font-size: 15.5px !important;
   font-weight: 700 !important;
 }
 
 .btn-p {
-  font-size: 15px !important;
+  font-size: 16px !important;
   font-weight: 700 !important;
-  padding: 10px 20px !important;
+  padding: 11px 22px !important;
 }
 
 .btn-sm {
-  font-size: 14px !important;
+  font-size: 14.5px !important;
   font-weight: 700 !important;
-  padding: 6px 14px !important;
+  padding: 7px 16px !important;
 }
 
 /* Feedbacks & Tooltips */
 .fb {
-  font-size: 15px !important;
-  line-height: 1.6;
+  font-size: 16.5px !important;
+  line-height: 1.7;
 }
 
 .video-tip-pill {
-  font-size: 14px !important;
-  line-height: 1.5;
+  font-size: 15.5px !important;
+  line-height: 1.6;
+  padding: 8px 14px;
 }
