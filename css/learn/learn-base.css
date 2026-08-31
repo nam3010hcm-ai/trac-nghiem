@@ -575,21 +575,24 @@ textarea,
 }
 
 /* Buttons */
-.btn {
+body.learn-body .btn {
   font-size: 15.5px !important;
   font-weight: 700 !important;
+  white-space: nowrap;
 }
 
-.btn-p {
+body.learn-body .btn-p {
   font-size: 16px !important;
   font-weight: 700 !important;
   padding: 11px 22px !important;
+  white-space: nowrap;
 }
 
-.btn-sm {
+body.learn-body .btn-sm {
   font-size: 14.5px !important;
   font-weight: 700 !important;
   padding: 7px 16px !important;
+  white-space: nowrap;
 }
 
 /* Feedbacks & Tooltips */
