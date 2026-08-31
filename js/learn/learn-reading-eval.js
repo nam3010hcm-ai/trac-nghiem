@@ -210,4 +210,58 @@ if (typeof window !== 'undefined') {
       playWrongSound();
     }
   };
+
+  window.checkReadTFNG = function(exIdx, itemIdx, userChoice, correctChoice, evidence) {
+    const btnT = document.getElementById(`tfng-btn-t-${exIdx}-${itemIdx}`);
+    const btnF = document.getElementById(`tfng-btn-f-${exIdx}-${itemIdx}`);
+    const btnNG = document.getElementById(`tfng-btn-ng-${exIdx}-${itemIdx}`);
+    const expBox = document.getElementById(`tfng-explain-${exIdx}-${itemIdx}`);
+    if (!btnT || !btnF || !btnNG) return;
+
+    btnT.disabled = true;
+    btnF.disabled = true;
+    btnNG.disabled = true;
+
+    const chosenBtn = userChoice === 'T' ? btnT : (userChoice === 'F' ? btnF : btnNG);
+    chosenBtn.classList.add('selected');
+
+    if (expBox) {
+      expBox.style.display = 'block';
+      const isCorrect = userChoice.toUpperCase() === (correctChoice || 'T').toUpperCase();
+      if (isCorrect) {
+        expBox.style.background = '#f0fdf4';
+        expBox.style.color = '#15803d';
+        expBox.innerHTML = `✅ <b>Chính xác!</b> ${evidence ? `<div style="font-size:12px;margin-top:2px;">📌 ${evidence}</div>` : ''}`;
+        playSuccessSound();
+        addXP(15, 'T/F/NG đúng');
+      } else {
+        expBox.style.background = '#fef2f2';
+        expBox.style.color = '#b91c1c';
+        expBox.innerHTML = `❌ <b>Chưa đúng!</b> Đáp án chuẩn: <b>${correctChoice}</b>. ${evidence ? `<div style="font-size:12px;margin-top:2px;">📌 ${evidence}</div>` : ''}`;
+        playWrongSound();
+      }
+    }
+  };
+
+  window.checkReadSpellingItem = function(exIdx, itIdx, targetWord) {
+    const input = document.getElementById(`read-sp-ans-${exIdx}-${itIdx}`);
+    const fb = document.getElementById(`read-sp-fb-${exIdx}-${itIdx}`);
+    if (!input || !fb) return;
+
+    const userVal = (input.value || '').trim().toUpperCase();
+    const correctVal = (targetWord || '').trim().toUpperCase();
+
+    fb.style.display = 'block';
+    if (userVal === correctVal) {
+      fb.className = 'fb fb-ok';
+      fb.innerHTML = `🎉 <b>Chính xác!</b> Chúc mừng bạn đã xếp đúng từ: <b>${correctVal}</b>`;
+      input.disabled = true;
+      playSuccessSound();
+      addXP(15, 'Xếp từ vựng đọc hiểu');
+    } else {
+      fb.className = 'fb fb-bad';
+      fb.innerHTML = `❌ <b>Chưa chính xác!</b> Hãy thử sắp xếp lại các chữ cái.`;
+      playWrongSound();
+    }
+  };
 }

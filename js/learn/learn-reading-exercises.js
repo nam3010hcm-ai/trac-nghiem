@@ -44,9 +44,10 @@ export function renderReadingExercises(exercises) {
       `;
     }
 
-    if (ex.type === 'mcq_group') {
-      const stageBadgeClass = ex.stage === 'skimming' ? 'stage-skim' : (ex.stage === 'vocabulary' ? 'stage-vocab' : 'stage-comp');
-      const stageBadgeLabel = ex.stage === 'skimming' ? '🔵 Skimming — Main Idea / Overview' : (ex.stage === 'vocabulary' ? '🟡 Vocabulary in Context' : '🟠 Comprehension — Detailed Understanding');
+    if (ex.type === 'mcq_group' || ex.type === 'skimming') {
+      const isSkim = ex.type === 'skimming' || ex.stage === 'skimming';
+      const stageBadgeClass = isSkim ? 'stage-skim' : (ex.stage === 'vocabulary' ? 'stage-vocab' : 'stage-comp');
+      const stageBadgeLabel = isSkim ? '🔵 Skimming — Main Idea / Overview' : (ex.stage === 'vocabulary' ? '🟡 Vocabulary in Context' : '🟠 Comprehension — Detailed Understanding');
       
       return `
         <div class="mcq-group-card" id="read-ex-card-${idx}">
@@ -204,6 +205,33 @@ export function renderReadingExercises(exercises) {
       `;
     }
 
+    if (ex.type === 'tfng' && ex.items) {
+      const items = ex.items || [];
+      return `
+        <div class="tf-group-card" id="read-ex-card-${idx}">
+          <div class="reading-stage-badge stage-comp">🟠 Comprehension — True / False / Not Given (IELTS)</div>
+          <div style="font-weight:800;font-size:16px;color:#9a3412;margin-bottom:6px">
+            ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. True / False / Not Given`}
+          </div>
+          ${ex.subtitle ? `<div style="font-size:13px;color:#64748b;margin-bottom:14px">${esc(ex.subtitle)}</div>` : ''}
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            ${items.map((item, itemIdx) => `
+              <div class="tf-item" id="tfng-item-${idx}-${itemIdx}">
+                <div class="tf-statement-text">${esc(item.statement)}</div>
+                <div class="tf-btn-group" style="display:flex;gap:6px;">
+                  <button type="button" class="tf-toggle-btn" id="tfng-btn-t-${idx}-${itemIdx}" onclick="window.checkReadTFNG(${idx}, ${itemIdx}, 'T', '${esc(item.answer || 'T')}', '${esc(item.evidence || '')}')">TRUE</button>
+                  <button type="button" class="tf-toggle-btn" id="tfng-btn-f-${idx}-${itemIdx}" onclick="window.checkReadTFNG(${idx}, ${itemIdx}, 'F', '${esc(item.answer || 'T')}', '${esc(item.evidence || '')}')">FALSE</button>
+                  <button type="button" class="tf-toggle-btn" id="tfng-btn-ng-${idx}-${itemIdx}" onclick="window.checkReadTFNG(${idx}, ${itemIdx}, 'NG', '${esc(item.answer || 'T')}', '${esc(item.evidence || '')}')">NOT GIVEN</button>
+                </div>
+                <div id="tfng-explain-${idx}-${itemIdx}" class="tf-explain-box" style="display:none"></div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
     if (ex.type === 'summary_cloze') {
       const bank = ex.wordBank || [];
       const blanks = ex.blanks || [];
@@ -276,6 +304,34 @@ export function renderReadingExercises(exercises) {
             <button class="btn btn-p" onclick="window.checkReadingSequencing(${idx})">✅ Kiểm tra thứ tự</button>
           </div>
           <div id="seq-fb-${idx}" class="fb" style="display:none;margin-top:10px"></div>
+        </div>
+      `;
+    }
+
+    if (ex.type === 'backward_spelling') {
+      const items = ex.items || [{ targetWord: ex.targetWord || 'AUTONOMOUS', scrambled: ex.scrambled || 'SUOMONOTUA', clue: ex.clue || 'Tự hành, tự chủ', hint: ex.hint || '' }];
+      return `
+        <div class="matching-exercise-card" id="read-ex-card-${idx}">
+          <div class="reading-stage-badge stage-vocab">🔤 Vocabulary in Context — Backward Spelling</div>
+          <div style="font-weight:800;font-size:16px;color:#3730a3;margin-bottom:6px">
+            ${ex.title ? esc(ex.title) : `Exercise ${idx + 1}. Backward Spelling & Word Puzzle`}
+          </div>
+          ${ex.subtitle ? `<div style="font-size:13px;color:#64748b;margin-bottom:14px">${esc(ex.subtitle)}</div>` : ''}
+
+          <div style="display:flex;flex-direction:column;gap:12px">
+            ${items.map((it, itIdx) => `
+              <div style="background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:10px;padding:14px;">
+                <div style="font-size:13px;color:#475569;margin-bottom:6px;"><b>Gợi ý:</b> ${esc(it.clue || '')} ${it.hint ? `<i>(${esc(it.hint)})</i>` : ''}</div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <span style="font-size:14px;font-weight:800;color:#1e40af;letter-spacing:2px;font-family:monospace;background:#dbeafe;padding:4px 10px;border-radius:6px;">${esc(it.scrambled || '')}</span>
+                  <span style="font-size:14px;font-weight:bold;color:#64748b;">➔</span>
+                  <input type="text" id="read-sp-ans-${idx}-${itIdx}" placeholder="Gõ từ đúng..." style="text-transform:uppercase;font-weight:700;font-size:13px;padding:4px 8px;border-radius:6px;border:1.5px solid #cbd5e1;width:160px;" onkeydown="if(event.key==='Enter') window.checkReadSpellingItem(${idx}, ${itIdx}, '${esc(it.targetWord)}')">
+                  <button type="button" class="btn btn-sm btn-p" onclick="window.checkReadSpellingItem(${idx}, ${itIdx}, '${esc(it.targetWord)}')">Kiểm tra</button>
+                </div>
+                <div id="read-sp-fb-${idx}-${itIdx}" class="fb" style="display:none;margin-top:8px;"></div>
+              </div>
+            `).join('')}
+          </div>
         </div>
       `;
     }

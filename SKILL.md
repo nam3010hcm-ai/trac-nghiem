@@ -274,10 +274,32 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 
 ---
 
+### 15. Hệ Thống Studio 10 Dạng Bài Tập Đọc Hiểu Sư Phạm Chuẩn Quốc Tế
+- **Tệp nguồn:** [`js/units/designer-reading-exercises.js`](file:///Users/namtp/Downloads/trac-nghiem/js/units/designer-reading-exercises.js), [`js/learn/learn-reading-exercises.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-reading-exercises.js), [`js/learn/learn-reading-eval.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-reading-eval.js)
+- **10 Dạng bài tập đọc hiểu chuẩn sư phạm:**
+  1. `pre_reading`: 🟢 Pre-reading (Kích hoạt kiến thức nền & Dự đoán câu hỏi gợi mở thảo luận).
+  2. `skimming`: 🔵 Skimming (Đọc lướt tìm ý chính / Tổng quan văn bản trong 60 giây).
+  3. `scanning_table`: 🔵 Scanning Table (Bảng tra cứu thông tin chi tiết / Số liệu / Sự kiện).
+  4. `matching`: 🟡 Matching Pairs (Nối từ vựng 1–8 với định nghĩa tiếng Anh a–h có hỗ trợ Dán nhanh).
+  5. `true_false_group`: 🟠 True / False (Nhận định Đúng / Sai đọc hiểu trọng tâm).
+  6. `tfng`: 🟠 True / False / Not Given (Đọc hiểu suy luận chuyên sâu chuẩn IELTS Reading).
+  7. `summary_cloze`: 🟣 Summary Cloze (Tóm tắt văn bản điền khuyết từ khóa `[BLANK_1]`, `[BLANK_2]`).
+  8. `sequencing`: 🟣 Sequencing (Sắp xếp chuỗi sự kiện theo đúng thứ tự thời gian / logic).
+  9. `mcq_group`: 🔴 Detailed MCQ (Trắc nghiệm đọc hiểu 4 lựa chọn A, B, C, D kèm giải thích chi tiết).
+  10. `backward_spelling`: 🔤 Backward Spelling (Đánh vần & Game xếp chữ đảo ngược từ vựng đọc hiểu).
+- **Giao diện Studio dành cho Giáo viên (`teacher.html#unit`):**
+  - Dropdown **`➕ Thêm Dạng Bài Tập Mới (Chọn 1/10 dạng)`** cho phép giáo viên chèn nhanh bất kỳ dạng bài tập nào.
+  - Nút **`✨ Nạp trọn bộ 10 dạng mẫu`** (`loadSample10ReadingExercises()`) nạp ngay bộ 10 bài tập mẫu chuẩn sư phạm hoàn chỉnh.
+  - Nút **`🗑️ Xóa hết bài tập`** (`clearAllReadingExercises()`).
+  - Hỗ trợ thêm/xóa dòng câu hỏi, thêm/xóa nhận định, thêm/xóa cặp nối từ bằng nút `➕ Thêm` và `🗑️ Xóa`.
+
+---
+
 ## 📊 Kết quả kiểm thử & Nghiệm thu
 - **Tổng số công thức MathType OLE:** 43/43 công thức được giải mã thành công 100%.
 - **Độ chính xác nhận diện đáp án đúng (In đậm & Bôi đỏ):** 34/34 câu (100%).
 - **Trò chơi Ghép cặp SVG Line:** Vẽ đường cong Bézier chính xác 100%, chấm điểm và đổi trạng thái mượt mà.
 - **Exercise 2 & 3 Language Focus:** Hoạt động hoàn hảo trên mọi thiết bị và màn hình.
 - **Quản lý & Thiết kế Unit 5 Kỹ năng:** Đồng bộ 100% với bảng `learning_units` Supabase, render chuẩn 5 kỹ năng vào `#ud-skill-content`, bộ lọc tìm kiếm & chuyển tab mượt mà không có runtime error.
+- **Hệ thống 10 Dạng Bài Tập Đọc Hiểu Sư Phạm:** Tích hợp đầy đủ Studio tương tác cho giáo viên và Renderer/Chấm điểm tương tác cho học viên với 10 dạng chuẩn quốc tế.
 - **Tỉ lệ lỗi Math input error / runtime error:** 0%.
