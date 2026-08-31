@@ -19,10 +19,17 @@ export function getAuthenticatedStudent() {
   }
 }
 
-export function toggleStudentPassVisible() {
+export function toggleStudentPassVisible(btnEl) {
   const input = $('st-login-pass');
+  const btn = btnEl || $('btn-toggle-st-pass') || (typeof event !== 'undefined' && event?.currentTarget);
   if (!input) return;
-  input.type = input.type === 'password' ? 'text' : 'password';
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (btn) btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    if (btn) btn.textContent = '👁️';
+  }
 }
 
 export async function loginStudent() {

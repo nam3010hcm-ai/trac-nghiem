@@ -92,14 +92,14 @@ window.globalLogout = async function() {
 
       <div class="fg">
         <label>Mã Sinh Viên (ID) hoặc Gmail / Email *</label>
-        <input type="text" id="st-login-email" placeholder="VD: SV001 hoặc student1@gmail.com" autocomplete="username">
+        <input type="text" id="st-login-email" placeholder="VD: SV001 hoặc student1@gmail.com" autocomplete="username" onkeydown="if(event.key==='Enter') window.loginStudent()">
       </div>
 
       <div class="fg">
         <label>Mật Khẩu *</label>
         <div style="position:relative">
-          <input type="password" id="st-login-pass" placeholder="Nhập mật khẩu..." autocomplete="current-password">
-          <button type="button" id="btn-toggle-st-pass" onclick="window.toggleStudentPassVisible()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px">👁️</button>
+          <input type="password" id="st-login-pass" placeholder="Nhập mật khẩu..." autocomplete="current-password" onkeydown="if(event.key==='Enter') window.loginStudent()">
+          <button type="button" id="btn-toggle-st-pass" onclick="window.toggleStudentPassVisible(this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;padding:4px;" title="Ẩn/Hiện mật khẩu">👁️</button>
         </div>
       </div>
 

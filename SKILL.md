@@ -309,6 +309,18 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 
 ---
 
+### 17. Hệ Thống Xác Thực Học Viên & Hiển Thị/Ẩn Mật Khẩu (Toàn Hệ Thống)
+- **Tệp nguồn:** [`learn.html`](file:///Users/namtp/Downloads/trac-nghiem/learn.html), [`student.html`](file:///Users/namtp/Downloads/trac-nghiem/student.html), [`teacher.html`](file:///Users/namtp/Downloads/trac-nghiem/teacher.html), [`js/learn/learn-auth.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-auth.js), [`js/student/student-auth.js`](file:///Users/namtp/Downloads/trac-nghiem/js/student/student-auth.js), [`js/teacher/teacher-auth.js`](file:///Users/namtp/Downloads/trac-nghiem/js/teacher/teacher-auth.js)
+- **Đồng bộ định danh & Phím Enter:**
+  - Nhập **Email** hoặc **Mã Học Viên (ID)** đều được truy vấn tự động không phân biệt hoa thường (`ilike`).
+  - Hỗ trợ nhấn phím **Enter** trên cả ô Email và Mật khẩu để kích hoạt đăng nhập tức thì.
+  - Tự động duy trì phiên đăng nhập liên thông SSO giữa Cổng thi (`student.html`) và Cổng học tập (`learn.html`) qua `localStorage.getItem('st_user')`.
+- **Nút Chuyển Đổi Ẩn/Hiện Mật Khẩu (`👁️` ↔ `🙈`):**
+  - Tích hợp tại tất cả form: Đăng nhập học tập (`#learn-auth-pass`), Đăng nhập phòng thi (`#st-login-pass`), Đăng nhập giảng viên (`#t-pass`), Modal thêm giảng viên (`#t-mod-pass`), Khóa Gemini API Key (`#pdf-gemini-api-key`).
+  - Đảm bảo cơ chế hoán đổi icon trực quan (`👁️` hiển thị ký tự $\leftrightarrow$ `🙈` che mật khẩu) mượt mà trên mọi thiết bị.
+
+---
+
 ## 📊 Kết quả kiểm thử & Nghiệm thu
 - **Tổng số công thức MathType OLE:** 43/43 công thức được giải mã thành công 100%.
 - **Độ chính xác nhận diện đáp án đúng (In đậm & Bôi đỏ):** 34/34 câu (100%).
@@ -317,4 +329,5 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 - **Quản lý & Thiết kế Unit 5 Kỹ năng:** Đồng bộ 100% với bảng `learning_units` Supabase, render chuẩn 5 kỹ năng vào `#ud-skill-content`, bộ lọc tìm kiếm & chuyển tab mượt mà không có runtime error.
 - **Hệ thống 10 Dạng Bài Tập Đọc Hiểu Sư Phạm:** Tích hợp đầy đủ Studio tương tác cho giáo viên và Renderer/Chấm điểm tương tác cho học viên với 10 dạng chuẩn quốc tế.
 - **Hệ thống Video Roleplay & Luyện Phát Âm Speaking:** Tích hợp đầy đủ Studio biên soạn nhân vật, kịch bản thoại đa chiều, dán nhanh kịch bản và luyện phát âm Web Speech AI.
+- **Hệ thống Đăng nhập & Ẩn/Hiện Mật khẩu Toàn diện:** Khắc phục triệt để lỗi đăng nhập học tập `learn.html`, hỗ trợ Enter key, đồng bộ SSO và nút chuyển đổi icon 👁️/🙈 ở mọi nơi.
 - **Tỉ lệ lỗi Math input error / runtime error:** 0%.

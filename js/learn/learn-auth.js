@@ -17,6 +17,19 @@ export function getAuthenticatedStudent() {
   try {
     const raw = sessionStorage.getItem(STUDENT_AUTH_KEY);
     if (raw) return JSON.parse(raw);
+    const stRaw = localStorage.getItem('st_user');
+    if (stRaw) {
+      const parsed = JSON.parse(stRaw);
+      if (parsed && (parsed.id || parsed.code)) {
+        return {
+          id: parsed.id || parsed.code,
+          full_name: parsed.full_name || parsed.name || 'Học Viên',
+          class_name: parsed.class_name || 'Lớp Tiêu Chuẩn',
+          email: parsed.email || `${(parsed.id || parsed.code).toLowerCase()}@trac-nghiem.edu.vn`,
+          is_active: true
+        };
+      }
+    }
   } catch (e) {}
   return null;
 }
@@ -39,31 +52,31 @@ export function formatStudyTime(seconds) {
   return `${mins} phút`;
 }
 
-export function toggleLearnPassVisible() {
-  const inp = document.getElementById('learn-login-pass');
-  const btn = document.getElementById('learn-toggle-pass-btn');
-  if (!inp || !btn) return;
+export function toggleLearnPassVisible(btnEl) {
+  const inp = document.getElementById('learn-auth-pass') || document.getElementById('learn-login-pass');
+  const btn = btnEl || document.getElementById('btn-toggle-learn-pass') || document.getElementById('learn-toggle-pass-btn') || (typeof event !== 'undefined' && event?.currentTarget);
+  if (!inp) return;
   if (inp.type === 'password') {
     inp.type = 'text';
-    btn.textContent = '🙈';
+    if (btn) btn.textContent = '🙈';
   } else {
     inp.type = 'password';
-    btn.textContent = '👁️';
+    if (btn) btn.textContent = '👁️';
   }
 }
 
 export async function loginLearnStudent() {
-  const codeInp = document.getElementById('learn-login-code');
-  const passInp = document.getElementById('learn-login-pass');
-  const errBox = document.getElementById('learn-login-error');
-  const btn = document.getElementById('learn-login-btn');
+  const codeInp = document.getElementById('learn-auth-email') || document.getElementById('learn-login-code') || document.getElementById('learn-login-email');
+  const passInp = document.getElementById('learn-auth-pass') || document.getElementById('learn-login-pass');
+  const errBox = document.getElementById('learn-login-err') || document.getElementById('learn-login-error');
+  const btn = document.getElementById('btn-learn-login') || document.getElementById('learn-login-btn');
 
-  const code = (codeInp?.value || '').trim();
+  const userInput = (codeInp?.value || '').trim();
   const pass = (passInp?.value || '').trim();
 
-  if (!code || !pass) {
+  if (!userInput || !pass) {
     if (errBox) {
-      errBox.textContent = '⚠️ Vui lòng nhập đầy đủ Mã học viên và Mật khẩu!';
+      errBox.textContent = '⚠️ Vui lòng nhập đầy đủ Mã Học Viên (ID) / Email và Mật khẩu!';
       errBox.style.display = 'block';
     }
     return;
@@ -77,27 +90,41 @@ export async function loginLearnStudent() {
     const client = db();
 
     if (client) {
-      const { data, error } = await client
-        .from('students')
-        .select('*')
-        .eq('id', code)
-        .maybeSingle();
+      let query = client.from('students').select('*');
+      if (userInput.includes('@')) {
+        query = query.ilike('email', userInput);
+      } else {
+        query = query.or(`id.ilike."${userInput}",email.ilike."${userInput}"`);
+      }
 
-      if (!error && data) {
-        const dbPass = data.password || data.code || '123456';
-        if (pass === dbPass || pass === '123456') {
-          studentData = data;
+      const { data, error } = await query;
+
+      if (!error && data && data.length > 0) {
+        const matched = data.find(st => {
+          const dbPass = st.password || st.code || '123456';
+          return pass === dbPass || pass === '123456';
+        });
+
+        if (matched) {
+          studentData = matched;
+        } else {
+          const firstSt = data[0];
+          const dbPass = firstSt.password || firstSt.code || '123456';
+          if (pass === dbPass || pass === '123456') {
+            studentData = firstSt;
+          }
         }
       }
     }
 
     if (!studentData) {
-      if (pass === '123456' || pass === code) {
+      if (pass === '123456' || pass === userInput) {
+        const idClean = userInput.replace(/@.*$/, '');
         studentData = {
-          id: code,
-          full_name: `Học Viên (${code})`,
+          id: idClean.toUpperCase(),
+          full_name: `Học Viên (${idClean})`,
           class_name: 'Lớp Tiêu Chuẩn',
-          email: `${code.toLowerCase()}@trac-nghiem.edu.vn`,
+          email: userInput.includes('@') ? userInput : `${userInput.toLowerCase()}@trac-nghiem.edu.vn`,
           is_active: true
         };
       }
@@ -105,7 +132,7 @@ export async function loginLearnStudent() {
 
     if (!studentData) {
       if (errBox) {
-        errBox.textContent = '❌ Mã học viên hoặc mật khẩu không chính xác!';
+        errBox.textContent = '❌ Mã học viên hoặc mật khẩu không chính xác! (Mặc định: 123456)';
         errBox.style.display = 'block';
       }
       return;

@@ -1891,7 +1891,10 @@ window.globalLogout = async function() {
 
     <div class="fg" style="margin-bottom:20px;">
       <label style="font-size:12.5px;font-weight:700;color:#334155;">Mật Khẩu Khởi Tạo</label>
-      <input type="password" id="t-mod-pass" placeholder="Nhập mật khẩu..." style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;">
+      <div style="position:relative;">
+        <input type="password" id="t-mod-pass" placeholder="Nhập mật khẩu..." style="width:100%;padding:8px 36px 8px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;box-sizing:border-box;">
+        <button type="button" onclick="const p=document.getElementById('t-mod-pass'); if(p.type==='password'){p.type='text';this.textContent='🙈';}else{p.type='password';this.textContent='👁️';}" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:15px;" title="Ẩn/Hiện mật khẩu">👁️</button>
+      </div>
     </div>
 
     <div style="display:flex;gap:10px;justify-content:flex-end;">
@@ -2315,7 +2318,10 @@ document.addEventListener('keydown', function(e) {
                 <span>🔑</span> Khóa Gemini API Key (Dành riêng cho file PDF):
               </div>
               <div style="display:flex; gap:8px; align-items:center;">
-                <input type="password" id="pdf-gemini-api-key" placeholder="Dán Gemini API Key (VD: AIzaSy...)" style="flex:1; padding:6px 10px; font-size:12.5px; font-family:monospace; border:1px solid #86efac; border-radius:6px; background:#ffffff;">
+                <div style="position:relative; flex:1;">
+                  <input type="password" id="pdf-gemini-api-key" placeholder="Dán Gemini API Key (VD: AIzaSy...)" style="width:100%; padding:6px 36px 6px 10px; font-size:12.5px; font-family:monospace; border:1px solid #86efac; border-radius:6px; background:#ffffff; box-sizing:border-box;">
+                  <button type="button" onclick="const p=document.getElementById('pdf-gemini-api-key'); if(p.type==='password'){p.type='text';this.textContent='🙈';}else{p.type='password';this.textContent='👁️';}" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;" title="Ẩn/Hiện API Key">👁️</button>
+                </div>
                 <button type="button" class="btn btn-sm" onclick="window.saveGeminiApiKeyFromInput()" style="background:#16a34a; color:#ffffff; font-weight:700; border:none; padding:6px 14px; border-radius:6px; font-size:12px;">💾 Lưu Key</button>
               </div>
             </div>
