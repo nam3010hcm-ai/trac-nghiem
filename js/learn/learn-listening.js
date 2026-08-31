@@ -169,37 +169,68 @@ export function renderListeningExercises(exercises) {
     }
 
     if (exType === 'dictation') {
-      const rawSent = ex.sentence || ex.text || ex.correct || '';
+      const rawSent = ex.targetSentence || ex.sentence || ex.text || ex.correct || ex.sampleAnswer || '';
       const safeSent = String(rawSent).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const promptText = ex.prompt || ex.question || ex.title || 'Nghe và chép chính tả (Dictation)';
       return `
         <div class="card" style="margin:0;border-left:4px solid #0284c7" id="lis-ex-card-${idx}">
-          <div style="font-weight:700;font-size:15px;margin-bottom:6px;color:#1e293b">Câu ${idx + 1}: Nghe và chép chính tả (Dictation)</div>
+          <div style="font-weight:700;font-size:15px;margin-bottom:6px;color:#1e293b">Câu ${idx + 1}: ${esc(promptText)}</div>
           <div style="font-size:13px;color:#64748b;margin-bottom:12px">💡 Bấm nút nghe câu mẫu, sau đó gõ lại chính xác từng từ bạn nghe được:</div>
-          <div style="margin-bottom:12px;display:flex;gap:10px">
-            <button class="btn btn-sm" onclick="window.speakDictation('${safeSent}')" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd">🔊 Nghe câu này</button>
+          <div style="margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button type="button" class="btn btn-sm" id="btn-dict-play-${idx}" onclick="window.speakDictation('${safeSent}', ${idx})" style="background:#e0f2fe;color:#0369a1;border:1.5px solid #bae6fd;font-weight:700;padding:7px 16px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+              <span id="dict-icon-${idx}">🔊</span>
+              <span id="dict-label-${idx}">Nghe câu này</span>
+            </button>
+            ${ex.hint ? `<span style="font-size:12px;color:#64748b;background:#f1f5f9;padding:4px 10px;border-radius:6px;">💡 Gợi ý: ${esc(ex.hint)}</span>` : ''}
           </div>
-          <textarea id="dictation-input-${idx}" class="dictation-textarea" placeholder="Gõ lại câu bạn nghe được tại đây..."></textarea>
+          <textarea id="dictation-input-${idx}" class="dictation-textarea" placeholder="Gõ lại câu bạn nghe được tại đây..." style="width:100%;min-height:75px;padding:10px 12px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:14px;box-sizing:border-box;resize:vertical;"></textarea>
           <div style="display:flex;gap:10px;margin-top:10px">
-            <button class="btn btn-p" onclick="window.checkDictation(${idx}, '${safeSent}')">✅ Kiểm tra kết quả</button>
+            <button type="button" class="btn btn-p" onclick="window.checkDictation(${idx}, '${safeSent}')" style="font-weight:700;">✅ Kiểm tra kết quả</button>
           </div>
-          <div id="dictation-fb-${idx}" class="fb" style="display:none"></div>
+          <div id="dictation-fb-${idx}" class="fb" style="display:none;margin-top:10px;"></div>
+        </div>
+      `;
+    }
+
+    if (exType === 'short_answer' || exType === 'qa') {
+      const qText = ex.question || ex.title || `Câu hỏi ${idx + 1}`;
+      const sampleAns = ex.sampleAnswer || ex.answer || '';
+      const safeKw = JSON.stringify(ex.keywords || []).replace(/"/g, '&quot;');
+      const safeSampleAns = String(sampleAns).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      return `
+        <div class="card" style="margin:0;border-left:4px solid #06b6d4" id="lis-ex-card-${idx}">
+          <div style="font-weight:700;font-size:15px;margin-bottom:6px;color:#1e293b">Câu ${idx + 1}: ${esc(qText)}</div>
+          ${ex.hint ? `<div style="font-size:12.5px;color:#64748b;margin-bottom:10px">💡 <b>Gợi ý:</b> ${esc(ex.hint)}</div>` : ''}
+          <input type="text" id="short-ans-inp-${idx}" placeholder="Nhập câu trả lời của bạn tại đây..." style="width:100%;padding:9px 12px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:14px;box-sizing:border-box;">
+          <div style="display:flex;gap:10px;margin-top:10px">
+            <button type="button" class="btn btn-p" onclick="window.checkLisShortAnswer(${idx}, '${safeSampleAns}', ${safeKw})">✅ Kiểm tra câu trả lời</button>
+          </div>
+          <div id="short-ans-fb-${idx}" class="fb" style="display:none;margin-top:10px;"></div>
         </div>
       `;
     }
 
     if (exType === 'gap_fill' || exType === 'fill_in_the_blank') {
       const rawSent = ex.sentence || ex.text || '';
-      const correctVal = ex.correct || ex.answer || '';
+      const answers = Array.isArray(ex.answers) ? ex.answers : [ex.correct || ex.answer || ''];
       const parts = rawSent.split(/\[___\]|___|\.{3,}/);
       return `
         <div class="card" style="margin:0;border-left:4px solid #8b5cf6" id="lis-ex-card-${idx}">
           <div style="font-weight:700;font-size:15px;margin-bottom:6px;color:#1e293b">Câu ${idx + 1}: Nghe & Điền từ còn thiếu</div>
-          <div style="font-size:14px;color:#334155;line-height:1.8;margin-bottom:12px;">
-            ${esc(parts[0] || '')}
-            <input type="text" id="gap-inp-${idx}-0" data-correct="${esc(correctVal)}" placeholder="..." style="display:inline-block;width:140px;padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-weight:700;text-align:center;">
-            ${esc(parts[1] || '')}
+          <div style="font-size:14px;color:#334155;line-height:2.2;margin-bottom:12px;">
+            ${parts.map((p, pIdx) => {
+              if (pIdx >= answers.length) return esc(p);
+              const ans = answers[pIdx] || '';
+              return `${esc(p)} <input type="text" id="gap-inp-${idx}-${pIdx}" data-correct="${esc(ans)}" placeholder="..." style="display:inline-block;width:130px;padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-weight:700;text-align:center;">`;
+            }).join('')}
           </div>
-          <button class="btn btn-sm btn-p" onclick="window.checkLisGapFill(${idx})">✅ Kiểm tra</button>
+          ${ex.optionsBank && ex.optionsBank.length ? `
+            <div style="font-size:12.5px;color:#64748b;margin-bottom:12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+              <span>Từ gợi ý:</span>
+              ${ex.optionsBank.map(opt => `<span style="background:#f1f5f9;border:1px solid #cbd5e1;padding:2px 8px;border-radius:4px;font-weight:700;color:#1e293b">${esc(opt)}</span>`).join('')}
+            </div>
+          ` : ''}
+          <button type="button" class="btn btn-sm btn-p" onclick="window.checkLisGapFill(${idx})">✅ Kiểm tra</button>
           <div id="gap-fb-${idx}" class="fb" style="display:none;margin-top:10px;"></div>
         </div>
       `;
@@ -317,7 +348,30 @@ if (typeof window !== 'undefined') {
     }
   };
 
-  window.speakDictation = function(sentence) {
-    speakText(sentence, { rate: currentPlaybackSpeed, lang: 'en-US' });
+  window.speakDictation = function(sentence, idx) {
+    const text = sentence || (currentLisLesson ? (currentLisLesson.audioText || currentLisLesson.transcript) : '');
+    if (!text) {
+      alert('Không tìm thấy câu để phát âm.');
+      return;
+    }
+    const btn = idx !== undefined ? document.getElementById(`btn-dict-play-${idx}`) : null;
+    const label = idx !== undefined ? document.getElementById(`dict-label-${idx}`) : null;
+    if (btn) {
+      btn.style.background = '#dcfce7';
+      btn.style.color = '#15803d';
+    }
+    if (label) label.textContent = 'Đang đọc...';
+
+    speakText(text, {
+      rate: currentPlaybackSpeed || 0.9,
+      lang: 'en-US',
+      onEnd: () => {
+        if (btn) {
+          btn.style.background = '#e0f2fe';
+          btn.style.color = '#0369a1';
+        }
+        if (label) label.textContent = 'Nghe câu này';
+      }
+    });
   };
 }

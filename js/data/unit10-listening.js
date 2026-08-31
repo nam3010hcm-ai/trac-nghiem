@@ -5,7 +5,7 @@ export const unit10Listening = [
     "topic": "Travel & Tourism",
     "level": "A2 - B1",
     "mediaType": "audio",
-    "audioUrl": "https://cdn.freesound.org/previews/530/530415_11861866-lq.mp3",
+    "audioUrl": "",
     "videoUrl": "",
     "audioText": "Good morning. Where are you flying to today? I'm flying to London Heathrow on flight BA178. May I see your passport and ticket, please? Here you go. Would you prefer a window seat or an aisle seat? An aisle seat, please. Great, here is your boarding pass. Gate 24B starts boarding at 10:30.",
     "transcript": "Agent: Good morning. Where are you flying to today?\nPassenger: I'm flying to London Heathrow on flight BA178.\nAgent: May I see your passport and ticket, please?\nPassenger: Here you go.\nAgent: Would you prefer a window seat or an aisle seat?\nPassenger: An aisle seat, please.\nAgent: Great, here is your boarding pass. Gate 24B starts boarding at 10:30.",
@@ -76,6 +76,7 @@ export const unit10Listening = [
         "type": "dictation",
         "prompt": "Nghe và gõ lại chính xác câu thông báo cửa khởi hành:",
         "targetSentence": "Gate 24B starts boarding at 10:30.",
+        "sentence": "Gate 24B starts boarding at 10:30.",
         "hint": "Bắt đầu bằng \"Gate...\""
       },
       {

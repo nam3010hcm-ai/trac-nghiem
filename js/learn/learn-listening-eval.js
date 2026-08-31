@@ -125,9 +125,46 @@ export function checkDictation(idx, targetSentence) {
   }
 }
 
+export function checkLisShortAnswer(idx, sampleAnswer, keywords = []) {
+  const inputEl = document.getElementById(`short-ans-inp-${idx}`);
+  const fb = document.getElementById(`short-ans-fb-${idx}`);
+  if (!inputEl || !fb) return;
+  const userInput = inputEl.value.trim();
+  if (!userInput) { alert('Vui lòng nhập câu trả lời trước khi kiểm tra!'); return; }
+
+  const cleanUser = userInput.toLowerCase();
+  let matchedKw = 0;
+  if (Array.isArray(keywords) && keywords.length) {
+    keywords.forEach(kw => {
+      if (cleanUser.includes(String(kw).toLowerCase())) matchedKw++;
+    });
+  }
+
+  const isPass = keywords.length ? (matchedKw >= Math.ceil(keywords.length * 0.5)) : (cleanUser.length > 5);
+
+  fb.style.display = 'block';
+  if (isPass) {
+    fb.className = 'fb fb-ok';
+    fb.innerHTML = `
+      <div style="font-weight:700;color:#16a34a;margin-bottom:4px">🎉 Rất tốt! Bạn đã trả lời đúng ý chính.</div>
+      ${sampleAnswer ? `<div style="font-size:13px;color:#334155;margin-top:6px">💡 <b>Câu trả lời mẫu tham khảo:</b> <i>${sampleAnswer}</i></div>` : ''}
+    `;
+    playSuccessSound();
+    addXP(20, 'Trả lời đúng câu hỏi');
+  } else {
+    fb.className = 'fb fb-bad';
+    fb.innerHTML = `
+      <div style="font-weight:700;color:#dc2626;margin-bottom:4px">⚠️ Câu trả lời chưa đủ ý. Hãy đối chiếu với gợi ý hoặc bài nghe!</div>
+      ${sampleAnswer ? `<div style="font-size:13px;color:#334155;margin-top:6px">💡 <b>Câu trả lời mẫu:</b> <i>${sampleAnswer}</i></div>` : ''}
+    `;
+    playWrongSound();
+  }
+}
+
 if (typeof window !== 'undefined') {
   window.checkLisMCQ = checkLisMCQ;
   window.checkLisGapFill = checkLisGapFill;
   window.checkLisTrueFalse = checkLisTrueFalse;
   window.checkDictation = checkDictation;
+  window.checkLisShortAnswer = checkLisShortAnswer;
 }

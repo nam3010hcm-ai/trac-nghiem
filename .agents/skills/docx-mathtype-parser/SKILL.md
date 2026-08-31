@@ -329,8 +329,9 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
      - ✅ **Đúng:** `String(ex.sentence || ex.text || ex.correct || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')`.
   2. **Hỗ trợ đa dạng cấu trúc bài tập Listening:**
      - `mcq`: Trắc nghiệm 4 lựa chọn có `question`, `options`, `answer`, `explain`.
-     - `dictation`: Nghe chép chính tả với chuỗi câu `sentence` / `text` an toàn và so khớp sai khác (diff word) có `filter(Boolean)`.
-     - `gap_fill`: Điền từ vào chỗ trống `[___]` hoặc `...`.
+     - `dictation`: Nghe chép chính tả với chuỗi câu `ex.targetSentence || ex.sentence || ex.text || ex.correct` an toàn, có fallback sang `audioText` bài học và so khớp sai khác (diff word) có `filter(Boolean)`.
+     - `short_answer` / `qa`: Trả lời câu hỏi ngắn với `keywords` linh hoạt và hiển thị câu trả lời mẫu `sampleAnswer`.
+     - `gap_fill`: Điền từ vào chỗ trống `[___]` hoặc `...`, hỗ trợ mảng đáp án `answers` và ngân hàng từ gợi ý `optionsBank`.
      - `true_false`: Nhận định Đúng/Sai hỗ trợ cả boolean và chuỗi `'true'`/`'false'`.
   3. **Thoát ký tự chuẩn (Escaping) trong HTML attributes:**
      - Luôn bọc qua `esc(...)` hoặc thay thế dấu nháy đơn/kép an toàn khi chèn vào `onclick="window.speakPronunciation('...')"` để tránh phá vỡ cú pháp DOM inline.
