@@ -39,9 +39,22 @@ export function loadLanguageFocusView() {
     ];
     bodyContent = renderPastFormVerbsView(verbs);
   } else if (tab === 'cards') {
-    const fCards = safeArray(langObj?.flashcards, []);
-    const currentCard = fCards[currentCardIdx] || fCards[0] || { word: 'Practice', meaning: 'Luyện tập', ipa: '/ˈpræk.tɪs/', pos: 'noun' };
-    bodyContent = renderFlashcardsView(currentCard, fCards.length || 1);
+    let fCards = safeArray(langObj?.flashcards, []);
+    if (!fCards.length && currentUnit?.vocabulary && typeof currentUnit.vocabulary === 'object') {
+      fCards = Object.entries(currentUnit.vocabulary).map(([word, info], idx) => ({
+        id: `fc_auto_${idx}`,
+        word,
+        pos: info?.pos || 'vocabulary',
+        ipa: info?.ipa || '',
+        meaning: info?.meaning || info?.definition || '',
+        example: info?.example || '',
+        synonyms: info?.synonyms || '',
+        image: info?.image || ''
+      }));
+    }
+    const safeIdx = Math.min(Math.max(0, currentCardIdx), Math.max(0, fCards.length - 1));
+    const currentCard = fCards[safeIdx] || (fCards.length ? fCards[0] : null);
+    bodyContent = renderFlashcardsView(currentCard, fCards.length);
   }
 
   workspace.innerHTML = `

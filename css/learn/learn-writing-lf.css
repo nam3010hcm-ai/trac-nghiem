@@ -335,3 +335,336 @@
   50% { transform: scale(1.02); }
   100% { transform: scale(1); }
 }
+
+/* =========================================================================
+   LANGUAGE FOCUS SUBNAV BAR
+   ========================================================================= */
+.skill-subnav-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1.5px solid #e2e8f0;
+  padding: 8px 12px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.skill-subnav-btn {
+  padding: 10px 18px;
+  font-size: 14.5px;
+  font-weight: 700;
+  border-radius: 12px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.skill-subnav-btn:hover {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.skill-subnav-btn.active {
+  background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+  color: #ffffff;
+  border-color: #4f46e5;
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.35);
+  transform: translateY(-1px);
+}
+
+/* =========================================================================
+   LUXURY 3D INTERACTIVE FLASHCARD COMPONENT
+   ========================================================================= */
+.flashcard-3d-wrapper {
+  max-width: 520px;
+  margin: 0 auto;
+  perspective: 1200px;
+  -webkit-perspective: 1200px;
+}
+
+.flashcard-3d-scene {
+  width: 100%;
+  min-height: 330px;
+  height: 340px;
+  position: relative;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.flashcard-3d-scene.flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-3d-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+.flashcard-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 26px;
+  box-sizing: border-box;
+  box-shadow: 0 16px 40px -10px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(226, 232, 240, 0.9);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.flashcard-3d-scene:hover .flashcard-face {
+  box-shadow: 0 24px 50px -10px rgba(37, 99, 235, 0.22), 0 0 0 2px #93c5fd;
+}
+
+/* Front Face */
+.flashcard-front {
+  background: linear-gradient(145deg, #ffffff 0%, #f8faff 100%);
+  border: 2px solid #e2eaf5;
+  transform: rotateY(0deg);
+  z-index: 2;
+}
+
+/* Back Face */
+.flashcard-back {
+  background: linear-gradient(145deg, #090d16 0%, #1e1b4b 60%, #0f172a 100%);
+  border: 2px solid rgba(99, 102, 241, 0.5);
+  color: #ffffff;
+  transform: rotateY(180deg);
+  z-index: 1;
+  overflow-y: auto;
+}
+
+/* Badges & Tags */
+.fc-top-bar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.fc-pos-tag {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fc-index-badge {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+.flashcard-back .fc-pos-tag {
+  color: #93c5fd;
+  background: rgba(37, 99, 235, 0.25);
+  border-color: rgba(147, 197, 253, 0.4);
+}
+
+.flashcard-back .fc-index-badge {
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Word & Typography */
+.fc-main-body {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: auto 0;
+  width: 100%;
+}
+
+.flashcard-word {
+  font-size: 34px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.flashcard-ipa {
+  font-family: 'Courier New', monospace;
+  font-size: 19px;
+  color: #4f46e5;
+  font-weight: 700;
+  background: #f5f3ff;
+  padding: 3px 14px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.fc-speak-btn {
+  margin-top: 6px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+  transition: all 0.2s ease;
+}
+
+.fc-speak-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.45);
+}
+
+.flashcard-meaning {
+  font-size: 21px;
+  font-weight: 800;
+  color: #fcd34d;
+  line-height: 1.45;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.flashcard-example-box {
+  background: rgba(255, 255, 255, 0.08);
+  border-left: 3.5px solid #6366f1;
+  border-radius: 0 10px 10px 0;
+  padding: 10px 16px;
+  margin-bottom: 10px;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.flashcard-example-text {
+  font-size: 15.5px;
+  font-style: italic;
+  color: #e2e8f0;
+  line-height: 1.55;
+}
+
+.flashcard-synonyms {
+  font-size: 14px;
+  color: #6ee7b7;
+  font-weight: 600;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 4px 14px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+/* Flip Indicator Hint */
+.fc-flip-hint {
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  animation: bounceSlow 2s infinite ease-in-out;
+}
+
+.flashcard-back .fc-flip-hint {
+  color: #94a3b8;
+}
+
+@keyframes bounceSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* Action Bar Controls */
+.fc-controls-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+.fc-nav-btn {
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 12px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #1e293b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.fc-nav-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+
+.fc-nav-btn.primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+
+.fc-nav-btn.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+}
+
+.fc-nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fc-flip-action-btn {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border-color: #ddd6fe;
+}
+
+.fc-flip-action-btn:hover:not(:disabled) {
+  background: #ede9fe;
+  border-color: #c4b5fd;
+}

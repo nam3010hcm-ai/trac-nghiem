@@ -362,6 +362,30 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
   4. **Tránh lỗi mạng 404 từ liên kết âm thanh bên thứ ba:**
      - Các link âm thanh ngoài (như `freesound.org`, v.v.) có thể hết hạn hoặc chặn CORS. Nếu không có URL CDN cố định hoặc Supabase Storage chính thức, hãy đặt `audioUrl: ""` để hệ thống tự động kích hoạt **Web Speech Native Voice (Giọng đọc AI bản xứ)** mượt mà 100%, không sinh lỗi đỏ `404 Not Found` trên trình duyệt.
 
+### 21. Kiến Trúc Thẻ Ghi Nhớ Từ Vựng 3D Tương Tác & Điều Hướng Phím (Flashcards 3D)
+- **Tệp nguồn:** [`js/learn/learn-flashcards.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-flashcards.js), [`js/learn/learn-lang-focus.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-lang-focus.js), [`css/learn/learn-writing-lf.css`](file:///Users/namtp/Downloads/trac-nghiem/css/learn/learn-writing-lf.css)
+- **Kiến trúc CSS 3D Flipping Transform:**
+  - Container `.flashcard-3d-wrapper` sở hữu `perspective: 1200px;` tạo không gian 3 chiều có chiều sâu chân thực.
+  - Sân khấu thẻ `.flashcard-3d-scene` sở hữu `transform-style: preserve-3d; transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);`.
+  - Khi được click hoặc kích hoạt, class `.flipped` kích hoạt `transform: rotateY(180deg);`.
+  - Cả 2 mặt `.flashcard-front` và `.flashcard-back` được gán `backface-visibility: hidden; position: absolute; inset: 0;` giúp che giấu mặt đối diện khi quay, chống hiện tượng đè chữ.
+- **Tương tác đa dạng:**
+  - Click bất kỳ điểm nào trên thẻ hoặc bấm nút *"🔄 Lật thẻ"* để đổi mặt.
+  - Tích hợp thanh tiến độ học tập `Progress Bar` theo tỷ lệ thẻ đã xem.
+  - Nút phát âm Web Speech AI Voice `🔊 Nghe phát âm` với tốc độ chuẩn bản xứ.
+  - Hỗ trợ phím tắt bàn phím: Phím mũi tên `← / →` để chuyển từ trước/sau, phím `Space` hoặc `Enter` để lật 3D tức thì.
+
+---
+
+### 22. Quản Lý Favicon & Cỡ Chữ (Typography Scaling) Cho Cổng Học Tập
+- **Tệp nguồn:** `favicon.ico`, `favicon.svg`, [`css/learn/learn-base.css`](file:///Users/namtp/Downloads/trac-nghiem/css/learn/learn-base.css), [`js/learn/learn-listening.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-listening.js), [`js/learn/learn-reading-engine.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-reading-engine.js)
+- **Tối ưu Favicon:** Khởi tạo `favicon.svg` và `favicon.ico` nhị phân tại thư mục gốc, liên kết trên tất cả các trang HTML (`learn.html`, `index.html`, `student.html`, `teacher.html`) loại bỏ hoàn toàn lỗi mạng `404 Not Found`.
+- **Tối ưu Typography To & Rõ Nét:**
+  - Base body: `16px`, `line-height: 1.7`.
+  - Transcript bài nghe & Đoạn văn đọc hiểu: `17.5px`, `line-height: 1.95 - 2.0`.
+  - Tiêu đề bài học: `22px` (`font-weight: 800`).
+  - Lựa chọn trắc nghiệm & Ô gõ chính tả: `16px - 16.5px`.
+
 ---
 
 ## 📊 Kết quả kiểm thử & Nghiệm thu
@@ -376,4 +400,5 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 - **Xử lý An toàn Null-Safe 5 Kỹ Năng:** Khắc phục hoàn toàn lỗi crash `TypeError: Cannot read properties of undefined (reading 'replace')` khi chuyển tab Listening/Speaking/Reading.
 - **Hero Audio Player & Big Speaker Component:** Nâng cấp nút loa lớn 64px, animation phát sáng và thanh điều khiển tốc độ trực quan 100%.
 - **Phát Âm Dictation & Short Answer Studio:** Hoạt động chính xác 100%, hỗ trợ Web Speech AI Native Voice không lỗi mạng 404.
+- **Thẻ Từ Vựng 3D (Flashcards 3D Interactive):** Hiệu ứng quay 3 chiều 180 độ, thanh tiến độ, phát âm và điều hướng mượt mà 100%.
 - **Tỉ lệ lỗi Math input error / runtime error:** 0%.
