@@ -81,13 +81,13 @@ export function loadReadingLesson(id) {
             <img src="${r.image}" style="width:100%;height:180px;object-fit:cover;display:block" alt="${esc(r.title)}" onerror="this.style.display='none'">
           </div>
         ` : ''}
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #e2e8f0;padding-bottom:10px;flex-wrap:wrap;gap:8px">
-          <h3 style="margin:0;font-size:18px;font-weight:800;color:#0f172a">📖 ${esc(r.title)}</h3>
-          <span style="font-size:12px;color:#0369a1;background:#e0f2fe;border:1px solid #bae6fd;padding:3px 10px;border-radius:20px;font-weight:700;display:inline-flex;align-items:center;gap:4px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid #e2e8f0;padding-bottom:12px;flex-wrap:wrap;gap:10px">
+          <h3 style="margin:0;font-size:22px;font-weight:800;color:#0f172a">📖 ${esc(r.title)}</h3>
+          <span style="font-size:13.5px;color:#0369a1;background:#e0f2fe;border:1px solid #bae6fd;padding:4px 12px;border-radius:20px;font-weight:700;display:inline-flex;align-items:center;gap:6px">
             💡 Nhấp vào từ màu xanh để tra từ & nghe phát âm
           </span>
         </div>
-        <div style="white-space:pre-wrap;line-height:1.95;font-size:15px;color:#1e293b">${annotatedPassage}</div>
+        <div style="white-space:pre-wrap;line-height:2.0;font-size:17.5px;color:#1e293b">${annotatedPassage}</div>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:16px;max-height:560px;overflow-y:auto;padding-right:6px">

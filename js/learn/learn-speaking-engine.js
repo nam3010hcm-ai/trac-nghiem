@@ -80,24 +80,24 @@ export function loadSpeakingLesson(id) {
         ${s.phrases.map((p, idx) => {
           const safeText = String(p.text || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
           return `
-          <div class="card" style="margin:0;border-left:4px solid #f43f5e">
-            <div style="display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:8px">
+          <div class="card" style="margin:0;border-left:5px solid #f43f5e">
+            <div style="display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:10px">
               <div>
-                <div style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:4px">${esc(p.text || '')}</div>
-                <div style="font-family:'Courier New',monospace;color:#e11d48;font-size:14px">${esc(p.ipa || '')}</div>
-                <div style="font-size:13px;color:#475569;margin-top:4px">💡 <i>${esc(p.meaning || '')}</i></div>
-                ${p.tip ? `<div class="video-tip-pill" style="margin-top:8px"><span>🎯</span> <span><b>Mẹo phát âm:</b> ${esc(p.tip)}</span></div>` : ''}
+                <div style="font-size:20px;font-weight:800;color:#0f172a;margin-bottom:6px">${esc(p.text || '')}</div>
+                <div style="font-family:'Courier New',monospace;color:#e11d48;font-size:16px;font-weight:700">${esc(p.ipa || '')}</div>
+                <div style="font-size:15px;color:#334155;margin-top:6px">💡 <i>${esc(p.meaning || '')}</i></div>
+                ${p.tip ? `<div class="video-tip-pill" style="margin-top:10px;font-size:14.5px"><span>🎯</span> <span><b>Mẹo phát âm:</b> ${esc(p.tip)}</span></div>` : ''}
               </div>
-              <button class="btn btn-sm" onclick="window.speakPronunciation('${safeText}')" style="background:#fff1f2;color:#be123c;border:1px solid #fecdd3;white-space:nowrap">🔊 Nghe mẫu</button>
+              <button class="btn btn-sm" onclick="window.speakPronunciation('${safeText}')" style="background:#fff1f2;color:#be123c;border:1px solid #fecdd3;white-space:nowrap;font-size:14.5px;padding:7px 16px;font-weight:700">🔊 Nghe mẫu</button>
             </div>
             
-            <div style="background:#f8fafc;padding:12px;border-radius:10px;margin-top:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-              <button class="btn btn-p" id="btn-spk-rec-${idx}" onclick="window.togglePronunciationRecording(${idx}, '${safeText}')" style="background:#e11d48;border-color:#e11d48">
+            <div style="background:#f8fafc;padding:14px 18px;border-radius:12px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+              <button class="btn btn-p" id="btn-spk-rec-${idx}" onclick="window.togglePronunciationRecording(${idx}, '${safeText}')" style="background:#e11d48;border-color:#e11d48;font-size:15.5px;padding:10px 22px">
                 🎙️ Bấm để nói
               </button>
-              <div id="spk-score-${idx}" style="font-weight:800;font-size:16px;color:#64748b">Điểm: --</div>
+              <div id="spk-score-${idx}" style="font-weight:800;font-size:17.5px;color:#475569">Điểm: --</div>
             </div>
-            <div id="spk-result-${idx}" style="margin-top:10px;font-size:14px;display:none" class="spoken-transcript-result"></div>
+            <div id="spk-result-${idx}" style="margin-top:12px;font-size:15px;display:none" class="spoken-transcript-result"></div>
           </div>
         `;
         }).join('')}
