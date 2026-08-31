@@ -155,8 +155,8 @@ export function renderGlobalHeaderProfile() {
       badge.innerHTML = `
         <div class="user-avatar-img">${avatarIcon}</div>
         <div style="display:flex;flex-direction:column;line-height:1.2;text-align:left;">
-          <span style="font-weight:800;font-size:13px;color:#ffffff;">${esc(userLabel)}</span>
-          <span style="font-size:10px;color:#93c5fd;font-weight:700;text-transform:uppercase;">${esc(subLabel)}</span>
+          <span style="font-weight:800;font-size:13px;color:#0f172a;">${esc(userLabel)}</span>
+          <span style="font-size:10.5px;color:#2563eb;font-weight:700;text-transform:uppercase;">${esc(subLabel)}</span>
         </div>
       `;
       badge.title = `Tài khoản: ${userLabel} (${subLabel})`;

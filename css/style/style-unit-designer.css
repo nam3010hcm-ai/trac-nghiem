@@ -61,9 +61,9 @@ body {
 .global-search-bar,
 .notif-bell-btn,
 .user-profile-badge {
-  background: #f8faff;
-  border-color: #e2eaf5;
-  color: #334155;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
 }
 
 .global-search-bar input { color: #17233b; }
