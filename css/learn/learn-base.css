@@ -19,6 +19,8 @@ body.learn-body {
   background: #ffffff;
   color: #0f172a;
   font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
@@ -408,4 +410,179 @@ body.learn-body {
 @keyframes wave {
   0%, 100% { height: 8px; }
   50% { height: 26px; }
+}
+
+/* =========================================================================
+   ENHANCED READABILITY & TYPOGRAPHY SCALING FOR LEARN PORTAL
+   ========================================================================= */
+/* 5 Kỹ Năng Navigation Tabs */
+.skill-tab-btn,
+.subject-tab {
+  font-size: 15.5px !important;
+  font-weight: 700 !important;
+  padding: 13px 18px !important;
+}
+
+.skill-tab-btn .tab-icon,
+.subject-tab span:first-child {
+  font-size: 20px !important;
+}
+
+/* Sidebar Lesson Selector Cards */
+.lesson-card {
+  padding: 15px 18px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.lesson-card:hover {
+  border-color: #93c5fd;
+  background: #f8faff;
+  transform: translateY(-1px);
+}
+
+.lesson-card.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+}
+
+.lesson-card-title,
+.lesson-card > div:first-child {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: #0f172a;
+  line-height: 1.4;
+}
+
+.lesson-card-meta,
+.lesson-card > div:last-child {
+  font-size: 13.5px !important;
+  color: #475569;
+}
+
+/* Content Cards & Questions */
+.card {
+  font-size: 16px;
+  line-height: 1.7;
+  padding: 24px 28px;
+  border-radius: 16px;
+}
+
+/* MCQ Options */
+.opt {
+  font-size: 15.5px !important;
+  font-weight: 600 !important;
+  padding: 12px 18px !important;
+  border-radius: 12px !important;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.opt:hover {
+  border-color: #3b82f6;
+  background: #f8faff;
+  transform: translateX(3px);
+}
+
+.okey {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  font-size: 14.5px !important;
+  font-weight: 800 !important;
+  border-radius: 8px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: #334155;
+}
+
+/* Reading Passages & Transcripts */
+.reading-passage,
+.transcript-box,
+.passage-content {
+  font-size: 16.5px !important;
+  line-height: 1.85 !important;
+  color: #1e293b;
+}
+
+.reading-passage p,
+.transcript-box p,
+.reading-text p {
+  font-size: 16.5px !important;
+  line-height: 1.85 !important;
+  margin-bottom: 12px;
+}
+
+/* Inputs & Textareas */
+input[type="text"],
+textarea,
+.dictation-textarea,
+.short-ans-inp,
+.gap-input {
+  font-size: 15.5px !important;
+  font-family: inherit;
+}
+
+.dictation-textarea {
+  font-size: 16px !important;
+  line-height: 1.6;
+}
+
+/* Speaking & Roleplay Typography */
+.timeline-text {
+  font-size: 15.5px !important;
+  line-height: 1.55 !important;
+}
+
+.timeline-speaker-name {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+}
+
+/* Buttons */
+.btn {
+  font-size: 14.5px !important;
+  font-weight: 700 !important;
+}
+
+.btn-p {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  padding: 10px 20px !important;
+}
+
+.btn-sm {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  padding: 6px 14px !important;
+}
+
+/* Feedbacks & Tooltips */
+.fb {
+  font-size: 15px !important;
+  line-height: 1.6;
+}
+
+.video-tip-pill {
+  font-size: 14px !important;
+  line-height: 1.5;
 }
