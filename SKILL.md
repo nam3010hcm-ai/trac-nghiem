@@ -321,6 +321,22 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 
 ---
 
+### 18. Nguyên Tắc An Toàn Null-Safe Khi Xử Lý Chuỗi & Render Bài Tập 5 Kỹ Năng
+- **Tệp nguồn:** [`js/learn/learn-listening.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-listening.js), [`js/learn/learn-listening-eval.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-listening-eval.js), [`js/learn/learn-speaking-engine.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-speaking-engine.js), [`js/learn/learn-roadmap.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-roadmap.js)
+- **Lưu ý phòng chống lỗi runtime (TypeError) khi chuyển tab kỹ năng:**
+  1. **Tuyệt đối không gọi `.replace()` hoặc chuỗi phương thức trực tiếp trên thuộc tính đối tượng khi chưa kiểm tra null/undefined:**
+     - ❌ **Sai:** `ex.sentence.replace(/'/g, "\\'")` (Sẽ crash toàn bộ luồng `switchSkillTab()` nếu `ex.sentence` bị `undefined`, `null` hoặc rỗng).
+     - ✅ **Đúng:** `String(ex.sentence || ex.text || ex.correct || '').replace(/'/g, "\\'").replace(/"/g, '&quot;')`.
+  2. **Hỗ trợ đa dạng cấu trúc bài tập Listening:**
+     - `mcq`: Trắc nghiệm 4 lựa chọn có `question`, `options`, `answer`, `explain`.
+     - `dictation`: Nghe chép chính tả với chuỗi câu `sentence` / `text` an toàn và so khớp sai khác (diff word) có `filter(Boolean)`.
+     - `gap_fill`: Điền từ vào chỗ trống `[___]` hoặc `...`.
+     - `true_false`: Nhận định Đúng/Sai hỗ trợ cả boolean và chuỗi `'true'`/`'false'`.
+  3. **Thoát ký tự chuẩn (Escaping) trong HTML attributes:**
+     - Luôn bọc qua `esc(...)` hoặc thay thế dấu nháy đơn/kép an toàn khi chèn vào `onclick="window.speakPronunciation('...')"` để tránh phá vỡ cú pháp DOM inline.
+
+---
+
 ## 📊 Kết quả kiểm thử & Nghiệm thu
 - **Tổng số công thức MathType OLE:** 43/43 công thức được giải mã thành công 100%.
 - **Độ chính xác nhận diện đáp án đúng (In đậm & Bôi đỏ):** 34/34 câu (100%).
@@ -330,4 +346,5 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 - **Hệ thống 10 Dạng Bài Tập Đọc Hiểu Sư Phạm:** Tích hợp đầy đủ Studio tương tác cho giáo viên và Renderer/Chấm điểm tương tác cho học viên với 10 dạng chuẩn quốc tế.
 - **Hệ thống Video Roleplay & Luyện Phát Âm Speaking:** Tích hợp đầy đủ Studio biên soạn nhân vật, kịch bản thoại đa chiều, dán nhanh kịch bản và luyện phát âm Web Speech AI.
 - **Hệ thống Đăng nhập & Ẩn/Hiện Mật khẩu Toàn diện:** Khắc phục triệt để lỗi đăng nhập học tập `learn.html`, hỗ trợ Enter key, đồng bộ SSO và nút chuyển đổi icon 👁️/🙈 ở mọi nơi.
+- **Xử lý An toàn Null-Safe 5 Kỹ Năng:** Khắc phục hoàn toàn lỗi crash `TypeError: Cannot read properties of undefined (reading 'replace')` khi chuyển tab Listening/Speaking/Reading.
 - **Tỉ lệ lỗi Math input error / runtime error:** 0%.
