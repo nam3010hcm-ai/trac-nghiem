@@ -107,10 +107,10 @@ export async function saveUnit() {
   syncCurrentDesignerSkillToDraft();
 
   const title = $('ud-title')?.value.trim();
-  const subject = $('ud-subject')?.value.trim() || '🇬BlogPost Tiếng Anh';
+  const subject = $('ud-subject')?.value.trim() || '🇬🇧 Tiếng Anh';
   const module = $('ud-module')?.value.trim() || 'English B1 - General & Academic Skills';
   const topic = $('ud-topic')?.value.trim() || '';
-  const level = $('ud-level')?.value.trim() || 'A2';
+  const level = $('ud-level')?.value.trim() || 'A2 - B1';
   const icon = $('ud-icon')?.value.trim() || '📖';
   const desc = $('ud-desc')?.value.trim() || '';
 
@@ -143,8 +143,14 @@ export async function saveUnit() {
     icon: icon,
     description: desc,
     is_hidden: draft.isHidden || false,
+    listening: fullContent.listening,
+    reading: fullContent.reading,
+    speaking: fullContent.speaking,
+    writing: fullContent.writing,
+    language_focus: fullContent.languageFocus,
     content: JSON.stringify(fullContent),
     created_by: state.currentUserEmail || 'nam3010hcm@gmail.com',
+    created_at: editingUnitId ? (draft.created_at || Date.now()) : Date.now(),
     updated_at: Date.now()
   };
 

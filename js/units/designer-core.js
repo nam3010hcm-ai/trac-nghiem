@@ -60,7 +60,7 @@ export function updateDesignerSubjectLabels(sub) {
 
 export function openUnitEditor(id = null) {
   setEditingUnitId(id);
-  const modal = document.getElementById('modal-unit-designer');
+  const modal = document.getElementById('unit-designer-modal') || document.getElementById('modal-unit-designer');
   if (!modal) return;
 
   let unit = null;
@@ -70,13 +70,16 @@ export function openUnitEditor(id = null) {
   }
 
   if (!unit) {
+    const curSub = $('flt-unit-subject')?.value || $('filter-unit-subject')?.value;
+    const curMod = $('flt-unit-module')?.value || $('filter-unit-module')?.value;
+
     unit = {
       id: 'unit_' + Date.now(),
-      subject: $('filter-unit-subject')?.value || '🇬BlogPost Tiếng Anh',
-      module: $('filter-unit-module')?.value || 'English B1 - General & Academic Skills',
+      subject: (curSub && curSub !== 'all') ? curSub : '🇬🇧 Tiếng Anh',
+      module: (curMod && curMod !== 'all') ? curMod : 'English B1 - General & Academic Skills',
       title: 'Unit ' + (unitsState.length + 1) + ': New Lesson',
       topic: 'General Topic',
-      level: 'B1',
+      level: 'A2 - B1',
       icon: '📖',
       description: 'Mô tả bài học tương tác 5 kỹ năng',
       listening: [],
@@ -93,7 +96,7 @@ export function openUnitEditor(id = null) {
   if ($('ud-subject')) $('ud-subject').value = unit.subject || '';
   if ($('ud-module')) $('ud-module').value = unit.module || '';
   if ($('ud-topic')) $('ud-topic').value = unit.topic || '';
-  if ($('ud-level')) $('ud-level').value = unit.level || 'B1';
+  if ($('ud-level')) $('ud-level').value = unit.level || 'A2 - B1';
   if ($('ud-icon')) $('ud-icon').value = unit.icon || '📖';
   if ($('ud-desc')) $('ud-desc').value = unit.description || '';
 
@@ -103,7 +106,7 @@ export function openUnitEditor(id = null) {
 }
 
 export function closeUnitEditor() {
-  const modal = document.getElementById('modal-unit-designer');
+  const modal = document.getElementById('unit-designer-modal') || document.getElementById('modal-unit-designer');
   if (modal) modal.style.display = 'none';
   window._currentDraftUnit = null;
   setEditingUnitId(null);
@@ -207,4 +210,6 @@ if (typeof window !== 'undefined') {
     switchDesignerSkillTab(skill);
   };
   window.autoFitAllDesignerTextareas = autoFitAllDesignerTextareas;
+  window.updateDesignerSubjectLabels = updateDesignerSubjectLabels;
+  window.onDesignerSubjectInput = updateDesignerSubjectLabels;
 }

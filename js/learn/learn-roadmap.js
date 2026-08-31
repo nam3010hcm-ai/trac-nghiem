@@ -63,25 +63,71 @@ export async function loadUnitsData() {
   let loaded = [];
   try {
     if (db()) {
-      const { data, error } = await db().from('learning_units').select('*').eq('is_hidden', false).order('created_at', { ascending: true });
-      if (!error && data && data.length > 0) {
+      let data = null;
+      let error = null;
+
+      try {
+        const res = await db().from('learning_units').select('*').eq('is_hidden', false).order('created_at', { ascending: true });
+        if (!res.error && res.data) {
+          data = res.data;
+        } else {
+          error = res.error;
+        }
+      } catch (e1) {
+        error = e1;
+      }
+
+      if (!data && error) {
+        try {
+          const res2 = await db().from('units').select('*').eq('is_hidden', false).order('updated_at', { ascending: true });
+          if (!res2.error && res2.data) {
+            data = res2.data;
+            error = null;
+          }
+        } catch (e2) {}
+      }
+
+      if (data && data.length > 0) {
         loaded = data.map(u => {
           const defMatch = DEFAULT_UNITS.find(d => d.id === u.id) || DEFAULT_UNITS[0];
+          let contentObj = {};
+          try {
+            contentObj = typeof u.content === 'string' ? JSON.parse(u.content) : (u.content || {});
+          } catch (e) {
+            contentObj = {};
+          }
+
+          const listening = (Array.isArray(u.listening) && u.listening.length > 0) 
+            ? u.listening 
+            : safeArray(contentObj.listening, defMatch?.listening || []);
+          const reading = (Array.isArray(u.reading) && u.reading.length > 0) 
+            ? u.reading 
+            : safeArray(contentObj.reading, defMatch?.reading || []);
+          const speaking = (Array.isArray(u.speaking) && u.speaking.length > 0) 
+            ? u.speaking 
+            : safeArray(contentObj.speaking, defMatch?.speaking || []);
+          const writing = (Array.isArray(u.writing) && u.writing.length > 0) 
+            ? u.writing 
+            : safeArray(contentObj.writing, defMatch?.writing || []);
+          const languageFocus = (u.language_focus && Object.keys(u.language_focus).length > 0)
+            ? u.language_focus
+            : safeObj(u.languageFocus || contentObj.languageFocus || contentObj.language_focus, defMatch?.languageFocus || {});
+
           return {
             id: u.id,
-            subject: normalizeSubjectName(u.subject),
-            module: normalizeModuleName(u.module),
+            subject: normalizeSubjectName(u.subject || contentObj.subject),
+            module: normalizeModuleName(u.module || contentObj.module),
             title: u.title,
             topic: u.topic || '',
             level: u.level || 'A2 - B1',
             icon: u.icon || '📖',
             description: u.description || '',
             isHidden: u.is_hidden ?? false,
-            listening: safeArray(u.listening, defMatch?.listening || []),
-            reading: safeArray(u.reading, defMatch?.reading || []),
-            speaking: safeArray(u.speaking, defMatch?.speaking || []),
-            writing: safeArray(u.writing, defMatch?.writing || []),
-            languageFocus: safeObj(u.language_focus || u.languageFocus, defMatch?.languageFocus || {})
+            listening,
+            reading,
+            speaking,
+            writing,
+            languageFocus
           };
         });
 

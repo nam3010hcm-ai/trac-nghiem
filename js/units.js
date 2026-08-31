@@ -92,9 +92,27 @@ export {
 // Global bindings
 if (typeof window !== 'undefined') {
   window.loadUnits = loadUnits;
+  window.populateUnitFilters = populateUnitFilters;
+  window.updateModuleFilterOptions = updateModuleFilterOptions;
+  window.updateDatalists = updateDatalists;
+  window.renderUnitsList = renderUnitsList;
+  window.toggleUnitVisibility = toggleUnitVisibility;
+  window.deleteUnit = deleteUnit;
   window.openUnitEditor = openUnitEditor;
   window.closeUnitEditor = closeUnitEditor;
   window.saveUnit = saveUnit;
-  window.deleteUnit = deleteUnit;
-  window.toggleUnitVisibility = toggleUnitVisibility;
+  window.updateDesignerSubjectLabels = updateDesignerSubjectLabels;
+  window.onDesignerSubjectInput = updateDesignerSubjectLabels;
+  window.autoFitAllDesignerTextareas = autoFitAllDesignerTextareas;
+  window.switchDesignerSkillTab = (skill) => {
+    syncCurrentDesignerSkillToDraft();
+    switchDesignerSkillTab(skill);
+  };
+  window.onUnitFilterChange = function() {
+    updateModuleFilterOptions();
+    renderUnitsList();
+  };
+  window.onUnitSearchInput = function() {
+    renderUnitsList();
+  };
 }

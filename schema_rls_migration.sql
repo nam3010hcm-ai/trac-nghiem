@@ -87,6 +87,26 @@ CREATE TABLE IF NOT EXISTS public.submissions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 7. LEARNING UNITS (BÀI HỌC 5 KỸ NĂNG & MEDIA BANK)
+CREATE TABLE IF NOT EXISTS public.learning_units (
+  id TEXT PRIMARY KEY,
+  subject TEXT NOT NULL DEFAULT '🇬🇧 Tiếng Anh',
+  module TEXT NOT NULL DEFAULT 'English B1 - General & Academic Skills',
+  title TEXT NOT NULL,
+  topic TEXT DEFAULT '',
+  level TEXT DEFAULT 'A2 - B1',
+  icon TEXT DEFAULT '📖',
+  description TEXT DEFAULT '',
+  is_hidden BOOLEAN DEFAULT FALSE,
+  listening JSONB DEFAULT '[]'::jsonb,
+  reading JSONB DEFAULT '[]'::jsonb,
+  speaking JSONB DEFAULT '[]'::jsonb,
+  writing JSONB DEFAULT '[]'::jsonb,
+  language_focus JSONB DEFAULT '{}'::jsonb,
+  created_by TEXT,
+  created_at BIGINT
+);
+
 -- ============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- ============================================================================
@@ -97,6 +117,7 @@ ALTER TABLE public.classes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.class_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.learning_units ENABLE ROW LEVEL SECURITY;
 
 -- 1. Schools Policy: Public Read, Authenticated Write
 CREATE POLICY "Schools public read" ON public.schools FOR SELECT USING (true);
@@ -128,6 +149,9 @@ CREATE POLICY "Submissions student write own" ON public.submissions
 
 CREATE POLICY "Submissions teacher update grade" ON public.submissions 
   FOR UPDATE USING (auth.role() = 'authenticated');
+
+-- 6. Learning Units Policy (Public Read/Write for LMS)
+CREATE POLICY "Learning units public read write" ON public.learning_units FOR ALL USING (true);
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_classes_school ON public.classes(school_id);

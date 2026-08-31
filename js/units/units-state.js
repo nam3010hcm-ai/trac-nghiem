@@ -29,31 +29,89 @@ export function setUnitsState(arr) {
 export async function safeUpsertUnit(payload) {
   if (!db()) return { error: new Error('Supabase client chưa được khởi tạo') };
 
-  const { data, error } = await db()
-    .from('units')
-    .upsert([payload], { onConflict: 'id' })
-    .select();
+  // Payload chuẩn hóa cho bảng learning_units
+  const learningUnitPayload = {
+    id: payload.id,
+    subject: payload.subject || '🇬🇧 Tiếng Anh',
+    module: payload.module || 'English B1 - General & Academic Skills',
+    title: payload.title || 'Unit không tên',
+    topic: payload.topic || '',
+    level: payload.level || 'A2 - B1',
+    icon: payload.icon || '📖',
+    description: payload.description || '',
+    is_hidden: payload.is_hidden ?? payload.isHidden ?? false,
+    listening: Array.isArray(payload.listening) ? payload.listening : [],
+    reading: Array.isArray(payload.reading) ? payload.reading : [],
+    speaking: Array.isArray(payload.speaking) ? payload.speaking : [],
+    writing: Array.isArray(payload.writing) ? payload.writing : [],
+    language_focus: payload.language_focus || payload.languageFocus || {},
+    created_by: payload.created_by || '',
+    created_at: payload.created_at || Date.now()
+  };
 
-  if (error) {
-    const isSubjectColMissing = error.message?.includes('subject') || error.code === 'PGRST204';
-    if (isSubjectColMissing) {
-      console.warn("Cột 'subject' hoặc 'module' chưa có trong Schema DB, tự động fallback:", error.message);
-      const fallbackPayload = {
-        id: payload.id,
-        title: payload.title,
-        topic: payload.topic,
-        level: payload.level,
-        icon: payload.icon,
-        description: payload.description,
-        is_hidden: payload.is_hidden,
-        content: payload.content,
-        updated_at: payload.updated_at
-      };
-      return await db().from('units').upsert([fallbackPayload], { onConflict: 'id' }).select();
+  try {
+    // 1. Thử upsert vào bảng learning_units trước
+    const { data, error } = await db()
+      .from('learning_units')
+      .upsert([learningUnitPayload], { onConflict: 'id' })
+      .select();
+
+    if (!error) {
+      return { data, error: null };
     }
-  }
 
-  return { data, error };
+    console.warn("Lưu learning_units gặp thông báo:", error.message || error);
+
+    // 2. Nếu bảng learning_units chưa tồn tại (PGRST205 / 404), thử upsert vào bảng units (legacy fallback)
+    const fallbackUnitsPayload = {
+      id: payload.id,
+      title: payload.title,
+      topic: payload.topic,
+      level: payload.level,
+      icon: payload.icon,
+      description: payload.description,
+      is_hidden: payload.is_hidden ?? payload.isHidden ?? false,
+      content: payload.content || JSON.stringify({
+        subject: payload.subject,
+        module: payload.module,
+        listening: payload.listening,
+        reading: payload.reading,
+        speaking: payload.speaking,
+        writing: payload.writing,
+        languageFocus: payload.language_focus || payload.languageFocus
+      }),
+      subject: payload.subject,
+      module: payload.module,
+      updated_at: Date.now()
+    };
+
+    const resUnits = await db()
+      .from('units')
+      .upsert([fallbackUnitsPayload], { onConflict: 'id' })
+      .select();
+
+    if (!resUnits.error) {
+      return resUnits;
+    }
+
+    // 3. Fallback tối thiểu cho units nếu thiếu cột subject/module
+    const minimalUnitsPayload = {
+      id: payload.id,
+      title: payload.title,
+      topic: payload.topic,
+      level: payload.level,
+      icon: payload.icon,
+      description: payload.description,
+      is_hidden: payload.is_hidden ?? payload.isHidden ?? false,
+      content: fallbackUnitsPayload.content,
+      updated_at: Date.now()
+    };
+
+    return await db().from('units').upsert([minimalUnitsPayload], { onConflict: 'id' }).select();
+  } catch (err) {
+    console.error("Lỗi khi lưu Unit lên Supabase:", err);
+    return { error: err };
+  }
 }
 
 export function normalizeSubjectName(sub) {

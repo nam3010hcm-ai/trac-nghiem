@@ -380,6 +380,17 @@ export function loadSampleLfSpelling() {
   });
 }
 
+export function autoUpdateLfScrambled(input) {
+  if (!input) return;
+  const card = input.closest('.lf-spelling-card');
+  if (!card) return;
+  const scrambledInput = card.querySelector('.lf-sp-scrambled');
+  if (scrambledInput) {
+    const val = input.value.trim().toUpperCase();
+    scrambledInput.value = val.split('').reverse().join('');
+  }
+}
+
 // Window global bindings
 if (typeof window !== 'undefined') {
   window.switchLfSubTab = switchLfSubTab;
@@ -409,4 +420,5 @@ if (typeof window !== 'undefined') {
   window.removeLfSpellingCard = removeLfSpellingCard;
   window._updateLfSpellingIndices = updateLfSpellingIndices;
   window.loadSampleLfSpelling = loadSampleLfSpelling;
+  window.autoUpdateLfScrambled = autoUpdateLfScrambled;
 }

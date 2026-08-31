@@ -350,6 +350,10 @@ window.globalLogout = async function() {
       }
     }
 
+    if (tabName === 'unit' && typeof window.renderUnitsList === 'function') {
+      window.renderUnitsList();
+    }
+
     if (typeof window._teacherModuleSwitchTab === 'function') {
       window._teacherModuleSwitchTab(tabName);
     }
@@ -357,7 +361,7 @@ window.globalLogout = async function() {
 
   window.addEventListener('hashchange', function() {
     var h = (window.location.hash || '').replace('#', '').trim();
-    var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics'];
+    var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs'];
     if (tabs.indexOf(h) !== -1) {
       window.switchTTab(h);
     }

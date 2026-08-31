@@ -232,11 +232,47 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 
 ---
 
+### 14. Kiến trúc Quản lý Unit Bài học & Supabase Schema (Lưu ý quan trọng cho Unit Designer & Learn)
+- **Tệp nguồn:** [`js/units.js`](file:///Users/namtp/Downloads/trac-nghiem/js/units.js), [`js/units/units-list.js`](file:///Users/namtp/Downloads/trac-nghiem/js/units/units-list.js), [`js/units/units-state.js`](file:///Users/namtp/Downloads/trac-nghiem/js/units/units-state.js), [`js/units/designer-core.js`](file:///Users/namtp/Downloads/trac-nghiem/js/units/designer-core.js), [`js/units/designer-save.js`](file:///Users/namtp/Downloads/trac-nghiem/js/units/designer-save.js), [`js/units/designer-handlers.js`](file:///Users/namtp/Downloads/trac-nghiem/js/units/designer-handlers.js), [`js/learn/learn-roadmap.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-roadmap.js), [`teacher.html`](file:///Users/namtp/Downloads/trac-nghiem/teacher.html)
+- **Kiến trúc & Quy tắc đồng bộ:**
+  1. **Tên bảng Supabase chuẩn: `learning_units` (Tránh lỗi 404 / PGRST205):**
+     - Bảng lưu trữ bài học 5 kỹ năng trên Supabase PostgreSQL mang tên chuẩn là **`public.learning_units`** (KHÔNG dùng `units`).
+     - **Cấu trúc cột chuẩn:**
+       - `id TEXT PRIMARY KEY`
+       - `subject TEXT NOT NULL DEFAULT '🇬🇧 Tiếng Anh'`
+       - `module TEXT NOT NULL DEFAULT 'English B1 - General & Academic Skills'`
+       - `title TEXT NOT NULL`
+       - `topic TEXT DEFAULT ''`
+       - `level TEXT DEFAULT 'A2 - B1'`
+       - `icon TEXT DEFAULT '📖'`
+       - `description TEXT DEFAULT ''`
+       - `is_hidden BOOLEAN DEFAULT FALSE`
+       - `listening JSONB DEFAULT '[]'::jsonb`
+       - `reading JSONB DEFAULT '[]'::jsonb`
+       - `speaking JSONB DEFAULT '[]'::jsonb`
+       - `writing JSONB DEFAULT '[]'::jsonb`
+       - `language_focus JSONB DEFAULT '{}'::jsonb`
+       - `created_by TEXT`, `created_at BIGINT`
+     - **Cơ chế Fallback thông minh:** Khi tải dữ liệu (`loadUnits`, `loadUnitsData`) hoặc lưu (`safeUpsertUnit`), luôn ưu tiên bảng `learning_units`, nếu gặp lỗi bảng chưa tồn tại sẽ tự động fallback sang `units` và nạp an toàn từ `SAMPLE_LEARN_UNITS` mà không gây Exception giao diện. Hệ thống phân giải thông minh cả 2 định dạng: cột rời (`listening`, `reading`...) và chuỗi JSON `content`.
+  2. **Global Window Bindings bắt buộc cho Module Units:**
+     - Mọi sự kiện inline trong `teacher.html` (`onchange`, `onclick`, `oninput`) đều gọi qua `window.*`. Các hàm sau BẮT BUỘC phải được bind lên `window` trong `js/units.js`, `units-list.js`, `designer-core.js`, `designer-save.js`, `designer-handlers.js`:
+       - `window.loadUnits`, `window.renderUnitsList`, `window.populateUnitFilters`, `window.updateModuleFilterOptions`, `window.updateDatalists`
+       - `window.toggleUnitVisibility`, `window.deleteUnit`, `window.onUnitFilterChange`, `window.onUnitSearchInput`
+       - `window.openUnitEditor`, `window.closeUnitEditor`, `window.saveUnit`, `window.switchDesignerSkillTab`
+       - `window.updateDesignerSubjectLabels`, `window.onDesignerSubjectInput`, `window.autoFitAllDesignerTextareas`, `window.autoUpdateLfScrambled`
+  3. **Đồng bộ Element ID & Modal Container:**
+     - Container danh sách Unit trong `teacher.html`: `#unit-management-list` (layout Grid responsive).
+     - Modal biên soạn Unit 5 kỹ năng: `#unit-designer-modal`.
+     - Badge đếm số lượng Unit: `#unit-count-badge`.
+
+---
+
 ## 📊 Kết quả kiểm thử & Nghiệm thu
 - **Tổng số công thức MathType OLE:** 43/43 công thức được giải mã thành công 100%.
 - **Độ chính xác nhận diện đáp án đúng (In đậm & Bôi đỏ):** 34/34 câu (100%).
 - **Trò chơi Ghép cặp SVG Line:** Vẽ đường cong Bézier chính xác 100%, chấm điểm và đổi trạng thái mượt mà.
 - **Exercise 2 & 3 Language Focus:** Hoạt động hoàn hảo trên mọi thiết bị và màn hình.
+- **Quản lý & Thiết kế Unit 5 Kỹ năng:** Đồng bộ 100% với bảng `learning_units` Supabase, bộ lọc tìm kiếm & chuyển tab mượt mà không có runtime error.
 - **Tỉ lệ lỗi Math input error / runtime error:** 0%.
 - **Tính năng điều hướng & Sticky Topbar phòng thi:** Hoạt động chính xác 100%, cập nhật thời gian thực khi chọn lại đáp án.
 

@@ -9,13 +9,44 @@ import { unitsState, setUnitsState, normalizeSubjectName, normalizeModuleName, m
 const db = () => window.supabaseClient;
 
 export async function loadUnits() {
-  try {
-    const { data: units, error } = await db()
-      .from('units')
-      .select('*')
-      .order('updated_at', { ascending: false });
+  let units = null;
+  let fetchErr = null;
 
-    if (error) throw error;
+  try {
+    if (db()) {
+      // 1. Thử lấy dữ liệu từ bảng learning_units (chuẩn của hệ thống)
+      try {
+        const res = await db()
+          .from('learning_units')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!res.error && res.data) {
+          units = res.data;
+        } else {
+          fetchErr = res.error;
+        }
+      } catch (err1) {
+        fetchErr = err1;
+      }
+
+      // 2. Nếu bảng learning_units chưa có hoặc lỗi, thử bảng legacy units
+      if (!units && fetchErr) {
+        try {
+          const res2 = await db()
+            .from('units')
+            .select('*')
+            .order('updated_at', { ascending: false });
+
+          if (!res2.error && res2.data) {
+            units = res2.data;
+            fetchErr = null;
+          }
+        } catch (err2) {
+          // ignore
+        }
+      }
+    }
 
     if (units && units.length > 0) {
       setUnitsState(units.map(u => {
@@ -25,6 +56,23 @@ export async function loadUnits() {
         } catch (e) {
           contentObj = {};
         }
+
+        const listening = (Array.isArray(u.listening) && u.listening.length > 0) 
+          ? u.listening 
+          : (contentObj.listening || []);
+        const reading = (Array.isArray(u.reading) && u.reading.length > 0) 
+          ? u.reading 
+          : (contentObj.reading || []);
+        const speaking = (Array.isArray(u.speaking) && u.speaking.length > 0) 
+          ? u.speaking 
+          : (contentObj.speaking || []);
+        const writing = (Array.isArray(u.writing) && u.writing.length > 0) 
+          ? u.writing 
+          : (contentObj.writing || []);
+        const languageFocus = (u.language_focus && Object.keys(u.language_focus).length > 0) 
+          ? u.language_focus 
+          : (u.languageFocus || contentObj.languageFocus || contentObj.language_focus || {});
+
         return {
           id: u.id,
           subject: u.subject || contentObj.subject || '🇬🇧 Tiếng Anh',
@@ -34,20 +82,24 @@ export async function loadUnits() {
           level: u.level || 'A2',
           icon: u.icon || '📖',
           description: u.description || '',
-          isHidden: u.is_hidden || false,
+          isHidden: u.is_hidden ?? u.isHidden ?? false,
           created_by: u.created_by || '',
-          listening: contentObj.listening || [],
-          reading: contentObj.reading || [],
-          speaking: contentObj.speaking || [],
-          writing: contentObj.writing || [],
-          languageFocus: contentObj.languageFocus || {}
+          created_at: u.created_at || u.updated_at || Date.now(),
+          listening,
+          reading,
+          speaking,
+          writing,
+          languageFocus
         };
       }));
     } else {
+      if (fetchErr) {
+        console.info("Chưa tìm thấy bảng 'learning_units' trên Supabase hoặc bảng rỗng, đang khởi tạo từ dữ liệu mẫu mặc định.");
+      }
       setUnitsState(JSON.parse(JSON.stringify(SAMPLE_LEARN_UNITS || [])));
     }
   } catch (e) {
-    console.warn("Không tải được danh sách Units từ Supabase, sử dụng dữ liệu mẫu:", e);
+    console.info("Khởi tạo danh sách Units từ dữ liệu mẫu:", e.message || e);
     setUnitsState(JSON.parse(JSON.stringify(SAMPLE_LEARN_UNITS || [])));
   }
 
@@ -89,7 +141,7 @@ export function updateModuleFilterOptions() {
   const modules = new Set();
 
   unitsState.forEach(u => {
-    if (selSub === 'all' || matchSubject(u.subject, selSub)) {
+    if (selSub === 'all' || !selSub || matchSubject(u.subject, selSub)) {
       if (u.module) modules.add(u.module);
     }
   });
@@ -126,22 +178,29 @@ export function updateDatalists() {
 }
 
 export function renderUnitsList() {
-  const container = document.getElementById('unit-list-container');
+  const container = document.getElementById('unit-management-list') || document.getElementById('unit-list-container');
   if (!container) return;
+
+  container.style.display = 'grid';
+  container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(320px, 1fr))';
+  container.style.gap = '16px';
 
   const subFilter = document.getElementById('flt-unit-subject')?.value || 'all';
   const modFilter = document.getElementById('flt-unit-module')?.value || 'all';
   const searchFilter = (document.getElementById('flt-unit-search')?.value || '').toLowerCase().trim();
 
   const filtered = unitsState.filter(u => {
-    if (subFilter !== 'all' && !matchSubject(u.subject, subFilter)) return false;
-    if (modFilter !== 'all' && !matchModule(u.module, modFilter)) return false;
+    if (subFilter !== 'all' && subFilter !== '' && !matchSubject(u.subject, subFilter)) return false;
+    if (modFilter !== 'all' && modFilter !== '' && !matchModule(u.module, modFilter)) return false;
     if (searchFilter) {
       const matchText = `${u.title} ${u.topic} ${u.description || ''} ${u.subject || ''} ${u.module || ''}`.toLowerCase();
       if (!matchText.includes(searchFilter)) return false;
     }
     return true;
   });
+
+  const badge = document.getElementById('unit-count-badge');
+  if (badge) badge.textContent = filtered.length;
 
   if (filtered.length === 0) {
     container.innerHTML = `
@@ -214,12 +273,20 @@ export async function toggleUnitVisibility(unitId) {
   unit.isHidden = newStatus;
 
   try {
-    const { error } = await db()
-      .from('units')
-      .update({ is_hidden: newStatus, updated_at: Date.now() })
+    let { error } = await db()
+      .from('learning_units')
+      .update({ is_hidden: newStatus })
       .eq('id', unitId);
 
-    if (error) throw error;
+    if (error) {
+      const res = await db()
+        .from('units')
+        .update({ is_hidden: newStatus, updated_at: Date.now() })
+        .eq('id', unitId);
+      if (res.error && res.error.code !== 'PGRST205') {
+        throw res.error;
+      }
+    }
     renderUnitsList();
   } catch (e) {
     console.error("Lỗi cập nhật trạng thái Unit:", e);
@@ -236,12 +303,20 @@ export async function deleteUnit(unitId) {
   const uTitle = u ? u.title : unitId;
 
   try {
-    const { error } = await db()
-      .from('units')
+    let { error } = await db()
+      .from('learning_units')
       .delete()
       .eq('id', unitId);
 
-    if (error) throw error;
+    if (error) {
+      const res = await db()
+        .from('units')
+        .delete()
+        .eq('id', unitId);
+      if (res.error && res.error.code !== 'PGRST205') {
+        throw res.error;
+      }
+    }
 
     setUnitsState(unitsState.filter(unit => unit.id !== unitId));
     populateUnitFilters();
@@ -257,6 +332,13 @@ export async function deleteUnit(unitId) {
 }
 
 if (typeof window !== 'undefined') {
+  window.renderUnitsList = renderUnitsList;
+  window.populateUnitFilters = populateUnitFilters;
+  window.updateModuleFilterOptions = updateModuleFilterOptions;
+  window.updateDatalists = updateDatalists;
+  window.loadUnits = loadUnits;
+  window.toggleUnitVisibility = toggleUnitVisibility;
+  window.deleteUnit = deleteUnit;
   window.onUnitFilterChange = function() {
     updateModuleFilterOptions();
     renderUnitsList();
