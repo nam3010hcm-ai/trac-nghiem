@@ -41,8 +41,9 @@ body {
 .logo-title { color: #1e3a8a; }
 .logo-subtitle { color: #64748b; }
 .logo-flag {
-  background: linear-gradient(135deg, #2563eb, #6366f1);
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.22);
+  background: #ffffff;
+  border: 1.5px solid rgba(254, 240, 138, 0.6);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
 }
 
 .nav {
