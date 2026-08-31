@@ -260,10 +260,17 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
        - `window.toggleUnitVisibility`, `window.deleteUnit`, `window.onUnitFilterChange`, `window.onUnitSearchInput`
        - `window.openUnitEditor`, `window.closeUnitEditor`, `window.saveUnit`, `window.switchDesignerSkillTab`
        - `window.updateDesignerSubjectLabels`, `window.onDesignerSubjectInput`, `window.autoFitAllDesignerTextareas`, `window.autoUpdateLfScrambled`
-  3. **Đồng bộ Element ID & Modal Container:**
+  3. **Đồng bộ Element ID & Container Form 5 Kỹ Năng (Tránh lỗi không render):**
      - Container danh sách Unit trong `teacher.html`: `#unit-management-list` (layout Grid responsive).
      - Modal biên soạn Unit 5 kỹ năng: `#unit-designer-modal`.
+     - **Container nội dung form 5 kỹ năng:** `#ud-skill-content` (**CỰC KỲ QUAN TRỌNG**: trong `teacher.html` là `<div id="ud-skill-content"></div>`, hàm `renderCurrentDesignerSkillBody()` phải trỏ chính xác vào `#ud-skill-content` hoặc fallback `#ud-skill-content-wrap` để nạp đúng giao diện vào DOM).
      - Badge đếm số lượng Unit: `#unit-count-badge`.
+  4. **Nạp & Đồng bộ Dữ liệu 5 Kỹ Năng trong Unit Designer (`designer-core.js` & `designer-save.js`):**
+     - 🎧 **Listening:** Nạp `mediaType`, `title`, `audioUrl`, `videoUrl`, `transcript` / `audioText`, và danh sách câu hỏi `exercises`.
+     - 📖 **Reading:** Nạp đoạn văn `passage`, từ điển tương tác `vocabulary` (từ, IPA, POS, nghĩa) và 10 dạng bài tập đọc hiểu `exercises`.
+     - 🗣️ **Speaking:** Nạp câu luyện mẫu `text`, phiên âm `ipa`, bản dịch `meaning`, và hình ảnh `image`.
+     - ✍️ **Writing:** Nạp bài tập viết lại câu `transformation` (câu gốc `originalSentence`, phủ định `negativeAnswer`, nghi vấn `questionAnswer`, `hint`) và sắp xếp từ `scramble` (câu chuẩn `correctSentence`, `hint`).
+     - 🔍 **Language Focus:** Nạp và tự động trích xuất đồng bộ 5 Sub-tabs: `pastVerbs` (Infinitive, Past, Meaning), `grammarChallenge` (Trắc nghiệm A/B/C/D), `backwardSpelling` (Đảo chữ ngược), `matchPairs` (Cặp nối từ), `flashcards` (Thẻ ghi nhớ 3D).
 
 ---
 
@@ -272,5 +279,5 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 - **Độ chính xác nhận diện đáp án đúng (In đậm & Bôi đỏ):** 34/34 câu (100%).
 - **Trò chơi Ghép cặp SVG Line:** Vẽ đường cong Bézier chính xác 100%, chấm điểm và đổi trạng thái mượt mà.
 - **Exercise 2 & 3 Language Focus:** Hoạt động hoàn hảo trên mọi thiết bị và màn hình.
-- **Quản lý & Thiết kế Unit 5 Kỹ năng:** Đồng bộ 100% với bảng `learning_units` Supabase, bộ lọc tìm kiếm & chuyển tab mượt mà không có runtime error.
+- **Quản lý & Thiết kế Unit 5 Kỹ năng:** Đồng bộ 100% với bảng `learning_units` Supabase, render chuẩn 5 kỹ năng vào `#ud-skill-content`, bộ lọc tìm kiếm & chuyển tab mượt mà không có runtime error.
 - **Tỉ lệ lỗi Math input error / runtime error:** 0%.
