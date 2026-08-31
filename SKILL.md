@@ -295,6 +295,20 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 
 ---
 
+### 16. Hệ Thống Studio Kỹ Năng Speaking & Video Roleplay Tương Tác
+- **Tệp nguồn:** [`js/units/designer-speaking.js`](file:///Users/namtp/Downloads/trac-nghiem/js/units/designer-speaking.js), [`js/learn/learn-speaking-engine.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-speaking-engine.js), [`js/learn/learn-speaking-roleplay.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-speaking-roleplay.js)
+- **Các phân hệ cốt lõi trong Speaking Studio:**
+  1. **🎬 Video / Audio Roleplay Đa Nhân Vật & 2 Nhân Vật A-B:**
+     - Thiết lập nhân vật đóng vai: Tên nhân vật, vai trò (Role Title), avatar emoji, màu sắc nhận diện, link video/audio. Hỗ trợ hội thoại 2, 3, hoặc 4 người.
+     - Soạn kịch bản lời thoại từng lượt (`dialogue`): Người nói (A/B/C...), câu thoại tiếng Anh (`text`), phiên âm IPA (`ipa`), dịch nghĩa tiếng Việt (`meaning`), mẹo phát âm & ngữ điệu (`tip`), link video/audio riêng cho câu thoại (`videoUrl`).
+     - Hỗ trợ công cụ **`⚡ Dán nhanh kịch bản (Quick Paste Dialogue)`** tự động bóc tách từ văn bản thô.
+  2. **🗣️ Câu Luyện Phát Âm Trọng Tâm & Thành Ngữ Giao Tiếp (Pronunciation Phrases):**
+     - Bảng danh sách câu luyện nói: Câu tiếng Anh, IPA, Dịch nghĩa, Mẹo nối âm / trọng âm và hình ảnh minh họa.
+     - Tích hợp nhận diện giọng nói và chấm điểm tức thì qua Web Speech API trên giao diện học viên.
+  3. **✨ Nạp Đề Mẫu Chuẩn Speaking:** Nút **`✨ Nạp kịch bản mẫu chuẩn`** (`loadSampleSpeakingLesson()`) sinh ngay trọn bộ Roleplay và Phrases hoàn chỉnh.
+
+---
+
 ## 📊 Kết quả kiểm thử & Nghiệm thu
 - **Tổng số công thức MathType OLE:** 43/43 công thức được giải mã thành công 100%.
 - **Độ chính xác nhận diện đáp án đúng (In đậm & Bôi đỏ):** 34/34 câu (100%).
@@ -302,4 +316,5 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 - **Exercise 2 & 3 Language Focus:** Hoạt động hoàn hảo trên mọi thiết bị và màn hình.
 - **Quản lý & Thiết kế Unit 5 Kỹ năng:** Đồng bộ 100% với bảng `learning_units` Supabase, render chuẩn 5 kỹ năng vào `#ud-skill-content`, bộ lọc tìm kiếm & chuyển tab mượt mà không có runtime error.
 - **Hệ thống 10 Dạng Bài Tập Đọc Hiểu Sư Phạm:** Tích hợp đầy đủ Studio tương tác cho giáo viên và Renderer/Chấm điểm tương tác cho học viên với 10 dạng chuẩn quốc tế.
+- **Hệ thống Video Roleplay & Luyện Phát Âm Speaking:** Tích hợp đầy đủ Studio biên soạn nhân vật, kịch bản thoại đa chiều, dán nhanh kịch bản và luyện phát âm Web Speech AI.
 - **Tỉ lệ lỗi Math input error / runtime error:** 0%.

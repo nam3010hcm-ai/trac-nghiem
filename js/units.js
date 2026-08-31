@@ -52,6 +52,11 @@ import {
 } from './units/designer-reading-exercises.js';
 
 import {
+  renderSpeakingDesigner,
+  extractSpeakingFromDOM
+} from './units/designer-speaking.js';
+
+import {
   renderLanguageFocusDesigner
 } from './units/designer-lang-focus.js';
 
@@ -86,6 +91,8 @@ export {
   renderReadingVocabularyDesigner,
   renderReadingDesignerExercises,
   extractReadingExercisesFromDOM,
+  renderSpeakingDesigner,
+  extractSpeakingFromDOM,
   renderLanguageFocusDesigner
 };
 

@@ -7,6 +7,7 @@ import { unitsState, editingUnitId, currentDesignerSkill, safeUpsertUnit } from 
 import { updateDatalists, renderUnitsList, populateUnitFilters } from './units-list.js';
 import { extractListeningExercisesFromDOM } from './designer-listening.js';
 import { extractReadingExercisesFromDOM } from './designer-reading-exercises.js';
+import { extractSpeakingFromDOM } from './designer-speaking.js';
 import { closeUnitEditor } from './designer-core.js';
 
 export function syncCurrentDesignerSkillToDraft() {
@@ -63,16 +64,9 @@ export function syncCurrentDesignerSkillToDraft() {
     }
     if (exercises.length) unit.reading[0].exercises = exercises;
   } else if (currentDesignerSkill === 'speaking') {
-    const text = $('ud-spk-text')?.value.trim();
-    const ipa = $('ud-spk-ipa')?.value.trim();
-    const meaning = $('ud-spk-meaning')?.value.trim();
-    const image = $('ud-spk-image')?.value.trim();
-
-    if (!unit.speaking) unit.speaking = [];
-    if (!unit.speaking[0]) unit.speaking[0] = { id: 'spk_1', phrases: [] };
-    unit.speaking[0].type = 'phrases';
-    if (text) {
-      unit.speaking[0].phrases = [{ text, ipa: ipa || '', meaning: meaning || '', image: image || '', tip: 'Luyện phát âm chuẩn âm cuối.' }];
+    const spkList = extractSpeakingFromDOM(unit.speaking || []);
+    if (spkList && spkList.length) {
+      unit.speaking = spkList;
     }
   } else if (currentDesignerSkill === 'writing') {
     const tfOrig = $('ud-wrt-tf-orig')?.value.trim();

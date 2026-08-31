@@ -7,6 +7,7 @@ import { unitsState, editingUnitId, setEditingUnitId, currentDesignerSkill, setC
 import { renderListeningDesignerExercises } from './designer-listening.js';
 import { renderReadingVocabularyDesigner } from './designer-reading-vocab.js';
 import { renderReadingDesignerExercises } from './designer-reading-exercises.js';
+import { renderSpeakingDesigner } from './designer-speaking.js';
 import { renderLanguageFocusDesigner } from './designer-lang-focus.js';
 import { syncCurrentDesignerSkillToDraft, saveUnit } from './designer-save.js';
 
@@ -174,18 +175,7 @@ export function renderCurrentDesignerSkillBody() {
       </div>
     `;
   } else if (skill === 'speaking') {
-    const s1 = (unit.speaking && unit.speaking[0]) ? unit.speaking[0] : {};
-    const p1 = (s1.phrases && s1.phrases[0]) ? s1.phrases[0] : (typeof s1 === 'object' && s1.text ? s1 : { text: 'Hello, welcome to Vietnam!', ipa: '/həˈloʊ/', meaning: 'Xin chào, chào mừng đến Việt Nam' });
-    contentWrap.innerHTML = `
-      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column;gap:14px">
-        <div class="fg" style="margin:0"><label>Câu luyện phát âm mẫu *</label><input type="text" id="ud-spk-text" value="${esc(p1.text || '')}" placeholder="VD: Hello, welcome to Vietnam!"></div>
-        <div class="grid2">
-          <div class="fg" style="margin:0"><label>Phiên âm IPA</label><input type="text" id="ud-spk-ipa" value="${esc(p1.ipa || '')}" placeholder="VD: /həˈloʊ/"></div>
-          <div class="fg" style="margin:0"><label>Dịch nghĩa</label><input type="text" id="ud-spk-meaning" value="${esc(p1.meaning || '')}" placeholder="VD: Xin chào, chào mừng đến Việt Nam"></div>
-        </div>
-        <div class="fg" style="margin:0"><label>Hình ảnh minh họa URL (tùy chọn)</label><input type="text" id="ud-spk-image" value="${esc(p1.image || s1.image || '')}" placeholder="VD: https://..."></div>
-      </div>
-    `;
+    contentWrap.innerHTML = renderSpeakingDesigner(unit);
   } else if (skill === 'writing') {
     const wList = Array.isArray(unit.writing) ? unit.writing : [];
     const wTransform = wList.find(w => w.category === 'transformation' || w.id?.includes('transform')) || wList[0] || {};
