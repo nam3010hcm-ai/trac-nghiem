@@ -390,6 +390,28 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
   7. **Luyện phát âm Speaking Phrases:** Câu luyện nói to **`20px`**, phiên âm IPA to **`16px`**, dịch nghĩa **`15px`**, nút ghi âm $15.5\text{px}$.
   8. **Thanh Điều hướng 5 Kỹ năng (`.skill-tab-btn`):** Đạt **`16.5px`** (`font-weight: 700`, `padding: 14px 20px`), icon cỡ $22\text{px}$.
 
+### 23. Tối Ưu Bố Cục Quản Trị & Chống Lỗi Gấp Khúc Nút Điều Hướng (Teacher Layout & Button Flow)
+- **Tệp nguồn:** [`teacher.html`](file:///Users/namtp/Downloads/trac-nghiem/teacher.html), [`css/style/style-student.css`](file:///Users/namtp/Downloads/trac-nghiem/css/style/style-student.css), [`css/learn/learn-base.css`](file:///Users/namtp/Downloads/trac-nghiem/css/learn/learn-base.css)
+- **Chống lỗi ngắt dòng dọc & co ép (Flex Shrink / Text Wrapping):**
+  - Tất cả các nút bấm `.btn`, `.btn-sm`, `.admin-cmd-search` được thiết lập `white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;` để văn bản không bị ngắt dòng từng từ theo chiều dọc khi thu nhỏ màn hình hoặc trong thanh flex.
+  - Thanh tìm kiếm nhanh `.admin-cmd-search` sở hữu `min-width: 260px; max-width: 340px;` cố định chiều ngang, hiển thị phím tắt `Ctrl + K` chuẩn mực.
+- **Tối ưu không gian hiển thị:** Loại bỏ thanh `admin-top-bar` phụ trùng lặp trên `teacher.html`, mở rộng không gian nội dung bảng điều khiển, biểu đồ KPI và báo cáo Analytics.
+- **Phân vùng phạm vi CSS (Scoping):** Giới hạn toàn bộ font-size typography mở rộng trong `body.learn-body`, bảo vệ giao diện quản trị giáo viên `teacher.html` không bị ảnh hưởng chéo.
+
+---
+
+### 24. Phân Cấp Học Tập Đa Môn Học 3 Cấp Độ (Curriculum Hierarchy Engine)
+- **Tệp nguồn:** [`js/curriculum.js`](file:///Users/namtp/Downloads/trac-nghiem/js/curriculum.js), [`teacher.html#curriculum`](file:///Users/namtp/Downloads/trac-nghiem/teacher.html), [`js/units.js`](file:///Users/namtp/Downloads/trac-nghiem/js/units.js)
+- **Cấu trúc 3 Cấp độ Sư phạm Chuẩn:** `Môn học (Subject) ➔ Học phần (Module / Course) ➔ Unit Bài học (5 Kỹ năng)`.
+- **Cơ chế Khử trùng lặp (Deduplication & Normalization):**
+  - Tích hợp hàm chuẩn hóa `matchSubject()` và `matchModule()` để tự động gom nhóm các Unit từ Supabase/State vào đúng Môn học (`🇬🇧 Tiếng Anh`, `📐 Toán Học`, `⚡ Vật Lý`, `🧪 Hóa Học`, `💻 Tin Học`), triệt tiêu hiện tượng trùng lặp môn do khác biệt emoji hay khoảng trắng.
+- **Hiển thị đầy đủ bộ huy hiệu 5 Kỹ năng:**
+  - Mỗi thẻ Unit hiển thị chi tiết số lượng bài tập: 🎧 `Lis`, 📖 `Read`, 🗣️ `Spk`, ✍️ `Wri`, 🔍 `LF` (Language Focus).
+- **Tích hợp hai chiều với Unit Designer:**
+  - Nút *"➕ Thêm Unit 5 Kỹ Năng"* trên từng học phần tự động mở Unit Designer và điền sẵn Môn học + Học phần tương ứng (`openUnitEditor(null, subject, module)`).
+  - Bấm vào bất kỳ thẻ Unit nào sẽ mở ngay Unit Designer để chỉnh sửa chi tiết.
+  - Bộ lọc dropdown Môn học cập nhật số lượng Unit theo thời gian thực.
+
 ---
 
 ## 📊 Kết quả kiểm thử & Nghiệm thu
@@ -405,4 +427,5 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 - **Hero Audio Player & Big Speaker Component:** Nâng cấp nút loa lớn 64px, animation phát sáng và thanh điều khiển tốc độ trực quan 100%.
 - **Phát Âm Dictation & Short Answer Studio:** Hoạt động chính xác 100%, hỗ trợ Web Speech AI Native Voice không lỗi mạng 404.
 - **Thẻ Từ Vựng 3D (Flashcards 3D Interactive):** Hiệu ứng quay 3 chiều 180 độ, thanh tiến độ, phát âm và điều hướng mượt mà 100%.
+- **Phân Cấp Học Phần 3 Cấp Độ (Curriculum Tree):** Đồng bộ Môn học ➔ Học phần ➔ Unit 5 Kỹ năng, khử trùng lặp và tích hợp Unit Designer mượt mà 100%.
 - **Tỉ lệ lỗi Math input error / runtime error:** 0%.
