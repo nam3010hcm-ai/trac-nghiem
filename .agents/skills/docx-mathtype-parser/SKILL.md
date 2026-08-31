@@ -377,14 +377,18 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 
 ---
 
-### 22. Quản Lý Favicon & Cỡ Chữ (Typography Scaling) Cho Cổng Học Tập
-- **Tệp nguồn:** `favicon.ico`, `favicon.svg`, [`css/learn/learn-base.css`](file:///Users/namtp/Downloads/trac-nghiem/css/learn/learn-base.css), [`js/learn/learn-listening.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-listening.js), [`js/learn/learn-reading-engine.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-reading-engine.js)
+### 22. Quản Lý Favicon & Cỡ Chữ Chuẩn Báo Chí VnExpress (Typography Scaling)
+- **Tệp nguồn:** `favicon.ico`, `favicon.svg`, [`css/learn/learn-base.css`](file:///Users/namtp/Downloads/trac-nghiem/css/learn/learn-base.css), [`js/learn/learn-listening.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-listening.js), [`js/learn/learn-reading-engine.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-reading-engine.js), [`js/learn/learn-speaking-engine.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-speaking-engine.js)
 - **Tối ưu Favicon:** Khởi tạo `favicon.svg` và `favicon.ico` nhị phân tại thư mục gốc, liên kết trên tất cả các trang HTML (`learn.html`, `index.html`, `student.html`, `teacher.html`) loại bỏ hoàn toàn lỗi mạng `404 Not Found`.
-- **Tối ưu Typography To & Rõ Nét:**
-  - Base body: `16px`, `line-height: 1.7`.
-  - Transcript bài nghe & Đoạn văn đọc hiểu: `17.5px`, `line-height: 1.95 - 2.0`.
-  - Tiêu đề bài học: `22px` (`font-weight: 800`).
-  - Lựa chọn trắc nghiệm & Ô gõ chính tả: `16px - 16.5px`.
+- **Hệ Thống Typography Chuẩn VnExpress Cho Toàn Bộ Cổng Học Tập:**
+  1. **Base Body (`body.learn-body`):** Nâng lên **`17.5px`**, độ giãn dòng **`line-height: 1.8`**, màu chữ `#1e293b` tương phản chuẩn báo điện tử cao cấp.
+  2. **Đoạn văn Đọc hiểu & Transcript (`.reading-passage`, `.transcript-box`):** Đạt chuẩn **`19px`**, độ giãn dòng vàng **`line-height: 1.95 - 2.0`** ($\approx 37\text{px}$), khoảng cách đoạn $16\text{px}$, chữ sắc nét không gây mỏi mắt.
+  3. **Tiêu đề Bài học (`Lesson Title`):** Đạt **`26px`** (`font-weight: 800`, `line-height: 1.35`), màu xanh đen `#0f172a`.
+  4. **Tiêu đề Câu hỏi & Bài tập (`Questions`):** Đạt **`18.5px`** (`font-weight: 800`, `line-height: 1.55`).
+  5. **Nút Lựa chọn Trắc nghiệm A/B/C/D (`.opt`, `.okey`):** Nút lựa chọn tăng lên **`17.5px`** (`padding: 14px 20px`), huy hiệu chữ cái `A, B, C, D` to $36\text{px} \times 36\text{px}$ (`16px bold`).
+  6. **Ô Gõ Chép Chính Tả (`.dictation-textarea`) & Điền từ (`.gap-input`):** Textarea đạt **`18.5px`** (chiều cao $95\text{px}$, `line-height: 1.7`), ô điền từ đạt **`17.5px`** (`line-height: 2.5`).
+  7. **Luyện phát âm Speaking Phrases:** Câu luyện nói to **`20px`**, phiên âm IPA to **`16px`**, dịch nghĩa **`15px`**, nút ghi âm $15.5\text{px}$.
+  8. **Thanh Điều hướng 5 Kỹ năng (`.skill-tab-btn`):** Đạt **`16.5px`** (`font-weight: 700`, `padding: 14px 20px`), icon cỡ $22\text{px}$.
 
 ---
 
