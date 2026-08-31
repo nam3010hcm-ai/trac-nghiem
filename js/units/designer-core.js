@@ -121,7 +121,7 @@ export function switchDesignerSkillTab(skill) {
 }
 
 export function renderCurrentDesignerSkillBody() {
-  const contentWrap = document.getElementById('ud-skill-content-wrap');
+  const contentWrap = document.getElementById('ud-skill-content') || document.getElementById('ud-skill-content-wrap');
   if (!contentWrap || !window._currentDraftUnit) return;
 
   const unit = window._currentDraftUnit;
@@ -175,23 +175,54 @@ export function renderCurrentDesignerSkillBody() {
     `;
   } else if (skill === 'speaking') {
     const s1 = (unit.speaking && unit.speaking[0]) ? unit.speaking[0] : {};
-    const p1 = (s1.phrases && s1.phrases[0]) ? s1.phrases[0] : { text: 'Hello, welcome to Vietnam!', ipa: '/həˈloʊ/', meaning: 'Xin chào, chào mừng đến Việt Nam' };
+    const p1 = (s1.phrases && s1.phrases[0]) ? s1.phrases[0] : (typeof s1 === 'object' && s1.text ? s1 : { text: 'Hello, welcome to Vietnam!', ipa: '/həˈloʊ/', meaning: 'Xin chào, chào mừng đến Việt Nam' });
     contentWrap.innerHTML = `
       <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column;gap:14px">
-        <div class="fg" style="margin:0"><label>Câu luyện phát âm mẫu *</label><input type="text" id="ud-spk-text" value="${esc(p1.text || '')}"></div>
+        <div class="fg" style="margin:0"><label>Câu luyện phát âm mẫu *</label><input type="text" id="ud-spk-text" value="${esc(p1.text || '')}" placeholder="VD: Hello, welcome to Vietnam!"></div>
         <div class="grid2">
-          <div class="fg" style="margin:0"><label>Phiên âm IPA</label><input type="text" id="ud-spk-ipa" value="${esc(p1.ipa || '')}"></div>
-          <div class="fg" style="margin:0"><label>Dịch nghĩa</label><input type="text" id="ud-spk-meaning" value="${esc(p1.meaning || '')}"></div>
+          <div class="fg" style="margin:0"><label>Phiên âm IPA</label><input type="text" id="ud-spk-ipa" value="${esc(p1.ipa || '')}" placeholder="VD: /həˈloʊ/"></div>
+          <div class="fg" style="margin:0"><label>Dịch nghĩa</label><input type="text" id="ud-spk-meaning" value="${esc(p1.meaning || '')}" placeholder="VD: Xin chào, chào mừng đến Việt Nam"></div>
         </div>
+        <div class="fg" style="margin:0"><label>Hình ảnh minh họa URL (tùy chọn)</label><input type="text" id="ud-spk-image" value="${esc(p1.image || s1.image || '')}" placeholder="VD: https://..."></div>
       </div>
     `;
   } else if (skill === 'writing') {
+    const wList = Array.isArray(unit.writing) ? unit.writing : [];
+    const wTransform = wList.find(w => w.category === 'transformation' || w.id?.includes('transform')) || wList[0] || {};
+    const tfItem = (wTransform.items && wTransform.items[0]) ? wTransform.items[0] : {};
+    const wScramble = wList.find(w => w.category === 'scramble' || w.id?.includes('scramble')) || wList[1] || {};
+    const scItem = (wScramble.items && wScramble.items[0]) ? wScramble.items[0] : {};
+
     contentWrap.innerHTML = `
-      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column;gap:14px">
-        <div class="fg" style="margin:0"><label>Câu gốc khẳng định (+)</label><input type="text" id="ud-wrt-tf-orig" value="They arrived on time yesterday."></div>
+      <div class="card" style="margin:0;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column;gap:16px">
+        <div style="font-weight:800;font-size:14px;color:#0f172a;">✍️ Bài Tập 1: Viết lại câu (Transformation)</div>
+        <div class="fg" style="margin:0">
+          <label>Câu gốc khẳng định (+) *</label>
+          <input type="text" id="ud-wrt-tf-orig" value="${esc(tfItem.originalSentence || 'They arrived on time yesterday.')}">
+        </div>
         <div class="grid2">
-          <div class="fg" style="margin:0"><label>a) Đáp án Phủ định (-)</label><input type="text" id="ud-wrt-tf-neg" value="They did not arrive on time yesterday."></div>
-          <div class="fg" style="margin:0"><label>b) Đáp án Nghi vấn (?)</label><input type="text" id="ud-wrt-tf-ques" value="Did they arrive on time yesterday?"></div>
+          <div class="fg" style="margin:0">
+            <label>a) Đáp án Phủ định (-) *</label>
+            <input type="text" id="ud-wrt-tf-neg" value="${esc(tfItem.negativeAnswer || 'They did not arrive on time yesterday.')}">
+          </div>
+          <div class="fg" style="margin:0">
+            <label>b) Đáp án Nghi vấn (?) *</label>
+            <input type="text" id="ud-wrt-tf-ques" value="${esc(tfItem.questionAnswer || 'Did they arrive on time yesterday?')}">
+          </div>
+        </div>
+        <div class="fg" style="margin:0">
+          <label>Gợi ý ngữ pháp (Hint)</label>
+          <input type="text" id="ud-wrt-tf-hint" value="${esc(tfItem.hint || '')}" placeholder="VD: Past Simple (did / didn't + V_infinitive)">
+        </div>
+
+        <div style="font-weight:800;font-size:14px;color:#0f172a;margin-top:8px;">🧩 Bài Tập 2: Xếp từ thành câu hoàn chỉnh (Word Scramble)</div>
+        <div class="fg" style="margin:0">
+          <label>Câu chuẩn hoàn chỉnh *</label>
+          <input type="text" id="ud-wrt-scramble-sentence" value="${esc(scItem.correctSentence || 'Although it rained heavily, we decided to go camping.')}">
+        </div>
+        <div class="fg" style="margin:0">
+          <label>Gợi ý (Hint)</label>
+          <input type="text" id="ud-wrt-scramble-hint" value="${esc(scItem.hint || '')}" placeholder="VD: Mệnh đề nhượng bộ bắt đầu bằng Although...">
         </div>
       </div>
     `;

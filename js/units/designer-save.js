@@ -100,6 +100,108 @@ export function syncCurrentDesignerSkillToDraft() {
       });
     }
     if (newWrtList.length) unit.writing = newWrtList;
+  } else if (currentDesignerSkill === 'languageFocus') {
+    if (!unit.languageFocus) unit.languageFocus = {};
+
+    // 1. Past verbs
+    const verbRows = document.querySelectorAll('#ud-lf-verbs-tbody tr.lf-verb-row');
+    if (verbRows.length > 0) {
+      const vList = [];
+      verbRows.forEach(r => {
+        const inf = (r.querySelector('.lf-verb-inf')?.value || '').trim();
+        const past = (r.querySelector('.lf-verb-past')?.value || '').trim();
+        const meaning = (r.querySelector('.lf-verb-meaning')?.value || '').trim();
+        if (inf || past) {
+          vList.push({ infinitive: inf, past: past, meaning: meaning });
+        }
+      });
+      unit.languageFocus.pastVerbs = vList;
+    }
+
+    // 2. Grammar challenge
+    const gCards = document.querySelectorAll('#ud-lf-grammar-list .lf-grammar-card');
+    if (gCards.length > 0) {
+      const gList = [];
+      gCards.forEach((c, idx) => {
+        const q = (c.querySelector('.lf-g-q')?.value || '').trim();
+        const optA = (c.querySelector('.lf-g-opt0')?.value || '').trim();
+        const optB = (c.querySelector('.lf-g-opt1')?.value || '').trim();
+        const optC = (c.querySelector('.lf-g-opt2')?.value || '').trim();
+        const optD = (c.querySelector('.lf-g-opt3')?.value || '').trim();
+        const ans = (c.querySelector('.lf-g-ans')?.value || 'A').trim();
+        const exp = (c.querySelector('.lf-g-exp')?.value || '').trim();
+        if (q) {
+          gList.push({
+            id: 'g_' + (idx + 1),
+            question: q,
+            options: [optA, optB, optC, optD].filter(Boolean),
+            answer: ans,
+            explanation: exp
+          });
+        }
+      });
+      unit.languageFocus.grammarChallenge = gList;
+    }
+
+    // 3. Backward spelling
+    const spCards = document.querySelectorAll('#ud-lf-spelling-list .lf-spelling-card');
+    if (spCards.length > 0) {
+      const spList = [];
+      spCards.forEach((c, idx) => {
+        const target = (c.querySelector('.lf-sp-target')?.value || '').trim().toUpperCase();
+        const scrambled = (c.querySelector('.lf-sp-scrambled')?.value || '').trim().toUpperCase();
+        const clue = (c.querySelector('.lf-sp-clue')?.value || '').trim();
+        const hint = (c.querySelector('.lf-sp-hint')?.value || '').trim();
+        if (target) {
+          spList.push({
+            id: 'sp_' + (idx + 1),
+            targetWord: target,
+            scrambled: scrambled || target.split('').reverse().join(''),
+            clue: clue,
+            hint: hint
+          });
+        }
+      });
+      unit.languageFocus.backwardSpelling = spList;
+    }
+
+    // 4. Match pairs
+    const pairRows = document.querySelectorAll('#ud-lf-pairs-tbody tr.lf-pair-row');
+    if (pairRows.length > 0) {
+      const pList = [];
+      pairRows.forEach((r, idx) => {
+        const left = (r.querySelector('.lf-pair-left')?.value || '').trim();
+        const right = (r.querySelector('.lf-pair-right')?.value || '').trim();
+        if (left && right) {
+          pList.push({ id: 'p_' + (idx + 1), left, right });
+        }
+      });
+      unit.languageFocus.matchPairs = pList;
+    }
+
+    // 5. Flashcards
+    const fcCards = document.querySelectorAll('#ud-lf-cards-list .lf-flashcard-card');
+    if (fcCards.length > 0) {
+      const fcList = [];
+      fcCards.forEach((c, idx) => {
+        const front = (c.querySelector('.lf-fc-front')?.value || '').trim();
+        const ipa = (c.querySelector('.lf-fc-ipa')?.value || '').trim();
+        const pos = (c.querySelector('.lf-fc-pos')?.value || 'noun').trim();
+        const back = (c.querySelector('.lf-fc-back')?.value || '').trim();
+        const example = (c.querySelector('.lf-fc-example')?.value || '').trim();
+        if (front) {
+          fcList.push({
+            id: 'fc_' + (idx + 1),
+            front,
+            ipa,
+            pos,
+            back,
+            example
+          });
+        }
+      });
+      unit.languageFocus.flashcards = fcList;
+    }
   }
 }
 
