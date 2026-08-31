@@ -328,5 +328,8 @@ export function renderExams(){
   }).join('') || '<div class="empty">📭 Chưa có đề thi.</div>';
 }
 
-window.renderPracticeExams = renderPracticeExams;
-window.renderExams = renderExams;
+if (typeof window !== 'undefined') {
+  window.renderPracticeExams = renderPracticeExams;
+  window.renderExams = renderExams;
+}
+

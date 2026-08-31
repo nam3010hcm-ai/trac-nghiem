@@ -282,7 +282,10 @@ function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-window.openClassModal = openClassModal;
-window.saveClassFromModal = saveClassFromModal;
-window.saveClassItem = saveClassItem;
-window.deleteClassItem = deleteClassItem;
+if (typeof window !== 'undefined') {
+  window.openClassModal = openClassModal;
+  window.saveClassFromModal = saveClassFromModal;
+  window.saveClassItem = saveClassItem;
+  window.deleteClassItem = deleteClassItem;
+}
+

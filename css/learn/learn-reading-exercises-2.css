@@ -1,0 +1,246 @@
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
+}
+
+.tf-explain-box {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* 5. Summary Cloze */
+.summary-cloze-card {
+  background: #ffffff;
+  border: 1.5px solid #e9d5ff;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.05);
+}
+
+.summary-wordbank-container {
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  border: 1.5px dashed #d8b4fe;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.summary-wordbank-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.summary-bank-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: #ffffff;
+  color: #7e22ce;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid #d8b4fe;
+  box-shadow: 0 1px 3px rgba(147, 51, 234, 0.1);
+  user-select: none;
+}
+
+.summary-passage-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 18px 20px;
+  font-size: 15px;
+  line-height: 2.2;
+  color: #1e293b;
+}
+
+.summary-select {
+  padding: 4px 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #6b21a8;
+  background: #ffffff;
+  border: 1.5px solid #c084fc;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+  margin: 0 3px;
+}
+
+.summary-select.correct {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.summary-select.wrong {
+  border-color: #ef4444;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* 6. Sequencing */
+.sequencing-card {
+  background: #ffffff;
+  border: 1.5px solid #fbcfe8;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(219, 39, 119, 0.05);
+}
+
+.sequencing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.sequencing-item {
+  background: #fdf2f8;
+  border: 1px solid #fbcfe8;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sequencing-select {
+  padding: 6px 10px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #be185d;
+  background: #ffffff;
+  border: 1.5px solid #f472b6;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+}
+
+.sequencing-text {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #1e293b;
+  flex: 1;
+}
+
+/* 7. Critical Thinking */
+.critical-thinking-card {
+  background: #ffffff;
+  border: 1.5px solid #fecaca;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.05);
+}
+
+.critical-q-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.critical-item {
+  background: #fff5f5;
+  border: 1px solid #fee2e2;
+  border-left: 4px solid #ef4444;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.critical-q-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #991b1b;
+  margin-bottom: 6px;
+}
+
+.critical-hint-reveal {
+  background: #ffffff;
+  border: 1px dashed #fca5a5;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.useful-expressions-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 14px;
+}
+
+.useful-chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.useful-expr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.useful-expr-chip:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+  transform: translateY(-1px);
+}
+
+/* 8. Post-reading Presentation */
+.postread-card {
+  background: #ffffff;
+  border: 1.5px solid #c7d2fe;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.05);
+}
+
+.postread-checklist-box {
+  background: #eef2ff;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 12px 0;
+}
+
+.postread-structure-box {
+  background: #f8fafc;
+  border-left: 4px solid #4f46e5;
+  border-radius: 0 10px 10px 0;
+  padding: 16px;
+  font-size: 14.5px;
+  line-height: 1.8;
+  color: #1e1b4b;
+  font-style: italic;
+  margin-top: 12px;
+}
+
+
+

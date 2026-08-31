@@ -11,42 +11,8 @@ export let assignmentsList = [];
 
 // Default demo assignments matching Supabase schema
 export const DEFAULT_ASSIGNMENTS = [
-  {
-    id: '00000000-0000-0000-0000-000000000101',
-    title: '📝 Kiểm tra Giữa Kỳ 1 — Anh Văn 10 (Ma trận 40 câu)',
-    classId: '00000000-0000-0000-0000-000000000010',
-    className: 'Lớp 10A1 - Anh Văn Chuyên',
-    contentType: 'exam',
-    contentId: '1',
-    startAt: '2026-08-10T08:00',
-    dueAt: '2026-08-25T23:59',
-    durationMinutes: 45,
-    maxAttempts: 1,
-    isShuffleQuestions: true,
-    isShuffleOptions: true,
-    showAnswersMode: 'after_due',
-    status: 'active',
-    submittedCount: 24,
-    totalStudents: 35
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000102',
-    title: '🎬 Video Roleplay: Hotel Check-in & Inquiry (A & B)',
-    classId: '00000000-0000-0000-0000-000000000011',
-    className: 'Lớp 11B2 - Luyện Thi IELTS & B2',
-    contentType: 'video_roleplay',
-    contentId: 'u1',
-    startAt: '2026-08-12T00:00',
-    dueAt: '2026-08-30T23:59',
-    durationMinutes: 0,
-    maxAttempts: 0,
-    isShuffleQuestions: false,
-    isShuffleOptions: false,
-    showAnswersMode: 'immediate',
-    status: 'active',
-    submittedCount: 18,
-    totalStudents: 28
-  }
+  { id: '00000000-0000-0000-0000-000000000101', title: '📝 Kiểm tra Giữa Kỳ 1 — Anh Văn 10 (Ma trận 40 câu)', classId: '00000000-0000-0000-0000-000000000010', className: 'Lớp 10A1 - Anh Văn Chuyên', contentType: 'exam', contentId: '1', startAt: '2026-08-10T08:00', dueAt: '2026-08-25T23:59', durationMinutes: 45, maxAttempts: 1, isShuffleQuestions: true, isShuffleOptions: true, showAnswersMode: 'after_due', status: 'active', submittedCount: 24, totalStudents: 35 },
+  { id: '00000000-0000-0000-0000-000000000102', title: '🎬 Video Roleplay: Hotel Check-in & Inquiry (A & B)', classId: '00000000-0000-0000-0000-000000000011', className: 'Lớp 11B2 - Luyện Thi IELTS & B2', contentType: 'video_roleplay', contentId: 'u1', startAt: '2026-08-12T00:00', dueAt: '2026-08-30T23:59', durationMinutes: 0, maxAttempts: 0, isShuffleQuestions: false, isShuffleOptions: false, showAnswersMode: 'immediate', status: 'active', submittedCount: 18, totalStudents: 28 }
 ];
 
 /**
@@ -306,12 +272,16 @@ export function openAssignmentModal(assignmentId = null) {
   modal.style.display = 'flex';
 }
 
-window.updateAsgContentSelect = function(type) {
+export function updateAsgContentSelect(type) {
   const contentSel = document.getElementById('asg-input-content');
   if (contentSel) {
     contentSel.innerHTML = getContentOptionsHTML(type, '');
   }
-};
+}
+if (typeof window !== 'undefined') {
+  window.updateAsgContentSelect = updateAsgContentSelect;
+}
+
 
 /**
  * Save Assignment from Modal Inputs
@@ -486,8 +456,11 @@ export async function saveAssignmentItem(data) {
 }
 
 
-window.openAssignmentModal = openAssignmentModal;
-window.saveAssignmentFromModal = saveAssignmentFromModal;
-window.saveAssignmentItem = saveAssignmentItem;
-window.deleteAssignmentItem = deleteAssignmentItem;
-window.previewAssignment = previewAssignment;
+if (typeof window !== 'undefined') {
+  window.openAssignmentModal = openAssignmentModal;
+  window.saveAssignmentFromModal = saveAssignmentFromModal;
+  window.saveAssignmentItem = saveAssignmentItem;
+  window.deleteAssignmentItem = deleteAssignmentItem;
+  window.previewAssignment = previewAssignment;
+}
+

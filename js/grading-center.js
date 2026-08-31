@@ -232,5 +232,8 @@ function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-window.openGradeModal = openGradeModal;
-window.saveGradeResult = saveGradeResult;
+if (typeof window !== 'undefined') {
+  window.openGradeModal = openGradeModal;
+  window.saveGradeResult = saveGradeResult;
+}
+

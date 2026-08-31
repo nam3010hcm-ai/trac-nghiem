@@ -1,0 +1,271 @@
+/* =========================================================================
+   7. ADVANCED 7-STAGE READING PEDAGOGICAL COMPONENTS
+   ========================================================================= */
+
+/* Reading Stage Badges */
+.reading-stage-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.stage-pre {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.stage-skim {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.stage-scan {
+  background: #f0fdfa;
+  color: #0d9488;
+  border: 1px solid #99f6e4;
+}
+
+.stage-vocab {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.stage-comp {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+}
+
+.stage-sum {
+  background: #faf5ff;
+  color: #9333ea;
+  border: 1px solid #e9d5ff;
+}
+
+.stage-seq {
+  background: #fdf2f8;
+  color: #db2777;
+  border: 1px solid #fbcfe8;
+}
+
+.stage-crit {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.stage-post {
+  background: #eef2ff;
+  color: #4f46e5;
+  border: 1px solid #c7d2fe;
+}
+
+/* 1. Pre-reading Card */
+.preread-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+  border: 1.5px solid #bbf7d0;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.06);
+}
+
+.preread-q-item {
+  background: #ffffff;
+  border: 1px solid #dcfce7;
+  border-left: 4px solid #10b981;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.preread-hint-box {
+  background: #ffffff;
+  border: 1.5px dashed #86efac;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 12px;
+  font-size: 13.5px;
+  color: #166534;
+  line-height: 1.6;
+}
+
+/* 2. Group MCQ Card (Skimming / Vocabulary / Comprehension) */
+.mcq-group-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.mcq-group-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 14px;
+  transition: all 0.2s ease;
+}
+
+.mcq-group-item:last-child {
+  margin-bottom: 0;
+}
+
+.mcq-group-q-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 10px;
+}
+
+/* 3. Scanning Table */
+.scanning-table-card {
+  background: #ffffff;
+  border: 1.5px solid #ccfbf1;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.05);
+}
+
+.scanning-grid-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+
+.scanning-row {
+  background: #f8fafc;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.scanning-col-q {
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  width: 50%;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.scanning-col-input {
+  padding: 8px 10px;
+  width: 38%;
+}
+
+.scanning-text-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  outline: none;
+  background: #ffffff;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.scanning-text-input:focus {
+  border-color: #0d9488;
+  box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.2);
+}
+
+.scanning-col-status {
+  padding: 8px 12px;
+  width: 12%;
+  text-align: center;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.scanning-row.correct {
+  background: #f0fdf4 !important;
+  border-left: 4px solid #16a34a;
+}
+
+.scanning-row.wrong {
+  background: #fef2f2 !important;
+  border-left: 4px solid #ef4444;
+}
+
+/* 4. True/False Group */
+.tf-group-card {
+  background: #ffffff;
+  border: 1.5px solid #ffedd5;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(234, 88, 12, 0.05);
+}
+
+.tf-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  transition: all 0.2s ease;
+}
+
+.tf-statement-text {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #1e293b;
+  flex: 1;
+  min-width: 240px;
+}
+
+.tf-btn-group {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tf-toggle-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  border-radius: 6px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tf-toggle-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.tf-toggle-btn.btn-true.selected {
+  background: #16a34a;
+  color: #ffffff;
+  border-color: #16a34a;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+}
+
+.tf-toggle-btn.btn-false.selected {

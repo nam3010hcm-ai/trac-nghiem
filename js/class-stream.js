@@ -169,5 +169,8 @@ function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-window.submitStreamPost = submitStreamPost;
-window.submitPostComment = submitPostComment;
+if (typeof window !== 'undefined') {
+  window.submitStreamPost = submitStreamPost;
+  window.submitPostComment = submitPostComment;
+}
+

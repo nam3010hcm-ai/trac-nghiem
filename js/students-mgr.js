@@ -427,13 +427,16 @@ export function exportStudentsCSV() {
   link.click();
 }
 
-window.openStudentModal = openStudentModal;
-window.closeStudentModal = closeStudentModal;
-window.saveStudent = saveStudent;
-window.toggleStudentStatus = toggleStudentStatus;
-window.deleteStudent = deleteStudent;
-window.openBulkStudentModal = openBulkStudentModal;
-window.closeBulkStudentModal = closeBulkStudentModal;
-window.saveBulkStudents = saveBulkStudents;
-window.exportStudentsCSV = exportStudentsCSV;
-window.renderStudentsList = renderStudentsList;
+if (typeof window !== 'undefined') {
+  window.openStudentModal = openStudentModal;
+  window.closeStudentModal = closeStudentModal;
+  window.saveStudent = saveStudent;
+  window.toggleStudentStatus = toggleStudentStatus;
+  window.deleteStudent = deleteStudent;
+  window.openBulkStudentModal = openBulkStudentModal;
+  window.closeBulkStudentModal = closeBulkStudentModal;
+  window.saveBulkStudents = saveBulkStudents;
+  window.exportStudentsCSV = exportStudentsCSV;
+  window.renderStudentsList = renderStudentsList;
+}
+

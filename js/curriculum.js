@@ -438,14 +438,17 @@ export function deleteModule(modId) {
 }
 
 // Global Exports
-window.renderCurriculumTree = renderCurriculumTree;
-window.syncCurriculumWithUnits = syncCurriculumWithUnits;
-window.openSubjectModal = openSubjectModal;
-window.closeSubjectModal = closeSubjectModal;
-window.saveSubject = saveSubject;
-window.deleteSubject = deleteSubject;
-window.openModuleModal = openModuleModal;
-window.closeModuleModal = closeModuleModal;
-window.saveModule = saveModule;
-window.deleteModule = deleteModule;
+if (typeof window !== 'undefined') {
+  window.renderCurriculumTree = renderCurriculumTree;
+  window.syncCurriculumWithUnits = syncCurriculumWithUnits;
+  window.openSubjectModal = openSubjectModal;
+  window.closeSubjectModal = closeSubjectModal;
+  window.saveSubject = saveSubject;
+  window.deleteSubject = deleteSubject;
+  window.openModuleModal = openModuleModal;
+  window.closeModuleModal = closeModuleModal;
+  window.saveModule = saveModule;
+  window.deleteModule = deleteModule;
+}
+
 

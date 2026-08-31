@@ -1,0 +1,370 @@
+/* =========================================================================
+   NEW COMPREHENSIVE EXERCISE STYLES
+   ========================================================================= */
+
+/* 1. VOCABULARY MATCHING (1-9 with a-i) */
+.matching-exercise-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.matching-grid-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+
+.matching-row {
+  background: #f8fafc;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.matching-row:hover {
+  background: #f1f5f9;
+}
+
+.matching-row.correct {
+  background: #f0fdf4 !important;
+  border-left: 4px solid #16a34a;
+}
+
+.matching-row.wrong {
+  background: #fef2f2 !important;
+  border-left: 4px solid #ef4444;
+}
+
+.matching-col-num {
+  width: 40px;
+  text-align: center;
+  font-weight: 800;
+  color: #6366f1;
+  font-size: 14px;
+  padding: 10px 8px;
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.matching-col-word {
+  padding: 10px 12px;
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 14.5px;
+  min-width: 160px;
+}
+
+.matching-col-select {
+  width: 90px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.matching-select {
+  width: 100%;
+  padding: 6px 10px;
+  font-weight: 800;
+  font-size: 14px;
+  color: #1e293b;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+  outline: none;
+}
+
+.matching-select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+}
+
+.matching-definitions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px dashed #cbd5e1;
+  margin-top: 14px;
+}
+
+.matching-def-item {
+  display: flex;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.matching-def-letter {
+  font-weight: 800;
+  color: #0284c7;
+  min-width: 24px;
+}
+
+/* 2. BACKWARD SPELLING & WORD PUZZLE */
+.spelling-puzzle-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+  border: 1.5px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.spelling-tiles-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.spelling-char-tile {
+  width: 42px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 2px solid #3b82f6;
+  border-radius: 8px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1e40af;
+  box-shadow: 0 3px 6px rgba(59,130,246,0.15);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.spelling-char-tile:hover {
+  transform: translateY(-2px);
+  background: #eff6ff;
+}
+
+.spelling-char-tile.used {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spelling-assembled-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  min-height: 52px;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.85);
+  border: 2px dashed #93c5fd;
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+
+/* 3. SHORT ANSWER / COMPREHENSION QUESTIONS */
+.short-answer-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+
+.short-answer-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14.5px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.short-answer-input:focus {
+  border-color: #6366f1;
+}
+
+.sample-answer-reveal {
+  background: #f8fafc;
+  border-left: 4px solid #0284c7;
+  padding: 12px 14px;
+  border-radius: 0 8px 8px 0;
+  margin-top: 10px;
+  font-size: 13.5px;
+  color: #334155;
+}
+
+/* 4. SENTENCE TRANSFORMATION (NEGATIVE & QUESTION) */
+.sentence-transform-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  border-left: 4px solid #8b5cf6;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.transform-orig-sentence {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #1e293b;
+  background: #f5f3ff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  border: 1px solid #ede9fe;
+}
+
+.transform-sub-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.transform-badge-neg {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #b91c1c;
+  background: #fee2e2;
+  padding: 2px 8px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.transform-badge-ques {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #1d4ed8;
+  background: #dbeafe;
+  padding: 2px 8px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.transform-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.transform-input.correct {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  color: #15803d;
+  font-weight: 600;
+}
+
+.transform-input.wrong {
+  border-color: #ef4444;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* 5. PAST FORM VERBS TABLE */
+.past-form-table-wrap {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  margin-bottom: 20px;
+}
+
+.past-form-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.past-form-table th {
+  background: #f8fafc;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #475569;
+  text-align: left;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.past-form-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+}
+
+.past-form-table tr:hover td {
+  background: #f8fafc;
+}
+
+.verb-input-cell {
+  width: 100%;
+  max-width: 200px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  outline: none;
+}
+
+.verb-input-cell.correct {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.verb-input-cell.wrong {
+  border-color: #ef4444;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+/* Sub-nav tabs for skill modules */
+.skill-subnav-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.skill-subnav-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.skill-subnav-btn:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.skill-subnav-btn.active {
+  background: #6366f1;
+  color: #ffffff;
+  border-color: #6366f1;
+  box-shadow: 0 2px 6px rgba(99,102,241,0.25);
+}

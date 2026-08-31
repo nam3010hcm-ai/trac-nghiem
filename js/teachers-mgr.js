@@ -471,10 +471,13 @@ export async function deleteTeacher(id) {
 }
 
 // Gán lên window object
-window.loadTeachers = loadTeachers;
-window.renderTeachersList = renderTeachersList;
-window.openTeacherModal = openTeacherModal;
-window.closeTeacherModal = closeTeacherModal;
-window.saveTeacher = saveTeacher;
-window.toggleTeacherStatus = toggleTeacherStatus;
-window.deleteTeacher = deleteTeacher;
+if (typeof window !== 'undefined') {
+  window.loadTeachers = loadTeachers;
+  window.renderTeachersList = renderTeachersList;
+  window.openTeacherModal = openTeacherModal;
+  window.closeTeacherModal = closeTeacherModal;
+  window.saveTeacher = saveTeacher;
+  window.toggleTeacherStatus = toggleTeacherStatus;
+  window.deleteTeacher = deleteTeacher;
+}
+
