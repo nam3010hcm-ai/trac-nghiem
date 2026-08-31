@@ -337,6 +337,18 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 
 ---
 
+### 19. Hệ Thống Hero Audio Player & Nút Loa Lớn Tương Tác (Listening Studio)
+- **Tệp nguồn:** [`js/learn/learn-listening.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-listening.js), [`css/learn/learn-listening.css`](file:///Users/namtp/Downloads/trac-nghiem/css/learn/learn-listening.css)
+- **Nâng cấp giao diện phát âm thanh bài nghe:**
+  - **Nút Loa Kích Thước Lớn (`.lis-big-speaker-btn`):**
+    - Kích thước lớn $64\text{px} \times 64\text{px}$, biểu tượng loa `🔊` cỡ $30\text{px}$ siêu nổi bật với gradient xanh dương đổ bóng 3D (`#2563eb` $\to$ `#1d4ed8`).
+    - **Hiệu ứng sóng âm phát sóng (Pulse Green):** Khi bấm nghe, nút loa chuyển sang màu xanh lục phát sáng động kèm vòng tròn xung nhịp (`@keyframes pulse-green`), hiển thị trạng thái *"ĐANG PHÁT ÂM THANH... (BẤM ĐỂ DỪNG)"*.
+  - **Nhận diện & Điều khiển Tốc độ Phát (`speed-pill`):**
+    - Hỗ trợ đổi tốc độ linh hoạt: `0.75x` (Chậm), `1.0x` (Chuẩn), `1.25x` (Nhanh) cho cả File Audio thực tế và Web Speech Native Voice.
+  - **Tương tác 1 chạm trực quan:** Học viên có thể click vào nút Loa hoặc click trực tiếp vào tiêu đề *"BẤM VÀO LOA ĐỂ PHÁT ÂM THANH"* để kích hoạt phát âm.
+
+---
+
 ## 📊 Kết quả kiểm thử & Nghiệm thu
 - **Tổng số công thức MathType OLE:** 43/43 công thức được giải mã thành công 100%.
 - **Độ chính xác nhận diện đáp án đúng (In đậm & Bôi đỏ):** 34/34 câu (100%).
@@ -347,4 +359,5 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 - **Hệ thống Video Roleplay & Luyện Phát Âm Speaking:** Tích hợp đầy đủ Studio biên soạn nhân vật, kịch bản thoại đa chiều, dán nhanh kịch bản và luyện phát âm Web Speech AI.
 - **Hệ thống Đăng nhập & Ẩn/Hiện Mật khẩu Toàn diện:** Khắc phục triệt để lỗi đăng nhập học tập `learn.html`, hỗ trợ Enter key, đồng bộ SSO và nút chuyển đổi icon 👁️/🙈 ở mọi nơi.
 - **Xử lý An toàn Null-Safe 5 Kỹ Năng:** Khắc phục hoàn toàn lỗi crash `TypeError: Cannot read properties of undefined (reading 'replace')` khi chuyển tab Listening/Speaking/Reading.
+- **Hero Audio Player & Big Speaker Component:** Nâng cấp nút loa lớn 64px, animation phát sáng và thanh điều khiển tốc độ trực quan 100%.
 - **Tỉ lệ lỗi Math input error / runtime error:** 0%.

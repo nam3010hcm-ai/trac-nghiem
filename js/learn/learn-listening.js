@@ -71,24 +71,39 @@ export function loadListeningLesson(id) {
         </video>
       </div>
     `;
-  } else if (l.audioUrl) {
-    mediaHtml = `
-      <div class="audio-player-custom">
-        <audio id="current-lis-audio" src="${l.audioUrl}" preload="metadata"></audio>
-        <button class="play-btn" id="btn-play-lis" onclick="window.playCurrentListeningAudio()">▶</button>
-        <div class="speed-selector">
-          <span style="font-size:12px;color:#64748b;font-weight:600">Tốc độ:</span>
-          <button class="speed-btn ${currentPlaybackSpeed === 0.75 ? 'active' : ''}" onclick="window.setListeningSpeed(0.75)">0.75x</button>
-          <button class="speed-btn ${currentPlaybackSpeed === 1.0 ? 'active' : ''}" onclick="window.setListeningSpeed(1.0)">1.0x</button>
-          <button class="speed-btn ${currentPlaybackSpeed === 1.25 ? 'active' : ''}" onclick="window.setListeningSpeed(1.25)">1.25x</button>
-        </div>
-      </div>
-    `;
   } else {
+    const isAudioFile = Boolean(l.audioUrl);
     mediaHtml = `
-      <div class="audio-player-custom">
-        <button class="play-btn" id="btn-play-lis" onclick="window.playCurrentListeningAudio()">🔊</button>
-        <span style="font-size:13.5px;color:#334155;font-weight:600">Phát âm tự nhiên (Web Speech AI Voice)</span>
+      <div class="lis-audio-hero-card">
+        ${isAudioFile ? `<audio id="current-lis-audio" src="${l.audioUrl}" preload="metadata"></audio>` : ''}
+        <div class="lis-audio-left">
+          <button type="button" class="lis-big-speaker-btn" id="btn-play-lis" onclick="window.playCurrentListeningAudio()" title="Bấm vào để Nghe Bài Học">
+            <span id="lis-speaker-icon">🔊</span>
+          </button>
+          <div class="lis-audio-info">
+            <div class="lis-audio-main-title" onclick="window.playCurrentListeningAudio()">
+              <span id="lis-audio-status-text">BẤM VÀO LOA ĐỂ PHÁT ÂM THANH</span>
+              <span class="lis-audio-play-tag" id="lis-audio-play-tag">▶ BẮT ĐẦU NGHE</span>
+            </div>
+            <div class="lis-audio-sub-meta">
+              <span class="lis-engine-badge">
+                ${isAudioFile ? '🎧 File âm thanh Studio chất lượng cao' : '🎙️ Giọng đọc tự nhiên chuẩn bản xứ (Web Speech AI Voice)'}
+              </span>
+              <span class="lis-duration-pill">⏱️ ${esc(l.duration || '50s')}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="lis-audio-controls">
+          <div class="speed-selector-group">
+            <span class="speed-label">⚡ Tốc độ:</span>
+            <div class="speed-btn-group">
+              <button type="button" class="speed-pill ${currentPlaybackSpeed === 0.75 ? 'active' : ''}" onclick="window.setListeningSpeed(0.75)">0.75x</button>
+              <button type="button" class="speed-pill ${currentPlaybackSpeed === 1.0 ? 'active' : ''}" onclick="window.setListeningSpeed(1.0)">1.0x (Chuẩn)</button>
+              <button type="button" class="speed-pill ${currentPlaybackSpeed === 1.25 ? 'active' : ''}" onclick="window.setListeningSpeed(1.25)">1.25x</button>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -98,8 +113,8 @@ export function loadListeningLesson(id) {
       <div class="card" style="margin:0">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div>
-            <div style="font-size:18px;font-weight:800;color:#1e293b">${l.title}</div>
-            <div style="font-size:13px;color:#64748b">🎯 Chủ đề: ${l.topic || currentUnit.topic || 'General'}</div>
+            <div style="font-size:18px;font-weight:800;color:#1e293b">${esc(l.title)}</div>
+            <div style="font-size:13px;color:#64748b">🎯 Chủ đề: ${esc(l.topic || currentUnit.topic || 'General')}</div>
           </div>
           <button class="btn btn-sm" id="btn-toggle-transcript" onclick="window.toggleLisTranscript()">👁️ Hiện Transcript</button>
         </div>
@@ -108,7 +123,7 @@ export function loadListeningLesson(id) {
 
         <div id="lis-transcript-box" class="transcript-box" style="display:none;margin-top:14px">
           <div style="font-weight:700;font-size:13px;color:#0f172a;margin-bottom:6px">📝 Lời thoại bài nghe (Transcript):</div>
-          <div style="font-size:14px;color:#334155;line-height:1.7">${l.transcript || l.audioText || 'Chưa có transcript.'}</div>
+          <div style="font-size:14px;color:#334155;line-height:1.7">${esc(l.transcript || l.audioText || l.text || 'Chưa có transcript.')}</div>
         </div>
       </div>
 
@@ -214,21 +229,84 @@ export function renderListeningExercises(exercises) {
 // Window global bindings
 if (typeof window !== 'undefined') {
   window.selectListeningLesson = selectListeningLesson;
+
   window.setListeningSpeed = function(spd) {
     currentPlaybackSpeed = spd;
     const audio = document.getElementById('current-lis-audio');
     if (audio) audio.playbackRate = spd;
+    document.querySelectorAll('.speed-pill').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent.includes(spd + 'x'));
+    });
   };
+
   window.playCurrentListeningAudio = function() {
     if (!currentLisLesson) return;
     const audio = document.getElementById('current-lis-audio');
+    const playBtn = document.getElementById('btn-play-lis');
+    const iconSpan = document.getElementById('lis-speaker-icon');
+    const statusText = document.getElementById('lis-audio-status-text');
+    const playTag = document.getElementById('lis-audio-play-tag');
+
+    // 1. If real audio element exists
     if (audio) {
-      if (audio.paused) audio.play();
-      else audio.pause();
+      if (audio.paused) {
+        audio.playbackRate = currentPlaybackSpeed;
+        audio.play().then(() => {
+          if (playBtn) playBtn.classList.add('is-playing');
+          if (iconSpan) iconSpan.textContent = '⏸️';
+          if (statusText) statusText.textContent = 'ĐANG PHÁT ÂM THANH... (BẤM ĐỂ TẠM DỪNG)';
+          if (playTag) playTag.textContent = '⏸️ TẠM DỪNG';
+        }).catch(err => console.warn('Audio play error:', err));
+
+        audio.onended = function() {
+          if (playBtn) playBtn.classList.remove('is-playing');
+          if (iconSpan) iconSpan.textContent = '🔊';
+          if (statusText) statusText.textContent = 'BẤM VÀO LOA ĐỂ PHÁT ÂM THANH';
+          if (playTag) playTag.textContent = '▶ BẮT ĐẦU NGHE';
+        };
+      } else {
+        audio.pause();
+        if (playBtn) playBtn.classList.remove('is-playing');
+        if (iconSpan) iconSpan.textContent = '🔊';
+        if (statusText) statusText.textContent = 'BẤM VÀO LOA ĐỂ PHÁT ÂM THANH';
+        if (playTag) playTag.textContent = '▶ BẮT ĐẦU NGHE';
+      }
       return;
     }
-    speakText(currentLisLesson.audioText || currentLisLesson.transcript, { rate: currentPlaybackSpeed, lang: 'en-US' });
+
+    // 2. Web Speech AI Voice
+    if (window.speechSynthesis && window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      if (playBtn) playBtn.classList.remove('is-playing');
+      if (iconSpan) iconSpan.textContent = '🔊';
+      if (statusText) statusText.textContent = 'BẤM VÀO LOA ĐỂ PHÁT ÂM THANH';
+      if (playTag) playTag.textContent = '▶ BẮT ĐẦU NGHE';
+      return;
+    }
+
+    const textToSpeak = currentLisLesson.audioText || currentLisLesson.transcript || currentLisLesson.text || currentLisLesson.content || '';
+    if (!textToSpeak) {
+      alert('Bài nghe chưa có nội dung văn bản để phát âm.');
+      return;
+    }
+
+    if (playBtn) playBtn.classList.add('is-playing');
+    if (iconSpan) iconSpan.textContent = '🔊';
+    if (statusText) statusText.textContent = 'ĐANG PHÁT ÂM BÀI HỌC (BẤM ĐỂ DỪNG)...';
+    if (playTag) playTag.textContent = '⏹️ DỪNG PHÁT';
+
+    speakText(textToSpeak, {
+      rate: currentPlaybackSpeed,
+      lang: 'en-US',
+      onEnd: () => {
+        if (playBtn) playBtn.classList.remove('is-playing');
+        if (iconSpan) iconSpan.textContent = '🔊';
+        if (statusText) statusText.textContent = 'BẤM VÀO LOA ĐỂ PHÁT ÂM THANH';
+        if (playTag) playTag.textContent = '▶ BẮT ĐẦU NGHE';
+      }
+    });
   };
+
   window.toggleLisTranscript = function() {
     const box = document.getElementById('lis-transcript-box');
     const btn = document.getElementById('btn-toggle-transcript');
@@ -238,6 +316,7 @@ if (typeof window !== 'undefined') {
       btn.textContent = isHidden ? '🙈 Ẩn Transcript' : '👁️ Hiện Transcript';
     }
   };
+
   window.speakDictation = function(sentence) {
     speakText(sentence, { rate: currentPlaybackSpeed, lang: 'en-US' });
   };

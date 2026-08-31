@@ -262,3 +262,183 @@
   padding: 2px 6px;
   border-radius: 4px;
 }
+
+/* =========================================================================
+   ENHANCED HERO AUDIO & SPEAKER PLAYER STYLES
+   ========================================================================= */
+.lis-audio-hero-card {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e0effe 100%);
+  border: 2px solid #bfdbfe;
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 16px 0;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+  transition: all 0.25s ease;
+}
+
+.lis-audio-hero-card:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 6px 22px rgba(37, 99, 235, 0.12);
+}
+
+.lis-audio-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 280px;
+}
+
+.lis-big-speaker-btn {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lis-big-speaker-btn:hover {
+  transform: scale(1.08);
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  box-shadow: 0 6px 24px rgba(37, 99, 235, 0.45);
+}
+
+.lis-big-speaker-btn:active {
+  transform: scale(0.95);
+}
+
+.lis-big-speaker-btn.is-playing {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  box-shadow: 0 4px 20px rgba(22, 163, 74, 0.4);
+  animation: pulse-green 1.5s infinite;
+}
+
+@keyframes pulse-green {
+  0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.6); }
+  70% { box-shadow: 0 0 0 14px rgba(22, 163, 74, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+}
+
+.lis-audio-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lis-audio-main-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1e3a8a;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.lis-audio-main-title:hover {
+  color: #2563eb;
+}
+
+.lis-audio-play-tag {
+  font-size: 11px;
+  font-weight: 800;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lis-audio-sub-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #475569;
+  flex-wrap: wrap;
+}
+
+.lis-engine-badge {
+  color: #0369a1;
+  font-weight: 600;
+}
+
+.lis-duration-pill {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 700;
+  color: #334155;
+  font-size: 11px;
+}
+
+.lis-audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.speed-selector-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1.5px solid #bfdbfe;
+}
+
+.speed-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e40af;
+}
+
+.speed-btn-group {
+  display: flex;
+  gap: 4px;
+}
+
+.speed-pill {
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.speed-pill:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.speed-pill.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
