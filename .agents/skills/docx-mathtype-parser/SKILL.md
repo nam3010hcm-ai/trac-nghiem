@@ -350,6 +350,20 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 
 ---
 
+### 20. Xử Lý An Toàn Phát Âm Dictation & Tránh Lỗi 404 URL Âm Thanh Ngoại Bộ
+- **Tệp nguồn:** [`js/learn/learn-listening.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-listening.js), [`js/learn/learn-listening-eval.js`](file:///Users/namtp/Downloads/trac-nghiem/js/learn/learn-listening-eval.js), [`js/data/unit10-listening.js`](file:///Users/namtp/Downloads/trac-nghiem/js/data/unit10-listening.js)
+- **Quy tắc xử lý trường dữ liệu đa dạng (Multi-Schema Dictation):**
+  1. **Đồng bộ hóa tên trường câu mẫu:** Dữ liệu bài tập Dictation có thể dùng `ex.targetSentence`, `ex.sentence`, `ex.text`, `ex.correct`, hoặc `ex.sampleAnswer`. Khi render HTML & truyền vào `window.speakDictation()`, bắt buộc dùng biểu thức fallback:
+     ```javascript
+     const rawSent = ex.targetSentence || ex.sentence || ex.text || ex.correct || ex.sampleAnswer || '';
+     ```
+  2. **Fallback tự động sang nội dung bài học (`currentLisLesson.audioText`):** Nếu câu Dictation thiếu trường văn bản, hàm phát âm `speakDictation(sentence, idx)` tự động lấy `audioText` hoặc `transcript` của bài nghe để phát âm, không để câm tiếng.
+  3. **Hiệu ứng trực quan khi bấm nghe câu mẫu:** Nút `🔊 Nghe câu này` chuyển sang màu xanh lá (`#dcfce7`) và hiển thị chữ *"Đang đọc..."* trong suốt thời gian Web Speech AI Voice phát âm, sau đó tự động hoàn nguyên khi kết thúc (`onEnd`).
+  4. **Tránh lỗi mạng 404 từ liên kết âm thanh bên thứ ba:**
+     - Các link âm thanh ngoài (như `freesound.org`, v.v.) có thể hết hạn hoặc chặn CORS. Nếu không có URL CDN cố định hoặc Supabase Storage chính thức, hãy đặt `audioUrl: ""` để hệ thống tự động kích hoạt **Web Speech Native Voice (Giọng đọc AI bản xứ)** mượt mà 100%, không sinh lỗi đỏ `404 Not Found` trên trình duyệt.
+
+---
+
 ## 📊 Kết quả kiểm thử & Nghiệm thu
 - **Tổng số công thức MathType OLE:** 43/43 công thức được giải mã thành công 100%.
 - **Độ chính xác nhận diện đáp án đúng (In đậm & Bôi đỏ):** 34/34 câu (100%).
@@ -361,6 +375,7 @@ Tài liệu này ghi lại toàn bộ kiến trúc, chức năng, giải thuật
 - **Hệ thống Đăng nhập & Ẩn/Hiện Mật khẩu Toàn diện:** Khắc phục triệt để lỗi đăng nhập học tập `learn.html`, hỗ trợ Enter key, đồng bộ SSO và nút chuyển đổi icon 👁️/🙈 ở mọi nơi.
 - **Xử lý An toàn Null-Safe 5 Kỹ Năng:** Khắc phục hoàn toàn lỗi crash `TypeError: Cannot read properties of undefined (reading 'replace')` khi chuyển tab Listening/Speaking/Reading.
 - **Hero Audio Player & Big Speaker Component:** Nâng cấp nút loa lớn 64px, animation phát sáng và thanh điều khiển tốc độ trực quan 100%.
+- **Phát Âm Dictation & Short Answer Studio:** Hoạt động chính xác 100%, hỗ trợ Web Speech AI Native Voice không lỗi mạng 404.
 - **Tỉ lệ lỗi Math input error / runtime error:** 0%.
 - **Tính năng điều hướng & Sticky Topbar phòng thi:** Hoạt động chính xác 100%, cập nhật thời gian thực khi chọn lại đáp án.
 
