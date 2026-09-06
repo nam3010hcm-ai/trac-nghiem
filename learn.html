@@ -86,6 +86,9 @@ window.globalLogout = async function() {
   </div>
 
   <div class="header-actions">
+    <button type="button" class="btn btn-sm" onclick="window.openStudentAppPairingModal();" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; padding:7px 14px; font-weight:700; border-radius:8px; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(16,185,129,0.3); margin-right:8px; cursor:pointer;" title="Kết nối với App điện thoại BookVocab">
+      📱 App BookVocab
+    </button>
     <div class="user-profile-badge">
       <div class="user-avatar-img">🎓</div>
       <span>Học viên EduCore</span>
@@ -293,12 +296,165 @@ window.globalLogout = async function() {
     <!-- 5. PHÂN HỆ LANGUAGE FOCUS -->
     <div class="tab-content skill-content-panel" id="skill-panel-languageFocus">
       <div class="card">
+        <!-- BANNER ĐỒNG BỘ APP DI ĐỘNG -->
+        <div style="display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg, #f0fdf4, #dcfce7); border:1.5px solid #86efac; border-radius:14px; padding:14px 20px; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="font-size:28px;">📱</div>
+            <div>
+              <div style="font-weight:800; font-size:14.5px; color:#166534;">Học Flashcards & Ôn Tập Trên Điện Thoại (BookVocab App)</div>
+              <div style="font-size:12.5px; color:#15803d;">Quét trang sách ngoại văn A4 bằng camera • Ôn Spaced Repetition SRS • Tự động tích lũy XP về Web EduCore</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-sm btn-p" onclick="window.openStudentAppPairingModal();" style="background:#16a34a; border:none; padding:7px 14px; font-weight:700; cursor:pointer;">
+              ⚡ Mã QR Ghép Nối
+            </button>
+            <a href="downloads/BookVocabApp.apk" download="BookVocabApp.apk" class="btn btn-sm" style="background:#fff; border:1px solid #86efac; color:#166534; font-weight:700; padding:7px 14px; text-decoration:none;">
+              📥 Tải App APK
+            </a>
+          </div>
+        </div>
+
         <div style="font-family:var(--font-display);margin-bottom:14px;font-weight:800;font-size:16px;color:#0f172a">🔍 Thẻ Từ Vựng Flashcard 3D & Ghép Cụm Từ:</div>
         <div class="exercise-workspace" id="lang-workspace"></div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- ============================================================== -->
+<!-- MODAL KẾT NỐI HỌC VIÊN VỚI APP DI ĐỘNG BOOKVOCAB -->
+<!-- ============================================================== -->
+<div id="student-app-pairing-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.7); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(6px); padding:16px;">
+  <div class="card" style="max-width:540px; width:100%; border-radius:20px; box-shadow:var(--shadow-xl); padding:28px; position:relative; max-height:90vh; overflow-y:auto;">
+    <button type="button" onclick="window.closeStudentAppPairingModal();" style="position:absolute; top:18px; right:18px; background:#f1f5f9; border:none; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; font-weight:bold; color:#64748b;">✕</button>
+
+    <div style="display:flex; align-items:center; gap:14px; margin-bottom:20px;">
+      <div style="width:48px; height:48px; border-radius:14px; background:linear-gradient(135deg, #10b981, #047857); display:flex; align-items:center; justify-content:center; font-size:26px; color:#fff; box-shadow:0 4px 10px rgba(16,185,129,0.3);">
+        📱
+      </div>
+      <div>
+        <div style="font-size:18px; font-weight:800; color:#0f172a;">Kết Nối App BookVocab (Android)</div>
+        <div style="font-size:12.5px; color:#64748b;">Đăng nhập 1-chạm & Đồng bộ điểm XP, Flashcards hai chiều</div>
+      </div>
+    </div>
+
+    <!-- KHỐI MÃ QR GHÉP NỐI CÁ NHÂN -->
+    <div style="background:#f8fafc; border:1.5px dashed #10b981; border-radius:16px; padding:20px; text-align:center; margin-bottom:20px;">
+      <div style="font-size:12px; font-weight:800; color:#059669; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">
+        MÃ QR ĐĂNG NHẬP 1-CHẠM (FAST PAIRING)
+      </div>
+      <div style="display:flex; justify-content:center; margin-bottom:12px;">
+        <img id="st-modal-qr-img" src="" alt="Mã QR Đăng Nhập" style="width:180px; height:180px; border-radius:10px; border:1px solid #cbd5e1; background:#fff; padding:6px; box-shadow:0 4px 12px rgba(0,0,0,0.06);">
+      </div>
+      <div style="font-size:14px; font-weight:800; color:#0f172a;" id="st-modal-name">Học Viên EduCore</div>
+      <div style="font-size:12.5px; color:#64748b; margin-top:2px;">
+        Mã SV: <code id="st-modal-code" style="color:#059669; font-weight:700;">SV001</code> • Lớp: <span id="st-modal-class">10A1</span>
+      </div>
+      <div style="display:inline-block; background:#e0f2fe; color:#0369a1; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; margin-top:8px;" id="st-modal-xp">
+        ⭐ 1,250 XP
+      </div>
+    </div>
+
+    <!-- TẢI FILE APK & HƯỚNG DẪN -->
+    <div style="display:flex; gap:12px; margin-bottom:20px;">
+      <a href="downloads/BookVocabApp.apk" download="BookVocabApp.apk" class="btn btn-p btn-full" style="background:linear-gradient(135deg, #10b981, #059669); border:none; padding:12px; font-weight:700; font-size:14px; text-align:center; text-decoration:none;">
+        📥 Tải App Cho Điện Thoại (.APK - 31 MB)
+      </a>
+      <button type="button" class="btn" onclick="window.copyStudentPairingToken();" style="background:#f8fafc; border:1px solid #cbd5e1; font-size:13px; font-weight:700; white-space:nowrap;">
+        📋 Sao Chép Token
+      </button>
+    </div>
+
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px;">
+      <div style="font-weight:700; font-size:12.5px; color:#334155; margin-bottom:6px;">🚀 Các bước bắt đầu:</div>
+      <div style="font-size:12px; color:#64748b; line-height:1.6;">
+        1. Bấm nút tải <b>BookVocabApp.apk</b> và cài đặt lên điện thoại Android.<br>
+        2. Mở App, trên màn hình Đăng nhập chọn <b>"Quét mã QR / Dán Token"</b> và quét mã trên.<br>
+        3. Điểm XP kiếm được khi giải trắc nghiệm & lật Flashcard trên App sẽ tự động cộng dồn lên Web EduCore!
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:20px;">
+      <button type="button" class="btn" onclick="window.closeStudentAppPairingModal();" style="background:#f1f5f9; border:1px solid #cbd5e1; color:#475569; font-weight:600; padding:8px 24px;">
+        Đóng
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+window.openStudentAppPairingModal = function() {
+  const modal = document.getElementById('student-app-pairing-modal');
+  if (!modal) return;
+
+  let st = null;
+  try {
+    const raw = sessionStorage.getItem('educore_student_learn_session');
+    if (raw) st = JSON.parse(raw);
+    if (!st) {
+      const stRaw = localStorage.getItem('st_user');
+      if (stRaw) st = JSON.parse(stRaw);
+    }
+  } catch (e) {}
+
+  const code = (st && (st.id || st.code)) || 'SV001';
+  const name = (st && (st.full_name || st.name)) || 'Học viên ' + code;
+  const className = (st && (st.class_name || st.class)) || 'Lớp Tiếng Anh K7';
+  const email = (st && st.email) || `${code.toLowerCase()}@hoctap-k7.edu.vn`;
+  const xp = (st && st.total_xp) || 1250;
+
+  const nameEl = document.getElementById('st-modal-name');
+  const codeEl = document.getElementById('st-modal-code');
+  const classEl = document.getElementById('st-modal-class');
+  const xpEl = document.getElementById('st-modal-xp');
+  const qrImg = document.getElementById('st-modal-qr-img');
+
+  if (nameEl) nameEl.textContent = name;
+  if (codeEl) codeEl.textContent = code;
+  if (classEl) classEl.textContent = className;
+  if (xpEl) xpEl.textContent = `⭐ ${xp.toLocaleString()} XP`;
+
+  const pairingPayload = {
+    action: 'EDUCORE_STUDENT_SSO_PAIR',
+    version: '1.0',
+    studentId: code,
+    fullName: name,
+    className: className,
+    email: email,
+    totalXp: xp,
+    timestamp: Date.now(),
+    supabase: {
+      url: 'https://xuioxmjufpfdblecjvuv.supabase.co',
+      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1aW94bWp1ZnBmZGJsZWNqdnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NDk0NDIsImV4cCI6MjEwMjMyNTQ0Mn0.udJ9W9Y_6WgqENT6j2xSXGZg2pEKfvnMTWfzKR_3gfY'
+    }
+  };
+
+  const payloadStr = JSON.stringify(pairingPayload);
+  window._studentPairingTokenStr = payloadStr;
+
+  if (qrImg) {
+    const encoded = encodeURIComponent(payloadStr);
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encoded}&margin=8`;
+  }
+
+  modal.style.display = 'flex';
+};
+
+window.closeStudentAppPairingModal = function() {
+  const modal = document.getElementById('student-app-pairing-modal');
+  if (modal) modal.style.display = 'none';
+};
+
+window.copyStudentPairingToken = function() {
+  if (!window._studentPairingTokenStr) return;
+  navigator.clipboard.writeText(window._studentPairingTokenStr).then(() => {
+    alert('📋 Đã sao chép mã Token ghép nối! Bạn có thể dán vào BookVocabApp để đăng nhập.');
+  }).catch(() => {
+    alert('📋 Đã sao chép!');
+  });
+};
+</script>
 
 <!-- CANVAS HIỆU ỨNG PHÁO HOA CONFETTI -->
 <canvas id="confetti-canvas"></canvas>

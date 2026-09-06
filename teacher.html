@@ -279,7 +279,7 @@ window.globalLogout = async function() {
       tabName = 'dash';
     }
 
-    var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs'];
+    var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs', 'mobileapp'];
     if (tabs.indexOf(tabName) === -1) tabName = 'dash';
 
     try {
@@ -356,6 +356,10 @@ window.globalLogout = async function() {
       window.renderUnitsList();
     }
 
+    if (tabName === 'mobileapp' && typeof window.initMobileAppTab === 'function') {
+      window.initMobileAppTab();
+    }
+
     if (typeof window._teacherModuleSwitchTab === 'function') {
       window._teacherModuleSwitchTab(tabName);
     }
@@ -363,7 +367,7 @@ window.globalLogout = async function() {
 
   window.addEventListener('hashchange', function() {
     var h = (window.location.hash || '').replace('#', '').trim();
-    var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs'];
+    var tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs', 'mobileapp'];
     if (tabs.indexOf(h) !== -1) {
       window.switchTTab(h);
     }
@@ -479,6 +483,13 @@ window.globalLogout = async function() {
         <div class="sidebar-section-title">🖼️ TÀI NGUYÊN</div>
         <a class="sidebar-item" data-tab="img" onclick="window.switchTTab('img')">
           <span>🎵</span> <span>Media Library (Audio & Ảnh)</span>
+        </a>
+
+        <!-- 8. HỆ SINH THÁI DI ĐỘNG -->
+        <div class="sidebar-section-title">📱 HỆ SINH THÁI DI ĐỘNG</div>
+        <a class="sidebar-item" data-tab="mobileapp" onclick="window.switchTTab('mobileapp')">
+          <span>📱</span> <span>App Di Động (BookVocab)</span>
+          <span class="cat-badge" style="background:#10b981;color:#fff;font-size:9.5px;padding:2px 6px;margin-left:auto;">PRO</span>
         </a>
       </nav>
 
@@ -2073,6 +2084,248 @@ window.globalLogout = async function() {
           <div id="analytics-view-container">
             <!-- Rendered dynamically -->
           </div>
+        </div>
+
+        <!-- 11. HỆ SINH THÁI DI ĐỘNG BOOKVOCAB APP -->
+        <div id="tc-mobileapp" class="tab-content" style="display:none">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
+            <div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <h2 style="font-size:22px; font-weight:800; color:#0f172a; margin:0;">📱 Trung Tâm Liên Thông App Di Động — BookVocab</h2>
+                <span class="cat-badge" style="background:#10b981; color:#fff; font-weight:800; padding:4px 10px;">PRO NATIVE</span>
+              </div>
+              <div style="font-size:13.5px; color:#64748b; margin-top:6px; line-height:1.5;">
+                Đồng bộ hai chiều thời gian thực giữa Web LMS và Ứng dụng điện thoại BookVocabApp (Android) qua CSDL Supabase
+              </div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <button type="button" class="btn" onclick="window.initMobileAppTab();" style="background:#f8fafc; border:1px solid #cbd5e1; color:#334155;">
+                🔄 Làm mới dữ liệu
+              </button>
+              <a href="downloads/BookVocabApp.apk" download="BookVocabApp.apk" class="btn btn-p" style="background:linear-gradient(135deg, #10b981, #059669); border:none; box-shadow:0 4px 12px rgba(16,185,129,0.3); font-weight:700;">
+                📥 Tải App APK (31 MB)
+              </a>
+            </div>
+          </div>
+
+          <!-- 4 THẺ KPI ĐỒNG BỘ ĐÁM MÂY -->
+          <div class="dash-kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom:24px;">
+            <div class="card kpi-card" style="border-left:4px solid #6366f1;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <div class="kpi-label">UNIT BÀI HỌC SẴN SÀNG</div>
+                  <div class="kpi-val" id="mobile-stat-units" style="color:#6366f1;">7 Units</div>
+                </div>
+                <div style="font-size:32px;">📖</div>
+              </div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:8px;">Bảng Supabase: public.learning_units</div>
+            </div>
+
+            <div class="card kpi-card" style="border-left:4px solid #10b981;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <div class="kpi-label">HỌC VIÊN CÓ THỂ ĐĂNG NHẬP</div>
+                  <div class="kpi-val" id="mobile-stat-students" style="color:#10b981;">-- Học viên</div>
+                </div>
+                <div style="font-size:32px;">🧑‍🎓</div>
+              </div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:8px;">Bảng Supabase: public.students (Tài khoản thật)</div>
+            </div>
+
+            <div class="card kpi-card" style="border-left:4px solid #f59e0b;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <div class="kpi-label">GIẢNG VIÊN ĐIỀU PHỐI</div>
+                  <div class="kpi-val" id="mobile-stat-teachers" style="color:#f59e0b;">-- Giảng viên</div>
+                </div>
+                <div style="font-size:32px;">👩‍🏫</div>
+              </div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:8px;">Bảng Supabase: public.teachers</div>
+            </div>
+
+            <div class="card kpi-card" style="border-left:4px solid #ec4899;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <div class="kpi-label">TỪ VỰNG QUÉT TỪ SÁCH</div>
+                  <div class="kpi-val" id="mobile-stat-scanned" style="color:#ec4899;">3 Từ vựng</div>
+                </div>
+                <div style="font-size:32px;">📷</div>
+              </div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:8px;">Tiếp nhận từ OCR camera điện thoại</div>
+            </div>
+          </div>
+
+          <!-- LƯỚI 2 CỘT CHỨC NĂNG CHÍNH -->
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap:24px; margin-bottom:24px;">
+            
+            <!-- KHỐI 1: CỔNG TẢI & CÀI ĐẶT APK -->
+            <div class="card" style="border-radius:16px; padding:24px;">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                <div style="width:48px; height:48px; background:linear-gradient(135deg, #10b981, #047857); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px; color:#fff; box-shadow:0 4px 10px rgba(16,185,129,0.3);">
+                  📱
+                </div>
+                <div>
+                  <div style="font-size:17px; font-weight:800; color:#0f172a;">Cổng Phân Phối App BookVocab (Android)</div>
+                  <div style="font-size:12.5px; color:#64748b;">Quét sách ngoại văn A4 bằng CameraX • OCR Offline ML Kit • Flashcard 3D</div>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:20px; align-items:center; background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:14px; padding:16px; margin-bottom:18px;">
+                <div style="text-align:center; flex-shrink:0;">
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https%3A%2F%2Fhoctap-k7.vercel.app%2Fdownloads%2FBookVocabApp.apk&margin=6" alt="QR Tải APK" style="width:130px; height:130px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; padding:4px;">
+                  <div style="font-size:11px; font-weight:700; color:#64748b; margin-top:4px;">Quét để tải APK</div>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-weight:700; font-size:14px; color:#0f172a; margin-bottom:6px;">📦 File Cài Đặt: BookVocabApp.apk</div>
+                  <div style="font-size:12px; color:#64748b; line-height:1.6; margin-bottom:12px;">
+                    • Kích thước: <b>~31 MB</b> (Bản Build hoàn chỉnh)<br>
+                    • Yêu cầu: Android 7.0 (API 24) trở lên<br>
+                    • Tính năng: CameraX Tap-to-Focus, Từ điển 100% Offline, Flashcards 3D, Spaced Repetition SRS.
+                  </div>
+                  <a href="downloads/BookVocabApp.apk" download="BookVocabApp.apk" class="btn btn-sm btn-p" style="background:#10b981; border:none; padding:8px 16px; font-weight:700;">
+                    📥 Tải Trực Tiếp Vào Máy Tính / Điện Thoại
+                  </a>
+                </div>
+              </div>
+
+              <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px 16px;">
+                <div style="font-weight:700; font-size:12.5px; color:#166534; margin-bottom:4px;">💡 Hướng dẫn cài đặt nhanh 3 bước:</div>
+                <div style="font-size:12px; color:#15803d; line-height:1.6;">
+                  1. Tải file <b>BookVocabApp.apk</b> về điện thoại Android.<br>
+                  2. Mở file và bấm <b>Cài đặt</b> (Nếu có cảnh báo, chọn <i>Cho phép từ nguồn này</i>).<br>
+                  3. Mở App, đăng nhập bằng Mã Sinh Viên (Ví dụ: <code>SV001</code> / mật khẩu trong CSDL) hoặc quét mã QR ghép nối bên dưới!
+                </div>
+              </div>
+            </div>
+
+            <!-- KHỐI 2: CẤP MÃ QR GHÉP NỐI & ĐĂNG NHẬP 1-CHẠM -->
+            <div class="card" style="border-radius:16px; padding:24px;">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                <div style="width:48px; height:48px; background:linear-gradient(135deg, #6366f1, #4338ca); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px; color:#fff; box-shadow:0 4px 10px rgba(99,102,241,0.3);">
+                  ⚡
+                </div>
+                <div>
+                  <div style="font-size:17px; font-weight:800; color:#0f172a;">Cấp Mã Ghép Nối Nhanh (Fast Pairing SSO)</div>
+                  <div style="font-size:12.5px; color:#64748b;">Học viên quét mã trên App để đăng nhập tự động không cần gõ phím</div>
+                </div>
+              </div>
+
+              <div class="fg" style="margin-bottom:16px;">
+                <label style="font-weight:700; font-size:13px; color:#334155;">Chọn Học Viên Cần Cấp Mã:</label>
+                <div style="display:flex; gap:10px;">
+                  <select id="mobile-student-pair-select" style="flex:1; padding:9px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:13.5px; font-weight:600;">
+                    <option value="">-- Đang tải danh sách học viên... --</option>
+                  </select>
+                  <button type="button" class="btn btn-p" onclick="window.generateStudentPairingCode();" style="background:#6366f1; border:none; padding:9px 18px; font-weight:700; white-space:nowrap;">
+                    ⚡ Tạo Mã QR
+                  </button>
+                </div>
+              </div>
+
+              <!-- HỘP HIỂN THỊ MÃ QR GHÉP NỐI -->
+              <div id="mobile-qr-pairing-box" style="display:none; background:#f8fafc; border:1.5px dashed #6366f1; border-radius:14px; padding:18px; text-align:center;">
+                <div style="display:flex; gap:20px; align-items:center; justify-content:center; flex-wrap:wrap;">
+                  <img id="mobile-pairing-qr-img" src="" alt="Mã QR Ghép Nối" style="width:160px; height:160px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; padding:6px; box-shadow:0 4px 12px rgba(0,0,0,0.06);">
+                  <div style="text-align:left; max-width:260px;">
+                    <div style="font-size:11px; font-weight:800; color:#6366f1; text-transform:uppercase; letter-spacing:0.5px;">MÃ PIN XÁC THỰC 6 SỐ</div>
+                    <div id="mobile-pairing-pin-val" style="font-size:32px; font-weight:900; color:#0f172a; font-family:monospace; letter-spacing:4px; margin:4px 0 10px;">------</div>
+                    <div style="font-size:13px; color:#334155;">Họ tên: <b id="mobile-pairing-name-val">...</b></div>
+                    <div style="font-size:12px; color:#64748b;">Mã SV: <code id="mobile-pairing-code-val" style="color:#6366f1; font-weight:700;">...</code></div>
+                    <button type="button" class="btn btn-sm" onclick="window.copyPairingPayload();" style="margin-top:10px; background:#fff; border:1px solid #cbd5e1; font-size:11.5px; font-weight:700;">
+                      📋 Sao Chép Token Ghép Nối
+                    </button>
+                  </div>
+                </div>
+                <div style="font-size:11.5px; color:#64748b; margin-top:12px;">
+                  🛡️ Mã này tự động cấp quyền đồng bộ điểm kinh nghiệm XP hai chiều giữa App và Web.
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- KHỐI 3: BỘ XUẤT GÓI TỪ VỰNG CHO BOOKVOCAB APP -->
+          <div class="card" style="border-radius:16px; padding:24px; margin-bottom:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:44px; height:44px; background:linear-gradient(135deg, #f59e0b, #d97706); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; color:#fff; box-shadow:0 4px 10px rgba(245,158,11,0.3);">
+                  📦
+                </div>
+                <div>
+                  <div style="font-size:17px; font-weight:800; color:#0f172a;">Bộ Xuất Gói Bài Học Từ Vựng (Vocabulary Pack Exporter)</div>
+                  <div style="font-size:12.5px; color:#64748b;">Bóc tách trọn gói Flashcards, Ghép từ, Động từ bất quy tắc & Đọc hiểu sang chuẩn BookVocab</div>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:10px;">
+                <select id="mobile-unit-export-select" style="min-width:320px; padding:9px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:13.5px; font-weight:600;">
+                  <option value="">-- Đang nạp danh sách Unit... --</option>
+                </select>
+                <button type="button" class="btn btn-p" onclick="window.exportSelectedUnitVocab();" style="background:#f59e0b; border:none; padding:9px 20px; font-weight:700;">
+                  📲 Bóc Tách & Xuất Gói
+                </button>
+              </div>
+            </div>
+
+            <!-- PREVIEW GÓI XUẤT -->
+            <div id="mobile-export-preview-box" style="display:none; background:#fffbeb; border:1.5px solid #fde68a; border-radius:12px; padding:18px; margin-top:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+                <div id="mobile-export-summary" style="font-size:13.5px; color:#92400e; line-height:1.5;"></div>
+                <div style="display:flex; gap:8px;">
+                  <button type="button" class="btn btn-sm" onclick="window.copyExportedVocabJson();" style="background:#fff; border:1px solid #fde68a; color:#b45309; font-weight:700;">
+                    📋 Sao Chép JSON
+                  </button>
+                  <button type="button" class="btn btn-sm btn-p" onclick="window.downloadExportedVocabJson();" style="background:#d97706; border:none; color:#fff; font-weight:700;">
+                    📥 Tải File JSON Gói Bài Học
+                  </button>
+                </div>
+              </div>
+              <textarea id="mobile-export-json-content" readonly style="width:100%; height:180px; font-family:monospace; font-size:12px; background:#ffffff; border:1px solid #fcd34d; border-radius:8px; padding:12px; color:#0f172a; resize:vertical;"></textarea>
+            </div>
+          </div>
+
+          <!-- KHỐI 4: TIẾP NHẬN & PHÊ DUYỆT TỪ VỰNG QUÉT TỪ SÁCH GIÁO KHOA -->
+          <div class="card" style="border-radius:16px; padding:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:44px; height:44px; background:linear-gradient(135deg, #ec4899, #be185d); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; color:#fff; box-shadow:0 4px 10px rgba(236,72,153,0.3);">
+                  📷
+                </div>
+                <div>
+                  <div style="font-size:17px; font-weight:800; color:#0f172a;">Tiếp Nhận Từ Vựng Quét Từ Sách (Book Scanner Ingest)</div>
+                  <div style="font-size:12.5px; color:#64748b;">Học viên dùng CameraX trên điện thoại quét sách ngoại văn, bóc tách và gửi lên Web LMS</div>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:10px; align-items:center;">
+                <input type="file" id="mobile-vocab-file-input" accept=".json" style="display:none;" onchange="window.importScannedJsonFile(event);">
+                <button type="button" class="btn" onclick="document.getElementById('mobile-vocab-file-input').click();" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-weight:700;">
+                  📂 Nhập File JSON Từ App
+                </button>
+              </div>
+            </div>
+
+            <!-- BẢNG DỮ LIỆU TIẾP NHẬN -->
+            <div style="overflow-x:auto;">
+              <table class="data-table" style="width:100%; border-collapse:collapse;">
+                <thead>
+                  <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; text-align:left;">
+                    <th style="padding:12px; font-size:11.5px; color:#475569; font-weight:800; width:50px;">STT</th>
+                    <th style="padding:12px; font-size:11.5px; color:#475569; font-weight:800;">TỪ VỰNG & IPA</th>
+                    <th style="padding:12px; font-size:11.5px; color:#475569; font-weight:800; width:80px;">CEFR</th>
+                    <th style="padding:12px; font-size:11.5px; color:#475569; font-weight:800;">NGHĨA & NGUỒN SÁCH</th>
+                    <th style="padding:12px; font-size:11.5px; color:#475569; font-weight:800;">HỌC VIÊN QUÉT</th>
+                    <th style="padding:12px; font-size:11.5px; color:#475569; font-weight:800; text-align:center; width:110px;">TRẠNG THÁI</th>
+                    <th style="padding:12px; font-size:11.5px; color:#475569; font-weight:800; text-align:center; width:140px;">THAO TÁC</th>
+                  </tr>
+                </thead>
+                <tbody id="mobile-scanned-vocab-tbody">
+                  <!-- Rendered dynamically from mobile-app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
       </div>
     </main>

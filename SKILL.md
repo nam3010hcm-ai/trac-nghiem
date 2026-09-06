@@ -1,6 +1,6 @@
 # HỆ THỐNG SKILLS DỰ ÁN TRẮC NGHIỆM & HỌC TẬP TƯƠNG TÁC (EDUCORE)
 
-Tài liệu hướng dẫn kỹ thuật và kiến trúc của dự án đã được phân tách thành **7 Skill chuyên biệt** theo nguyên tắc *Progressive Disclosure* của Antigravity Agent, đặt tại thư mục [`.agents/skills/`](file:///Users/namtp/Downloads/trac-nghiem/.agents/skills/).
+Tài liệu hướng dẫn kỹ thuật và kiến trúc của dự án đã được phân tách thành **8 Skill chuyên biệt** theo nguyên tắc *Progressive Disclosure* của Antigravity Agent, đặt tại thư mục [`.agents/skills/`](file:///Users/namtp/Downloads/trac-nghiem/.agents/skills/).
 
 ---
 
@@ -15,6 +15,7 @@ Tài liệu hướng dẫn kỹ thuật và kiến trúc của dự án đã đ�
 | **5** | [`learn-reading-studio`](file:///Users/namtp/Downloads/trac-nghiem/.agents/skills/learn-reading-studio/SKILL.md) | `.agents/skills/learn-reading-studio/SKILL.md` | **Studio 10 Dạng Bài Tập Đọc Hiểu Sư Phạm Chuẩn Quốc Tế:**<br>- 10 dạng bài tập: Pre-reading, Skimming, Scanning Table, Matching, True/False, TFNG, Summary Cloze, Sequencing, Detailed MCQ, Backward Spelling<br>- Giao diện Studio biên soạn cho Giáo viên (`teacher.html#unit`)<br>- Trình render và chấm điểm tương tác cho Học viên (`learn.html`) |
 | **6** | [`learn-speaking-listening-media`](file:///Users/namtp/Downloads/trac-nghiem/.agents/skills/learn-speaking-listening-media/SKILL.md) | `.agents/skills/learn-speaking-listening-media/SKILL.md` | **Phân Hệ Luyện Kỹ Năng Nghe & Nói (Media Studio):**<br>- Studio Speaking & Video/Audio Roleplay kịch bản thoại đa nhân vật<br>- Hero Audio Player với nút loa lớn 64px Pulse Green & Speed Pill<br>- Xử lý an toàn Dictation & Web Speech Voice chống lỗi 404 URL<br>- Nguyên tắc an toàn Null-Safe khi render bài tập 5 kỹ năng<br>- Quản lý Favicon & Typography chuẩn báo chí VnExpress |
 | **7** | [`learn-interactive-exercises`](file:///Users/namtp/Downloads/trac-nghiem/.agents/skills/learn-interactive-exercises/SKILL.md) | `.agents/skills/learn-interactive-exercises/SKILL.md` | **Trò Chơi & Bài Tập Tương Tác Học Tập (Gamification):**<br>- Nối từ tự do SVG Bézier đa sắc màu & Submit Engine (`js/learn.js`)<br>- Exercise 2 MCQ & Exercise 3 Backward Spelling xếp chữ ngược 3D<br>- Thẻ ghi nhớ Flashcards 3D tương tác lật 180 độ & phím tắt |
+| **8** | [`mobile-app-sync`](file:///Users/namtp/Downloads/trac-nghiem/.agents/skills/mobile-app-sync/SKILL.md) | `.agents/skills/mobile-app-sync/SKILL.md` | **Liên Thông Hai Chiều Với App Di Động BookVocab:**<br>- Cổng tải & mã QR phân phối APK 31MB (`downloads/BookVocabApp.apk`)<br>- Mã QR Fast Pairing SSO & xác thực tài khoản thật Supabase (`public.students`)<br>- Bộ xuất gói từ vựng đa kỹ năng sang JSON chuẩn (`js/mobile-app.js`)<br>- Tự động đồng bộ điểm XP hai chiều theo thời gian thực (PATCH Supabase)<br>- Tiếp nhận & duyệt từ vựng học viên quét từ sách đưa vào Unit Designer |
 
 ---
 

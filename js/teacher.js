@@ -46,6 +46,8 @@ import {
   selectGalleryImage
 } from './teacher/teacher-gallery.js';
 
+import './mobile-app.js';
+
 export {
   showTeacherPanel,
   updateDashboardKPICounts,

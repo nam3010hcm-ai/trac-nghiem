@@ -253,7 +253,7 @@ export function switchTTab(t) {
     t = 'dash';
   }
 
-  const tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs'];
+  const tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs', 'mobileapp'];
   if (!tabs.includes(t)) t = 'dash';
 
   try {
@@ -291,6 +291,7 @@ export function switchTTab(t) {
   if (t === 'unit') renderUnitsList();
   if (t === 'practice') renderPracticeExams();
   if (t === 'e') renderExams();
+  if (t === 'mobileapp' && typeof window.initMobileAppTab === 'function') window.initMobileAppTab();
   if (t === 'teachers') {
     renderTeachersList();
     loadTeachers().then(renderTeachersList);
