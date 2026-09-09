@@ -21,6 +21,28 @@ export const DEFAULT_TEACHERS = [
     teacher_code: 'T001'
   },
   {
+    id: 'KT01',
+    email: 'khaothi@k7.edu.vn',
+    teacher_name: 'Thầy Hoàng (Cán Bộ Khảo Thí)',
+    name: 'Thầy Hoàng (Cán Bộ Khảo Thí)',
+    department: 'Ban Khảo Thí & ĐBCL',
+    role: 'examination_officer',
+    is_active: true,
+    password: '123',
+    teacher_code: 'KT01'
+  },
+  {
+    id: 'QL01',
+    email: 'quanlyhocvien@k7.edu.vn',
+    teacher_name: 'Cô Mai (Quản Lý Học Viên)',
+    name: 'Cô Mai (Quản Lý Học Viên)',
+    department: 'Phòng Công Tác Học Sinh & Đào Tạo',
+    role: 'student_manager',
+    is_active: true,
+    password: '123',
+    teacher_code: 'QL01'
+  },
+  {
     id: 'T002',
     email: 'chen.lms@k7.edu.vn',
     teacher_name: 'Dr. Chen',
@@ -188,6 +210,28 @@ export function renderTeachersList() {
     const isRoot = isRootUser(t.email);
     const teacherName = t.teacher_name || t.name || t.full_name || t.email;
 
+    let roleBadgeHtml = `<span style="background:#e0f2fe;color:#0284c7;border:1px solid #bae6fd;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;">👨‍🏫 Giảng viên</span>`;
+    let avatarIcon = '👨‍🏫';
+    let avatarBg = '#e0f2fe';
+    let avatarColor = '#0284c7';
+
+    if (isRoot) {
+      roleBadgeHtml = `<span style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;">👑 Root Admin</span>`;
+      avatarIcon = '👑';
+      avatarBg = '#fef3c7';
+      avatarColor = '#92400e';
+    } else if (t.role === 'examination_officer') {
+      roleBadgeHtml = `<span style="background:#e0e7ff;color:#4338ca;border:1px solid #c7d2fe;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;">⚖️ Cán bộ Khảo thí</span>`;
+      avatarIcon = '⚖️';
+      avatarBg = '#e0e7ff';
+      avatarColor = '#4338ca';
+    } else if (t.role === 'student_manager') {
+      roleBadgeHtml = `<span style="background:#d1fae5;color:#047857;border:1px solid #a7f3d0;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;">👥 Quản lý Học viên</span>`;
+      avatarIcon = '👥';
+      avatarBg = '#d1fae5';
+      avatarColor = '#047857';
+    }
+
     // Tính toán tài nguyên do giảng viên này tạo ra
     const questionsCount = (state?.questions || []).filter(q => (q.created_by || q.createdBy || '').toLowerCase() === (t.email || '').toLowerCase()).length;
     const examsCount = (state?.exams || []).filter(e => (e.created_by || e.createdBy || '').toLowerCase() === (t.email || '').toLowerCase()).length;
@@ -208,12 +252,15 @@ export function renderTeachersList() {
       <tr>
         <td>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;border-radius:50%;background:${isRoot ? '#fef3c7' : '#e0f2fe'};color:${isRoot ? '#92400e' : '#0284c7'};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;">
-              ${isRoot ? '👑' : '👨‍🏫'}
+            <div style="width:36px;height:36px;border-radius:10px;background:${avatarBg};color:${avatarColor};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;">
+              ${avatarIcon}
             </div>
             <div>
-              <div style="font-weight:700;color:#0f172a;">${esc(teacherName)}</div>
-              <div style="font-size:11.5px;color:#64748b;">Mã GV: ${esc(t.id || 'GV')}</div>
+              <div style="font-weight:700;color:#0f172a;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <span>${esc(teacherName)}</span>
+                ${roleBadgeHtml}
+              </div>
+              <div style="font-size:11.5px;color:#64748b;margin-top:2px;">Mã: <b>${esc(t.id || 'GV')}</b></div>
             </div>
           </div>
         </td>
@@ -254,7 +301,7 @@ export function renderTeachersList() {
   }).join('');
 }
 
-// 3. MỞ MODAL THÊM / SỬA GIẢNG VIÊN
+// 3. MỞ MODAL THÊM / SỬA GIẢNG VIÊN & CÁN BỘ
 export function openTeacherModal(id = null) {
   editingTeacherId = id;
   const modal = document.getElementById('modal-teacher');
@@ -265,17 +312,26 @@ export function openTeacherModal(id = null) {
   if (id) {
     const t = (teachersList || []).find(item => item.id === id);
     if (!t) return;
-    if (title) title.textContent = '✏️ Cập Nhật Tài Khoản Giảng Viên';
+    const isRoot = isRootUser(t.email);
+    if (title) title.textContent = '✏️ Cập Nhật Tài Khoản Cán Bộ / Giảng Viên';
     if ($('t-mod-email')) { $('t-mod-email').value = t.email || ''; $('t-mod-email').disabled = true; }
     if ($('t-mod-name')) $('t-mod-name').value = t.teacher_name || t.name || t.full_name || '';
     if ($('t-mod-dept')) $('t-mod-dept').value = t.department || '';
     if ($('t-mod-pass')) $('t-mod-pass').value = t.password || '';
+    if ($('t-mod-role')) {
+      $('t-mod-role').value = t.role || 'teacher';
+      $('t-mod-role').disabled = isRoot;
+    }
   } else {
-    if (title) title.textContent = '➕ Thêm Tài Khoản Giảng Viên Mới';
+    if (title) title.textContent = '➕ Thêm Tài Khoản Cán Bộ / Giảng Viên Mới';
     if ($('t-mod-email')) { $('t-mod-email').value = ''; $('t-mod-email').disabled = false; }
     if ($('t-mod-name')) $('t-mod-name').value = '';
     if ($('t-mod-dept')) $('t-mod-dept').value = '';
     if ($('t-mod-pass')) $('t-mod-pass').value = '123456';
+    if ($('t-mod-role')) {
+      $('t-mod-role').value = 'teacher';
+      $('t-mod-role').disabled = false;
+    }
   }
 
   modal.style.display = 'flex';
@@ -287,21 +343,26 @@ export function closeTeacherModal() {
   editingTeacherId = null;
 }
 
-// 4. LƯU TÀI KHOẢN GIẢNG VIÊN LÊN SUPABASE
+// 4. LƯU TÀI KHOẢN GIẢNG VIÊN / CÁN BỘ LÊN SUPABASE
 export async function saveTeacher() {
   const email = ($('t-mod-email')?.value || '').trim().toLowerCase();
   const name = ($('t-mod-name')?.value || '').trim();
   const dept = ($('t-mod-dept')?.value || '').trim();
   const password = ($('t-mod-pass')?.value || '').trim();
+  let role = $('t-mod-role')?.value || 'teacher';
 
   if (!email || !name) {
-    alert("❌ Vui lòng nhập đầy đủ Email và Họ tên giảng viên!");
+    alert("❌ Vui lòng nhập đầy đủ Email và Họ tên!");
     return;
   }
 
   if (!editingTeacherId && !password) {
-    alert("❌ Vui lòng nhập mật khẩu cho tài khoản giảng viên mới!");
+    alert("❌ Vui lòng nhập mật khẩu cho tài khoản mới!");
     return;
+  }
+
+  if (isRootUser(email)) {
+    role = 'admin';
   }
 
   const client = window.supabaseClient;
@@ -309,7 +370,8 @@ export async function saveTeacher() {
   if (editingTeacherId) {
     const updatePayload = {
       teacher_name: name,
-      department: dept || 'Khoa Ngoại Ngữ'
+      department: dept || 'Khoa Ngoại Ngữ',
+      role: role
     };
 
     if (password) {
@@ -333,19 +395,20 @@ export async function saveTeacher() {
       t.teacher_name = name;
       t.name = name;
       t.department = dept || 'Khoa Ngoại Ngữ';
+      t.role = role;
       if (password) {
         t.password = password;
       }
     }
-    await logTeacherActivity('Cập nhật', 'Giảng viên', `${name} (${editingTeacherId})`, editingTeacherId, `Bộ môn: ${dept || 'Khoa Ngoại Ngữ'}`);
+    await logTeacherActivity('Cập nhật', 'Giảng viên / Cán bộ', `${name} (${editingTeacherId})`, editingTeacherId, `Bộ môn: ${dept || 'Khoa Ngoại Ngữ'}, Vai trò: ${role}`);
     saveTeachersToLocal();
     closeTeacherModal();
     renderTeachersList();
-    alert("✅ Đã cập nhật thông tin Giảng viên thành công!");
+    alert("✅ Đã cập nhật thông tin tài khoản thành công!");
   } else {
     const exists = (teachersList || []).some(t => (t.email || '').toLowerCase() === email.toLowerCase());
     if (exists) {
-      alert("❌ Email giảng viên này đã tồn tại trên hệ thống!");
+      alert("❌ Email này đã tồn tại trên hệ thống!");
       return;
     }
 
@@ -358,7 +421,7 @@ export async function saveTeacher() {
         const { data: authData, error: authError } = await createEphemeralAuthUser(email, password, {
           teacher_name: name,
           name: name,
-          role: 'teacher'
+          role: role
         });
         if (!authError && authData?.user?.id) {
           authUserId = authData.user.id;
@@ -370,14 +433,14 @@ export async function saveTeacher() {
       }
     }
 
-    // 2. Chèn vào bảng teachers với đầy đủ mật khẩu
+    // 2. Chèn vào bảng teachers với đầy đủ mật khẩu và role
     const dbPayload = {
       id: newId,
       email: email,
       teacher_name: name,
-      department: dept || 'Khoa Ngoại Ngữ',
+      department: dept || (role === 'examination_officer' ? 'Ban Khảo Thí & ĐBCL' : (role === 'student_manager' ? 'Phòng Công Tác Học Sinh' : 'Khoa Ngoại Ngữ')),
       password: password,
-      role: isRootUser(email) ? 'admin' : 'teacher',
+      role: role,
       is_active: true,
       teacher_code: newId
     };
@@ -393,7 +456,7 @@ export async function saveTeacher() {
           console.error("Lỗi insert Supabase teachers:", error);
           alert("⚠️ Lỗi lưu CSDL Supabase: " + (error.message || JSON.stringify(error)));
         } else {
-          console.log("✅ Đã lưu thành công giảng viên vào Supabase:", data);
+          console.log("✅ Đã lưu thành công cán bộ/giảng viên vào Supabase:", data);
         }
       }
     } catch(e) {
@@ -405,12 +468,13 @@ export async function saveTeacher() {
       name: name
     };
     teachersList.unshift(localItem);
-    await logTeacherActivity('Tạo mới', 'Giảng viên', `${name} (${newId})`, newId, `Bộ môn: ${dept || 'Khoa Ngoại Ngữ'}, Email: ${email}`);
+    await logTeacherActivity('Tạo mới', 'Giảng viên / Cán bộ', `${name} (${newId})`, newId, `Bộ môn: ${dbPayload.department}, Vai trò: ${role}, Email: ${email}`);
     saveTeachersToLocal();
     closeTeacherModal();
     renderTeachersList();
-    alert("✅ Đã thêm tài khoản Giảng viên mới thành công!");
+    alert("✅ Đã thêm tài khoản mới thành công!");
   }
+}
 }
 
 // 5. MỞ / KHÓA TÀI KHOẢN GIẢNG VIÊN TRÊN SUPABASE

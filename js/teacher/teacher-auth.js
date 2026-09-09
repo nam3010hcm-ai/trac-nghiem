@@ -23,6 +23,7 @@ import { loadPendingSubmissions, renderGradingQueueTable } from '../grading-cent
 import { loadAnalyticsData, renderAnalyticsDashboard } from '../lms-analytics.js';
 import { loadClassPosts, renderClassStream } from '../class-stream.js';
 import { loadCohorts, populateCohortExams } from './teacher-cohorts.js';
+import { loadManagerMessages, renderManagerMessagesList } from '../manager-messages.js';
 
 export function updateDashboardKPICounts() {
   const qEl = document.getElementById('dash-kpi-q-count');
@@ -34,15 +35,37 @@ export function updateDashboardKPICounts() {
   if (sEl && state?.students) sEl.textContent = state.students.length.toLocaleString('vi-VN');
 }
 
-export function applyUserRolePermissions(isRoot) {
+export function applyUserRolePermissions(role, isRoot) {
+  const currentRole = isRoot ? 'root' : (role || 'teacher');
+
+  // 1. Phân hệ Quản Lý Người Dùng
   const secUsers = document.getElementById('sidebar-sec-users');
   if (secUsers) {
-    secUsers.style.display = isRoot ? 'block' : 'none';
+    secUsers.style.display = (isRoot || currentRole === 'examination_officer' || currentRole === 'student_manager') ? 'block' : 'none';
   }
 
-  const userMgmtElements = document.querySelectorAll('.user-mgmt-only, #tab-btn-teachers, #tab-btn-students, #tab-btn-authlogs');
-  userMgmtElements.forEach(el => {
+  // Root Admin: Toàn quyền truy cập quản lý giáo viên, học viên, audit logs
+  const rootOnlyElements = document.querySelectorAll('.user-mgmt-only, #tab-btn-teachers, #tab-btn-authlogs, [data-tab="teachers"], [data-tab="authlogs"]');
+  rootOnlyElements.forEach(el => {
     el.style.display = isRoot ? '' : 'none';
+  });
+
+  // Cán bộ Quản lý Học sinh & Khảo thí: Có quyền xem tab học viên
+  const studentTabElements = document.querySelectorAll('#tab-btn-students, [data-tab="students"]');
+  studentTabElements.forEach(el => {
+    el.style.display = (isRoot || currentRole === 'examination_officer' || currentRole === 'student_manager') ? '' : 'none';
+  });
+
+  // 2. Phân hệ Soạn thảo Đề thi & Unit (Ẩn đối với student_manager)
+  const authoringElements = document.querySelectorAll('.authoring-only, #tab-btn-curriculum, #tab-btn-unit, #tab-btn-c, #tab-btn-q, #tab-btn-practice, #tab-btn-e, #tab-btn-cohort, [data-tab="curriculum"], [data-tab="unit"], [data-tab="c"], [data-tab="q"], [data-tab="practice"], [data-tab="e"], [data-tab="cohort"]');
+  authoringElements.forEach(el => {
+    el.style.display = (currentRole === 'student_manager') ? 'none' : '';
+  });
+
+  // 3. Phân hệ Chấm bài & Giao bài
+  const gradingElements = document.querySelectorAll('.grading-access, #tab-btn-grading, #tab-btn-assignments, [data-tab="grading"], [data-tab="assignments"]');
+  gradingElements.forEach(el => {
+    el.style.display = (currentRole === 'student_manager') ? 'none' : '';
   });
 }
 
@@ -53,7 +76,6 @@ export async function showTeacherPanel(user) {
   const userEmail = String(user?.email || '').trim().toLowerCase();
   state.currentUserEmail = userEmail || 'nam3010hcm@gmail.com';
   const isRoot = isRootUser(state.currentUserEmail);
-  applyUserRolePermissions(isRoot);
 
   let teacherName = user?.teacher_name || user?.name || user?.user_metadata?.teacher_name || user?.user_metadata?.name || user?.user_metadata?.full_name;
   let department = user?.department || '';
@@ -96,6 +118,7 @@ export async function showTeacherPanel(user) {
         if ((parsed.email || '').toLowerCase() === state.currentUserEmail.toLowerCase()) {
           teacherName = parsed.teacher_name || parsed.name;
           if (!department) department = parsed.department;
+          if (parsed.role && !isRoot) role = parsed.role;
         }
       }
     } catch(e){}
@@ -104,9 +127,17 @@ export async function showTeacherPanel(user) {
   // 4. Giá trị mặc định chuẩn xác theo vai trò
   if (!teacherName && isRoot) teacherName = 'Thầy Nam (Root Admin)';
   if (!teacherName) teacherName = state.currentUserEmail.split('@')[0];
-  if (!department) department = isRoot ? 'Quản Trị Hệ Thống' : 'Khoa Ngoại Ngữ';
+  if (!department) {
+    if (isRoot) department = 'Quản Trị Hệ Thống';
+    else if (role === 'examination_officer') department = 'Ban Khảo Thí & ĐBCL';
+    else if (role === 'student_manager') department = 'Phòng Công Tác Học Sinh';
+    else department = 'Khoa Ngoại Ngữ';
+  }
 
   state.currentUserName = teacherName;
+  state.currentUserRole = isRoot ? 'root' : role;
+
+  applyUserRolePermissions(role, isRoot);
 
   try {
     localStorage.setItem('teacher_user', JSON.stringify({
@@ -136,6 +167,16 @@ export async function showTeacherPanel(user) {
       roleBadge.style.color = '#92400e';
       roleBadge.style.border = '1px solid #fde68a';
       roleBadge.innerHTML = '👑 Root Admin';
+    } else if (role === 'examination_officer') {
+      roleBadge.style.background = '#e0e7ff';
+      roleBadge.style.color = '#4338ca';
+      roleBadge.style.border = '1px solid #c7d2fe';
+      roleBadge.innerHTML = '⚖️ Cán bộ Khảo thí';
+    } else if (role === 'student_manager') {
+      roleBadge.style.background = '#d1fae5';
+      roleBadge.style.color = '#047857';
+      roleBadge.style.border = '1px solid #a7f3d0';
+      roleBadge.innerHTML = '👥 Quản lý Học viên';
     } else {
       roleBadge.style.background = '#e0f2fe';
       roleBadge.style.color = '#0369a1';
@@ -150,6 +191,14 @@ export async function showTeacherPanel(user) {
       avatarEl.style.background = '#ffffff';
       avatarEl.style.border = '1.5px solid #fde047';
       avatarEl.innerHTML = '<img src="assets/logo-emblem.png" style="width:100%;height:100%;object-fit:contain;" alt="Avatar">';
+    } else if (role === 'examination_officer') {
+      avatarEl.style.background = '#e0e7ff';
+      avatarEl.style.border = '1.5px solid #c7d2fe';
+      avatarEl.innerHTML = '<div style="font-size:18px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;">⚖️</div>';
+    } else if (role === 'student_manager') {
+      avatarEl.style.background = '#d1fae5';
+      avatarEl.style.border = '1.5px solid #a7f3d0';
+      avatarEl.innerHTML = '<div style="font-size:18px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;">👥</div>';
     } else {
       avatarEl.style.background = '#e0f2fe';
       avatarEl.style.border = '1.5px solid #bae6fd';
@@ -163,14 +212,19 @@ export async function showTeacherPanel(user) {
 
   await initData();
 
-  const validTabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs'];
+  const validTabs = ['dash', 'messages', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs', 'mobileapp'];
   const hashTab = (window.location.hash || '').replace('#', '').trim();
   let savedTab = null;
   try { savedTab = localStorage.getItem('active_teacher_tab'); } catch(e){}
   let targetTab = validTabs.includes(hashTab) ? hashTab : (validTabs.includes(savedTab) ? savedTab : 'dash');
-  if (!isRoot && ['teachers', 'students', 'authlogs'].includes(targetTab)) {
+  
+  if (!isRoot && ['teachers', 'authlogs'].includes(targetTab)) {
     targetTab = 'dash';
   }
+  if (['curriculum', 'unit', 'c', 'q', 'practice', 'e', 'cohort'].includes(targetTab) && role === 'student_manager') {
+    targetTab = 'dash';
+  }
+  
   switchTTab(targetTab);
 
   initTeacherApp();
@@ -298,14 +352,25 @@ export async function doLogout() {
 }
 
 export function switchTTab(t) {
-  const userMgmtTabs = ['teachers', 'students', 'authlogs'];
   const isRoot = isRootUser(state.currentUserEmail);
-  if (userMgmtTabs.includes(t) && !isRoot) {
-    showToast('warning', 'Hạn chế quyền', 'Phân hệ Quản Lý Người Dùng chỉ dành riêng cho tài khoản Root Admin!');
+  const currentRole = state.currentUserRole || 'teacher';
+
+  if (['teachers', 'authlogs'].includes(t) && !isRoot) {
+    showToast('warning', 'Hạn chế quyền', 'Phân hệ này chỉ dành riêng cho tài khoản Root Admin!');
     t = 'dash';
   }
 
-  const tabs = ['dash', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs', 'mobileapp'];
+  if (t === 'students' && !(isRoot || currentRole === 'examination_officer' || currentRole === 'student_manager')) {
+    showToast('warning', 'Hạn chế quyền', 'Phân hệ Quản lý Học viên chỉ dành cho Cán bộ Quản lý và Root Admin!');
+    t = 'dash';
+  }
+
+  if (['curriculum', 'unit', 'c', 'q', 'practice', 'e', 'cohort'].includes(t) && currentRole === 'student_manager') {
+    showToast('info', 'Thông báo', 'Cán bộ Quản lý Học viên tập trung theo dõi tiến độ và kết quả tại mục Học Viên, Kết Quả và Bảng Tin.');
+    t = 'dash';
+  }
+
+  const tabs = ['dash', 'messages', 'curriculum', 'q', 'practice', 'e', 'unit', 'teachers', 'students', 'r', 'c', 'cohort', 'img', 'classes', 'assignments', 'grading', 'stream', 'analytics', 'authlogs', 'mobileapp'];
   if (!tabs.includes(t)) t = 'dash';
 
   try {
@@ -333,6 +398,10 @@ export function switchTTab(t) {
     sidebarItems.forEach(item => item.classList.toggle('active', x === t));
   });
 
+  if (t === 'messages') {
+    renderManagerMessagesList();
+    loadManagerMessages().then(renderManagerMessagesList);
+  }
   if (t === 'classes') loadClasses().then(renderClassesList);
   if (t === 'assignments') loadAssignments().then(renderAssignmentsList);
   if (t === 'grading') loadPendingSubmissions().then(renderGradingQueueTable);

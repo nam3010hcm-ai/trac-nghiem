@@ -46,6 +46,17 @@ import {
   selectGalleryImage
 } from './teacher/teacher-gallery.js';
 
+import {
+  loadManagerMessages,
+  renderManagerMessagesList,
+  openCreateMessageModal,
+  closeCreateMessageModal,
+  saveNewManagerMessage,
+  submitMessageReply,
+  filterMessagesByCategory,
+  filterMessagesByPriority
+} from './manager-messages.js';
+
 import './mobile-app.js';
 
 export {
@@ -80,7 +91,15 @@ export {
   openSelectGalleryModal,
   quickUploadToGalleryFromModal,
   deleteGalleryItem,
-  selectGalleryImage
+  selectGalleryImage,
+  loadManagerMessages,
+  renderManagerMessagesList,
+  openCreateMessageModal,
+  closeCreateMessageModal,
+  saveNewManagerMessage,
+  submitMessageReply,
+  filterMessagesByCategory,
+  filterMessagesByPriority
 };
 
 // Window global bindings
@@ -112,4 +131,12 @@ if (typeof window !== 'undefined') {
   window.quickUploadToGalleryFromModal = quickUploadToGalleryFromModal;
   window.deleteGalleryItem = deleteGalleryItem;
   window.selectGalleryImage = selectGalleryImage;
+  window.loadManagerMessages = loadManagerMessages;
+  window.renderManagerMessagesList = renderManagerMessagesList;
+  window.openCreateMessageModal = openCreateMessageModal;
+  window.closeCreateMessageModal = closeCreateMessageModal;
+  window.saveNewManagerMessage = saveNewManagerMessage;
+  window.submitMessageReply = submitMessageReply;
+  window.filterMessagesByCategory = filterMessagesByCategory;
+  window.filterMessagesByPriority = filterMessagesByPriority;
 }

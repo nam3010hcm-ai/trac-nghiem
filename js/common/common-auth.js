@@ -141,10 +141,23 @@ export function renderGlobalHeaderProfile() {
     try {
       const parsed = JSON.parse(tcUserRaw);
       const isRoot = isRootUser(parsed.email);
+      const role = isRoot ? 'root' : (parsed.role || 'teacher');
       const fullName = isRoot ? 'Thầy Nam (Root Admin)' : (parsed.teacher_name || parsed.name || parsed.email);
       userLabel = fullName;
-      subLabel = isRoot ? 'Root Admin' : (parsed.department || 'Giảng viên');
-      avatarIcon = isRoot ? '👑' : '👨‍🏫';
+
+      if (isRoot) {
+        subLabel = 'Root Admin';
+        avatarIcon = '👑';
+      } else if (role === 'examination_officer') {
+        subLabel = parsed.department || 'Cán bộ Khảo thí';
+        avatarIcon = '⚖️';
+      } else if (role === 'student_manager') {
+        subLabel = parsed.department || 'Quản lý Học viên';
+        avatarIcon = '👥';
+      } else {
+        subLabel = parsed.department || 'Giảng viên';
+        avatarIcon = '👨‍🏫';
+      }
       isLoggedIn = true;
     } catch(e){}
   }
