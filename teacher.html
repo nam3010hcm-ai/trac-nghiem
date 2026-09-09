@@ -204,19 +204,29 @@ window.globalLogout = async function() {
         teacherRow = tData;
       } catch(e){}
 
-      const userEmail = authUser?.email || email;
-      const isRoot = (userEmail.trim().toLowerCase() === 'nam3010hcm@gmail.com');
-      let teacherName = teacherRow?.teacher_name || teacherRow?.name || authUser?.name;
+      const userEmail = (authUser?.email || email).trim().toLowerCase();
+      const isRoot = (userEmail === 'nam3010hcm@gmail.com');
+      let teacherName = teacherRow?.teacher_name || teacherRow?.name || authUser?.teacher_name || authUser?.name;
       if (!teacherName && isRoot) teacherName = 'Thầy Nam (Root Admin)';
       if (!teacherName) teacherName = userEmail.split('@')[0];
+      const department = teacherRow?.department || (isRoot ? 'Quản Trị Hệ Thống' : 'Khoa Ngoại Ngữ');
+      const role = isRoot ? 'admin' : (teacherRow?.role || 'teacher');
+
+      if (authUser) {
+        authUser.email = userEmail;
+        authUser.teacher_name = teacherName;
+        authUser.name = teacherName;
+        authUser.department = department;
+        authUser.role = role;
+      }
 
       localStorage.setItem('teacher_user', JSON.stringify({
-        id: teacherRow?.id || 'T001',
+        id: teacherRow?.id || (isRoot ? 'T001' : 'GV'),
         email: userEmail,
         name: teacherName,
         teacher_name: teacherName,
-        department: teacherRow?.department || (isRoot ? 'Quản Trị Hệ Thống' : 'Khoa Ngoại Ngữ'),
-        role: isRoot ? 'root' : (teacherRow?.role || 'teacher'),
+        department: department,
+        role: isRoot ? 'root' : role,
         login_timestamp: Date.now()
       }));
 
@@ -235,12 +245,28 @@ window.globalLogout = async function() {
       if (document.getElementById('current-user-email')) {
         document.getElementById('current-user-email').innerText = userEmail;
       }
+
+      const roleBadge = document.getElementById('user-role-badge');
+      if (roleBadge) {
+        if (isRoot) {
+          roleBadge.style.background = '#fef3c7';
+          roleBadge.style.color = '#92400e';
+          roleBadge.style.border = '1px solid #fde68a';
+          roleBadge.innerHTML = '👑 Root Admin';
+        } else {
+          roleBadge.style.background = '#e0f2fe';
+          roleBadge.style.color = '#0369a1';
+          roleBadge.style.border = '1px solid #bae6fd';
+          roleBadge.innerHTML = '👨‍🏫 Giáo viên';
+        }
+      }
+
       if (typeof window.renderGlobalHeaderProfile === 'function') {
         window.renderGlobalHeaderProfile();
       }
 
       if (typeof window.initTeacherPanelDirect === 'function') {
-        await window.initTeacherPanelDirect(authUser);
+        await window.initTeacherPanelDirect(authUser || { email: userEmail, teacher_name: teacherName, department: department, role: role });
       }
     } catch (error) {
       console.error("Lỗi đăng nhập:", error);
@@ -264,7 +290,7 @@ window.globalLogout = async function() {
       var uRaw = localStorage.getItem('teacher_user');
       if (uRaw) {
         var u = JSON.parse(uRaw);
-        if (u.role === 'root' || u.role === 'admin' || (u.email && u.email.toLowerCase() === 'nam3010hcm@gmail.com')) {
+        if (u.email && u.email.trim().toLowerCase() === 'nam3010hcm@gmail.com') {
           isRoot = true;
         }
       }
@@ -496,7 +522,7 @@ window.globalLogout = async function() {
       <!-- SIDEBAR FOOTER WITH USER PROFILE -->
       <div class="admin-sidebar-footer">
         <div class="user-profile-card">
-          <div class="user-profile-avatar" style="background:#ffffff;border:1.5px solid #fde047;padding:3px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(245,158,11,0.2);overflow:hidden;">
+          <div class="user-profile-avatar" id="sidebar-user-avatar" style="background:#ffffff;border:1.5px solid #fde047;padding:3px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(245,158,11,0.2);overflow:hidden;">
             <img src="assets/logo-emblem.png" style="width:100%;height:100%;object-fit:contain;" alt="Avatar">
           </div>
           <div class="user-profile-info">

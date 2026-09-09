@@ -6,6 +6,7 @@
  */
 
 import { $, esc, isRootUser, ROOT_ADMIN_EMAIL, state, getAuthorDisplayName, logTeacherActivity } from './common.js';
+import { createEphemeralAuthUser } from './supabase.js';
 
 export const DEFAULT_TEACHERS = [
   {
@@ -351,24 +352,21 @@ export async function saveTeacher() {
     const newId = generateNextTeacherId();
     let authUserId = null;
 
-    // 1. Tạo tài khoản Supabase Auth nếu có mật khẩu
-    if (client && password) {
+    // 1. Tạo tài khoản Supabase Auth độc lập (KHÔNG làm thay đổi phiên làm việc của Root Admin hiện tại)
+    if (password) {
       try {
-        const { data: authData, error: authError } = await client.auth.signUp({
-          email: email,
-          password: password,
-          options: {
-            data: {
-              teacher_name: name,
-              role: 'teacher'
-            }
-          }
+        const { data: authData, error: authError } = await createEphemeralAuthUser(email, password, {
+          teacher_name: name,
+          name: name,
+          role: 'teacher'
         });
         if (!authError && authData?.user?.id) {
           authUserId = authData.user.id;
+        } else if (authError) {
+          console.warn("[Teachers] Ephemeral SignUp info:", authError.message || authError);
         }
       } catch (authErr) {
-        console.warn("[Teachers] SignUp error:", authErr);
+        console.warn("[Teachers] Ephemeral SignUp exception:", authErr);
       }
     }
 

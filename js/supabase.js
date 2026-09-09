@@ -1,3 +1,6 @@
+export const SB_URL = "https://xuioxmjufpfdblecjvuv.supabase.co";
+export const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1aW94bWp1ZnBmZGJsZWNqdnV2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NDk0NDIsImV4cCI6MjEwMjMyNTQ0Mn0.udJ9W9Y_6WgqENT6j2xSXGZg2pEKfvnMTWfzKR_3gfY";
+
 // --- HELPER: XÁC THỰC (AUTH) ---
 export async function signInWithEmailAndPassword(email, password) {
   const normalizedEmail = String(email || '').trim().toLowerCase();
@@ -12,7 +15,24 @@ export async function signInWithEmailAndPassword(email, password) {
       email: normalizedEmail,
       password: normalizedPassword
     });
-    if (!error) return data;
+    
+    if (!error && data?.user) {
+      // Bổ sung đầy đủ Họ tên & Bộ môn từ bảng teachers
+      try {
+        const { data: teacherRow } = await window.supabaseClient
+          .from('teachers')
+          .select('*')
+          .ilike('email', normalizedEmail)
+          .maybeSingle();
+        if (teacherRow) {
+          data.user.teacher_name = teacherRow.teacher_name || teacherRow.name;
+          data.user.name = teacherRow.teacher_name || teacherRow.name;
+          data.user.department = teacherRow.department;
+          data.user.role = teacherRow.role || 'teacher';
+        }
+      } catch(e){}
+      return data;
+    }
 
     if (!normalizedEmail || !normalizedPassword) {
       throw error;
@@ -35,6 +55,8 @@ export async function signInWithEmailAndPassword(email, password) {
           id: teacherRow.id,
           email: teacherRow.email,
           name: teacherRow.teacher_name || teacherRow.name || teacherRow.email,
+          teacher_name: teacherRow.teacher_name || teacherRow.name || teacherRow.email,
+          department: teacherRow.department,
           role: teacherRow.role || 'teacher'
         }
       };
@@ -47,6 +69,36 @@ export async function signInWithEmailAndPassword(email, password) {
     }
     throw err;
   }
+}
+
+/**
+ * Tạo tài khoản Supabase Auth độc lập (Ephemeral Auth Client)
+ * Đảm bảo KHÔNG làm thay đổi phiên làm việc hoặc kích hoạt event của Root Admin hiện tại
+ */
+export async function createEphemeralAuthUser(email, password, metadata = {}) {
+  if (typeof window !== 'undefined' && window.supabase && typeof window.supabase.createClient === 'function') {
+    try {
+      const ephemeralClient = window.supabase.createClient(SB_URL, SB_KEY, {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+          storageKey: 'ephemeral_auth_create_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7)
+        }
+      });
+      const { data, error } = await ephemeralClient.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: metadata
+        }
+      });
+      return { data, error };
+    } catch (err) {
+      return { data: null, error: err };
+    }
+  }
+  return { data: null, error: new Error('Supabase client library not found') };
 }
 
 export async function signOut() {

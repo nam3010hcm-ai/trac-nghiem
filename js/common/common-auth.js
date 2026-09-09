@@ -140,8 +140,8 @@ export function renderGlobalHeaderProfile() {
   } else if (tcUserRaw) {
     try {
       const parsed = JSON.parse(tcUserRaw);
-      const isRoot = (parsed.email || '').toLowerCase() === ROOT_ADMIN_EMAIL.toLowerCase() || parsed.role === 'root' || parsed.role === 'admin';
-      const fullName = parsed.teacher_name || parsed.name || (isRoot ? 'Thầy Nam (Root Admin)' : parsed.email);
+      const isRoot = isRootUser(parsed.email);
+      const fullName = isRoot ? 'Thầy Nam (Root Admin)' : (parsed.teacher_name || parsed.name || parsed.email);
       userLabel = fullName;
       subLabel = isRoot ? 'Root Admin' : (parsed.department || 'Giảng viên');
       avatarIcon = isRoot ? '👑' : '👨‍🏫';
@@ -196,9 +196,6 @@ export function isRootUser(email) {
       const userRaw = localStorage.getItem('teacher_user');
       if (userRaw) {
         const u = JSON.parse(userRaw);
-        if (u.role === 'root' || u.role === 'admin' || String(u.email || '').trim().toLowerCase() === ROOT_ADMIN_EMAIL.toLowerCase()) {
-          return true;
-        }
         targetEmail = u.email;
       }
     } catch(e){}
@@ -206,19 +203,7 @@ export function isRootUser(email) {
   if (!targetEmail) return false;
   
   const emailStr = String(targetEmail).trim().toLowerCase();
-  if (emailStr === ROOT_ADMIN_EMAIL.toLowerCase()) return true;
-
-  try {
-    const userRaw = localStorage.getItem('teacher_user');
-    if (userRaw) {
-      const u = JSON.parse(userRaw);
-      if (String(u.email || '').trim().toLowerCase() === emailStr && (u.role === 'root' || u.role === 'admin')) {
-        return true;
-      }
-    }
-  } catch(e){}
-  
-  return false;
+  return emailStr === ROOT_ADMIN_EMAIL.toLowerCase();
 }
 
 export async function logUserAuthEvent(userEmail, userType = 'teacher', eventType = 'login', durationSeconds = 0) {

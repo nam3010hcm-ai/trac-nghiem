@@ -14,7 +14,7 @@ import { renderExams, renderPracticeExams, populateExamSelect, openEForm, closeE
 import { renderResults, exportCSV, clearResults } from '../results.js';
 import { loadUnits, renderUnitsList } from '../units.js';
 import { loadStudents, renderStudentsList } from '../students-mgr.js';
-import { loadTeachers, renderTeachersList } from '../teachers-mgr.js';
+import { loadTeachers, renderTeachersList, teachersList } from '../teachers-mgr.js';
 import { renderCurriculumTree, loadCurriculumFromSupabase } from '../curriculum.js';
 import { recordAuthEvent } from '../auth-logs.js';
 import { loadClasses, renderClassesList } from '../classes-mgr.js';
@@ -50,37 +50,76 @@ export async function showTeacherPanel(user) {
   $('t-login').style.display = 'none';
   $('t-panel').style.display = 'flex';
 
-  state.currentUserEmail = user?.email || 'nam3010hcm@gmail.com';
+  const userEmail = String(user?.email || '').trim().toLowerCase();
+  state.currentUserEmail = userEmail || 'nam3010hcm@gmail.com';
   const isRoot = isRootUser(state.currentUserEmail);
   applyUserRolePermissions(isRoot);
 
-  let teacherName = user?.teacher_name || user?.name;
+  let teacherName = user?.teacher_name || user?.name || user?.user_metadata?.teacher_name || user?.user_metadata?.name || user?.user_metadata?.full_name;
+  let department = user?.department || '';
+  let role = isRoot ? 'admin' : (user?.role || 'teacher');
+  let teacherId = user?.id || '';
+
+  // 1. Đối soát trong teachersList (bộ nhớ RAM)
+  const currentTeachers = (teachersList && teachersList.length > 0) ? teachersList : [];
+  const matchedTeacher = currentTeachers.find(t => (t.email || '').toLowerCase() === state.currentUserEmail.toLowerCase());
+  if (matchedTeacher) {
+    if (!teacherName) teacherName = matchedTeacher.teacher_name || matchedTeacher.name;
+    if (!department) department = matchedTeacher.department;
+    if (matchedTeacher.id) teacherId = matchedTeacher.id;
+    if (matchedTeacher.role && !isRoot) role = matchedTeacher.role;
+  }
+
+  // 2. Truy vấn Supabase bảng teachers nếu chưa có đủ thông tin
+  if ((!teacherName || !department) && window.supabaseClient) {
+    try {
+      const { data: dbTeacher } = await window.supabaseClient
+        .from('teachers')
+        .select('*')
+        .ilike('email', state.currentUserEmail)
+        .maybeSingle();
+      if (dbTeacher) {
+        if (!teacherName) teacherName = dbTeacher.teacher_name || dbTeacher.name;
+        if (!department) department = dbTeacher.department;
+        if (dbTeacher.id) teacherId = dbTeacher.id;
+        if (dbTeacher.role && !isRoot) role = dbTeacher.role;
+      }
+    } catch(e){}
+  }
+
+  // 3. Đối soát localStorage cache NHƯNG BẮT BUỘC PHẢI KHỚP EMAIL
   if (!teacherName) {
     try {
       const tcRaw = localStorage.getItem('teacher_user');
       if (tcRaw) {
         const parsed = JSON.parse(tcRaw);
-        teacherName = parsed.teacher_name || parsed.name;
+        if ((parsed.email || '').toLowerCase() === state.currentUserEmail.toLowerCase()) {
+          teacherName = parsed.teacher_name || parsed.name;
+          if (!department) department = parsed.department;
+        }
       }
     } catch(e){}
   }
+
+  // 4. Giá trị mặc định chuẩn xác theo vai trò
   if (!teacherName && isRoot) teacherName = 'Thầy Nam (Root Admin)';
   if (!teacherName) teacherName = state.currentUserEmail.split('@')[0];
+  if (!department) department = isRoot ? 'Quản Trị Hệ Thống' : 'Khoa Ngoại Ngữ';
 
   state.currentUserName = teacherName;
 
   try {
     localStorage.setItem('teacher_user', JSON.stringify({
-      id: user?.id || 'T001',
+      id: teacherId || (isRoot ? 'T001' : 'GV'),
       email: state.currentUserEmail,
       name: teacherName,
       teacher_name: teacherName,
-      department: user?.department || (isRoot ? 'Quản Trị Hệ Thống' : 'Khoa Ngoại Ngữ'),
-      role: isRoot ? 'root' : (user?.role || 'teacher'),
+      department: department,
+      role: isRoot ? 'root' : role,
       login_timestamp: Date.now()
     }));
 
-    recordAuthEvent(state.currentUserEmail, 'teacher', 'login', 0, user?.id || '', teacherName, '');
+    recordAuthEvent(state.currentUserEmail, 'teacher', 'login', 0, teacherId || (isRoot ? 'T001' : ''), teacherName, '');
   } catch(e){}
 
   if ($('current-user-name')) {
@@ -102,6 +141,19 @@ export async function showTeacherPanel(user) {
       roleBadge.style.color = '#0369a1';
       roleBadge.style.border = '1px solid #bae6fd';
       roleBadge.innerHTML = '👨‍🏫 Giáo viên';
+    }
+  }
+
+  const avatarEl = document.getElementById('sidebar-user-avatar');
+  if (avatarEl) {
+    if (isRoot) {
+      avatarEl.style.background = '#ffffff';
+      avatarEl.style.border = '1.5px solid #fde047';
+      avatarEl.innerHTML = '<img src="assets/logo-emblem.png" style="width:100%;height:100%;object-fit:contain;" alt="Avatar">';
+    } else {
+      avatarEl.style.background = '#e0f2fe';
+      avatarEl.style.border = '1.5px solid #bae6fd';
+      avatarEl.innerHTML = '<div style="font-size:18px;display:flex;align-items:center;justify-content:center;width:100%;height:100%;">👨‍🏫</div>';
     }
   }
 
