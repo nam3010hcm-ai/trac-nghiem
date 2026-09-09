@@ -475,7 +475,6 @@ export async function saveTeacher() {
     alert("✅ Đã thêm tài khoản mới thành công!");
   }
 }
-}
 
 // 5. MỞ / KHÓA TÀI KHOẢN GIẢNG VIÊN TRÊN SUPABASE
 export async function toggleTeacherStatus(id) {
