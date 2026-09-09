@@ -12,47 +12,7 @@ const db = () => window.supabaseClient;
 export let studentsList = [];
 let editingStudentId = null;
 
-export const DEFAULT_STUDENTS = [
-  {
-    id: 'HS1001',
-    student_code: 'HS1001',
-    full_name: 'Nguyễn Văn An',
-    class_name: 'Lớp 10A1 - Anh Văn Chuyên',
-    academic_year: '2025 - 2026',
-    email: 'an.nguyen@student.edu.vn',
-    password: '123',
-    is_active: true,
-    total_xp: 350,
-    role: 'student',
-    created_at: Date.now()
-  },
-  {
-    id: 'HS1002',
-    student_code: 'HS1002',
-    full_name: 'Trần Thị Bích',
-    class_name: 'Lớp 10A1 - Anh Văn Chuyên',
-    academic_year: '2025 - 2026',
-    email: 'bich.tran@student.edu.vn',
-    password: '123',
-    is_active: true,
-    total_xp: 280,
-    role: 'student',
-    created_at: Date.now()
-  },
-  {
-    id: 'HS1101',
-    student_code: 'HS1101',
-    full_name: 'Lê Hoàng Nam',
-    class_name: 'Lớp 11B2 - Luyện Thi IELTS & B2',
-    academic_year: '2025 - 2026',
-    email: 'nam.le@student.edu.vn',
-    password: '123',
-    is_active: true,
-    total_xp: 520,
-    role: 'student',
-    created_at: Date.now()
-  }
-];
+export const DEFAULT_STUDENTS = [];
 
 function saveStudentsToLocal() {
   try {
@@ -65,10 +25,10 @@ function loadStudentsFromLocal() {
     const saved = localStorage.getItem('educore_students_cache');
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch(e){}
-  return DEFAULT_STUDENTS;
+  return [];
 }
 
 // 1. NẠP DANH SÁCH HỌC VIÊN TỪ SUPABASE

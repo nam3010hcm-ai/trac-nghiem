@@ -8,74 +8,7 @@
 import { $, esc, isRootUser, ROOT_ADMIN_EMAIL, state, getAuthorDisplayName, logTeacherActivity } from './common.js';
 import { createEphemeralAuthUser } from './supabase.js';
 
-export const DEFAULT_TEACHERS = [
-  {
-    id: 'T001',
-    email: 'nam3010hcm@gmail.com',
-    teacher_name: 'Thầy Nam (Root Admin)',
-    name: 'Thầy Nam (Root Admin)',
-    department: 'Quản Trị Hệ Thống',
-    role: 'admin',
-    is_active: true,
-    password: '123',
-    teacher_code: 'T001'
-  },
-  {
-    id: 'KT01',
-    email: 'khaothi@k7.edu.vn',
-    teacher_name: 'Thầy Hoàng (Cán Bộ Khảo Thí)',
-    name: 'Thầy Hoàng (Cán Bộ Khảo Thí)',
-    department: 'Ban Khảo Thí & ĐBCL',
-    role: 'examination_officer',
-    is_active: true,
-    password: '123',
-    teacher_code: 'KT01'
-  },
-  {
-    id: 'QL01',
-    email: 'quanlyhocvien@k7.edu.vn',
-    teacher_name: 'Cô Mai (Quản Lý Học Viên)',
-    name: 'Cô Mai (Quản Lý Học Viên)',
-    department: 'Phòng Công Tác Học Sinh & Đào Tạo',
-    role: 'student_manager',
-    is_active: true,
-    password: '123',
-    teacher_code: 'QL01'
-  },
-  {
-    id: 'T002',
-    email: 'chen.lms@k7.edu.vn',
-    teacher_name: 'Dr. Chen',
-    name: 'Dr. Chen',
-    department: 'Khoa Ngoại Ngữ',
-    role: 'teacher',
-    is_active: true,
-    password: '123',
-    teacher_code: 'T002'
-  },
-  {
-    id: 'T004',
-    email: 'alice@example.com',
-    teacher_name: 'Alice',
-    name: 'Alice',
-    department: 'Khoa Testing',
-    role: 'teacher',
-    is_active: true,
-    password: '123',
-    teacher_code: 'T004'
-  },
-  {
-    id: 'T005',
-    email: 'nam84hcm@gmail.com',
-    teacher_name: 'Lê Văn Nam',
-    name: 'Lê Văn Nam',
-    department: 'Khoa Khoa học cơ bản/ Ngoại ngữ',
-    role: 'teacher',
-    is_active: true,
-    password: '123',
-    teacher_code: 'T005'
-  }
-];
+export const DEFAULT_TEACHERS = [];
 
 export let teachersList = [];
 
@@ -92,10 +25,10 @@ function loadTeachersFromLocal() {
     const saved = localStorage.getItem('educore_teachers_cache');
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch(e){}
-  return DEFAULT_TEACHERS;
+  return [];
 }
 
 function generateNextTeacherId() {
@@ -108,12 +41,8 @@ function generateNextTeacherId() {
 
 // 1. NẠP DANH SÁCH GIẢNG VIÊN TỪ SUPABASE
 export async function loadTeachers() {
-  // 1. Render tức thì từ bộ nhớ đệm / danh sách mặc định để không bị kẹt giao diện
   if (!teachersList || teachersList.length === 0) {
     teachersList = loadTeachersFromLocal();
-    if (!teachersList || teachersList.length === 0) {
-      teachersList = [...DEFAULT_TEACHERS];
-    }
   }
   renderTeachersList();
 
@@ -121,30 +50,19 @@ export async function loadTeachers() {
     const client = window.supabaseClient;
     if (client) {
       const { data, error } = await client.from('teachers').select('*');
-      if (!error && Array.isArray(data) && data.length > 0) {
+      if (!error && Array.isArray(data)) {
         teachersList = data.map(t => ({
           ...t,
           id: t.id || 'T001',
           name: t.teacher_name || t.name || t.full_name || t.email,
           teacher_name: t.teacher_name || t.name || t.full_name || t.email,
           email: t.email || '',
-          password: t.password || '123',
+          password: t.password || '',
           department: t.department || 'Bộ Môn Chung',
           is_active: t.is_active !== false,
           role: t.role || 'teacher'
         }));
 
-        // Đảm bảo Root Admin luôn có trong danh sách
-        const rootExists = teachersList.some(t => (t.email || '').toLowerCase() === ROOT_ADMIN_EMAIL.toLowerCase());
-        if (!rootExists) {
-          teachersList.unshift(DEFAULT_TEACHERS[0]);
-        }
-
-        saveTeachersToLocal();
-        renderTeachersList();
-        return teachersList;
-      } else if (!error && Array.isArray(data) && data.length === 0) {
-        teachersList = [...DEFAULT_TEACHERS];
         saveTeachersToLocal();
         renderTeachersList();
         return teachersList;
@@ -157,7 +75,7 @@ export async function loadTeachers() {
     console.warn("[Teachers] Exception khi loadTeachers:", err);
   }
 
-  // Fallback cache / demo teachers
+  // Fallback cache
   teachersList = loadTeachersFromLocal();
   renderTeachersList();
   return teachersList;
@@ -176,9 +94,6 @@ export function renderTeachersList() {
 
   if (!teachersList || teachersList.length === 0) {
     teachersList = loadTeachersFromLocal();
-    if (!teachersList || teachersList.length === 0) {
-      teachersList = [...DEFAULT_TEACHERS];
-    }
   }
 
   if (countEl) countEl.textContent = (teachersList || []).length;
@@ -327,7 +242,7 @@ export function openTeacherModal(id = null) {
     if ($('t-mod-email')) { $('t-mod-email').value = ''; $('t-mod-email').disabled = false; }
     if ($('t-mod-name')) $('t-mod-name').value = '';
     if ($('t-mod-dept')) $('t-mod-dept').value = '';
-    if ($('t-mod-pass')) $('t-mod-pass').value = '123456';
+    if ($('t-mod-pass')) $('t-mod-pass').value = '';
     if ($('t-mod-role')) {
       $('t-mod-role').value = 'teacher';
       $('t-mod-role').disabled = false;

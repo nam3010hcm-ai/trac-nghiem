@@ -74,7 +74,7 @@ export async function showTeacherPanel(user) {
   $('t-panel').style.display = 'flex';
 
   const userEmail = String(user?.email || '').trim().toLowerCase();
-  state.currentUserEmail = userEmail || 'nam3010hcm@gmail.com';
+  state.currentUserEmail = userEmail || '';
   const isRoot = isRootUser(state.currentUserEmail);
 
   let teacherName = user?.teacher_name || user?.name || user?.user_metadata?.teacher_name || user?.user_metadata?.name || user?.user_metadata?.full_name;

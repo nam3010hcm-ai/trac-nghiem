@@ -8,65 +8,7 @@
 import { $, esc, state, isRootUser, ROOT_ADMIN_EMAIL } from './common.js';
 import { showToast } from './ui-components.js';
 
-export const DEFAULT_MANAGER_MESSAGES = [
-  {
-    id: 'msg_001',
-    sender_name: 'Thầy Hoàng (Cán Bộ Khảo Thí)',
-    sender_email: 'khaothi@k7.edu.vn',
-    sender_role: 'examination_officer',
-    receiver_type: 'all',
-    receiver_name: 'Tất Cả Giảng Viên & Bộ Môn',
-    receiver_email: 'all',
-    title: '📢 Yêu cầu rà soát ma trận Đề thi Học kỳ 1 & Bộ đề B1 Quốc tế',
-    content: 'Kính gửi quý Thầy Cô các Khoa Ngoại ngữ & Khoa học cơ bản,\n\nBan Khảo thí & ĐBCL yêu cầu quý Thầy Cô tiến hành rà soát ngân hàng câu hỏi, kiểm tra ma trận độ phân hóa (30% Nhận biết, 40% Thông hiểu, 20% Vận dụng, 10% Vận dụng cao) cho kỳ thi sắp tới. Hạn chót hoàn tất trước ngày 25/09.\n\nTrân trọng cảm ơn quý Thầy Cô!',
-    category: 'khao_thi',
-    priority: 'urgent', // urgent, important, normal
-    created_at: new Date(Date.now() - 3600 * 1000 * 4).toISOString(),
-    is_read: true,
-    replies: [
-      {
-        id: 'rep_001_1',
-        sender_name: 'Dr. Chen',
-        sender_email: 'chen.lms@k7.edu.vn',
-        sender_role: 'teacher',
-        content: 'Khoa Ngoại ngữ đã rà soát xong 12 đề thi Unit 1–10 và kiểm tra đầy đủ phần Listening/Audio. Sẽ gửi báo cáo chi tiết trong ngày mai.',
-        created_at: new Date(Date.now() - 3600 * 1000 * 2).toISOString()
-      }
-    ]
-  },
-  {
-    id: 'msg_002',
-    sender_name: 'Cô Mai (Quản Lý Học Viên)',
-    sender_email: 'quanlyhocvien@k7.edu.vn',
-    sender_role: 'student_manager',
-    receiver_type: 'all',
-    receiver_name: 'Giảng viên Chủ nhiệm & Giảng viên Bộ môn',
-    receiver_email: 'all',
-    title: '📊 Báo cáo tỷ lệ chuyên cần & Đôn đốc 15 học viên cần hỗ trợ học tập',
-    content: 'Kính gửi quý Thầy Cô,\n\nPhòng Công tác Học viên đã tổng hợp danh sách Top 10 học viên xuất sắc tuần qua và ghi nhận 15 học viên có thời lượng học dưới 45 phút/tuần. Đề nghị quý Thầy Cô bộ môn nhắc nhở các em hoàn thành các bài học Unit 5 Kỹ năng trên Cổng Học Viên.\n\nDanh sách chi tiết đã được cập nhật tại tab "Hồ sơ học viên".',
-    category: 'hoc_vien',
-    priority: 'important',
-    created_at: new Date(Date.now() - 3600 * 1000 * 24).toISOString(),
-    is_read: true,
-    replies: []
-  },
-  {
-    id: 'msg_003',
-    sender_name: 'Thầy Nam (Root Admin)',
-    sender_email: 'nam3010hcm@gmail.com',
-    sender_role: 'admin',
-    receiver_type: 'all',
-    receiver_name: 'Toàn Thể Hội Đồng Đào Tạo EduCore',
-    receiver_email: 'all',
-    title: '🎉 Nâng cấp hệ thống: Bổ sung tính năng Chấm bài Trung tâm & LMS Analytics',
-    content: 'Ban Quản Trị vừa hoàn tất nâng cấp Trung tâm Chấm Bài (Grading Center) và Báo cáo Analytics toàn trường. Quý Thầy Cô và Cán bộ có thể vào các tab tương ứng trên thanh Sidebar để sử dụng.',
-    category: 'he_thong',
-    priority: 'normal',
-    created_at: new Date(Date.now() - 3600 * 1000 * 48).toISOString(),
-    is_read: true,
-    replies: []
-  }
-];
+export const DEFAULT_MANAGER_MESSAGES = [];
 
 export let managerMessagesList = [];
 let currentFilterCategory = 'all';
@@ -83,10 +25,10 @@ function loadMessagesFromLocal() {
     const raw = localStorage.getItem('educore_manager_messages');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch(e){}
-  return DEFAULT_MANAGER_MESSAGES;
+  return [];
 }
 
 // 1. TẢI DANH SÁCH TIN NHẮN TỪ SUPABASE & LOCAL
@@ -295,7 +237,7 @@ export async function saveNewManagerMessage() {
     return;
   }
 
-  const currentEmail = (state?.currentUserEmail || 'nam3010hcm@gmail.com').toLowerCase();
+  const currentEmail = (state?.currentUserEmail || getUserCurrentEmail() || '').toLowerCase();
   const currentName = state?.currentUserName || getUserCurrentName();
   const currentRole = getUserCurrentRole();
 
@@ -353,7 +295,7 @@ export async function submitMessageReply(msgId) {
   const msg = (managerMessagesList || []).find(m => m.id === msgId);
   if (!msg) return;
 
-  const currentEmail = (state?.currentUserEmail || 'nam3010hcm@gmail.com').toLowerCase();
+  const currentEmail = (state?.currentUserEmail || getUserCurrentEmail() || '').toLowerCase();
   const currentName = state?.currentUserName || getUserCurrentName();
   const currentRole = getUserCurrentRole();
 
@@ -476,6 +418,17 @@ function getUserCurrentName() {
     }
   } catch(e){}
   return 'Cán bộ EduCore';
+}
+
+function getUserCurrentEmail() {
+  try {
+    const tcRaw = localStorage.getItem('teacher_user');
+    if (tcRaw) {
+      const u = JSON.parse(tcRaw);
+      return u.email || '';
+    }
+  } catch(e){}
+  return '';
 }
 
 function formatTime(dtStr) {

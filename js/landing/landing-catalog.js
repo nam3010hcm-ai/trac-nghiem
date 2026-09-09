@@ -6,19 +6,9 @@ import { esc, $ } from '../common.js';
 
 const db = () => window.supabaseClient;
 
-const TEACHER_NAME_MAP = {
-  'nam3010hcm@gmail.com': 'Thầy Nam (Root Admin)',
-  'chen.lms@k7.edu.vn': 'Dr. Chen',
-  'alice@example.com': 'Alice',
-  'nam84hcm@gmail.com': 'Lê Văn Nam'
-};
-
 function formatInstructorDisplayName(val, teachersDb = []) {
-  if (!val) return 'Thầy Nam (Root Admin)';
+  if (!val) return 'Giảng Viên';
   const s = String(val).trim();
-  if (TEACHER_NAME_MAP[s.toLowerCase()]) {
-    return TEACHER_NAME_MAP[s.toLowerCase()];
-  }
   const matched = (teachersDb || []).find(t => 
     (t.email && t.email.toLowerCase() === s.toLowerCase()) ||
     (t.id && t.id.toLowerCase() === s.toLowerCase())
